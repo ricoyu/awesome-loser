@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd" >
+<hibernate-mapping>
+
+	<sql-query name="findAllStudents">
+		<![CDATA[
+	SELECT 
+	  aaa.*,
+	  g.GRADE_NAME gradeName 
+	FROM
+	  (SELECT 
+	    s.*,
+	    es.enroll_status_desc 
+	  FROM
+	    student s 
+	    LEFT JOIN enroll_status es 
+	      ON s.enroll_status = es.enroll_status_code 
+	  WHERE s.enroll_status IN (6, 9) 
+	    AND s.DELETED = 0) aaa 
+	  LEFT JOIN grades g 
+	    ON g.ID = aaa.grade_id 
+	    AND g.DELETED = 0 
+		]]>
+	</sql-query>
+
+</hibernate-mapping>

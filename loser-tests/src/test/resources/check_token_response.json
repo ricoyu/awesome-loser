@@ -1,0 +1,9 @@
+{
+  "aud" : [ "api-gateway", "product-service", "order-service", "authorize-server" ],
+  "user_name" : "sanshaoye",
+  "scope" : [ "read" ],
+  "active" : true,
+  "exp" : 1588851389,
+  "authorities" : [ "/order/selectOrderInfoByIdAndUserName", "/order/selectOrderInfoById", "/product/selectProductInfoById" ],
+  "client_id" : "portal_app"
+}

@@ -1,0 +1,13 @@
+https://www.javacodegeeks.com/2015/09/mediator-design-pattern.html
+
+The classess which hold reference of the mediator are called colleagues. The major participants of the Mediator Pattern are:
+
+1. Mediator
+Defines an interface for communicating with Colleague objects.
+
+2. ConcreteMediator
+Implements cooperative behavior by coordinating Colleague objects. It also knows and maintains its colleagues.
+
+3. Colleague Classes
+Each Colleague class knows its Mediator object. Each colleague communicates with its mediator whenever it would have otherwise communicated with another colleague.
+Colleague接口有一个setMediator(Mediator mediator)方法，Colleague的子类持有一个实例变量private Mediator mediator，再通过实现Colleague的setMediator将具体中介者注入进来.

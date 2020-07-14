@@ -1,0 +1,2 @@
+#set($test = "long line that should be truncated")
+#truncate("Testing $test", 20, "...", true)

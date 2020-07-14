@@ -1,0 +1,1203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" xmlns:html="http://www.w3.org/TR/REC-html40">
+	<DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+		<Author/>
+		<Title/>
+		<Description/>
+		<Subject/>
+	</DocumentProperties>
+	<Styles>
+		<Style ss:ID="HyperlinkId" ss:Name="Hyperlink">
+			<Font ss:Color="#0000ff"/>
+		</Style>
+		<Style ss:ID="1">
+			<NumberFormat ss:Format="yyyy-M-d HH:mm:ss AM/PM"/>
+		</Style>
+		<Style ss:ID="42">
+			<Alignment ss:Horizontal="Right" ss:Vertical="Top" ss:WrapText="1"/>
+			<Borders>
+				<Border ss:Position="Bottom"/>
+				<Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#000000"/>
+				<Border ss:Position="Left"/>
+				<Border ss:Position="Right"/>
+				<Border ss:Position="DiagonalLeft"/>
+			</Borders>
+			<Font ss:FontName="Arial" ss:Size="6.0" ss:Color="#000000"/>
+		</Style>
+		<Style ss:ID="51">
+			<Alignment ss:Horizontal="Left" ss:Vertical="Top" ss:WrapText="1"/>
+			<Borders>
+				<Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#000000"/>
+				<Border ss:Position="Top"/>
+				<Border ss:Position="Left"/>
+				<Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#000000"/>
+				<Border ss:Position="DiagonalLeft"/>
+			</Borders>
+			<Font ss:FontName="Arial" ss:Size="10.0" ss:Color="#000000"/>
+		</Style>
+		<Style ss:ID="22">
+			<Alignment ss:Horizontal="Right" ss:Vertical="Center" ss:WrapText="1"/>
+			<Borders>
+				<Border ss:Position="Bottom"/>
+				<Border ss:Position="Top"/>
+				<Border ss:Position="Left"/>
+				<Border ss:Position="Right"/>
+				<Border ss:Position="DiagonalLeft"/>
+			</Borders>
+			<Font ss:FontName="Arial" ss:Size="14.0" ss:Bold="1" ss:Color="#000000"/>
+		</Style>
+		<Style ss:ID="41">
+			<Alignment ss:Horizontal="Left" ss:Vertical="Top" ss:WrapText="1"/>
+			<Borders>
+				<Border ss:Position="Bottom"/>
+				<Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#000000"/>
+				<Border ss:Position="Left"/>
+				<Border ss:Position="Right"/>
+				<Border ss:Position="DiagonalLeft"/>
+			</Borders>
+			<Font ss:FontName="Arial" ss:Size="6.0" ss:Color="#000000"/>
+		</Style>
+		<Style ss:ID="47">
+			<Alignment ss:Horizontal="Left" ss:Vertical="Top" ss:WrapText="1"/>
+			<Borders>
+				<Border ss:Position="Bottom"/>
+				<Border ss:Position="Top"/>
+				<Border ss:Position="Left"/>
+				<Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#000000"/>
+				<Border ss:Position="DiagonalLeft"/>
+			</Borders>
+			<Font ss:FontName="Arial" ss:Size="10.0" ss:Color="#000000"/>
+		</Style>
+		<Style ss:ID="49">
+			<Alignment ss:Horizontal="Left" ss:Vertical="Top" ss:WrapText="1"/>
+			<Borders>
+				<Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#000000"/>
+				<Border ss:Position="Top"/>
+				<Border ss:Position="Left"/>
+				<Border ss:Position="Right"/>
+				<Border ss:Position="DiagonalLeft"/>
+			</Borders>
+			<Font ss:FontName="Arial" ss:Size="6.0" ss:Color="#000000"/>
+		</Style>
+		<Style ss:ID="50">
+			<Alignment ss:Horizontal="Left" ss:Vertical="Top" ss:WrapText="1"/>
+			<Borders>
+				<Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#000000"/>
+				<Border ss:Position="Top"/>
+				<Border ss:Position="Left"/>
+				<Border ss:Position="Right"/>
+				<Border ss:Position="DiagonalLeft"/>
+			</Borders>
+			<Font ss:FontName="Arial" ss:Size="10.0" ss:Color="#000000"/>
+		</Style>
+		<Style ss:ID="33">
+			<Alignment ss:Horizontal="Center" ss:Vertical="Top" ss:WrapText="1"/>
+			<Borders>
+				<Border ss:Position="Bottom"/>
+				<Border ss:Position="Top"/>
+				<Border ss:Position="Left"/>
+				<Border ss:Position="Right"/>
+				<Border ss:Position="DiagonalLeft"/>
+			</Borders>
+			<Font ss:FontName="Arial" ss:Size="8.0" ss:Color="#000000"/>
+		</Style>
+		<Style ss:ID="35">
+			<Alignment ss:Horizontal="Left" ss:Vertical="Top" ss:WrapText="1"/>
+			<Borders>
+				<Border ss:Position="Bottom"/>
+				<Border ss:Position="Top"/>
+				<Border ss:Position="Left"/>
+				<Border ss:Position="Right"/>
+				<Border ss:Position="DiagonalLeft"/>
+			</Borders>
+			<Font ss:FontName="Arial" ss:Size="8.0" ss:Color="#000000"/>
+		</Style>
+		<Style ss:ID="36">
+			<Alignment ss:Horizontal="Left" ss:Vertical="Top" ss:WrapText="1"/>
+			<Borders>
+				<Border ss:Position="Bottom"/>
+				<Border ss:Position="Top"/>
+				<Border ss:Position="Left"/>
+				<Border ss:Position="Right"/>
+				<Border ss:Position="DiagonalLeft"/>
+			</Borders>
+			<Font ss:FontName="Arial" ss:Size="8.0" ss:Color="#000000"/>
+			<NumberFormat ss:Format="[$-809]dd-MMM-YYYY HH:mm"/>
+		</Style>
+		<Style ss:ID="37">
+			<Alignment ss:Horizontal="Left" ss:Vertical="Top" ss:WrapText="1"/>
+			<Borders>
+				<Border ss:Position="Bottom"/>
+				<Border ss:Position="Top"/>
+				<Border ss:Position="Left"/>
+				<Border ss:Position="Right"/>
+				<Border ss:Position="DiagonalLeft"/>
+			</Borders>
+			<Font ss:FontName="Arial" ss:Size="8.0" ss:Color="#000000"/>
+		</Style>
+		<Style ss:ID="45">
+			<Alignment ss:Horizontal="Left" ss:Vertical="Top" ss:WrapText="1"/>
+			<Borders>
+				<Border ss:Position="Bottom"/>
+				<Border ss:Position="Top"/>
+				<Border ss:Position="Left"/>
+				<Border ss:Position="Right"/>
+				<Border ss:Position="DiagonalLeft"/>
+			</Borders>
+			<Font ss:FontName="Arial" ss:Size="6.0" ss:Color="#000000"/>
+		</Style>
+		<Style ss:ID="46">
+			<Alignment ss:Horizontal="Left" ss:Vertical="Top" ss:WrapText="1"/>
+			<Borders>
+				<Border ss:Position="Bottom"/>
+				<Border ss:Position="Top"/>
+				<Border ss:Position="Left"/>
+				<Border ss:Position="Right"/>
+				<Border ss:Position="DiagonalLeft"/>
+			</Borders>
+			<Font ss:FontName="Arial" ss:Size="10.0" ss:Color="#000000"/>
+		</Style>
+		<Style ss:ID="24">
+			<Alignment ss:Horizontal="Left" ss:Vertical="Top" ss:WrapText="1"/>
+			<Borders>
+				<Border ss:Position="Bottom"/>
+				<Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#000000"/>
+				<Border ss:Position="Left"/>
+				<Border ss:Position="Right"/>
+				<Border ss:Position="DiagonalLeft"/>
+			</Borders>
+			<Font ss:FontName="Arial" ss:Size="8.0" ss:Bold="1" ss:Color="#000000"/>
+		</Style>
+		<Style ss:ID="21">
+			<Alignment ss:Horizontal="Left" ss:Vertical="Bottom" ss:WrapText="1"/>
+			<Borders>
+				<Border ss:Position="Bottom"/>
+				<Border ss:Position="Top"/>
+				<Border ss:Position="Left"/>
+				<Border ss:Position="Right"/>
+				<Border ss:Position="DiagonalLeft"/>
+			</Borders>
+			<Font ss:FontName="Arial" ss:Size="10.0" ss:Color="#000000"/>
+		</Style>
+		<Style ss:ID="31">
+			<Alignment ss:Horizontal="Left" ss:Vertical="Top" ss:WrapText="1"/>
+			<Borders>
+				<Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#000000"/>
+				<Border ss:Position="Top"/>
+				<Border ss:Position="Left"/>
+				<Border ss:Position="Right"/>
+				<Border ss:Position="DiagonalLeft"/>
+			</Borders>
+			<Font ss:FontName="Arial" ss:Size="8.0" ss:Color="#000000"/>
+		</Style>
+		<Style ss:ID="40">
+			<Alignment ss:Horizontal="Left" ss:Vertical="Top" ss:WrapText="1"/>
+			<Borders>
+				<Border ss:Position="Bottom"/>
+				<Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#000000"/>
+				<Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#000000"/>
+				<Border ss:Position="Right"/>
+				<Border ss:Position="DiagonalLeft"/>
+			</Borders>
+			<Font ss:FontName="Arial" ss:Size="6.0" ss:Color="#000000"/>
+		</Style>
+		<Style ss:ID="27">
+			<Alignment ss:Horizontal="Left" ss:Vertical="Top" ss:WrapText="1"/>
+			<Borders>
+				<Border ss:Position="Bottom"/>
+				<Border ss:Position="Top"/>
+				<Border ss:Position="Left"/>
+				<Border ss:Position="Right"/>
+				<Border ss:Position="DiagonalLeft"/>
+			</Borders>
+			<Font ss:FontName="Arial" ss:Size="8.0" ss:Bold="1" ss:Color="#000000"/>
+		</Style>
+		<Style ss:ID="32">
+			<Alignment ss:Horizontal="Left" ss:Vertical="Top" ss:WrapText="1"/>
+			<Borders>
+				<Border ss:Position="Bottom"/>
+				<Border ss:Position="Top"/>
+				<Border ss:Position="Left"/>
+				<Border ss:Position="Right"/>
+				<Border ss:Position="DiagonalLeft"/>
+			</Borders>
+			<Font ss:FontName="Arial" ss:Size="8.0" ss:Bold="1" ss:Color="#000000"/>
+		</Style>
+		<Style ss:ID="38">
+			<Alignment ss:Horizontal="Left" ss:Vertical="Top" ss:WrapText="1"/>
+			<Borders>
+				<Border ss:Position="Bottom"/>
+				<Border ss:Position="Top"/>
+				<Border ss:Position="Left"/>
+				<Border ss:Position="Right"/>
+				<Border ss:Position="DiagonalLeft"/>
+			</Borders>
+			<Font ss:FontName="Arial" ss:Size="10.0" ss:Bold="1" ss:Color="#000000"/>
+		</Style>
+		<Style ss:ID="23">
+			<Alignment ss:Horizontal="Left" ss:Vertical="Top" ss:WrapText="1"/>
+			<Borders>
+				<Border ss:Position="Bottom"/>
+				<Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#000000"/>
+				<Border ss:Position="Left"/>
+				<Border ss:Position="Right"/>
+				<Border ss:Position="DiagonalLeft"/>
+			</Borders>
+			<Font ss:FontName="Arial" ss:Size="10.0" ss:Color="#000000"/>
+		</Style>
+		<Style ss:ID="25">
+			<Alignment ss:Horizontal="Left" ss:Vertical="Top" ss:WrapText="1"/>
+			<Borders>
+				<Border ss:Position="Bottom"/>
+				<Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#000000"/>
+				<Border ss:Position="Left"/>
+				<Border ss:Position="Right"/>
+				<Border ss:Position="DiagonalLeft"/>
+			</Borders>
+			<Font ss:FontName="Arial" ss:Size="8.0" ss:Color="#000000"/>
+		</Style>
+		<Style ss:ID="26">
+			<Alignment ss:Horizontal="Left" ss:Vertical="Top" ss:WrapText="1"/>
+			<Borders>
+				<Border ss:Position="Bottom"/>
+				<Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#000000"/>
+				<Border ss:Position="Left"/>
+				<Border ss:Position="Right"/>
+				<Border ss:Position="DiagonalLeft"/>
+			</Borders>
+			<Font ss:FontName="Arial" ss:Size="8.0" ss:Color="#000000"/>
+			<NumberFormat ss:Format="[$-809]dd-MMM-YYYY"/>
+		</Style>
+		<Style ss:ID="34">
+			<Alignment ss:Horizontal="Left" ss:Vertical="Top" ss:WrapText="1"/>
+			<Borders>
+				<Border ss:Position="Bottom"/>
+				<Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#000000"/>
+				<Border ss:Position="Left"/>
+				<Border ss:Position="Right"/>
+				<Border ss:Position="DiagonalLeft"/>
+			</Borders>
+			<Font ss:FontName="Arial" ss:Size="10.0" ss:Bold="1" ss:Color="#000000"/>
+		</Style>
+		<Style ss:ID="43">
+			<Alignment ss:Horizontal="Left" ss:Vertical="Top" ss:WrapText="1"/>
+			<Borders>
+				<Border ss:Position="Bottom"/>
+				<Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#000000"/>
+				<Border ss:Position="Left"/>
+				<Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#000000"/>
+				<Border ss:Position="DiagonalLeft"/>
+			</Borders>
+			<Font ss:FontName="Arial" ss:Size="6.0" ss:Color="#000000"/>
+		</Style>
+		<Style ss:ID="48">
+			<Alignment ss:Horizontal="Left" ss:Vertical="Top" ss:WrapText="1"/>
+			<Borders>
+				<Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#000000"/>
+				<Border ss:Position="Top"/>
+				<Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#000000"/>
+				<Border ss:Position="Right"/>
+				<Border ss:Position="DiagonalLeft"/>
+			</Borders>
+			<Font ss:FontName="Arial" ss:Size="6.0" ss:Color="#000000"/>
+		</Style>
+		<Style ss:ID="44">
+			<Alignment ss:Horizontal="Left" ss:Vertical="Top" ss:WrapText="1"/>
+			<Borders>
+				<Border ss:Position="Bottom"/>
+				<Border ss:Position="Top"/>
+				<Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#000000"/>
+				<Border ss:Position="Right"/>
+				<Border ss:Position="DiagonalLeft"/>
+			</Borders>
+			<Font ss:FontName="Arial" ss:Size="6.0" ss:Color="#000000"/>
+		</Style>
+		<Style ss:ID="20">
+			<Alignment ss:Horizontal="Left" ss:Vertical="Top" ss:WrapText="1"/>
+			<Borders>
+				<Border ss:Position="Bottom"/>
+				<Border ss:Position="Top"/>
+				<Border ss:Position="Left"/>
+				<Border ss:Position="Right"/>
+				<Border ss:Position="DiagonalLeft"/>
+			</Borders>
+			<Font ss:FontName="Arial" ss:Size="10.0" ss:Color="#000000"/>
+		</Style>
+		<Style ss:ID="28">
+			<Alignment ss:Horizontal="Left" ss:Vertical="Top" ss:WrapText="1"/>
+			<Borders>
+				<Border ss:Position="Bottom"/>
+				<Border ss:Position="Top"/>
+				<Border ss:Position="Left"/>
+				<Border ss:Position="Right"/>
+				<Border ss:Position="DiagonalLeft"/>
+			</Borders>
+			<Font ss:FontName="Arial" ss:Size="8.0" ss:Color="#000000"/>
+		</Style>
+		<Style ss:ID="29">
+			<Alignment ss:Horizontal="Left" ss:Vertical="Top" ss:WrapText="1"/>
+			<Borders>
+				<Border ss:Position="Bottom"/>
+				<Border ss:Position="Top"/>
+				<Border ss:Position="Left"/>
+				<Border ss:Position="Right"/>
+				<Border ss:Position="DiagonalLeft"/>
+			</Borders>
+			<Font ss:FontName="Arial" ss:Size="8.0" ss:Color="#000000"/>
+		</Style>
+		<Style ss:ID="30">
+			<Alignment ss:Horizontal="Left" ss:Vertical="Top" ss:WrapText="1"/>
+			<Borders>
+				<Border ss:Position="Bottom"/>
+				<Border ss:Position="Top"/>
+				<Border ss:Position="Left"/>
+				<Border ss:Position="Right"/>
+				<Border ss:Position="DiagonalLeft"/>
+			</Borders>
+			<Font ss:FontName="Arial" ss:Size="8.0" ss:Color="#000000"/>
+		</Style>
+		<Style ss:ID="39">
+			<Alignment ss:Horizontal="Left" ss:Vertical="Top" ss:WrapText="1"/>
+			<Borders>
+				<Border ss:Position="Bottom"/>
+				<Border ss:Position="Top"/>
+				<Border ss:Position="Left"/>
+				<Border ss:Position="Right"/>
+				<Border ss:Position="DiagonalLeft"/>
+			</Borders>
+			<Font ss:FontName="Arial" ss:Size="10.0" ss:Color="#000000"/>
+		</Style>
+	</Styles>
+	<Names>
+		<NamedRange ss:Name="__bookmark_2" ss:RefersTo="Report!R26C1:R30C21"/>
+		<NamedRange ss:Name="__bookmark_1" ss:RefersTo="Report!R1C1:R37C21"/>
+		<NamedRange ss:Name="__bookmark_3" ss:RefersTo="Report!R31C1:R36C21"/>
+	</Names>
+
+<Worksheet ss:Name="Report">
+	<ss:Table>
+		<ss:Column ss:Width="44.032" ss:AutoFitWidth="0"/>
+		<ss:Column ss:Width="29.312" ss:AutoFitWidth="0"/>
+		<ss:Column ss:Width="14.72" ss:AutoFitWidth="0"/>
+		<ss:Column ss:Width="14.592" ss:AutoFitWidth="0"/>
+		<ss:Column ss:Width="44.16" ss:AutoFitWidth="0"/>
+		<ss:Column ss:Width="14.592" ss:AutoFitWidth="0"/>
+		<ss:Column ss:Width="73.472" ss:AutoFitWidth="0"/>
+		<ss:Column ss:Width="88.064" ss:AutoFitWidth="0"/>
+		<ss:Column ss:Width="14.72" ss:AutoFitWidth="0"/>
+		<ss:Column ss:Width="14.72" ss:AutoFitWidth="0"/>
+		<ss:Column ss:Width="14.592" ss:AutoFitWidth="0"/>
+		<ss:Column ss:Width="44.032" ss:AutoFitWidth="0"/>
+		<ss:Column ss:Width="29.44" ss:AutoFitWidth="0"/>
+		<ss:Column ss:Width="44.032" ss:AutoFitWidth="0"/>
+		<ss:Column ss:Width="14.72" ss:AutoFitWidth="0"/>
+		<ss:Column ss:Width="88.064" ss:AutoFitWidth="0"/>
+		<ss:Column ss:Width="14.72" ss:AutoFitWidth="0"/>
+		<ss:Column ss:Width="73.344" ss:AutoFitWidth="0"/>
+		<ss:Column ss:Width="22.016" ss:AutoFitWidth="0"/>
+		<ss:Column ss:Width="14.72" ss:AutoFitWidth="0"/>
+		<ss:Column ss:Width="22.016" ss:AutoFitWidth="0"/>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="21" ss:MergeAcross="10"/>
+			<Cell ss:Index="12" ss:StyleID="22" ss:MergeAcross="9">
+				<Data ss:Type="String">Bulk Collection Report</Data>
+			</Cell>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="24" ss:MergeAcross="2">
+				<Data ss:Type="String">Batch Reference</Data>
+			</Cell>
+			<Cell ss:Index="4" ss:StyleID="25">
+				<Data ss:Type="String">:</Data>
+			</Cell>
+			<Cell ss:Index="5" ss:StyleID="25" ss:MergeAcross="2">
+				<Data ss:Type="String">SEP181STDD</Data>
+			</Cell>
+			<Cell ss:Index="8" ss:StyleID="24" ss:MergeAcross="1">
+				<Data ss:Type="String">Payment Date</Data>
+			</Cell>
+			<Cell ss:Index="10" ss:StyleID="25">
+				<Data ss:Type="String">:</Data>
+			</Cell>
+			<Cell ss:Index="11" ss:StyleID="26" ss:MergeAcross="3">
+				<Data ss:Type="DateTime">2018-09-05T00:00:00.000</Data>
+			</Cell>
+			<Cell ss:Index="15" ss:StyleID="24" ss:MergeAcross="1">
+				<Data ss:Type="String">Hash Value</Data>
+			</Cell>
+			<Cell ss:Index="17" ss:StyleID="25">
+				<Data ss:Type="String">:</Data>
+			</Cell>
+			<Cell ss:Index="18" ss:StyleID="25" ss:MergeAcross="3">
+				<Data ss:Type="String">609209</Data>
+			</Cell>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="27" ss:MergeAcross="2">
+				<Data ss:Type="String">To Account</Data>
+			</Cell>
+			<Cell ss:Index="4" ss:StyleID="28">
+				<Data ss:Type="String">:</Data>
+			</Cell>
+			<Cell ss:Index="5" ss:StyleID="28" ss:MergeAcross="2">
+				<Data ss:Type="String">MULBERRY LEARNING   CEN&#10;TRE @ T P P - 003931062&#10;5 - SGD</Data>
+			</Cell>
+			<Cell ss:Index="8" ss:StyleID="27" ss:MergeAcross="1">
+				<Data ss:Type="String">Batch ID</Data>
+			</Cell>
+			<Cell ss:Index="10" ss:StyleID="28">
+				<Data ss:Type="String">:</Data>
+			</Cell>
+			<Cell ss:Index="11" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">90000</Data>
+			</Cell>
+			<Cell ss:Index="15" ss:StyleID="27" ss:MergeAcross="1">
+				<Data ss:Type="String">Encryption Hash</Data>
+			</Cell>
+			<Cell ss:Index="17" ss:StyleID="28">
+				<Data ss:Type="String">:</Data>
+			</Cell>
+			<Cell ss:Index="18" ss:StyleID="28" ss:MergeAcross="3"/>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="27" ss:MergeAcross="2">
+				<Data ss:Type="String">Source</Data>
+			</Cell>
+			<Cell ss:Index="4" ss:StyleID="28">
+				<Data ss:Type="String">:</Data>
+			</Cell>
+			<Cell ss:Index="5" ss:StyleID="28" ss:MergeAcross="2">
+				<Data ss:Type="String">online</Data>
+			</Cell>
+			<Cell ss:Index="8" ss:StyleID="27" ss:MergeAcross="1">
+				<Data ss:Type="String">Status</Data>
+			</Cell>
+			<Cell ss:Index="10" ss:StyleID="28">
+				<Data ss:Type="String">:</Data>
+			</Cell>
+			<Cell ss:Index="11" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">Partial Completed</Data>
+			</Cell>
+			<Cell ss:Index="15" ss:StyleID="27" ss:MergeAcross="1">
+				<Data ss:Type="String">UCIC Code</Data>
+			</Cell>
+			<Cell ss:Index="17" ss:StyleID="28">
+				<Data ss:Type="String">:</Data>
+			</Cell>
+			<Cell ss:Index="18" ss:StyleID="29" ss:MergeAcross="3"/>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="27" ss:MergeAcross="2">
+				<Data ss:Type="String">Total Items</Data>
+			</Cell>
+			<Cell ss:Index="4" ss:StyleID="28">
+				<Data ss:Type="String">:</Data>
+			</Cell>
+			<Cell ss:Index="5" ss:StyleID="30" ss:MergeAcross="2">
+				<Data ss:Type="Number">17</Data>
+			</Cell>
+			<Cell ss:Index="8" ss:StyleID="27" ss:MergeAcross="1">
+				<Data ss:Type="String">Total Completed Count</Data>
+			</Cell>
+			<Cell ss:Index="10" ss:StyleID="28">
+				<Data ss:Type="String">:</Data>
+			</Cell>
+			<Cell ss:Index="11" ss:StyleID="30" ss:MergeAcross="3">
+				<Data ss:Type="Number">16</Data>
+			</Cell>
+			<Cell ss:Index="15" ss:StyleID="27" ss:MergeAcross="1">
+				<Data ss:Type="String">Total Rejected Count</Data>
+			</Cell>
+			<Cell ss:Index="17" ss:StyleID="28">
+				<Data ss:Type="String">:</Data>
+			</Cell>
+			<Cell ss:Index="18" ss:StyleID="30" ss:MergeAcross="3">
+				<Data ss:Type="Number">1</Data>
+			</Cell>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="27" ss:MergeAcross="2">
+				<Data ss:Type="String">Total Amount</Data>
+			</Cell>
+			<Cell ss:Index="4" ss:StyleID="28">
+				<Data ss:Type="String">:</Data>
+			</Cell>
+			<Cell ss:Index="5" ss:StyleID="28" ss:MergeAcross="2">
+				<Data ss:Type="String">SGD 16,855.00</Data>
+			</Cell>
+			<Cell ss:Index="8" ss:StyleID="27" ss:MergeAcross="1">
+				<Data ss:Type="String">Total Completed Amount</Data>
+			</Cell>
+			<Cell ss:Index="10" ss:StyleID="28">
+				<Data ss:Type="String">:</Data>
+			</Cell>
+			<Cell ss:Index="11" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">SGD 15,871.00</Data>
+			</Cell>
+			<Cell ss:Index="15" ss:StyleID="27" ss:MergeAcross="1">
+				<Data ss:Type="String">Total Rejected Amount</Data>
+			</Cell>
+			<Cell ss:Index="17" ss:StyleID="28">
+				<Data ss:Type="String">:</Data>
+			</Cell>
+			<Cell ss:Index="18" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">SGD 984.00</Data>
+			</Cell>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="31" ss:MergeAcross="2"/>
+			<Cell ss:Index="4" ss:StyleID="31"/>
+			<Cell ss:Index="5" ss:StyleID="31" ss:MergeAcross="2"/>
+			<Cell ss:Index="8" ss:StyleID="31" ss:MergeAcross="1"/>
+			<Cell ss:Index="10" ss:StyleID="31"/>
+			<Cell ss:Index="11" ss:StyleID="31" ss:MergeAcross="3"/>
+			<Cell ss:Index="15" ss:StyleID="31" ss:MergeAcross="1"/>
+			<Cell ss:Index="17" ss:StyleID="31"/>
+			<Cell ss:Index="18" ss:StyleID="31" ss:MergeAcross="3"/>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="27">
+				<Data ss:Type="String">Item No</Data>
+			</Cell>
+			<Cell ss:Index="2" ss:StyleID="27" ss:MergeAcross="3">
+				<Data ss:Type="String">Name</Data>
+			</Cell>
+			<Cell ss:Index="6" ss:StyleID="27" ss:MergeAcross="1">
+				<Data ss:Type="String">DDA Reference</Data>
+			</Cell>
+			<Cell ss:Index="8" ss:StyleID="32">
+				<Data ss:Type="String">Account</Data>
+			</Cell>
+			<Cell ss:Index="9" ss:StyleID="27" ss:MergeAcross="3">
+				<Data ss:Type="String">Bank Details</Data>
+			</Cell>
+			<Cell ss:Index="13" ss:StyleID="27" ss:MergeAcross="2">
+				<Data ss:Type="String">Amount</Data>
+			</Cell>
+			<Cell ss:Index="16" ss:StyleID="27">
+				<Data ss:Type="String">Payer Reference</Data>
+			</Cell>
+			<Cell ss:Index="17" ss:StyleID="27" ss:MergeAcross="1">
+				<Data ss:Type="String">Processing Status</Data>
+			</Cell>
+			<Cell ss:Index="19" ss:StyleID="27" ss:MergeAcross="2">
+				<Data ss:Type="String">Reason Desc</Data>
+			</Cell>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="33">
+				<Data ss:Type="String">1</Data>
+			</Cell>
+			<Cell ss:Index="2" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">Zhou Shen Wei</Data>
+			</Cell>
+			<Cell ss:Index="6" ss:StyleID="28" ss:MergeAcross="1">
+				<Data ss:Type="String">T1505064G</Data>
+			</Cell>
+			<Cell ss:Index="8" ss:StyleID="28">
+				<Data ss:Type="String">526166939001</Data>
+			</Cell>
+			<Cell ss:Index="9" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">OCBCSGSGXXX</Data>
+			</Cell>
+			<Cell ss:Index="13" ss:StyleID="28" ss:MergeAcross="2">
+				<Data ss:Type="String">SGD 984.00</Data>
+			</Cell>
+			<Cell ss:Index="16" ss:StyleID="28">
+				<Data ss:Type="String">T1505064G</Data>
+			</Cell>
+			<Cell ss:Index="17" ss:StyleID="28" ss:MergeAcross="1">
+				<Data ss:Type="String">Completed</Data>
+			</Cell>
+			<Cell ss:Index="19" ss:StyleID="28" ss:MergeAcross="2"/>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="33">
+				<Data ss:Type="String">2</Data>
+			</Cell>
+			<Cell ss:Index="2" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">Clement Goh Wenbin</Data>
+			</Cell>
+			<Cell ss:Index="6" ss:StyleID="28" ss:MergeAcross="1">
+				<Data ss:Type="String">T1630913Z</Data>
+			</Cell>
+			<Cell ss:Index="8" ss:StyleID="28">
+				<Data ss:Type="String">690570239001</Data>
+			</Cell>
+			<Cell ss:Index="9" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">OCBCSGSGXXX</Data>
+			</Cell>
+			<Cell ss:Index="13" ss:StyleID="28" ss:MergeAcross="2">
+				<Data ss:Type="String">SGD 1,091.00</Data>
+			</Cell>
+			<Cell ss:Index="16" ss:StyleID="28">
+				<Data ss:Type="String">T1630913Z</Data>
+			</Cell>
+			<Cell ss:Index="17" ss:StyleID="28" ss:MergeAcross="1">
+				<Data ss:Type="String">Completed</Data>
+			</Cell>
+			<Cell ss:Index="19" ss:StyleID="28" ss:MergeAcross="2"/>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="33">
+				<Data ss:Type="String">3</Data>
+			</Cell>
+			<Cell ss:Index="2" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">Marcus Lim Jia Xian</Data>
+			</Cell>
+			<Cell ss:Index="6" ss:StyleID="28" ss:MergeAcross="1">
+				<Data ss:Type="String">T1503073E</Data>
+			</Cell>
+			<Cell ss:Index="8" ss:StyleID="28">
+				<Data ss:Type="String">526175781001</Data>
+			</Cell>
+			<Cell ss:Index="9" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">OCBCSGSGXXX</Data>
+			</Cell>
+			<Cell ss:Index="13" ss:StyleID="28" ss:MergeAcross="2">
+				<Data ss:Type="String">SGD 991.00</Data>
+			</Cell>
+			<Cell ss:Index="16" ss:StyleID="28">
+				<Data ss:Type="String">T1503073E</Data>
+			</Cell>
+			<Cell ss:Index="17" ss:StyleID="28" ss:MergeAcross="1">
+				<Data ss:Type="String">Completed</Data>
+			</Cell>
+			<Cell ss:Index="19" ss:StyleID="28" ss:MergeAcross="2"/>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="33">
+				<Data ss:Type="String">4</Data>
+			</Cell>
+			<Cell ss:Index="2" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">Lucas Lim Jia Rui</Data>
+			</Cell>
+			<Cell ss:Index="6" ss:StyleID="28" ss:MergeAcross="1">
+				<Data ss:Type="String">T1503068I</Data>
+			</Cell>
+			<Cell ss:Index="8" ss:StyleID="28">
+				<Data ss:Type="String">526175773001</Data>
+			</Cell>
+			<Cell ss:Index="9" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">OCBCSGSGXXX</Data>
+			</Cell>
+			<Cell ss:Index="13" ss:StyleID="28" ss:MergeAcross="2">
+				<Data ss:Type="String">SGD 884.00</Data>
+			</Cell>
+			<Cell ss:Index="16" ss:StyleID="28">
+				<Data ss:Type="String">T1503068I</Data>
+			</Cell>
+			<Cell ss:Index="17" ss:StyleID="28" ss:MergeAcross="1">
+				<Data ss:Type="String">Completed</Data>
+			</Cell>
+			<Cell ss:Index="19" ss:StyleID="28" ss:MergeAcross="2"/>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="33">
+				<Data ss:Type="String">5</Data>
+			</Cell>
+			<Cell ss:Index="2" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">Rachel Lim Zhi Xuan</Data>
+			</Cell>
+			<Cell ss:Index="6" ss:StyleID="28" ss:MergeAcross="1">
+				<Data ss:Type="String">T1606858B</Data>
+			</Cell>
+			<Cell ss:Index="8" ss:StyleID="28">
+				<Data ss:Type="String">690449640001</Data>
+			</Cell>
+			<Cell ss:Index="9" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">OCBCSGSGXXX</Data>
+			</Cell>
+			<Cell ss:Index="13" ss:StyleID="28" ss:MergeAcross="2">
+				<Data ss:Type="String">SGD 984.00</Data>
+			</Cell>
+			<Cell ss:Index="16" ss:StyleID="28">
+				<Data ss:Type="String">T1606858B</Data>
+			</Cell>
+			<Cell ss:Index="17" ss:StyleID="28" ss:MergeAcross="1">
+				<Data ss:Type="String">Completed</Data>
+			</Cell>
+			<Cell ss:Index="19" ss:StyleID="28" ss:MergeAcross="2"/>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="33">
+				<Data ss:Type="String">6</Data>
+			</Cell>
+			<Cell ss:Index="2" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">Kayleb Tew Shao Hao</Data>
+			</Cell>
+			<Cell ss:Index="6" ss:StyleID="28" ss:MergeAcross="1">
+				<Data ss:Type="String">T1537550C</Data>
+			</Cell>
+			<Cell ss:Index="8" ss:StyleID="28">
+				<Data ss:Type="String">690391131001</Data>
+			</Cell>
+			<Cell ss:Index="9" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">OCBCSGSGXXX</Data>
+			</Cell>
+			<Cell ss:Index="13" ss:StyleID="28" ss:MergeAcross="2">
+				<Data ss:Type="String">SGD 984.00</Data>
+			</Cell>
+			<Cell ss:Index="16" ss:StyleID="28">
+				<Data ss:Type="String">T1537550C</Data>
+			</Cell>
+			<Cell ss:Index="17" ss:StyleID="28" ss:MergeAcross="1">
+				<Data ss:Type="String">Completed</Data>
+			</Cell>
+			<Cell ss:Index="19" ss:StyleID="28" ss:MergeAcross="2"/>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="33">
+				<Data ss:Type="String">7</Data>
+			</Cell>
+			<Cell ss:Index="2" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">Sarah Tan Ler Hsuen</Data>
+			</Cell>
+			<Cell ss:Index="6" ss:StyleID="28" ss:MergeAcross="1">
+				<Data ss:Type="String">T1441417C</Data>
+			</Cell>
+			<Cell ss:Index="8" ss:StyleID="28">
+				<Data ss:Type="String">690175369001</Data>
+			</Cell>
+			<Cell ss:Index="9" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">OCBCSGSGXXX</Data>
+			</Cell>
+			<Cell ss:Index="13" ss:StyleID="28" ss:MergeAcross="2">
+				<Data ss:Type="String">SGD 984.00</Data>
+			</Cell>
+			<Cell ss:Index="16" ss:StyleID="28">
+				<Data ss:Type="String">T1441417C</Data>
+			</Cell>
+			<Cell ss:Index="17" ss:StyleID="28" ss:MergeAcross="1">
+				<Data ss:Type="String">Completed</Data>
+			</Cell>
+			<Cell ss:Index="19" ss:StyleID="28" ss:MergeAcross="2"/>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="33">
+				<Data ss:Type="String">8</Data>
+			</Cell>
+			<Cell ss:Index="2" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">Sarah Tan Ler Hsuen</Data>
+			</Cell>
+			<Cell ss:Index="6" ss:StyleID="28" ss:MergeAcross="1">
+				<Data ss:Type="String">T1441417C</Data>
+			</Cell>
+			<Cell ss:Index="8" ss:StyleID="28">
+				<Data ss:Type="String">690175369001</Data>
+			</Cell>
+			<Cell ss:Index="9" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">OCBCSGSGXXX</Data>
+			</Cell>
+			<Cell ss:Index="13" ss:StyleID="28" ss:MergeAcross="2">
+				<Data ss:Type="String">SGD 877.00</Data>
+			</Cell>
+			<Cell ss:Index="16" ss:StyleID="28">
+				<Data ss:Type="String">T1441417C</Data>
+			</Cell>
+			<Cell ss:Index="17" ss:StyleID="28" ss:MergeAcross="1">
+				<Data ss:Type="String">Completed</Data>
+			</Cell>
+			<Cell ss:Index="19" ss:StyleID="28" ss:MergeAcross="2"/>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="33">
+				<Data ss:Type="String">9</Data>
+			</Cell>
+			<Cell ss:Index="2" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">Joseph Lee Min Yue</Data>
+			</Cell>
+			<Cell ss:Index="6" ss:StyleID="28" ss:MergeAcross="1">
+				<Data ss:Type="String">T1733579G</Data>
+			</Cell>
+			<Cell ss:Index="8" ss:StyleID="28">
+				<Data ss:Type="String">083602031</Data>
+			</Cell>
+			<Cell ss:Index="9" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">DBSSSGSGXXX</Data>
+			</Cell>
+			<Cell ss:Index="13" ss:StyleID="28" ss:MergeAcross="2">
+				<Data ss:Type="String">SGD 1,112.00</Data>
+			</Cell>
+			<Cell ss:Index="16" ss:StyleID="28">
+				<Data ss:Type="String">T1733579G</Data>
+			</Cell>
+			<Cell ss:Index="17" ss:StyleID="28" ss:MergeAcross="1">
+				<Data ss:Type="String">Completed</Data>
+			</Cell>
+			<Cell ss:Index="19" ss:StyleID="28" ss:MergeAcross="2"/>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="33">
+				<Data ss:Type="String">10</Data>
+			</Cell>
+			<Cell ss:Index="2" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">Eton Ngo Xiang Wei</Data>
+			</Cell>
+			<Cell ss:Index="6" ss:StyleID="28" ss:MergeAcross="1">
+				<Data ss:Type="String">T1628078F</Data>
+			</Cell>
+			<Cell ss:Index="8" ss:StyleID="28">
+				<Data ss:Type="String">290105676</Data>
+			</Cell>
+			<Cell ss:Index="9" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">DBSSSGSGXXX</Data>
+			</Cell>
+			<Cell ss:Index="13" ss:StyleID="28" ss:MergeAcross="2">
+				<Data ss:Type="String">SGD 984.00</Data>
+			</Cell>
+			<Cell ss:Index="16" ss:StyleID="28">
+				<Data ss:Type="String">T1628078F</Data>
+			</Cell>
+			<Cell ss:Index="17" ss:StyleID="28" ss:MergeAcross="1">
+				<Data ss:Type="String">Completed</Data>
+			</Cell>
+			<Cell ss:Index="19" ss:StyleID="28" ss:MergeAcross="2"/>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="33">
+				<Data ss:Type="String">11</Data>
+			</Cell>
+			<Cell ss:Index="2" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">Zhou Shen Wei</Data>
+			</Cell>
+			<Cell ss:Index="6" ss:StyleID="28" ss:MergeAcross="1">
+				<Data ss:Type="String">T1505064G</Data>
+			</Cell>
+			<Cell ss:Index="8" ss:StyleID="28">
+				<Data ss:Type="String">526166939001</Data>
+			</Cell>
+			<Cell ss:Index="9" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">OCBCSGSGXXX</Data>
+			</Cell>
+			<Cell ss:Index="13" ss:StyleID="28" ss:MergeAcross="2">
+				<Data ss:Type="String">SGD 1,101.00</Data>
+			</Cell>
+			<Cell ss:Index="16" ss:StyleID="28">
+				<Data ss:Type="String">T1505064G</Data>
+			</Cell>
+			<Cell ss:Index="17" ss:StyleID="28" ss:MergeAcross="1">
+				<Data ss:Type="String">Completed</Data>
+			</Cell>
+			<Cell ss:Index="19" ss:StyleID="28" ss:MergeAcross="2"/>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="33">
+				<Data ss:Type="String">12</Data>
+			</Cell>
+			<Cell ss:Index="2" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">Anika Bhor</Data>
+			</Cell>
+			<Cell ss:Index="6" ss:StyleID="28" ss:MergeAcross="1">
+				<Data ss:Type="String">752207918</Data>
+			</Cell>
+			<Cell ss:Index="8" ss:StyleID="28">
+				<Data ss:Type="String">2880100917</Data>
+			</Cell>
+			<Cell ss:Index="9" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">DBSSSGSGXXX</Data>
+			</Cell>
+			<Cell ss:Index="13" ss:StyleID="28" ss:MergeAcross="2">
+				<Data ss:Type="String">SGD 1,605.00</Data>
+			</Cell>
+			<Cell ss:Index="16" ss:StyleID="28">
+				<Data ss:Type="String">752207918</Data>
+			</Cell>
+			<Cell ss:Index="17" ss:StyleID="28" ss:MergeAcross="1">
+				<Data ss:Type="String">Completed</Data>
+			</Cell>
+			<Cell ss:Index="19" ss:StyleID="28" ss:MergeAcross="2"/>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="33">
+				<Data ss:Type="String">13</Data>
+			</Cell>
+			<Cell ss:Index="2" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">Evan Ong - 2</Data>
+			</Cell>
+			<Cell ss:Index="6" ss:StyleID="28" ss:MergeAcross="1">
+				<Data ss:Type="String">T1212077F</Data>
+			</Cell>
+			<Cell ss:Index="8" ss:StyleID="28">
+				<Data ss:Type="String">120984381</Data>
+			</Cell>
+			<Cell ss:Index="9" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">DBSSSGSGXXX</Data>
+			</Cell>
+			<Cell ss:Index="13" ss:StyleID="28" ss:MergeAcross="2">
+				<Data ss:Type="String">SGD 1,305.00</Data>
+			</Cell>
+			<Cell ss:Index="16" ss:StyleID="28">
+				<Data ss:Type="String">T1212077F</Data>
+			</Cell>
+			<Cell ss:Index="17" ss:StyleID="28" ss:MergeAcross="1">
+				<Data ss:Type="String">Completed</Data>
+			</Cell>
+			<Cell ss:Index="19" ss:StyleID="28" ss:MergeAcross="2"/>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="33">
+				<Data ss:Type="String">14</Data>
+			</Cell>
+			<Cell ss:Index="2" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">Kayson Tew Yi Han</Data>
+			</Cell>
+			<Cell ss:Index="6" ss:StyleID="28" ss:MergeAcross="1">
+				<Data ss:Type="String">T1315346E</Data>
+			</Cell>
+			<Cell ss:Index="8" ss:StyleID="28">
+				<Data ss:Type="String">590744843001</Data>
+			</Cell>
+			<Cell ss:Index="9" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">OCBCSGSGXXX</Data>
+			</Cell>
+			<Cell ss:Index="13" ss:StyleID="28" ss:MergeAcross="2">
+				<Data ss:Type="String">SGD 877.00</Data>
+			</Cell>
+			<Cell ss:Index="16" ss:StyleID="28">
+				<Data ss:Type="String">T1315346E</Data>
+			</Cell>
+			<Cell ss:Index="17" ss:StyleID="28" ss:MergeAcross="1">
+				<Data ss:Type="String">Completed</Data>
+			</Cell>
+			<Cell ss:Index="19" ss:StyleID="28" ss:MergeAcross="2"/>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="33">
+				<Data ss:Type="String">15</Data>
+			</Cell>
+			<Cell ss:Index="2" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">Yong Jing Hau</Data>
+			</Cell>
+			<Cell ss:Index="6" ss:StyleID="28" ss:MergeAcross="1">
+				<Data ss:Type="String">T1270960E</Data>
+			</Cell>
+			<Cell ss:Index="8" ss:StyleID="28">
+				<Data ss:Type="String">690294525001</Data>
+			</Cell>
+			<Cell ss:Index="9" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">OCBCSGSGXXX</Data>
+			</Cell>
+			<Cell ss:Index="13" ss:StyleID="28" ss:MergeAcross="2">
+				<Data ss:Type="String">SGD 884.00</Data>
+			</Cell>
+			<Cell ss:Index="16" ss:StyleID="28">
+				<Data ss:Type="String">T1270960E</Data>
+			</Cell>
+			<Cell ss:Index="17" ss:StyleID="28" ss:MergeAcross="1">
+				<Data ss:Type="String">Completed</Data>
+			</Cell>
+			<Cell ss:Index="19" ss:StyleID="28" ss:MergeAcross="2"/>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="33">
+				<Data ss:Type="String">16</Data>
+			</Cell>
+			<Cell ss:Index="2" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">Yong Jing Hau</Data>
+			</Cell>
+			<Cell ss:Index="6" ss:StyleID="28" ss:MergeAcross="1">
+				<Data ss:Type="String">T1270960E</Data>
+			</Cell>
+			<Cell ss:Index="8" ss:StyleID="28">
+				<Data ss:Type="String">3553781181</Data>
+			</Cell>
+			<Cell ss:Index="9" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">UOVBSGSGXXX</Data>
+			</Cell>
+			<Cell ss:Index="13" ss:StyleID="28" ss:MergeAcross="2">
+				<Data ss:Type="String">SGD 224.00</Data>
+			</Cell>
+			<Cell ss:Index="16" ss:StyleID="28">
+				<Data ss:Type="String">T1270960E</Data>
+			</Cell>
+			<Cell ss:Index="17" ss:StyleID="28" ss:MergeAcross="1">
+				<Data ss:Type="String">Completed</Data>
+			</Cell>
+			<Cell ss:Index="19" ss:StyleID="28" ss:MergeAcross="2"/>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="33">
+				<Data ss:Type="String">17</Data>
+			</Cell>
+			<Cell ss:Index="2" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">Lee Yu Hng Jayden</Data>
+			</Cell>
+			<Cell ss:Index="6" ss:StyleID="28" ss:MergeAcross="1">
+				<Data ss:Type="String">T1406560H</Data>
+			</Cell>
+			<Cell ss:Index="8" ss:StyleID="28">
+				<Data ss:Type="String">590899134001</Data>
+			</Cell>
+			<Cell ss:Index="9" ss:StyleID="28" ss:MergeAcross="3">
+				<Data ss:Type="String">OCBCSGSGXXX</Data>
+			</Cell>
+			<Cell ss:Index="13" ss:StyleID="28" ss:MergeAcross="2">
+				<Data ss:Type="String">SGD 984.00</Data>
+			</Cell>
+			<Cell ss:Index="16" ss:StyleID="28">
+				<Data ss:Type="String">T1406560H</Data>
+			</Cell>
+			<Cell ss:Index="17" ss:StyleID="28" ss:MergeAcross="1">
+				<Data ss:Type="String">Bank Rejected</Data>
+			</Cell>
+			<Cell ss:Index="19" ss:StyleID="28" ss:MergeAcross="2">
+				<Data ss:Type="String">Please contact bank for assistance (1209)</Data>
+			</Cell>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="34" ss:MergeAcross="20">
+				<Data ss:Type="String">Payment History</Data>
+			</Cell>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="32" ss:MergeAcross="4">
+				<Data ss:Type="String">Action</Data>
+			</Cell>
+			<Cell ss:Index="6" ss:StyleID="32" ss:MergeAcross="7">
+				<Data ss:Type="String">User Name</Data>
+			</Cell>
+			<Cell ss:Index="14" ss:StyleID="32" ss:MergeAcross="7">
+				<Data ss:Type="String">Date/Time</Data>
+			</Cell>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="35" ss:MergeAcross="4">
+				<Data ss:Type="String">Create</Data>
+			</Cell>
+			<Cell ss:Index="6" ss:StyleID="35" ss:MergeAcross="7">
+				<Data ss:Type="String">LIM HUI ENG</Data>
+			</Cell>
+			<Cell ss:Index="14" ss:StyleID="36" ss:MergeAcross="7">
+				<Data ss:Type="DateTime">2018-09-03T10:34:02.000</Data>
+			</Cell>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="35" ss:MergeAcross="4">
+				<Data ss:Type="String">Approve</Data>
+			</Cell>
+			<Cell ss:Index="6" ss:StyleID="35" ss:MergeAcross="7">
+				<Data ss:Type="String">KOH CHEW CHEE</Data>
+			</Cell>
+			<Cell ss:Index="14" ss:StyleID="36" ss:MergeAcross="7">
+				<Data ss:Type="DateTime">2018-09-04T16:48:26.000</Data>
+			</Cell>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="37" ss:MergeAcross="4"/>
+			<Cell ss:Index="6" ss:StyleID="37" ss:MergeAcross="7"/>
+			<Cell ss:Index="14" ss:StyleID="37" ss:MergeAcross="7"/>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="38" ss:MergeAcross="20">
+				<Data ss:Type="String">Approval Requirement</Data>
+			</Cell>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="27" ss:MergeAcross="4">
+				<Data ss:Type="String">Signature Trail</Data>
+			</Cell>
+			<Cell ss:Index="6" ss:StyleID="39">
+				<Data ss:Type="String">:</Data>
+			</Cell>
+			<Cell ss:Index="7" ss:StyleID="28" ss:MergeAcross="14">
+				<Data ss:Type="String">Group A</Data>
+			</Cell>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="27" ss:MergeAcross="4">
+				<Data ss:Type="String">Next Signatory</Data>
+			</Cell>
+			<Cell ss:Index="6" ss:StyleID="39">
+				<Data ss:Type="String">:</Data>
+			</Cell>
+			<Cell ss:Index="7" ss:StyleID="28" ss:MergeAcross="14">
+				<Data ss:Type="String"/>
+			</Cell>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="27" ss:MergeAcross="4">
+				<Data ss:Type="String">Verifier Groups</Data>
+			</Cell>
+			<Cell ss:Index="6" ss:StyleID="39">
+				<Data ss:Type="String">:</Data>
+			</Cell>
+			<Cell ss:Index="7" ss:StyleID="28" ss:MergeAcross="14">
+				<Data ss:Type="String"/>
+			</Cell>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="27" ss:MergeAcross="4">
+				<Data ss:Type="String">Releaser Groups</Data>
+			</Cell>
+			<Cell ss:Index="6" ss:StyleID="39">
+				<Data ss:Type="String">:</Data>
+			</Cell>
+			<Cell ss:Index="7" ss:StyleID="28" ss:MergeAcross="14">
+				<Data ss:Type="String"/>
+			</Cell>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="27" ss:MergeAcross="4">
+				<Data ss:Type="String">Selected Approvers</Data>
+			</Cell>
+			<Cell ss:Index="6" ss:StyleID="39">
+				<Data ss:Type="String">:</Data>
+			</Cell>
+			<Cell ss:Index="7" ss:StyleID="29" ss:MergeAcross="14"/>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="20" ss:MergeAcross="20"/>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="40" ss:MergeAcross="1">
+				<Data ss:Type="String">Printed On</Data>
+			</Cell>
+			<Cell ss:Index="3" ss:StyleID="41">
+				<Data ss:Type="String">:</Data>
+			</Cell>
+			<Cell ss:Index="4" ss:StyleID="41" ss:MergeAcross="13">
+				<Data ss:Type="String">20-Sep-2018 13:18:08 (SGT)</Data>
+			</Cell>
+			<Cell ss:Index="18" ss:StyleID="42">
+				<Data ss:Type="String">Page</Data>
+			</Cell>
+			<Cell ss:Index="19" ss:StyleID="41">
+				<Data ss:Type="String">1</Data>
+			</Cell>
+			<Cell ss:Index="20" ss:StyleID="41">
+				<Data ss:Type="String">of</Data>
+			</Cell>
+			<Cell ss:Index="21" ss:StyleID="43">
+				<Data ss:Type="String">2</Data>
+			</Cell>
+		</Row>
+		<Row ss:AutoFitHeight="1">
+			<Cell ss:Index="1" ss:StyleID="48" ss:MergeAcross="1">
+				<Data ss:Type="String">Printed By</Data>
+			</Cell>
+			<Cell ss:Index="3" ss:StyleID="49">
+				<Data ss:Type="String">:</Data>
+			</Cell>
+			<Cell ss:Index="4" ss:StyleID="49" ss:MergeAcross="13">
+				<Data ss:Type="String">LIM HUI ENG</Data>
+			</Cell>
+			<Cell ss:Index="18" ss:StyleID="50"/>
+			<Cell ss:Index="19" ss:StyleID="50"/>
+			<Cell ss:Index="20" ss:StyleID="50"/>
+			<Cell ss:Index="21" ss:StyleID="51"/>
+		</Row>
+	</ss:Table>
+	<WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+		<PageSetup>
+			<PageMargins x:Bottom="0.39369446" x:Left="0.7480278" x:Right="0.7480278" x:Top="0.39369446"/>
+			<Layout x:Orientation="Landscape"/>
+		</PageSetup>
+		<Print>
+			<PaperSizeIndex>9</PaperSizeIndex>
+		</Print>
+	</WorksheetOptions>
+</Worksheet>
+</Workbook>

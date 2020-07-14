@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="2.1" xmlns="http://xmlns.jcp.org/xml/ns/persistence"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence
+			 http://www.oracle.com/webfolder/technetwork/jsc/xml/ns/persistence/persistence_2_1.xsd">
+
+	<persistence-unit name="loser-orm" transaction-type="RESOURCE_LOCAL">
+
+		<provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+
+		<!-- <class>com.peacefish.entity.auth.User</class>
+		<class>com.peacefish.entity.auth.Role</class>
+		<class>com.peacefish.entity.auth.Privilege</class>
+		<class>com.peacefish.entity.auth.Resource</class>
+		<class>com.peacefish.entity.Address</class>
+		<class>com.loserico.orm.entity.Product</class> 
+		<class>com.loserico.orm.entity.Centre</class>
+		<class>com.loserico.orm.entity.Customer</class>
+		<class>com.loserico.orm.entity.AttendeeRegister</class>
+		<class>com.loserico.orm.entity.Book</class>-->
+		<class>com.loserico.orm.entity.CustomerCode</class>
+
+		<exclude-unlisted-classes>true</exclude-unlisted-classes>
+
+		<properties>
+			<property name="hibernate.ejb.naming_strategy" value="org.hibernate.cfg.ImprovedNamingStrategy" />
+			<property name="hibernate.dialect" value="org.hibernate.dialect.MySQL5Dialect" />
+			<!-- <property name="hibernate.connection.url"
+				value="jdbc:mysql://192.168.1.103:3306/jpa_example?rewriteBatchedStatements=true&amp;zeroDateTimeBehavior=convertToNull&amp;useUnicode=true&amp;characterEncoding=utf8" /> -->
+			<!-- <property name="hibernate.connection.url"
+				value="jdbc:mysql://192.168.1.103:3306/geh_erp?rewriteBatchedStatements=true&amp;zeroDateTimeBehavior=convertToNull&amp;useUnicode=true&amp;characterEncoding=utf8" /> -->
+			<property name="hibernate.connection.url"
+				value="jdbc:mysql://118.178.252.68:3306/pims?rewriteBatchedStatements=true&amp;zeroDateTimeBehavior=convertToNull&amp;useUnicode=true&amp;characterEncoding=utf8" />
+			<property name="hibernate.connection.driver_class" value="com.mysql.jdbc.Driver" />
+			<property name="hibernate.connection.username" value="pims" />
+			<property name="hibernate.connection.password" value="pims_@$%^Learning_)(" />
+<!-- 			<property name="hibernate.connection.username" value="jpa" />
+			<property name="hibernate.connection.password" value="123456" /> -->
+			<property name="hibernate.show_sql" value="true" />
+			<property name="hibernate.format_sql" value="true" />
+			<property name="hibernate.hbm2ddl.auto" value="update" />
+			<property name="hibernate.jdbc.batch_size" value="200" />
+			<!-- 
+			<property name="hibernate.cache.region.factory_class" value="org.hibernate.cache.ehcache.EhCacheRegionFactory" />
+			<property name="hibernate.query.startup_check" value="false" />
+			-->
+			<property name="hibernate.cache.use_second_level_cache" value="false" />
+			<property name="hibernate.cache.use_query_cache" value="false" /> 
+			<property name="hibernate.generate_statistics" value="false"/>
+		</properties>
+
+	</persistence-unit>
+</persistence>
