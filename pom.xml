@@ -3,26 +3,26 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.loserico</groupId>
-    <artifactId>sexy-uncle</artifactId>
+    <artifactId>awesome-loser</artifactId>
     <packaging>pom</packaging>
-    <version>4.7.0</version>
-    <name>Sexy Uncle</name>
+    <version>4.7.3</version>
+    <name>Awesome Loser</name>
     <url>http://maven.apache.org</url>
 
     <modules>
-        <module>../commons-lang</module>
-        <module>../loser-codec</module>
-        <module>../commons-spring</module>
-        <module>../loser-cache</module>
-        <module>../loser-json</module>
-        <module>../loser-orm</module>
-        <module>../loser-sharding</module>
-        <module>../loser-tests</module>
-        <module>../loser-validation</module>
-        <module>../loser-web</module>
-        <module>../loser-workbook</module>
-        <module>../loser-networking</module>
-        <module>../loser-security</module>
+        <module>commons-lang</module>
+        <module>loser-codec</module>
+        <module>commons-spring</module>
+        <module>loser-cache</module>
+        <module>loser-json</module>
+        <module>loser-orm</module>
+        <module>loser-sharding</module>
+        <module>loser-tests</module>
+        <module>loser-validation</module>
+        <module>loser-web</module>
+        <module>loser-workbook</module>
+        <module>loser-networking</module>
+        <module>loser-security</module>
     </modules>
 
     <properties>
@@ -40,8 +40,7 @@
         <log4j.version>1.2.17</log4j.version>
         <logback.version>1.2.3</logback.version>
 
-        <jackson.version>2.10.3</jackson.version>
-        <!--<jackson.version>2.11.0</jackson.version>-->
+        <jackson.version>2.11.0</jackson.version>
         <jaxb-api.versioin>2.2.12</jaxb-api.versioin>
         <json.version>20170516</json.version>
         <jsonpath.version>2.4.0</jsonpath.version>
@@ -260,11 +259,6 @@
                 <groupId>commons-codec</groupId>
                 <artifactId>commons-codec</artifactId>
                 <version>${commons-codec.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>commons-beanutils</groupId>
-                <artifactId>commons-beanutils</artifactId>
-                <version>1.9.4</version>
             </dependency>
             
             <dependency>

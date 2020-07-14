@@ -1,5 +1,6 @@
 package com.loserico.json.jackson.deserializer;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -44,9 +45,9 @@ public class LocalDateDeserializer extends JSR310DateTimeDeserializerBase<LocalD
 		super(deserializer, leniency);
 	}
 	
-	/*protected LocalDateDeserializer(LocalDateDeserializer base, JsonFormat.Shape shape) {
+	protected LocalDateDeserializer(LocalDateDeserializer base, JsonFormat.Shape shape) {
 		super(base, shape);
-	}*/
+	}
 
 	@Override
 	protected JSR310DateTimeDeserializerBase<LocalDate> withDateFormat(DateTimeFormatter dtf) {
@@ -58,10 +59,10 @@ public class LocalDateDeserializer extends JSR310DateTimeDeserializerBase<LocalD
 		return new LocalDateDeserializer(this, leniency);
 	}
 	
-	/*@Override
+	@Override
 	protected JSR310DateTimeDeserializerBase<LocalDate> withShape(JsonFormat.Shape shape) {
 		return new LocalDateDeserializer(this, shape);
-	}*/
+	}
 	
 	
 	@Override

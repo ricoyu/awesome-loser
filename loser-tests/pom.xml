@@ -3,14 +3,14 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <artifactId>loser-tests</artifactId>
-    <name>loser-tests</name>
+    <name>Awesome Test cases</name>
     <description>各种测试用例</description>
 
     <parent>
         <groupId>com.loserico</groupId>
-        <artifactId>sexy-uncle</artifactId>
-        <relativePath>../sexy-uncle/pom.xml</relativePath>
-        <version>4.7.0</version>
+        <artifactId>awesome-loser</artifactId>
+        <relativePath>../pom.xml</relativePath>
+        <version>4.7.3</version>
     </parent>
 
     <dependencies>

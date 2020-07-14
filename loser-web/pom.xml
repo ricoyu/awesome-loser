@@ -9,9 +9,9 @@
 
     <parent>
         <groupId>com.loserico</groupId>
-        <artifactId>sexy-uncle</artifactId>
-        <relativePath>../sexy-uncle/pom.xml</relativePath>
-        <version>4.7.0</version>
+        <artifactId>awesome-loser</artifactId>
+        <relativePath>../pom.xml</relativePath>
+        <version>4.7.3</version>
     </parent>
 
     <dependencies>
