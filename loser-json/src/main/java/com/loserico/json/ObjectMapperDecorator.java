@@ -19,6 +19,7 @@ import com.loserico.json.jackson.deserializer.EnumDeserializer;
 import com.loserico.json.jackson.deserializer.LocalDateDeserializer;
 import com.loserico.json.jackson.deserializer.LocalDateTimeDeserializer;
 import com.loserico.json.jackson.serializer.LocalDateTimeSerializer;
+import com.loserico.json.jackson.serializer.XssStringJsonSerializer;
 import com.loserico.json.resource.PropertyReader;
 
 import java.text.SimpleDateFormat;
@@ -36,10 +37,10 @@ import static java.time.format.DateTimeFormatter.ofPattern;
 
 /**
  * ObjectMapper装饰器
- * 用法: 
+ * 用法:
  * ObjectMapperDecorator decorator = new ObjectMapperDecorator();
  * decorator.decorate(objectMapper);
- * 
+ *
  * <p>
  * Copyright: (C), 2020/4/30 10:44
  * <p>
@@ -73,7 +74,7 @@ public class ObjectMapperDecorator {
 		if (!enumProperties.isEmpty()) {
 			SimpleModule customModule = new SimpleModule();
 			customModule.setDeserializerModifier(new BeanDeserializerModifier() {
-				@SuppressWarnings({ "unchecked", "rawtypes" })
+				@SuppressWarnings({"unchecked", "rawtypes"})
 				@Override
 				public JsonDeserializer modifyEnumDeserializer(DeserializationConfig config,
 				                                               final JavaType type,
@@ -96,6 +97,13 @@ public class ObjectMapperDecorator {
 		 * POJO的有参构造函数需要标注@JsonCreator
 		 */
 		objectMapper.registerModule(new ParameterNamesModule(JsonCreator.Mode.PROPERTIES));
+		
+		//注册xss解析器
+		SimpleModule xssModule = new SimpleModule("XssStringJsonModule");
+		xssModule.addSerializer(String.class, new XssStringJsonSerializer());
+		//xssModule.addDeserializer(String.class, new XssStringJsonDeserializer());
+		objectMapper.registerModule(xssModule);
+		
 		return objectMapper;
 	}
 	
@@ -114,7 +122,7 @@ public class ObjectMapperDecorator {
 		
 		/*
 		 * 如果在Spring环境使用, 从Spring容器中拿到的objectMapper实例已经注册过javaTimeModule
-		 * 默认是不支持重复注册的, 即我们这里注册的会被忽略, 
+		 * 默认是不支持重复注册的, 即我们这里注册的会被忽略,
 		 * 所以需要禁用IGNORE_DUPLICATE_MODULE_REGISTRATIONS, 该选项默认是开启的
 		 */
 		objectMapper.disable(MapperFeature.IGNORE_DUPLICATE_MODULE_REGISTRATIONS);
@@ -164,9 +172,9 @@ public class ObjectMapperDecorator {
 	
 	private DateTimeFormatter epocMillisFormatter() {
 		return new DateTimeFormatterBuilder()
-					.appendValue(ChronoField.INSTANT_SECONDS, 1, 19, SignStyle.NEVER)
-					.appendValue(ChronoField.MILLI_OF_SECOND, 3)
-					.toFormatter().withZone(ZoneOffset.ofHours(8));
+				.appendValue(ChronoField.INSTANT_SECONDS, 1, 19, SignStyle.NEVER)
+				.appendValue(ChronoField.MILLI_OF_SECOND, 3)
+				.toFormatter().withZone(ZoneOffset.ofHours(8));
 	}
 	
 	

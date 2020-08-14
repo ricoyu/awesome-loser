@@ -506,6 +506,30 @@ public final class JedisUtils {
 	}
 	
 	/**
+	 * 递增1, 并且在首次递增的时候设置过期时间, key有效期内再次执行不会重新更新TTL, 直到key过期后调用则重新设置过期时间
+	 *
+	 * @param key
+	 * @return Long
+	 */
+	public static Long incr(String key, long expires, TimeUnit timeUnit) {
+		String sampleKey = "incrExpire.lua";
+		String setnxSha1 = shaHashs.computeIfAbsent(sampleKey, x -> {
+			log.debug("Load script {}", sampleKey);
+			if (jedisOperations instanceof JedisClusterOperations) {
+				return jedisOperations.scriptLoad(IOUtils.readClassPathFileAsString("/lua-scripts/incrExpire.lua"), key);
+			}
+			return jedisOperations.scriptLoad(IOUtils.readClassPathFileAsString("/lua-scripts/incrExpire.lua"));
+		});
+		
+		long expireInSeconds = timeUnit.toSeconds(expires);
+		long currentValue = (long) jedisOperations.evalsha(toBytes(setnxSha1),
+				1,
+				toBytes(key),
+				toBytes(expireInSeconds));
+		return currentValue;
+	}
+	
+	/**
 	 * 一次增加size长度
 	 *
 	 * @param key
@@ -1825,6 +1849,14 @@ public final class JedisUtils {
 		return (T) jedisOperations.evalsha(sha);
 	}
 	
+	public static <T> T evalsha(byte[] sha, int keyCount, byte[]... params) {
+		return (T) jedisOperations.evalsha(sha, keyCount, params);
+	}
+	
+	public static <T> T evalsha(String sha, int keyCount, Object... params) {
+		return (T) jedisOperations.evalsha(toBytes(sha), keyCount, toBytes(params));
+	}
+	
 	/**
 	 * 发布消息, 返回接收到消息的订阅者数量
 	 *
@@ -2015,6 +2047,19 @@ public final class JedisUtils {
 		
 		long result = (long) jedisOperations.evalsha(setnxSha1, 1, key, value);
 		return result == 1L;
+	}
+	
+	/**
+	 * lua脚本加载到Redis
+	 * @param luaPath
+	 * @return lua脚本加载到Redis之后得到的SHA1值
+	 */
+	public static String scriptLoad(String luaPath) {
+		log.debug("Load script {}", luaPath);
+		if (jedisOperations instanceof JedisClusterOperations) {
+			return jedisOperations.scriptLoad(IOUtils.readClassPathFileAsString(luaPath), luaPath);
+		}
+		return jedisOperations.scriptLoad(IOUtils.readClassPathFileAsString(luaPath));
 	}
 	
 	public static <R> R execute(Function<Jedis, R> func) {

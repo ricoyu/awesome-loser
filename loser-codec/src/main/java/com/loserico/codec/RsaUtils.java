@@ -1,5 +1,6 @@
 package com.loserico.codec;
 
+import com.loserico.codec.exception.PrivateDecryptException;
 import com.loserico.codec.exception.RsaPublicKeyException;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -7,6 +8,12 @@ import org.slf4j.LoggerFactory;
 
 import javax.crypto.Cipher;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -14,12 +21,18 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.text.MessageFormat;
 import java.util.Base64;
 import java.util.Objects;
+
+import static org.apache.commons.codec.binary.Base64.decodeBase64;
+import static org.apache.commons.codec.binary.Base64.encodeBase64String;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
  * RSA 非对称加密/加密工具
@@ -38,61 +51,155 @@ public final class RsaUtils {
 	
 	public static final String CHARSET = "UTF-8";
 	
-	//密钥算法
+	/**
+	 * 密钥算法
+	 */
 	public static final String ALGORITHM_RSA = "RSA";
 	
-	//RSA 签名算法
+	/**
+	 * RSA 签名算法
+	 */
 	public static final String ALGORITHM_RSA_SIGN = "SHA256WithRSA";
 	
+	/**
+	 * 密钥对长度
+	 */
 	public static final int KEY_LENGTH = 2048;
+	
+	/**
+	 * String to hold the name of the private key file.
+	 */
+	public static final String PRIVATE_KEY_FILE = System.getProperty("user.home") + "/private.key";
+	
+	/**
+	 * String to hold name of the public key file.
+	 */
+	public static final String PUBLIC_KEY_FILE = System.getProperty("user.home") + "/public.key";
+	
+	/**
+	 * 公钥
+	 */
+	private static RSAPublicKey publicKey = null;
+	
+	/**
+	 * 公钥串
+	 */
+	private static String publicKeyStr = null;
+	
+	/**
+	 * 私钥
+	 */
+	private static RSAPrivateKey privateKey = null;
 	
 	private RsaUtils() {
 	}
 	
+	
 	/**
-	 * 初始化RSA密钥对, 通过publicKey, privateKey从Map中获取公钥和私钥
+	 * 初始化RSA密钥对
 	 *
 	 * @param keysize RSA1024已经不安全了,建议2048
 	 * @return 经过Base64编码后的公私钥
 	 */
-	public static RsaKeyPair initRSAKey(int keysize) {
-		if (keysize < KEY_LENGTH) {
-			throw new IllegalArgumentException("RSA1024已经不安全了,请使用" + KEY_LENGTH + "初始化RSA密钥对");
-		}
-		//为RSA算法创建一个KeyPairGenerator对象
-		KeyPairGenerator kpg;
-		try {
-			kpg = KeyPairGenerator.getInstance(ALGORITHM_RSA);
-		} catch (NoSuchAlgorithmException e) {
-			throw new IllegalArgumentException("No such algorithm-->[" + ALGORITHM_RSA + "]");
-		}
-		//初始化KeyPairGenerator对象
-		kpg.initialize(KEY_LENGTH);
-		//生成密匙对
-		KeyPair keyPair = kpg.generateKeyPair();
-		//得到公钥
-		PublicKey publicKey = keyPair.getPublic();
-		String publicKeyStr = base64Encode(publicKey.getEncoded());
-		//得到私钥
-		PrivateKey privateKey = keyPair.getPrivate();
-		String privateKeyStr = base64Encode(privateKey.getEncoded());
+	static {
 		
-		return new RsaKeyPair(publicKeyStr, privateKeyStr);
+		/*
+		 * 磁盘上不存在密钥对则重新生成
+		 */
+		if (!keysPresent()) {
+			
+			try {
+				KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(ALGORITHM_RSA);
+				
+				//初始化KeyPairGenerator对象
+				keyPairGenerator.initialize(KEY_LENGTH);
+				//生成密匙对
+				KeyPair keyPair = keyPairGenerator.generateKeyPair();
+				//得到公钥
+				publicKey = (RSAPublicKey) keyPair.getPublic();
+				//得到私钥
+				privateKey = (RSAPrivateKey) keyPair.getPrivate();
+				
+				File privateKeyFile = new File(PRIVATE_KEY_FILE);
+				File publicKeyFile = new File(PUBLIC_KEY_FILE);
+				
+				if (publicKeyFile.getParentFile() != null) {
+					publicKeyFile.getParentFile().mkdirs();
+				}
+				publicKeyFile.createNewFile();
+				
+				if (privateKeyFile.getParentFile() != null) {
+					privateKeyFile.getParentFile().mkdirs();
+				}
+				privateKeyFile.createNewFile();
+				
+				ObjectOutputStream publicKeyOS = new ObjectOutputStream(new FileOutputStream(publicKeyFile));
+				publicKeyOS.writeObject(publicKey);
+				publicKeyOS.close();
+				
+				ObjectOutputStream privateKeyOS = new ObjectOutputStream(new FileOutputStream(privateKeyFile));
+				privateKeyOS.writeObject(privateKey);
+				privateKeyOS.close();
+				
+			} catch (Exception e) {
+				throw new RuntimeException("生成密钥对失败", e);
+			}
+		} else {
+			/*
+			 * 从磁盘上读取密钥对
+			 */
+			try {
+				ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(PUBLIC_KEY_FILE));
+				publicKey = (RSAPublicKey) objectInputStream.readObject();
+				
+				objectInputStream = new ObjectInputStream(new FileInputStream(PRIVATE_KEY_FILE));
+				privateKey = (RSAPrivateKey) objectInputStream.readObject();
+				objectInputStream.close();
+			} catch (IOException | ClassNotFoundException e) {
+				throw new RuntimeException("获取密钥对失败", e);
+			}
+		}
+		
+		//得到公钥串
+		publicKeyStr = base64Encode(publicKey.getEncoded());
+	}
+	
+	
+	/**
+	 * 公钥加密, 用的公钥是储存在系统磁盘上的
+	 * <p>
+	 * Copyright: Copyright (c) 2020-03-09 17:48
+	 * <p>
+	 * Company: Sexy Uncle Inc.
+	 * <p>
+	 *
+	 * @author Rico Yu  ricoyu520@gmail.com
+	 * @version 1.0
+	 */
+	public static String publicEncrypt(String data) {
+		try {
+			Cipher cipher = Cipher.getInstance(ALGORITHM_RSA);
+			cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+			return base64Encode(rsaSplitCodec(cipher, Cipher.ENCRYPT_MODE, data.getBytes(CHARSET)));
+		} catch (Exception e) {
+			throw new RuntimeException("加密字符串[" + data + "]时遇到异常", e);
+		}
 	}
 	
 	/**
 	 * RSA算法公钥加密数据
 	 *
-	 * @param data      待加密的明文字符串
-	 * @param publicKey RSA公钥字符串
-	 * @return RSA公钥加密后的经过Base64编码的密文字符串
+	 * @param data         公钥加密后的加密串
+	 * @param publicKeyStr Base64编码的RSA公钥字符串
+	 * @return 公钥解密后的原始串
 	 */
-	public static String publicEncrypt(String data, String publicKey) {
+	public static String publicEncrypt(String data, String publicKeyStr) {
 		try {
 			//通过X509编码的Key指令获得公钥对象
-			X509EncodedKeySpec x509KeySpec = new X509EncodedKeySpec(base64Decode(publicKey));
+			X509EncodedKeySpec x509KeySpec = new X509EncodedKeySpec(base64Decode(publicKeyStr));
 			KeyFactory keyFactory = KeyFactory.getInstance(ALGORITHM_RSA);
 			PublicKey key = keyFactory.generatePublic(x509KeySpec);
+			// 对数据加密
 			Cipher cipher = Cipher.getInstance(keyFactory.getAlgorithm());
 			cipher.init(Cipher.ENCRYPT_MODE, key);
 			return base64Encode(rsaSplitCodec(cipher, Cipher.ENCRYPT_MODE, data.getBytes(CHARSET)));
@@ -104,11 +211,33 @@ public final class RsaUtils {
 	/**
 	 * RSA算法公钥解密数据
 	 *
+	 * @param data
+	 * @return String
+	 */
+	public static String publicDecrypt(String data) {
+		if (isBlank(data)) {
+			return data;
+		}
+		try {
+			Cipher cipher = Cipher.getInstance(ALGORITHM_RSA);
+			cipher.init(Cipher.DECRYPT_MODE, publicKey);
+			return new String(rsaSplitCodec(cipher, Cipher.DECRYPT_MODE, base64Decode(data)), CHARSET);
+		} catch (Exception e) {
+			throw new RuntimeException("解密字符串[" + data + "]时遇到异常", e);
+		}
+	}
+	
+	/**
+	 * RSA算法公钥解密数据
+	 *
 	 * @param data      待解密的经过Base64编码的密文字符串
 	 * @param publicKey RSA公钥字符串
 	 * @return RSA公钥解密后的明文字符串
 	 */
 	public static String publicDecrypt(String data, String publicKey) {
+		if (isBlank(data)) {
+			return data;
+		}
 		try {
 			//通过X509编码的Key指令获得公钥对象
 			X509EncodedKeySpec x509KeySpec = new X509EncodedKeySpec(base64Decode(publicKey));
@@ -125,14 +254,14 @@ public final class RsaUtils {
 	/**
 	 * RSA算法私钥加密数据
 	 *
-	 * @param data 待加密的明文字符串
-	 * @param key  RSA私钥字符串
+	 * @param data          待加密的明文字符串
+	 * @param privateKeyStr RSA私钥字符串
 	 * @return RSA私钥加密后的经过Base64编码的密文字符串
 	 */
-	public static String privateEncrypt(String data, String key) {
+	public static String privateEncrypt(String data, String privateKeyStr) {
 		try {
 			//通过PKCS#8编码的Key指令获得私钥对象
-			PKCS8EncodedKeySpec pkcs8KeySpec = new PKCS8EncodedKeySpec(Base64.getDecoder().decode(key));
+			PKCS8EncodedKeySpec pkcs8KeySpec = new PKCS8EncodedKeySpec(Base64.getDecoder().decode(privateKeyStr));
 			KeyFactory keyFactory = KeyFactory.getInstance(ALGORITHM_RSA);
 			PrivateKey privateKey = keyFactory.generatePrivate(pkcs8KeySpec);
 			Cipher cipher = Cipher.getInstance(keyFactory.getAlgorithm());
@@ -146,14 +275,52 @@ public final class RsaUtils {
 	/**
 	 * RSA算法私钥解密数据
 	 *
+	 * @param data
+	 * @return String
+	 */
+	public String privateEncrypt(String data) {
+		try {
+			Cipher cipher = Cipher.getInstance(ALGORITHM_RSA);
+			cipher.init(Cipher.ENCRYPT_MODE, privateKey);
+			return base64Encode(rsaSplitCodec(cipher, Cipher.ENCRYPT_MODE, data.getBytes(CHARSET)));
+		} catch (Exception e) {
+			throw new RuntimeException("加密字符串[" + data + "]时遇到异常", e);
+		}
+	}
+	
+	/**
+	 * RSA算法私钥解密数据
+	 *
 	 * @param data 待解密的经过Base64编码的密文字符串
-	 * @param key  RSA私钥字符串
 	 * @return RSA私钥解密后的明文字符串
 	 */
-	public static String privateDecrypt(String data, String key) {
+	public static String privateDecrypt(String data) {
+		if (isBlank(data)) {
+			return data;
+		}
+		try {
+			Cipher cipher = Cipher.getInstance(ALGORITHM_RSA);
+			cipher.init(Cipher.DECRYPT_MODE, privateKey);
+			return new String(rsaSplitCodec(cipher, Cipher.DECRYPT_MODE, base64Decode(data)), CHARSET);
+		} catch (Exception e) {
+			throw new PrivateDecryptException("解密字符串[" + data + "]时遇到异常", e);
+		}
+	}
+	
+	/**
+	 * RSA算法私钥解密数据
+	 *
+	 * @param data          待解密的经过Base64编码的密文字符串
+	 * @param privateKeyStr RSA私钥字符串
+	 * @return RSA私钥解密后的明文字符串
+	 */
+	public static String privateDecrypt(String data, String privateKeyStr) {
+		if (isBlank(data)) {
+			return data;
+		}
 		try {
 			//通过PKCS#8编码的Key指令获得私钥对象
-			PKCS8EncodedKeySpec pkcs8KeySpec = new PKCS8EncodedKeySpec(base64Decode(key));
+			PKCS8EncodedKeySpec pkcs8KeySpec = new PKCS8EncodedKeySpec(base64Decode(privateKeyStr));
 			KeyFactory keyFactory = KeyFactory.getInstance(ALGORITHM_RSA);
 			PrivateKey privateKey = keyFactory.generatePrivate(pkcs8KeySpec);
 			Cipher cipher = Cipher.getInstance(keyFactory.getAlgorithm());
@@ -164,18 +331,37 @@ public final class RsaUtils {
 		}
 	}
 	
+	
 	/**
 	 * RSA算法使用私钥对数据生成数字签名
 	 *
-	 * @param data       待签名的明文字符串
-	 * @param privateKey RSA私钥字符串
+	 * @param data 待签名的明文字符串
 	 * @return RSA私钥签名后的经过Base64编码的字符串
 	 */
-	public static String sign(String data, String privateKey) {
+	public static String sign(String data) {
+		try {
+			//sign
+			Signature signature = Signature.getInstance(ALGORITHM_RSA_SIGN);
+			signature.initSign(privateKey);
+			signature.update(data.getBytes(CHARSET));
+			return encodeBase64String(signature.sign());
+		} catch (Exception e) {
+			throw new RuntimeException("签名字符串[" + data + "]时遇到异常", e);
+		}
+	}
+	
+	/**
+	 * RSA算法使用私钥对数据生成数字签名
+	 *
+	 * @param data          待签名的明文字符串
+	 * @param privateKeyStr RSA私钥字符串
+	 * @return RSA私钥签名后的经过Base64编码的字符串
+	 */
+	public static String sign(String data, String privateKeyStr) {
 		Objects.requireNonNull(data, "data不能为null");
 		try {
 			//通过PKCS#8编码的Key指令获得私钥对象
-			PKCS8EncodedKeySpec pkcs8KeySpec = new PKCS8EncodedKeySpec(base64Decode(privateKey));
+			PKCS8EncodedKeySpec pkcs8KeySpec = new PKCS8EncodedKeySpec(base64Decode(privateKeyStr));
 			KeyFactory keyFactory = KeyFactory.getInstance(ALGORITHM_RSA);
 			PrivateKey key = keyFactory.generatePrivate(pkcs8KeySpec);
 			Signature signature = Signature.getInstance(ALGORITHM_RSA_SIGN);
@@ -190,15 +376,33 @@ public final class RsaUtils {
 	/**
 	 * RSA算法使用公钥校验数字签名
 	 *
-	 * @param data      参与签名的明文字符串
-	 * @param publicKey RSA公钥字符串
-	 * @param sign      RSA签名得到的经过Base64编码的字符串
+	 * @param data 参与签名的明文字符串
+	 * @param sign RSA签名得到的经过Base64编码的字符串
 	 * @return true--验签通过,false--验签未通过
 	 */
-	public static boolean verify(String data, String publicKey, String sign) {
+	public boolean verify(String data, String sign) {
+		try {
+			Signature signature = Signature.getInstance(ALGORITHM_RSA_SIGN);
+			signature.initVerify(publicKey);
+			signature.update(data.getBytes(CHARSET));
+			return signature.verify(decodeBase64(sign));
+		} catch (Exception e) {
+			throw new RuntimeException("验签字符串[" + data + "]时遇到异常", e);
+		}
+	}
+	
+	/**
+	 * RSA算法使用公钥校验数字签名
+	 *
+	 * @param data         参与签名的明文字符串
+	 * @param publicKeyStr RSA公钥字符串
+	 * @param sign         RSA签名得到的经过Base64编码的字符串
+	 * @return true--验签通过,false--验签未通过
+	 */
+	public static boolean verify(String data, String sign, String publicKeyStr) {
 		try {
 			//通过X509编码的Key指令获得公钥对象
-			X509EncodedKeySpec x509KeySpec = new X509EncodedKeySpec(base64Decode(publicKey));
+			X509EncodedKeySpec x509KeySpec = new X509EncodedKeySpec(base64Decode(publicKeyStr));
 			KeyFactory keyFactory = KeyFactory.getInstance(ALGORITHM_RSA);
 			PublicKey key = keyFactory.generatePublic(x509KeySpec);
 			Signature signature = Signature.getInstance(ALGORITHM_RSA_SIGN);
@@ -213,12 +417,13 @@ public final class RsaUtils {
 	/**
 	 * 根据公钥字符串获取公钥对象
 	 * 完整的公钥是类似这样的
-	 * 
+	 * <p>
 	 * -----BEGIN PUBLIC KEY-----
 	 * MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtgaTD/42sQ5WZXKBTPUHkv0kib5UJrkoEaLZa/3lcFolse5rKIu8JEbf6YjJP6UOdOc21+r9vJZSaKNOgm5XqaD41o8Zs2eiGa2QX0y5LLfOHm9RIRakm9WR7drYI43XNnEE0XQL0QgoIh6Z9IruPbqpuXa38+FlBobHl5dc5TZK35u+HkYf67v/a4QP1W7S8y2S4xt8vzFa1GvR5eZGL3jp+Mmk5BYtpLT6e94XNh1IAMjGor7jox7fmI4oJ+xr75kmJSS2RvL9yI5QbklPaWfiWQ/sHDZPzuW83RcST9x6tg8GKGW6mGrcKh5We/L9T4slA1ky2QRI9ATS1haD5QIDAQAB
 	 * -----END PUBLIC KEY-----
-	 * 
+	 * <p>
 	 * publicKey是中间部分的字符串, 不包含头尾的BEGIN/END PUBLIC KEY
+	 *
 	 * @param publicKey
 	 * @return PublicKey
 	 */
@@ -239,8 +444,9 @@ public final class RsaUtils {
 	 * -----BEGIN PUBLIC KEY-----
 	 * MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtgaTD/42sQ5WZXKBTPUHkv0kib5UJrkoEaLZa/3l....
 	 * -----END PUBLIC KEY-----
-	 * 
+	 * <p>
 	 * 这个方法的作用是去掉头尾, 取中间部分
+	 *
 	 * @param publicKey
 	 * @return String
 	 */
@@ -290,36 +496,6 @@ public final class RsaUtils {
 		return resultDatas;
 	}
 	
-	/**
-	 * 存储生成的RSA公钥/私钥对
-	 * <p>
-	 * Copyright: Copyright (c) 2020-03-04 16:29
-	 * <p>
-	 * Company: Sexy Uncle Inc.
-	 * <p>
-	 *
-	 * @author Rico Yu  ricoyu520@gmail.com
-	 * @version 1.0
-	 */
-	public static class RsaKeyPair {
-		private final String publicKey;
-		private final String privateKey;
-		
-		public RsaKeyPair(String publicKey, String privateKey) {
-			this.publicKey = publicKey;
-			this.privateKey = privateKey;
-		}
-		
-		public String publicKey() {
-			return publicKey;
-		}
-		
-		public String privateKey() {
-			return privateKey;
-		}
-		
-	}
-	
 	private static String base64Encode(byte[] data) {
 		return Base64.getEncoder().encodeToString(data);
 	}
@@ -328,32 +504,22 @@ public final class RsaUtils {
 		return Base64.getDecoder().decode(encoded);
 	}
 	
-	public static void main(String[] args) {
-		/*long begin = System.currentTimeMillis();
-		RsaKeyPair rsaKeyPair = initRSAKey(2048);
-		System.out.println("公钥:" + rsaKeyPair.publicKey());
-		System.out.println("私钥:" + rsaKeyPair.privateKey);
-		String sign = sign("ABCabc123测试", rsaKeyPair.privateKey());
-		System.out.println("签名:" + sign);
-		System.out.println("校验:" + verify("ABCabc123测试", rsaKeyPair.publicKey(), sign));
+	/**
+	 * 检查公钥/私钥是否都已生成
+	 *
+	 * @return boolean
+	 */
+	private static boolean keysPresent() {
+		File privateKey = new File(PRIVATE_KEY_FILE);
+		File publicKey = new File(PUBLIC_KEY_FILE);
 		
-		String encrypted = publicEncrypt("三少爷是很牛逼的", rsaKeyPair.publicKey());
-		System.out.println("密文:" + encrypted);
-		String decrypted = privateDecrypt(encrypted, rsaKeyPair.privateKey());
-		System.out.println("明文:" + decrypted);
-		
-		encrypted = privateEncrypt("仔仔是个讨厌鬼", rsaKeyPair.privateKey());
-		System.out.println("密文:" + encrypted);
-		decrypted = publicDecrypt(encrypted, rsaKeyPair.publicKey());
-		System.out.println("明文:" + decrypted);
-		long end = System.currentTimeMillis();
-		System.out.println("花费时间:" + (end - begin)+"毫秒");*/
-		
-		String publicKey =
-				"MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA49/8JF52dNBDAeiCZHvDjK/rSHj4Ac2Le7OikFMUwtDgN22eClYGvXhbp/segPhKJ8JWKrWc9d1lX7X/RyrlVobAwY8rcPqA0fI55qzn6Y8H4/zrPiOxwrwHfVG6K46v7NVcxreHnpKoHlE2rRBwcMmoPJFk0An6q/Tl6sZLMdcWWDFKRLMOnsfasOmBn22Or1mJZRHcT/yIDy5n6KSXc8eFMfXskO7NL9eJYdLEfv5TGP1lmGkP50s2YfC6c9KgVlb8Zay1TaX6Z+H8L9U8vhirCFFgP+J2E/BzQRq9AtLvIRE+k2MCFjkc5ZOONwseQSdKj0bPX9OTKb9lanDw5QIDAQAB";
-		String encrypted = publicEncrypt("太极者, 无极而生. 动静之机, 阴阳之母也.", publicKey);
-		System.out.println(encrypted);
+		return privateKey.exists() && publicKey.exists();
 	}
+	
+	public static String getPublicKeyStr() {
+		return publicKeyStr;
+	}
+	
 }
 
 

@@ -1,6 +1,11 @@
 package com.loserico.json;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.loserico.common.lang.utils.IOUtils;
 import com.loserico.json.jackson.JacksonUtils;
+import com.loserico.json.jackson.deserializer.MongoObjectIdDeserializer;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -62,6 +67,63 @@ public class JacksonUtilsTest {
 		Map<String, Object> resultMap = JacksonUtils.pojoToMap(person);
 		System.out.println(resultMap);
 		Assert.assertEquals("2020-03-20", resultMap.get("birthday"));
+	}
+	
+	@Test
+	public void testMongoDocumentJson() {
+		String json = IOUtils.readClassPathFileAsString("mongodbDocumentJson.json");
+		UserInfo userInfo = JacksonUtils.toObject(json, UserInfo.class);
+		System.out.println(userInfo.getId());
+	}
+	
+	@Data
+	public static class UserInfo {
+		
+		@JsonProperty("_id")
+		@JsonDeserialize(using = MongoObjectIdDeserializer.class)
+		private String id;
+		/**
+		 * 用户名
+		 */
+		private String username;
+		/**
+		 * 权限，角色
+		 */
+		private String role;
+		/**
+		 * 用户密码
+		 */
+		private String password;
+		
+		/**
+		 * 昵称
+		 */
+		private String nickname;
+		/**
+		 * 邮箱
+		 */
+		private String email;
+		
+		/**
+		 * 锁定状态
+		 */
+		private boolean lock;
+		
+		/**
+		 * 机构ID
+		 */
+		@JsonProperty("organ_id")
+		private String organId;
+		
+		/**
+		 * 机构ID
+		 */
+		private Boolean auth;
+		/**
+		 * 机构
+		 */
+		@JsonIgnore
+		private String organ;
 	}
 	
 	@Data

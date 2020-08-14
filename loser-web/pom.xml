@@ -11,7 +11,7 @@
         <groupId>com.loserico</groupId>
         <artifactId>awesome-loser</artifactId>
         <relativePath>../pom.xml</relativePath>
-        <version>4.7.3</version>
+        <version>4.7.4</version>
     </parent>
 
     <dependencies>
@@ -23,6 +23,11 @@
         <dependency>
             <groupId>com.loserico</groupId>
             <artifactId>loser-validation</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.loserico</groupId>
+            <artifactId>loser-json</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

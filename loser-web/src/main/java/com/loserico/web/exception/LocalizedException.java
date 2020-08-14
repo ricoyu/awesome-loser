@@ -1,6 +1,7 @@
 package com.loserico.web.exception;
 
 import com.loserico.common.lang.utils.CollectionUtils;
+import com.loserico.common.lang.vo.ErrorType;
 import com.loserico.web.utils.MessageHelper;
 
 import java.util.ArrayList;
@@ -23,38 +24,44 @@ public class LocalizedException extends RuntimeException {
 
 	private static final long serialVersionUID = -6377039158210405281L;
 
-	private int statusCode = 500;
+	private String statusCode = "500";
 
 	private String messageTemplate;
 
 	private List<Object> messageParams = new ArrayList<>();
 
 	private String defaultMessage;
-
-	public LocalizedException(int statusCode, String messageTemplate) {
+	
+	public LocalizedException(ErrorType errorType) {
+		this.statusCode = errorType.getCode();
+		this.messageTemplate = errorType.getMsgTemplate();
+		this.defaultMessage = errorType.getMsg();
+	}
+	
+	public LocalizedException(String statusCode, String messageTemplate) {
 		this.statusCode = statusCode;
 		this.messageTemplate = messageTemplate;
 	}
 
-	public LocalizedException(int statusCode, String messageTemplate, String defaultMesssage) {
+	public LocalizedException(String statusCode, String messageTemplate, String defaultMesssage) {
 		this.statusCode = statusCode;
 		this.messageTemplate = messageTemplate;
 		this.defaultMessage = defaultMesssage;
 	}
 	
 	public LocalizedException(String[] datas) {
-		this.statusCode = Integer.parseInt(datas[0]);
+		this.statusCode = datas[0];
 		this.messageTemplate = datas[1];
 		this.defaultMessage = datas[2];
 	}
 
-	public LocalizedException(int statusCode, String messageTemplate, List<Object> messageParams) {
+	public LocalizedException(String statusCode, String messageTemplate, List<Object> messageParams) {
 		this.statusCode = statusCode;
 		this.messageTemplate = messageTemplate;
 		this.messageParams = messageParams;
 	}
 	
-	public LocalizedException(int statusCode, String messageTemplate, List<Object> messageParams,
+	public LocalizedException(String statusCode, String messageTemplate, List<Object> messageParams,
 			String defaultMesssage) {
 		this.statusCode = statusCode;
 		this.messageTemplate = messageTemplate;
@@ -62,14 +69,14 @@ public class LocalizedException extends RuntimeException {
 		this.messageParams = messageParams;
 	}
 
-	public LocalizedException(int statusCode, String messageTemplate, String defaultMesssage, Throwable cause) {
+	public LocalizedException(String statusCode, String messageTemplate, String defaultMesssage, Throwable cause) {
 		super(cause);
 		this.statusCode = statusCode;
 		this.messageTemplate = messageTemplate;
 		this.defaultMessage = defaultMesssage;
 	}
 
-	public LocalizedException(int statusCode, String messageTemplate, List<Object> messageParams,
+	public LocalizedException(String statusCode, String messageTemplate, List<Object> messageParams,
 			String defaultMesssage, Throwable cause) {
 		super(cause);
 		this.statusCode = statusCode;
@@ -78,11 +85,11 @@ public class LocalizedException extends RuntimeException {
 		this.messageParams = messageParams;
 	}
 
-	public int getStatusCode() {
+	public String getStatusCode() {
 		return statusCode;
 	}
 
-	public void setStatusCode(int statusCode) {
+	public void setStatusCode(String statusCode) {
 		this.statusCode = statusCode;
 	}
 

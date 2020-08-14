@@ -26,4 +26,12 @@ public interface ErrorType {
      * @return
      */
     String getMsg();
+    
+    /**
+     * 消息国际化模板
+     * @return
+     */
+    default String getMsgTemplate() {
+        return null;
+    };
 }

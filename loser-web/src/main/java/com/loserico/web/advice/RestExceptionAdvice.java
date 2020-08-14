@@ -202,7 +202,7 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> handleLocalizedException(LocalizedException e) {
 		logger.error("", e);
-		Result result = Results.status(e.getStatusCode() + "", e.getLocalizedMessage()).build();
+		Result result = Results.status(e.getStatusCode(), e.getLocalizedMessage()).build();
 		return new ResponseEntity(result, HttpStatus.OK);
 	}
 	

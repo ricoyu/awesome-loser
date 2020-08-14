@@ -26,5 +26,6 @@ public class HexaConvertTest {
 	@Test
 	public void testDecimal2HexString() {
 		System.out.println("身高:" + Integer.toHexString(175).toUpperCase());
+		System.out.println(Integer.toHexString(384).toLowerCase());
 	}
 }

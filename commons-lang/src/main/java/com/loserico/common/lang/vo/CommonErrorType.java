@@ -11,7 +11,7 @@ package com.loserico.common.lang.vo;
  * @author Rico Yu  ricoyu520@gmail.com
  * @version 1.0
  */
-public enum CommmonErrorType implements ErrorType {
+public enum CommonErrorType implements ErrorType {
 
     INTERNAL_SERVER_ERROR("000001","服务器内部错误");
 
@@ -24,7 +24,7 @@ public enum CommmonErrorType implements ErrorType {
      */
     private String msg;
 
-    CommmonErrorType(String status, String msg) {
+    CommonErrorType(String status, String msg) {
         this.status = status;
         this.msg = msg;
     }

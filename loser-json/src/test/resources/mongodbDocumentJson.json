@@ -1,0 +1,13 @@
+{
+  "_id": {
+    "$oid": "5f17d8c023b6431762b34663"
+  },
+  "auth": true,
+  "nickname": "admin",
+  "organ_id": "all",
+  "password": "8a3e4699c3ea43011b65bdc2e8dbeab5888cf63718a89e881b0bfdd34b0969bb",
+  "username": "admin",
+  "email": "",
+  "role": "admin",
+  "lock": false
+}

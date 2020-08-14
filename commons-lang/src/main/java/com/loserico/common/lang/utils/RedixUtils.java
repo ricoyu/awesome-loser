@@ -2,6 +2,8 @@ package com.loserico.common.lang.utils;
 
 import java.math.BigInteger;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 /**
  * 各种进制之间转换工具
  * <p>
@@ -17,6 +19,7 @@ public class RedixUtils {
 
 	private static final char[] HEX_CODE = "0123456789abcdef".toCharArray();
 	private static final String HEX_STR = "0123456789ABCDEF";
+	private static final String HEX_PREFIX = "0x";
 
 	/**
 	 * byte[]转16进制字符串
@@ -64,6 +67,35 @@ public class RedixUtils {
 	 */
 	public static String intToBinary(int i) {
 		return Integer.toBinaryString(i);
+	}
+	
+	/**
+	 * int型转16进制, 不带0x前缀
+	 * @param i
+	 * @return String
+	 */
+	public static String int2Hex(Integer i) {
+		if (i == null) {
+			return null;
+		}
+		
+		return Integer.toHexString(i);
+	}
+	
+	/**
+	 * 16进制字符串转整型
+	 * @param hex
+	 * @return Integer
+	 */
+	public static Integer hex2Int(String hex) {
+		if (isBlank(hex)) {
+			return null;
+		}
+		
+		if (hex.startsWith(HEX_PREFIX)) {
+			hex = hex.substring(2);
+		}
+		return Integer.parseInt(hex, 16);
 	}
 	
 	/**

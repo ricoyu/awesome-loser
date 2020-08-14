@@ -10,7 +10,7 @@
         <groupId>com.loserico</groupId>
         <artifactId>awesome-loser</artifactId>
         <relativePath>../pom.xml</relativePath>
-        <version>4.7.3</version>
+        <version>4.7.4</version>
     </parent>
 
     <dependencies>
@@ -275,6 +275,13 @@
             <groupId>io.netty</groupId>
             <artifactId>netty-transport-native-epoll</artifactId>
             <version>4.1.48.Final</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>1.2.70</version>
             <scope>test</scope>
         </dependency>
         <!-- =================== Redisson 依赖 =================== -->

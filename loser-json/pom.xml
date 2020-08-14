@@ -11,7 +11,7 @@
         <groupId>com.loserico</groupId>
         <artifactId>awesome-loser</artifactId>
         <relativePath>../pom.xml</relativePath>
-        <version>4.7.3</version>
+        <version>4.7.4</version>
     </parent>
 
     <dependencies>
@@ -98,6 +98,13 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-all</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jongo</groupId>
+            <artifactId>jongo</artifactId>
+            <version>1.4.1</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

@@ -270,6 +270,14 @@ public final class ServletUtils {
 		return sb.toString().replaceAll("\r|\n|\t", "");
 	}
 	
+	/**
+	 * HttpServletRequest.getRemoteAddr();
+	 * @return String
+	 */
+	public static String remoteAddr() {
+		return request().getRemoteAddr();
+	}
+	
 	public static String getIpAddress(HttpServletRequest request) {
 		String ip = request.getHeader("x-forwarded-for");
 		if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
@@ -287,7 +295,7 @@ public final class ServletUtils {
 		if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
 			ip = request.getRemoteAddr();
 		}
-		// 如果是多级代理，那么取第一个ip为客户端ip
+		// 如果是多级代理, 那么取第一个ip为客户端ip
 		if (ip != null && ip.indexOf(",") != -1) {
 			ip = ip.substring(0, ip.indexOf(",")).trim();
 		}

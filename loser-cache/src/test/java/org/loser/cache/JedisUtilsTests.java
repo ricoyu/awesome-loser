@@ -1,8 +1,11 @@
 package org.loser.cache;
 
 import com.loserico.cache.JedisUtils;
+import lombok.SneakyThrows;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * <p>
@@ -33,7 +36,28 @@ public class JedisUtilsTests {
 	}
 	
 	@Test
+	public void testSetWithExpire() {
+		Boolean success = JedisUtils.set("k1", "v1", 1, TimeUnit.MINUTES);
+		System.out.println(success);
+	}
+	
+	@Test
+	public void testSetNX() {
+		Boolean success = JedisUtils.setnx("k2", "v2", 1, TimeUnit.MINUTES);
+		System.out.println(success);
+	}
+	
+	@Test
 	public void testSubscribe() {
+	}
+	
+	@SneakyThrows
+	@Test
+	public void testIncrWithExpire() {
+		Long value = JedisUtils.incr("retryCount", 1, TimeUnit.MINUTES);
+		System.out.println(value);
+		TimeUnit.SECONDS.sleep(20);
+		System.out.println(JedisUtils.incr("retryCount", 1, TimeUnit.MINUTES));
 	}
 	
 }
