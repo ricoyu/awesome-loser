@@ -16,6 +16,12 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.loserico</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        
+        <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-webmvc</artifactId>
         </dependency>

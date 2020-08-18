@@ -1,5 +1,6 @@
 package com.loserico.web.advice;
 
+import com.loserico.common.lang.exception.ApplicationException;
 import com.loserico.common.lang.exception.BusinessException;
 import com.loserico.common.lang.exception.ValidationException;
 import com.loserico.common.lang.utils.ReflectionUtils;
@@ -12,7 +13,6 @@ import com.loserico.validation.utils.ValidationUtils;
 import com.loserico.web.exception.LocalizedException;
 import com.loserico.web.utils.MessageHelper;
 import lombok.extern.slf4j.Slf4j;
-import org.omg.CORBA.portable.ApplicationException;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -72,13 +72,9 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 		logger.error("Rest API ERROR happen", ex);
 		headers.add("Content-Type", "application/json");
 		ErrorMessage errorMessage = ValidationUtils.getErrorMessage(ex.getBindingResult());
-		List<String> msgs = errorMessage.getErrors()
-				.stream()
-				.map(errArray -> errArray[1])
-				.collect(toList());
 		
-		Results.Builder builder = Results.status("400", msgs);
-		return new ResponseEntity(builder.build(), headers, HttpStatus.OK);
+		Result result = Results.status("400", errorMessage.getErrors()).build();
+		return new ResponseEntity(result, headers, HttpStatus.OK);
 	}
 	
 	/**
@@ -97,10 +93,7 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 			BindException bindException = (BindException) cause;
 			BindingResult bindingResult = bindException.getBindingResult();
 			ErrorMessage errorMessage = ValidationUtils.getErrorMessage(bindingResult);
-			List<String> msgs = errorMessage.getErrors()
-					.stream()
-					.map(errArray -> errArray[1])
-					.collect(toList());
+			List<String[]> msgs = errorMessage.getErrors();
 			
 			Result result = null;
 			boolean rowNumExists = ReflectionUtils.existsField(bindingResult, ROW_NUM);
@@ -135,14 +128,14 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	                                                              HttpHeaders headers, HttpStatus status, WebRequest request) {
 		logger.error("Rest API ERROR happen", ex);
 		ErrorMessage errorMessage = ValidationUtils.getErrorMessage(ex.getBindingResult());
-		List<String> msgs = errorMessage.getErrors()
+		List<String[]> msgs = errorMessage.getErrors()
 				.stream()
 				.map((errArray) -> {
 					Matcher matcher = messageTemplatePattern.matcher(errArray[1]);
 					if (matcher.matches()) {
-						return MessageHelper.getMessage(matcher.group(1));
+						errArray[1] = MessageHelper.getMessage(matcher.group(1));
 					}
-					return errArray[1];
+					return errArray;
 				})
 				.collect(toList());
 		Result result = Results.status("400", msgs).build();
@@ -161,14 +154,14 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	protected ResponseEntity<Object> handleMethodArgumentNotValid(GeneralValidationException e) {
 		logger.error("Rest API ERROR happen", e);
 		ErrorMessage errorMessage = e.getErrorMessage();
-		List<String> msgs = errorMessage.getErrors()
+		List<String[]> msgs = errorMessage.getErrors()
 				.stream()
 				.map((errArray) -> {
 					Matcher matcher = messageTemplatePattern.matcher(errArray[1]);
 					if (matcher.matches()) {
-						return MessageHelper.getMessage(matcher.group(1));
+						errArray[1] = MessageHelper.getMessage(matcher.group(1));
 					}
-					return errArray[1];
+					return errArray;
 				})
 				.collect(toList());
 		Result result = Results.status("400", msgs).build();
@@ -211,7 +204,7 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	@ResponseBody
 	public Result handleApplicationException(ApplicationException e) {
 		logger.error("Rest API ERROR happen", e);
-		return Results.status("500", "Internal Server Error").build();
+		return Results.status(e.getCode(), e.getMessage()).build();
 	}
 	
 	@ExceptionHandler(Throwable.class)

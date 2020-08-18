@@ -5,6 +5,17 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 
+/**
+ * REST通用输出结果封装
+ * <p>
+ * Copyright: Copyright (c) 2020-08-17 16:54
+ * <p>
+ * Company: Sexy Uncle Inc.
+ * <p>
+ 
+ * @author Rico Yu  ricoyu520@gmail.com
+ * @version 1.0
+ */
 @Data
 @Slf4j
 public class Result {

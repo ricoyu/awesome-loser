@@ -6,6 +6,17 @@ import javax.validation.ConstraintDeclarationException;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
+/**
+ * 验证只接受给定的值
+ * <p>
+ * Copyright: Copyright (c) 2020-08-18 10:21
+ * <p>
+ * Company: Sexy Uncle Inc.
+ * <p>
+ 
+ * @author Rico Yu  ricoyu520@gmail.com
+ * @version 1.0
+ */
 public class AllowedValueValidator implements ConstraintValidator<AllowedValues, String> {
 	private String[] candidateValues = null;
 	private String[] exceptValues = null;

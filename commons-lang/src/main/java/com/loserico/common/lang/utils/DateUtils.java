@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeParseException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
@@ -19,59 +20,7 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.loserico.common.lang.constants.DateConstants.DTF_DATETIME_FORMAT_EN;
-import static com.loserico.common.lang.constants.DateConstants.DTF_DATETIME_FORMAT_EN_1;
-import static com.loserico.common.lang.constants.DateConstants.DTF_DATETIME_FORMAT_EN_2;
-import static com.loserico.common.lang.constants.DateConstants.DTF_DATETIME_FORMAT_EN_3;
-import static com.loserico.common.lang.constants.DateConstants.DTF_DATETIME_FORMAT_EN_4;
-import static com.loserico.common.lang.constants.DateConstants.DTF_DATETIME_FORMAT_EN_5;
-import static com.loserico.common.lang.constants.DateConstants.DTF_DATETIME_FORMAT_EN_6;
-import static com.loserico.common.lang.constants.DateConstants.DTF_DATETIME_FORMAT_EN_7;
-import static com.loserico.common.lang.constants.DateConstants.DTF_DATETIME_FORMAT_EN_8;
-import static com.loserico.common.lang.constants.DateConstants.DTF_DATETIME_FORMAT_EN_9;
-import static com.loserico.common.lang.constants.DateConstants.DTF_ISO_DATE;
-import static com.loserico.common.lang.constants.DateConstants.DTF_ISO_DATETIME;
-import static com.loserico.common.lang.constants.DateConstants.DTF_ISO_DATETIME_1;
-import static com.loserico.common.lang.constants.DateConstants.DTF_ISO_DATETIME_2;
-import static com.loserico.common.lang.constants.DateConstants.DTF_ISO_DATETIME_3;
-import static com.loserico.common.lang.constants.DateConstants.DTF_ISO_DATETIME_4;
-import static com.loserico.common.lang.constants.DateConstants.DTF_ISO_DATETIME_5;
-import static com.loserico.common.lang.constants.DateConstants.DTF_ISO_DATETIME_SHORT;
-import static com.loserico.common.lang.constants.DateConstants.DTF_ISO_DATETIME_SHORT_1;
-import static com.loserico.common.lang.constants.DateConstants.DTF_ISO_DATETIME_SHORT_2;
-import static com.loserico.common.lang.constants.DateConstants.DTF_ISO_DATETIME_SHORT_3;
-import static com.loserico.common.lang.constants.DateConstants.DTF_ISO_DATETIME_SHORT_4;
-import static com.loserico.common.lang.constants.DateConstants.DTF_ISO_DATETIME_SHORT_5;
-import static com.loserico.common.lang.constants.DateConstants.DTF_ISO_DATETIME_SHORT_6;
-import static com.loserico.common.lang.constants.DateConstants.DTF_ISO_DATETIME_SHORT_7;
-import static com.loserico.common.lang.constants.DateConstants.FMT_ISO_DATETIME;
-import static com.loserico.common.lang.constants.DateConstants.FMT_ISO_DATETIME_1;
-import static com.loserico.common.lang.constants.DateConstants.PT_DATETIME_FORMAT_EN;
-import static com.loserico.common.lang.constants.DateConstants.PT_DATETIME_FORMAT_EN_1;
-import static com.loserico.common.lang.constants.DateConstants.PT_DATETIME_FORMAT_EN_2;
-import static com.loserico.common.lang.constants.DateConstants.PT_DATETIME_FORMAT_EN_3;
-import static com.loserico.common.lang.constants.DateConstants.PT_DATETIME_FORMAT_EN_4;
-import static com.loserico.common.lang.constants.DateConstants.PT_DATETIME_FORMAT_EN_5;
-import static com.loserico.common.lang.constants.DateConstants.PT_DATETIME_FORMAT_EN_6;
-import static com.loserico.common.lang.constants.DateConstants.PT_DATETIME_FORMAT_EN_7;
-import static com.loserico.common.lang.constants.DateConstants.PT_DATETIME_FORMAT_EN_8;
-import static com.loserico.common.lang.constants.DateConstants.PT_DATETIME_FORMAT_EN_9;
-import static com.loserico.common.lang.constants.DateConstants.PT_ISO_DATE;
-import static com.loserico.common.lang.constants.DateConstants.PT_ISO_DATETIME;
-import static com.loserico.common.lang.constants.DateConstants.PT_ISO_DATETIME_1;
-import static com.loserico.common.lang.constants.DateConstants.PT_ISO_DATETIME_2;
-import static com.loserico.common.lang.constants.DateConstants.PT_ISO_DATETIME_3;
-import static com.loserico.common.lang.constants.DateConstants.PT_ISO_DATETIME_4;
-import static com.loserico.common.lang.constants.DateConstants.PT_ISO_DATETIME_5;
-import static com.loserico.common.lang.constants.DateConstants.PT_ISO_DATETIME_SHORT;
-import static com.loserico.common.lang.constants.DateConstants.PT_ISO_DATETIME_SHORT_1;
-import static com.loserico.common.lang.constants.DateConstants.PT_ISO_DATETIME_SHORT_2;
-import static com.loserico.common.lang.constants.DateConstants.PT_ISO_DATETIME_SHORT_3;
-import static com.loserico.common.lang.constants.DateConstants.PT_ISO_DATETIME_SHORT_4;
-import static com.loserico.common.lang.constants.DateConstants.PT_ISO_DATETIME_SHORT_5;
-import static com.loserico.common.lang.constants.DateConstants.PT_ISO_DATETIME_SHORT_6;
-import static com.loserico.common.lang.constants.DateConstants.PT_ISO_DATETIME_SHORT_7;
-import static com.loserico.common.lang.constants.DateConstants.ZONE_ID_SHANG_HAI;
+import static com.loserico.common.lang.constants.DateConstants.*;
 import static com.loserico.common.lang.utils.SimpleDateFormatHolder.getSimpleDateFormat;
 import static java.time.format.DateTimeFormatter.ofPattern;
 
@@ -472,6 +421,59 @@ public final class DateUtils {
 		Objects.nonNull(source);
 		if (PT_ISO_DATE.matcher(source).matches()) {
 			return LocalDate.parse(source, DTF_ISO_DATE);
+		}
+		
+		if (PT_ISO_DATE_1.matcher(source).matches()) {
+			return LocalDate.parse(source, DTF_ISO_DATE_1);
+		}
+		
+		if (PT_ISO_DATE_2.matcher(source).matches()) {
+			return LocalDate.parse(source, DTF_ISO_DATE_2);
+		}
+		
+		if (PT_ISO_DATE_3.matcher(source).matches()) {
+			return LocalDate.parse(source, DTF_ISO_DATE_3);
+		}
+		
+		if (PT_DATE_EN.matcher(source).matches()) {
+			return LocalDate.parse(source, DTF_DATE_FORMAT_EN);
+		}
+		
+		if (PT_DATE_EN_1.matcher(source).matches()) {
+			return LocalDate.parse(source, DTF_DATE_FORMAT_EN_1);
+		}
+		
+		if (PT_DATE_EN_1.matcher(source).matches()) {
+			return LocalDate.parse(source, DTF_DATE_FORMAT_EN_2);
+		}
+		
+		if (PT_DATE_EN_3.matcher(source).matches()) {
+			return LocalDate.parse(source, DTF_DATE_FORMAT_EN_3);
+		}
+		
+		if (PT_DATE_EN_5.matcher(source).matches()) {
+			return LocalDate.parse(source, DTF_DATE_FORMAT_EN_5);
+		}
+		
+		if (PT_DATE_EN_6.matcher(source).matches()) {
+			return LocalDate.parse(source, DTF_DATE_FORMAT_EN_6);
+		}
+		
+		if (PT_DATE_EN_7.matcher(source).matches()) {
+			return LocalDate.parse(source, DTF_DATE_FORMAT_EN_7);
+		}
+		
+		if (PT_DATE_CONCISE.matcher(source).matches()) {
+			return LocalDate.parse(source, DTF_DATE_CONCISE);
+		}
+		
+		try {
+			return LocalDate.parse(source, DTF_DATE_FORMAT_EN_LOCALE_4);
+		} catch (DateTimeParseException e) {
+		}
+		try {
+			return LocalDate.parse(source, DTF_DATE_FORMAT_EN_4);
+		} catch (DateTimeParseException e) {
 		}
 		log.warn("{} does not match any LocalDate format! ", source);
 		return null;

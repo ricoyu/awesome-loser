@@ -12,7 +12,10 @@ package com.loserico.common.lang.enums;
  * @on
  */
 public enum Gender {
-
+	
+	/**
+	 * 女性
+	 */
 	FEMALE {
 
 		@Override
@@ -21,6 +24,10 @@ public enum Gender {
 		}
 
 	},
+	
+	/**
+	 * 男性
+	 */
 	MALE {
 
 		@Override
@@ -29,6 +36,10 @@ public enum Gender {
 		}
 
 	},
+	
+	/**
+	 * 不知道
+	 */
 	UNKNOWN {
 
 		@Override

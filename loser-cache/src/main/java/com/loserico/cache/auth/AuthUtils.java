@@ -284,7 +284,7 @@ public final class AuthUtils {
 	 */
 	static {
 		// 默认1分钟执行一次
-		int period = propertyReader.getInt("redis.auth.clear-expired.period", 1);
+		int period = propertyReader.getInt("redis.auth.clear-expired.period", -1);
 		// -1表示不执行清理
 		if (-1 != period) {
 			ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(1);

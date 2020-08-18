@@ -18,8 +18,8 @@ import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import com.loserico.json.jackson.deserializer.EnumDeserializer;
 import com.loserico.json.jackson.deserializer.LocalDateDeserializer;
 import com.loserico.json.jackson.deserializer.LocalDateTimeDeserializer;
+import com.loserico.json.jackson.deserializer.XssStringJsonDeserializer;
 import com.loserico.json.jackson.serializer.LocalDateTimeSerializer;
-import com.loserico.json.jackson.serializer.XssStringJsonSerializer;
 import com.loserico.json.resource.PropertyReader;
 
 import java.text.SimpleDateFormat;
@@ -100,8 +100,8 @@ public class ObjectMapperDecorator {
 		
 		//注册xss解析器
 		SimpleModule xssModule = new SimpleModule("XssStringJsonModule");
-		xssModule.addSerializer(String.class, new XssStringJsonSerializer());
-		//xssModule.addDeserializer(String.class, new XssStringJsonDeserializer());
+		//xssModule.addSerializer(String.class, new XssStringJsonSerializer());
+		xssModule.addDeserializer(String.class, new XssStringJsonDeserializer());
 		objectMapper.registerModule(xssModule);
 		
 		return objectMapper;
@@ -113,7 +113,8 @@ public class ObjectMapperDecorator {
 		javaTimeModule.addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer(ofPattern("yyyy-MM-dd HH:mm:ss")));
 		
 		javaTimeModule.addSerializer(LocalDate.class, new com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer(ofPattern("yyyy-MM-dd")));
-		javaTimeModule.addDeserializer(LocalDate.class, new com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer(ofPattern("yyyy-MM-dd")));
+		//javaTimeModule.addDeserializer(LocalDate.class, new com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer(ofPattern("yyyy-MM-dd")));
+		javaTimeModule.addDeserializer(LocalDate.class, new LocalDateDeserializer());
 		
 		javaTimeModule.addSerializer(LocalTime.class, new com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer(ofPattern("HH:mm:ss")));
 		javaTimeModule.addDeserializer(LocalTime.class, new com.fasterxml.jackson.datatype.jsr310.deser.LocalTimeDeserializer(ofPattern("HH:mm:ss")));
@@ -138,10 +139,9 @@ public class ObjectMapperDecorator {
 		objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 		objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
 		objectMapper.setVisibility(objectMapper.getSerializationConfig().getDefaultVisibilityChecker()
-				.withFieldVisibility(JsonAutoDetect.Visibility.ANY)
+				.withFieldVisibility(JsonAutoDetect.Visibility.NONE)
 				.withGetterVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
-				.withSetterVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
-				.withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
+				.withSetterVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY));
 		
 		return objectMapper;
 	}
@@ -162,10 +162,9 @@ public class ObjectMapperDecorator {
 		
 		objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
 		objectMapper.setVisibility(objectMapper.getSerializationConfig().getDefaultVisibilityChecker()
-				.withFieldVisibility(JsonAutoDetect.Visibility.ANY)
+				.withFieldVisibility(JsonAutoDetect.Visibility.NONE)
 				.withGetterVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
-				.withSetterVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
-				.withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
+				.withSetterVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY));
 		
 		return objectMapper;
 	}

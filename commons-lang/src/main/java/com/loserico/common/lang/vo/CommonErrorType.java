@@ -12,27 +12,31 @@ package com.loserico.common.lang.vo;
  * @version 1.0
  */
 public enum CommonErrorType implements ErrorType {
-
-    INTERNAL_SERVER_ERROR("000001","服务器内部错误");
+    
+    /**
+     * 
+     */
+    INTERNAL_SERVER_ERROR("50001","服务器内部错误");
 
     /**
      * 错误类型码
      */
-    private String status;
+    private String code;
+    
     /**
      * 错误类型描述信息
      */
     private String msg;
 
-    CommonErrorType(String status, String msg) {
-        this.status = status;
+    CommonErrorType(String code, String msg) {
+        this.code = code;
         this.msg = msg;
     }
     
     
     @Override
     public String getCode() {
-        return this.getCode();
+        return this.code;
     }
     
     @Override

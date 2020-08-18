@@ -25,7 +25,8 @@ public class GenericEnumConverter implements GenericConverter {
 	
 	private Set<String> properties = new HashSet<>();
 	
-	private boolean propertyFirst = true; //TODO 先按属性匹配，匹配不到，如果是数字，按ordinal匹配，如果是字符串，按name匹配
+	//TODO 先按属性匹配，匹配不到，如果是数字，按ordinal匹配，如果是字符串，按name匹配
+	private boolean propertyFirst = true;
 	
 	public GenericEnumConverter() {
 		
