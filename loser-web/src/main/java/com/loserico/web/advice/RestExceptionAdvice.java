@@ -2,6 +2,7 @@ package com.loserico.web.advice;
 
 import com.loserico.common.lang.exception.ApplicationException;
 import com.loserico.common.lang.exception.BusinessException;
+import com.loserico.common.lang.exception.EntityNotFoundException;
 import com.loserico.common.lang.exception.ValidationException;
 import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.common.lang.vo.Result;
@@ -173,6 +174,16 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	public ResponseEntity<Object> handleUniqueConstraintViolationException(UniqueConstraintViolationException e) {
 		logger.error("", e);
 		Result result = Results.status("400", "Bad Request")
+				.debugMessage(e.getMessage())
+				.build();
+		return new ResponseEntity(result, HttpStatus.OK);
+	}
+	
+	@ExceptionHandler(EntityNotFoundException.class)
+	@ResponseStatus(value = HttpStatus.OK)
+	public ResponseEntity<Object> handleEntityNotFoundException(EntityNotFoundException e) {
+		logger.error("", e);
+		Result result = Results.status("404", e.getMessage())
 				.debugMessage(e.getMessage())
 				.build();
 		return new ResponseEntity(result, HttpStatus.OK);

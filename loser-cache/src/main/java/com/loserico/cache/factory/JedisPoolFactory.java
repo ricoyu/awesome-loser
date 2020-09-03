@@ -2,7 +2,7 @@ package com.loserico.cache.factory;
 
 
 import com.loserico.cache.config.RedisProperties;
-import com.loserico.json.resource.PropertyReader;
+import com.loserico.common.lang.resource.PropertyReader;
 import org.apache.commons.lang3.StringUtils;
 import redis.clients.jedis.JedisPool;
 

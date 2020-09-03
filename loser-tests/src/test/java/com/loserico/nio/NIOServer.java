@@ -9,8 +9,11 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 
+import static java.nio.channels.SelectionKey.OP_READ;
+import static java.nio.channels.SelectionKey.OP_WRITE;
+
 /**
- * NIO模型的selector 就像一个大总管，负责监听各种IO事件，然后转交给后端线程去处理
+ * NIO模型的selector 就像一个大总管, 负责监听各种IO事件, 然后转交给后端线程去处理
  * <p>
  * NIO相对于BIO非阻塞的体现就在: 
  * BIO的后端线程需要阻塞等待客户端写数据(比如read方法), 如果客户端不写数据线程就要阻塞
@@ -86,7 +89,7 @@ public class NIOServer {
 			 * 5: 将 SocketChannel 注册到 Selector 上, 关心 read 事件
 			 * 6: 注册后返回一个 SelectionKey,, 会和该 SocketChannel 关联
 			 */
-			socketChannel.register(key.selector(), SelectionKey.OP_READ);
+			socketChannel.register(key.selector(), OP_READ);
 		} else if (key.isReadable()) {
 			System.out.println("有客户端数据可读事件发生了...");
 			/*
@@ -109,7 +112,7 @@ public class NIOServer {
 			 */
 			socketChannel.write(bufferToWrite);
 			
-			key.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+			key.interestOps(OP_READ | OP_WRITE);
 			socketChannel.close();
 		}
 	}

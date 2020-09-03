@@ -3,7 +3,7 @@ package com.loserico.cache.factory;
 import com.loserico.cache.operations.JedisClusterOperations;
 import com.loserico.cache.operations.JedisOperations;
 import com.loserico.cache.operations.JedisPoolOperations;
-import com.loserico.json.resource.PropertyReader;
+import com.loserico.common.lang.resource.PropertyReader;
 import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisCluster;

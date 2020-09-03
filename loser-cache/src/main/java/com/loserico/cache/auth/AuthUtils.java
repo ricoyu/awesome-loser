@@ -4,7 +4,7 @@ import com.loserico.cache.JedisUtils;
 import com.loserico.common.lang.utils.StringUtils;
 import com.loserico.json.jackson.JacksonUtils;
 import com.loserico.json.jsonpath.JsonPathUtils;
-import com.loserico.json.resource.PropertyReader;
+import com.loserico.common.lang.resource.PropertyReader;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;

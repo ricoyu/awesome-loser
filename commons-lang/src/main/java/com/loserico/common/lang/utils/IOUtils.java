@@ -3,6 +3,7 @@ package com.loserico.common.lang.utils;
 import com.loserico.common.lang.exception.IORuntimeException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
@@ -21,6 +22,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.URL;
 import java.nio.ByteBuffer;
+import java.nio.channels.ByteChannel;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
@@ -85,6 +87,18 @@ public class IOUtils {
 	public static final String LINE_SEPARATOR_UNIX = "\n";
 	
 	public static final String CLASSPATH_PREFIX = "classpath*:";
+	
+	/**
+	 * The default buffer size ({@value}) to use in copy methods.
+	 */
+	public static final int DEFAULT_BUFFER_SIZE = 8192;
+	
+	public static final int MIN_BUFFER_SIZE = 1024;
+	
+	/**
+	 * Represents the end-of-file (or stream).
+	 */
+	public static final int EOF = -1;
 	
 	/**
 	 * 从InputStream读取字符串
@@ -314,6 +328,7 @@ public class IOUtils {
 	
 	/**
 	 * 持续从命令行读取数据并交给consumer, 收到exit或者quit退出
+	 *
 	 * @param consumer
 	 */
 	public static void readCommandLine(Consumer<String> consumer) {
@@ -695,15 +710,16 @@ public class IOUtils {
 		inputStream.close();
 	}
 	
-	public static void copy(final InputStream in, final OutputStream out) throws IOException {
+/*	public static void copy(final InputStream in, final OutputStream out) throws IOException {
 		final byte[] buf = new byte[2048];
 		int len;
 		while ((len = in.read(buf)) != -1) {
 			out.write(buf, 0, len);
 		}
-	}
+	}*/
 	
-	/*
+	
+	/**
 	 * Copy one file to another place
 	 */
 	public static boolean copy(Path copyFrom, Path copyTo, CopyOption... options) {
@@ -862,4 +878,172 @@ public class IOUtils {
 	public static long length(Path path) {
 		return FileUtils.sizeOf(path.toFile());
 	}
+	
+	
+	/**
+	 * Gets the contents of an <code>InputStream</code> as a <code>byte[]</code>.
+	 * <p>
+	 * This method buffers the input internally, so there is no need to use a
+	 * <code>BufferedInputStream</code>.
+	 *
+	 * @param input the <code>InputStream</code> to read from
+	 * @return the requested byte array
+	 * @throws NullPointerException if the input is null
+	 * @throws IOException          if an I/O error occurs
+	 */
+	public static byte[] toByteArray(final InputStream input) throws IOException {
+		byte[] initialBuffer = new byte[MIN_BUFFER_SIZE];
+		int read = input.read(initialBuffer);
+		
+		//如果input已经结束, 或者发送的数据小于MIN_BUFFER_SIZE, 那么一次就读完了, 不需要再次读取
+		if (read == -1) {
+			return new byte[0];
+		}
+		if (read < initialBuffer.length) {
+			byte[] bytes = new byte[read];
+			System.arraycopy(initialBuffer, 0, bytes, 0, read);
+			return bytes;
+		}
+		
+		//一次读不完, 那么多次读取, 累积放入ByteArrayOutputStream, 最后返回byte[]
+		try (final ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+			output.write(initialBuffer, 0, initialBuffer.length);
+			copy(input, output);
+			return output.toByteArray();
+		}
+	}
+	
+	/**
+	 * 从channel中读取数据
+	 * @param channel
+	 * @return byte[]
+	 * @throws IOException
+	 */
+	public static byte[] toByteArray(final ByteChannel channel) throws IOException{
+		ByteBuffer buffer = ByteBuffer.allocate(MIN_BUFFER_SIZE);
+		int read = channel.read(buffer);
+		
+		//如果input已经结束, 不需要再次读取
+		if (read == -1) {
+			return new byte[0];
+		}
+		//发送的数据小于MIN_BUFFER_SIZE, 那么一次就读完了, 不需要再次读取
+		if (buffer.hasRemaining()) {
+			return buffer.array();
+		}
+		
+		//一次读不完, 那么多次读取, 累积放入ByteArrayOutputStream, 最后返回byte[]
+		try (final ByteArrayOutputStream output = new ByteArrayOutputStream(DEFAULT_BUFFER_SIZE * 4)) {
+			//先把上面第一次读取的放入output
+			output.write(buffer.array(), 0, buffer.capacity());
+			
+			//1024 bytes一次读不完, 那么一次分配大一点的buffer
+			buffer = ByteBuffer.allocate(DEFAULT_BUFFER_SIZE);
+			//只要读到了数据就往output里面写
+			while ((read = channel.read(buffer)) != -1) {
+				output.write(buffer.array(), 0, read);
+				//清空buffer, 为继续写入buffer做准备
+				buffer.clear();
+			}
+			
+			return output.toByteArray();
+		}
+	}
+	
+	/**
+	 * Copies bytes from an <code>InputStream</code> to an
+	 * <code>OutputStream</code>.
+	 * <p>
+	 * This method buffers the input internally, so there is no need to use a
+	 * <code>BufferedInputStream</code>.
+	 * <p>
+	 * Large streams (over 2GB) will return a bytes copied value of
+	 * <code>-1</code> after the copy has completed since the correct
+	 * number of bytes cannot be returned as an int. For large streams
+	 * use the <code>copyLarge(InputStream, OutputStream)</code> method.
+	 *
+	 * @param input  the <code>InputStream</code> to read from
+	 * @param output the <code>OutputStream</code> to write to
+	 * @return the number of bytes copied, or -1 if &gt; Integer.MAX_VALUE
+	 * @throws NullPointerException if the input or output is null
+	 * @throws IOException          if an I/O error occurs
+	 * @since 1.1
+	 */
+	public static int copy(final InputStream input, final OutputStream output) throws IOException {
+		final long count = copyLarge(input, output);
+		if (count > Integer.MAX_VALUE) {
+			return -1;
+		}
+		return (int) count;
+	}
+	
+	/**
+	 * Copies bytes from an <code>InputStream</code> to an <code>OutputStream</code> using an internal buffer of the
+	 * given size.
+	 * <p>
+	 * This method buffers the input internally, so there is no need to use a <code>BufferedInputStream</code>.
+	 * <p>
+	 *
+	 * @param input      the <code>InputStream</code> to read from
+	 * @param output     the <code>OutputStream</code> to write to
+	 * @param bufferSize the bufferSize used to copy from the input to the output
+	 * @return the number of bytes copied
+	 * @throws NullPointerException if the input or output is null
+	 * @throws IOException          if an I/O error occurs
+	 * @since 2.5
+	 */
+	public static long copy(final InputStream input, final OutputStream output, final int bufferSize)
+			throws IOException {
+		return copyLarge(input, output, new byte[bufferSize]);
+	}
+	
+	/**
+	 * Copies bytes from a large (over 2GB) <code>InputStream</code> to an
+	 * <code>OutputStream</code>.
+	 * <p>
+	 * This method buffers the input internally, so there is no need to use a
+	 * <code>BufferedInputStream</code>.
+	 * <p>
+	 * The buffer size is given by {@link #DEFAULT_BUFFER_SIZE}.
+	 *
+	 * @param input  the <code>InputStream</code> to read from
+	 * @param output the <code>OutputStream</code> to write to
+	 * @return the number of bytes copied
+	 * @throws NullPointerException if the input or output is null
+	 * @throws IOException          if an I/O error occurs
+	 * @since 1.3
+	 */
+	public static long copyLarge(final InputStream input, final OutputStream output)
+			throws IOException {
+		return copy(input, output, DEFAULT_BUFFER_SIZE);
+	}
+	
+	
+	/**
+	 * Copies bytes from a large (over 2GB) <code>InputStream</code> to an
+	 * <code>OutputStream</code>.
+	 * <p>
+	 * This method uses the provided buffer, so there is no need to use a
+	 * <code>BufferedInputStream</code>.
+	 * <p>
+	 *
+	 * @param input  the <code>InputStream</code> to read from
+	 * @param output the <code>OutputStream</code> to write to
+	 * @param buffer the buffer to use for the copy
+	 * @return the number of bytes copied
+	 * @throws NullPointerException if the input or output is null
+	 * @throws IOException          if an I/O error occurs
+	 * @since 2.2
+	 */
+	public static long copyLarge(final InputStream input, final OutputStream output, final byte[] buffer)
+			throws IOException {
+		long count = 0;
+		int n;
+		while (EOF != (n = input.read(buffer))) {
+			output.write(buffer, 0, n);
+			count += n;
+		}
+		return count;
+	}
+	
 }

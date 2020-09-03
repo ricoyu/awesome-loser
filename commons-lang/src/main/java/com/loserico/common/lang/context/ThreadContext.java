@@ -24,7 +24,6 @@ import java.util.Map;
  * @since 0.1
  */
 public final class ThreadContext {
-
 	/**
 	 * Private internal log instance.
 	 */

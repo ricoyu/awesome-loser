@@ -84,6 +84,7 @@ public class Page implements Serializable {
 	 * 
 	 * @return
 	 */
+	@JsonIgnore
 	public int getMaxResults() {
 		return this.pageSize;
 	}
@@ -104,7 +105,8 @@ public class Page implements Serializable {
 		this.totalCount = totalCount;
 		updatePagingStatus();
 	}
-
+	
+	@JsonIgnore
 	public boolean isAutoCount() {
 		return autoCount;
 	}
@@ -158,7 +160,8 @@ public class Page implements Serializable {
 		}
 
 	}
-
+	
+	@JsonIgnore
 	public boolean isPagingIgnore() {
 		return pagingIgnore;
 	}
@@ -199,6 +202,7 @@ public class Page implements Serializable {
 		this.hasPreviousPage = hasPreviousPage;
 	}
 	
+	@JsonIgnore
 	public OrderBean getOrder() {
 		return order;
 	}
@@ -207,6 +211,7 @@ public class Page implements Serializable {
 		this.order = order;
 	}
 	
+	@JsonIgnore
 	public List<OrderBean> getOrders() {
 		return orders;
 	}

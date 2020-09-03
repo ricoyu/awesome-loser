@@ -1,6 +1,6 @@
 package com.loserico.cache.factory;
 
-import com.loserico.json.resource.PropertyReader;
+import com.loserico.common.lang.resource.PropertyReader;
 
 /**
  * Jedis连接池工厂类的工厂类

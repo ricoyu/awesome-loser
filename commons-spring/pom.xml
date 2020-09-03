@@ -4,6 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>commons-spring</artifactId>
     <packaging>jar</packaging>
+    <version>${project.parent.version}</version>
     <name>Spring Framework encapsulations</name>
     <url>http://maven.apache.org</url>
 
@@ -11,14 +12,14 @@
         <groupId>com.loserico</groupId>
         <artifactId>awesome-loser</artifactId>
         <relativePath>../pom.xml</relativePath>
-        <version>4.7.4</version>
+        <version>4.7.6</version>
     </parent>
 
     <dependencies>
         <dependency>
             <groupId>com.loserico</groupId>
             <artifactId>commons-lang</artifactId>
-            <version>${project.parent.version}</version>
+            <version>4.7.6</version>
         </dependency>
         <dependency>
             <groupId>com.loserico</groupId>
@@ -36,6 +37,10 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
         </dependency>
 
         <dependency>
@@ -61,7 +66,18 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-all</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
         </dependency>
 
         <dependency>

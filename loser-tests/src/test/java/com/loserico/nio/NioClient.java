@@ -8,6 +8,9 @@ import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 
+import static java.nio.channels.SelectionKey.OP_CONNECT;
+import static java.nio.channels.SelectionKey.OP_READ;
+
 /**
  * <p>
  * Copyright: (C), 2019/12/21 17:21
@@ -48,7 +51,7 @@ public class NioClient {
 		 */
 		socketChannel.connect(new InetSocketAddress(ip, port));
 		// 将通道管理器和该通道绑定, 并为该通道注册SelectionKey.OP_CONNECT事件
-		socketChannel.register(this.selector, SelectionKey.OP_CONNECT);
+		socketChannel.register(this.selector, OP_CONNECT);
 	}
 	
 	/**
@@ -82,7 +85,7 @@ public class NioClient {
 					socketChannel.write(buffer);
 					
 					//在和服务端连接成功之后, 为了可以接收到服务端的信息, 需要给通道设置读的权限
-					socketChannel.register(this.selector, SelectionKey.OP_READ); // 获得了可读的事件
+					socketChannel.register(this.selector, OP_READ); // 获得了可读的事件
 				} else if (key.isReadable()) {
 					read(key);
 				}

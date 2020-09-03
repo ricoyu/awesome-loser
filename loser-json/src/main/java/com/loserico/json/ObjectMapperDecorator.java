@@ -20,7 +20,7 @@ import com.loserico.json.jackson.deserializer.LocalDateDeserializer;
 import com.loserico.json.jackson.deserializer.LocalDateTimeDeserializer;
 import com.loserico.json.jackson.deserializer.XssStringJsonDeserializer;
 import com.loserico.json.jackson.serializer.LocalDateTimeSerializer;
-import com.loserico.json.resource.PropertyReader;
+import com.loserico.common.lang.resource.PropertyReader;
 
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;

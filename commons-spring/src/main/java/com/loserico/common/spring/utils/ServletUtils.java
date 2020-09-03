@@ -6,12 +6,15 @@ import org.springframework.util.Assert;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import javax.servlet.ServletRequest;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.BufferedReader;
 import java.io.IOException;
+
+import static com.loserico.common.lang.utils.Assert.notNull;
 
 /**
  * Spring 环境下读写Http Servlet相关接口
@@ -301,6 +304,28 @@ public final class ServletUtils {
 		}
 		
 		return ip;
+	}
+	
+	/**
+	 * 判断请求的URI是否与给定的matchPath匹配(以matchPath结尾)
+	 * @param request
+	 * @param matchPath 要匹配的URI
+	 * @return boolean
+	 */
+	public static boolean pathMatch(HttpServletRequest request, String matchPath) {
+		notNull(matchPath, "matchPath cannot be null");
+		return request.getServletPath().endsWith(matchPath.trim());
+	}
+	
+	/**
+	 * 判断请求的URI是否与给定的matchPath匹配(以matchPath结尾)
+	 * @param request
+	 * @param matchPath 要匹配的URI
+	 * @return boolean
+	 */
+	public static boolean pathMatch(ServletRequest request, String matchPath) {
+		notNull(matchPath, "matchPath cannot be null");
+		return pathMatch((HttpServletRequest)request, matchPath);
 	}
 	
 	public static class CookieBuilder {
