@@ -1,7 +1,7 @@
 package com.loserico.codec.exception;
 
 /**
- * 获取RSA公钥对象出错是抛出本异常
+ * 获取RSA公钥对象出错时抛出本异常
  * <p>
  * Copyright: (C), 2020/5/22 18:46
  * <p>

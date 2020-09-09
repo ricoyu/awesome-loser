@@ -51,8 +51,7 @@ public class NonBlockingLock implements Lock{
 	
 	@Override
 	public void lock() {
-		boolean locked = JedisUtils.lock(key, requestId);
-		this.locked = locked;
+		this.locked = JedisUtils.lock(key, requestId);
 	}
 
 	@Override
@@ -62,6 +61,7 @@ public class NonBlockingLock implements Lock{
 			if (!unlockSuccess) {
 				throw new OperationNotSupportedException("解锁失败了哟");
 			}
+			locked = false;
 		} else {
 			throw new OperationNotSupportedException("你还没获取到锁哦");
 		}

@@ -1,6 +1,7 @@
 package com.loserico.codec;
 
 import com.loserico.codec.exception.PrivateDecryptException;
+import com.loserico.codec.exception.RsaPrivateKeyException;
 import com.loserico.codec.exception.RsaPublicKeyException;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -91,6 +92,11 @@ public final class RsaUtils {
 	 */
 	private static RSAPrivateKey privateKey = null;
 	
+	/**
+	 * 私钥串
+	 */
+	private static String privateKeyStr = null;
+	
 	private RsaUtils() {
 	}
 	
@@ -102,7 +108,6 @@ public final class RsaUtils {
 	 * @return 经过Base64编码后的公私钥
 	 */
 	static {
-		
 		/*
 		 * 磁盘上不存在密钥对则重新生成
 		 */
@@ -120,26 +125,7 @@ public final class RsaUtils {
 				//得到私钥
 				privateKey = (RSAPrivateKey) keyPair.getPrivate();
 				
-				File privateKeyFile = new File(PRIVATE_KEY_FILE);
-				File publicKeyFile = new File(PUBLIC_KEY_FILE);
-				
-				if (publicKeyFile.getParentFile() != null) {
-					publicKeyFile.getParentFile().mkdirs();
-				}
-				publicKeyFile.createNewFile();
-				
-				if (privateKeyFile.getParentFile() != null) {
-					privateKeyFile.getParentFile().mkdirs();
-				}
-				privateKeyFile.createNewFile();
-				
-				ObjectOutputStream publicKeyOS = new ObjectOutputStream(new FileOutputStream(publicKeyFile));
-				publicKeyOS.writeObject(publicKey);
-				publicKeyOS.close();
-				
-				ObjectOutputStream privateKeyOS = new ObjectOutputStream(new FileOutputStream(privateKeyFile));
-				privateKeyOS.writeObject(privateKey);
-				privateKeyOS.close();
+				write2Disk(publicKey, privateKey);
 				
 			} catch (Exception e) {
 				throw new RuntimeException("生成密钥对失败", e);
@@ -162,8 +148,46 @@ public final class RsaUtils {
 		
 		//得到公钥串
 		publicKeyStr = base64Encode(publicKey.getEncoded());
+		//得到私钥串
+		privateKeyStr = base64Encode(privateKey.getEncoded());
 	}
 	
+	/**
+	 * 工具公钥串/私钥串重新初始化, 必须同时提供公钥私钥, 否则报错
+	 *
+	 * @param publicKeyStr
+	 * @param privateKeyStr
+	 */
+	public synchronized static void reinitialize(String publicKeyStr, String privateKeyStr) {
+		if (isBlank(publicKeyStr) || isBlank(privateKeyStr)) {
+			throw new IllegalArgumentException("公钥/私钥不能为空");
+		}
+		
+		//先备份旧的, 如果重新初始化失败, 回退旧版
+		String publicKeyStrOld = RsaUtils.publicKeyStr;
+		String privateKeyStrOld = RsaUtils.privateKeyStr;
+		
+		RSAPublicKey publicKeyOld = RsaUtils.publicKey;
+		RSAPrivateKey privateKeyOld = RsaUtils.privateKey;
+		
+		try {
+			RsaUtils.publicKeyStr = publicKeyStr;
+			RsaUtils.privateKeyStr = privateKeyStr;
+			
+			RsaUtils.publicKey = RsaUtils.publicKey(publicKeyStr);
+			RsaUtils.privateKey = RsaUtils.privateKey(privateKeyStr);
+			
+			write2Disk(publicKey, privateKey);
+		} catch (Throwable e) {
+			log.info("回退旧版公私钥...");
+			RsaUtils.publicKeyStr = publicKeyStrOld;
+			RsaUtils.privateKeyStr = privateKeyStrOld;
+			RsaUtils.publicKey = publicKeyOld;
+			RsaUtils.privateKey = privateKeyOld;
+			
+			throw new RuntimeException("重新输出化密钥对失败", e);
+		}
+	}
 	
 	/**
 	 * 公钥加密, 用的公钥是储存在系统磁盘上的
@@ -424,19 +448,36 @@ public final class RsaUtils {
 	 * <p>
 	 * publicKey是中间部分的字符串, 不包含头尾的BEGIN/END PUBLIC KEY
 	 *
-	 * @param publicKey
+	 * @param publicKeyStr
 	 * @return PublicKey
 	 */
-	public static PublicKey publicKey(String publicKey) {
+	public static RSAPublicKey publicKey(String publicKeyStr) {
 		//通过X509编码的Key指令获得公钥对象
-		X509EncodedKeySpec x509KeySpec = new X509EncodedKeySpec(base64Decode(publicKey));
+		X509EncodedKeySpec x509KeySpec = new X509EncodedKeySpec(base64Decode(publicKeyStr));
 		try {
 			KeyFactory keyFactory = KeyFactory.getInstance(ALGORITHM_RSA);
-			return keyFactory.generatePublic(x509KeySpec);
+			return (RSAPublicKey) keyFactory.generatePublic(x509KeySpec);
 		} catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
 			log.error("根据公钥串[{}]获取公钥对象失败", publicKey, e);
 			throw new RsaPublicKeyException(MessageFormat.format("根据公钥串[{0}]获取公钥对象失败", publicKey), e);
 		}
+	}
+	
+	/**
+	 * 根据私钥字符串获取私钥对象
+	 *
+	 * @param privateKeyStr
+	 * @return PrivateKey
+	 */
+	public static RSAPrivateKey privateKey(String privateKeyStr) {
+		PKCS8EncodedKeySpec pkcs8KeySpec = new PKCS8EncodedKeySpec(base64Decode(privateKeyStr));
+		try {
+			KeyFactory keyFactory = KeyFactory.getInstance(ALGORITHM_RSA);
+			return (RSAPrivateKey) keyFactory.generatePrivate(pkcs8KeySpec);
+		} catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+			throw new RsaPrivateKeyException(MessageFormat.format("根据私钥串[{0}]获取私钥对象失败", privateKeyStr), e);
+		}
+		
 	}
 	
 	/**
@@ -516,10 +557,36 @@ public final class RsaUtils {
 		return privateKey.exists() && publicKey.exists();
 	}
 	
+	private static void write2Disk(PublicKey publicKey, PrivateKey privateKey) throws IOException {
+		File privateKeyFile = new File(PRIVATE_KEY_FILE);
+		File publicKeyFile = new File(PUBLIC_KEY_FILE);
+		
+		if (publicKeyFile.getParentFile() != null) {
+			publicKeyFile.getParentFile().mkdirs();
+		}
+		publicKeyFile.createNewFile();
+		
+		if (privateKeyFile.getParentFile() != null) {
+			privateKeyFile.getParentFile().mkdirs();
+		}
+		privateKeyFile.createNewFile();
+		
+		ObjectOutputStream publicKeyOS = new ObjectOutputStream(new FileOutputStream(publicKeyFile));
+		publicKeyOS.writeObject(publicKey);
+		publicKeyOS.close();
+		
+		ObjectOutputStream privateKeyOS = new ObjectOutputStream(new FileOutputStream(privateKeyFile));
+		privateKeyOS.writeObject(privateKey);
+		privateKeyOS.close();
+	}
+	
 	public static String getPublicKeyStr() {
 		return publicKeyStr;
 	}
 	
+	public static String getPrivateKeyStr() {
+		return privateKeyStr;
+	}
 }
 
 

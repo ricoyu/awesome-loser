@@ -1,5 +1,6 @@
 package com.loserico.cache.operations;
 
+import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPubSub;
@@ -18,6 +19,7 @@ import java.util.Set;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
+@Slf4j
 public class JedisClusterOperations implements JedisOperations {
 	
 	private final JedisCluster jedisCluster;
@@ -313,7 +315,7 @@ public class JedisClusterOperations implements JedisOperations {
 	
 	@Override
 	public void subscribe(JedisPubSub jedisPubSub, String... channels) {
-		
+		log.info("Not implemented yet!");
 	}
 	
 	@Override

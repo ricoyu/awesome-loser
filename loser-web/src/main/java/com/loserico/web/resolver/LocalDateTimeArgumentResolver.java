@@ -1,6 +1,6 @@
 package com.loserico.web.resolver;
 
-import com.loserico.web.utils.RegexUtils;
+import com.loserico.common.lang.utils.RegexUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;

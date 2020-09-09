@@ -5,6 +5,7 @@ import com.loserico.codec.exception.HmacSha256Exception;
 import com.loserico.codec.exception.NoSuchHashAlgorithmException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.digest.DigestUtils;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -154,5 +155,17 @@ public final class HashUtils {
 		}
 		
 		return Base64.encodeBase64String(hmacSHA256.doFinal(message.getBytes(StandardCharsets.UTF_8)));
+	}
+	
+	
+	/**
+	 * 使用UTF-8编码进行MD5加密
+	 * MD5 is a widely used cryptographic hash function, which produces a hash of 128 bit.
+	 * 
+	 * @param source
+	 * @return
+	 */
+	public static String md5Hex(String source) {
+		return DigestUtils.md5Hex(source);
 	}
 }

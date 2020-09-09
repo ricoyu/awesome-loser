@@ -3,6 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>loser-sharding</artifactId>
     <packaging>jar</packaging>
+    <version>${project.parent.version}</version>
     <name>Loser Sharding JDBC</name>
     <url>http://maven.apache.org</url>
 
@@ -10,7 +11,7 @@
         <groupId>com.loserico</groupId>
         <artifactId>awesome-loser</artifactId>
         <relativePath>../pom.xml</relativePath>
-        <version>4.7.6</version>
+        <version>4.7.9</version>
     </parent>
 
     <dependencies>

@@ -1,7 +1,10 @@
 package com.loserico.codec;
 
+import com.loserico.common.lang.utils.DateUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class HashUtilsTest {
 	
@@ -65,5 +68,14 @@ public class HashUtilsTest {
 		//System.out.println(token);
 		//System.out.println(HashUtils.md5("BFPbEkNmW4cLpc17jp5S4fZOLJzd1Ea2Mv5M0KTQ2v87X96YRbjT609UNLgColmmrd6aFQXlXcFaqOzIvSbcRZ2xkpo1BIwOC8D"));
 		//System.out.println(HashUtils.md5("/api-centre/statistic/2017F?access-token=BFPbEkNmW4cLpc17jp5S4fZOLJzd1Ea2Mv5M0KTQ2v87X96YRbjT609UNLgColmmrd6aFQXlXcFaqOzIvSbcRZ2xkpo1BIwOC8D"));
+	}
+	
+	@Test
+	public void testMD5Checksum() {
+		String checksum = "bc611a61faa02d2b20aa659af7111bba";
+		String secretKey = "4b2ef0867a4af53076cdea03f210b18b";
+		long timestamp = DateUtils.toEpochMilis("2020-09-07 10:10:00");
+		String myChecksum = HashUtils.md5Hex(timestamp + secretKey);
+		assertThat(checksum.equals(myChecksum)).isTrue();
 	}
 }

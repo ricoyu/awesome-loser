@@ -4,6 +4,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.loserico.common.lang.i18n.I18N.i18nMessage;
+
 /**
  * <blockquote><pre>
  * status    请求接口状态码
@@ -103,6 +105,7 @@ public class Results {
 		
 		/**
 		 * 分页支持
+		 *
 		 * @param page
 		 * @return Builder
 		 */
@@ -132,6 +135,7 @@ public class Results {
 	
 	/**
 	 * 设置status 200 OK
+	 *
 	 * @return Builder
 	 */
 	public static Builder success() {
@@ -140,6 +144,7 @@ public class Results {
 	
 	/**
 	 * code设为"-1"
+	 *
 	 * @param message
 	 * @return
 	 */
@@ -154,7 +159,7 @@ public class Results {
 	
 	public static Builder status(ErrorType errorType) {
 		Builder builder = new Builder();
-		return builder.status(errorType.getCode(), errorType.getMsg());
+		return builder.status(errorType.getCode(), i18nMessage(errorType));
 	}
 	
 }

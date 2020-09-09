@@ -1,0 +1,62 @@
+{
+  "uuid": "a83988a2e0dd43f1a4c6771bdf535abf",
+  "hostIP": "172.16.0.113",
+  "version": "2.2",
+  "disabledPorts": [
+    "21",
+    "22"
+  ],
+  "hostInfo": {
+    "bit": "64",
+    "hostname": "localhost.localdomain",
+    "uptime": "342686",
+    "bootTime": "2019-08-11 16:14:31",
+    "procs": "237",
+    "os": "linux",
+    "platform": "centos",
+    "platformFamily": "rhel",
+    "platformVersion": "7.3.1611",
+    "kernelVersion": "3.10.0-514.el7.x86_64",
+    "kernelArch": "x86_64"
+  },
+  "netcards": [
+    {
+      "name": "ens160",
+      "ip": "172.16.0.113",
+      "mask": "172.16.0.113/24",
+      "flags": "up|broadcast|multicast",
+      "hardwareAddr": "00:0c:29:d1:4c:35",
+      "ips": [
+        {
+          "ip": "172.16.0.113",
+          "version": "IPv4",
+          "mask": "172.16.0.113/24"
+        },
+        {
+          "ip": "fe80::a7d1:97b:1672:e730",
+          "version": "IPv6",
+          "mask": "fe80::a7d1:97b:1672:e730/64"
+        }
+      ]
+    },
+    {
+      "name": "ens161",
+      "flags": "up|broadcast|multicast",
+      "hardwareAddr": "00:0c:29:d1:4c:35",
+      "ip": "172.16.0.114",
+      "mask": "172.16.0.114/24",
+      "ips": [
+        {
+          "ip": "172.16.0.114",
+          "version": "IPv4",
+          "mask": "172.16.0.114/24"
+        },
+        {
+          "ip": "fe80::a7d1:97b:1672:e731",
+          "version": "IPv6",
+          "mask": "fe80::a7d1:97b:1672:e731/64"
+        }
+      ]
+    }
+  ]
+}

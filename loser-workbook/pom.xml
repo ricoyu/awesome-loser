@@ -4,6 +4,7 @@
         xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <modelVersion>4.0.0</modelVersion>
     <artifactId>loser-workbook</artifactId>
+    <version>${project.parent.version}</version>
     <name>Read/Write Excel CVS</name>
     <url>http://maven.apache.org</url>
 
@@ -11,7 +12,7 @@
         <groupId>com.loserico</groupId>
         <artifactId>awesome-loser</artifactId>
         <relativePath>../pom.xml</relativePath>
-        <version>4.7.6</version>
+        <version>4.7.9</version>
     </parent>
 
     <dependencies>

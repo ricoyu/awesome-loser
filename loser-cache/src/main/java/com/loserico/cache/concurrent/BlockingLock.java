@@ -1,6 +1,7 @@
 package com.loserico.cache.concurrent;
 
 import com.loserico.cache.JedisUtils;
+import com.loserico.cache.exception.OperationNotSupportedException;
 import com.loserico.cache.listeners.MessageListener;
 import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.JedisPubSub;
@@ -57,9 +58,14 @@ public class BlockingLock implements Lock {
 	private String key;
 	
 	/**
-	 * 锁的值, 解锁要用到
+	 * 锁的值, 解锁要用到; 解锁时提供的value跟redis中的匹配才可以解锁
 	 */
 	private String value;
+	
+	/**
+	 * 是否加锁成功
+	 */
+	private boolean locked;
 	
 	/**
 	 * 负责定时刷新锁过期时间
@@ -99,6 +105,7 @@ public class BlockingLock implements Lock {
 		boolean locked = JedisUtils.setnx(key, value, 30, TimeUnit.SECONDS);
 		if (locked) {
 			log.info(">>>>>> {} 获取锁成功 <<<<<<", threadName);
+			this.locked = true;
 			startWatchDog();
 			return;
 		}
@@ -111,6 +118,7 @@ public class BlockingLock implements Lock {
 			locked = JedisUtils.setnx(key, value, 30, TimeUnit.SECONDS);
 			if (locked) {
 				log.info(">>>>>> {} 自旋{}次获取锁成功 <<<<<<", threadName, i);
+				this.locked = true;
 				startWatchDog();
 				return;
 			}
@@ -134,6 +142,7 @@ public class BlockingLock implements Lock {
 			locked = JedisUtils.setnx(key, value, 30, TimeUnit.SECONDS);
 			if (locked) {
 				log.info(">>>>>> {} 醒来后终获成功 <<<<<<", threadName);
+				this.locked = true;
 				stopListener();
 				startWatchDog();
 				return;
@@ -144,26 +153,40 @@ public class BlockingLock implements Lock {
 	
 	@Override
 	public void unlock() {
+		if (!locked) {
+			throw new OperationNotSupportedException("你还没获取到锁哦");
+		}
+		
+		String threadName = Thread.currentThread().getName();
 		//解锁
-		JedisUtils.unlock(key, value);
+		boolean unlockSuccess = JedisUtils.unlock(key, value);
+		if (!unlockSuccess) {
+			throw new OperationNotSupportedException("解锁失败了哟");
+		}
+		log.info(">>>>>> {} 解锁成功 <<<<<<", threadName);
+		
+		locked = false;
+		
 		/**
-		 * 通知其他线程可以重新获取锁了, 吧当前线程名作为消息发出去, 方便记log
+		 * 通知其他线程可以重新获取锁了, 把当前线程名作为消息发出去, 方便记log
 		 */
 		JedisUtils.publish(notifyChannel, Thread.currentThread().getName());
+		log.info(">>>>>> {} 发布消息, 现在其他线程可以重新获取锁 <<<<<<", threadName);
 		/**
 		 * 关掉看门狗
 		 */
 		stopWatchDog();
+		log.info(">>>>>> {} shutdown Watch dog <<<<<<", threadName);
 	}
 	
 	@Override
 	public boolean locked() {
-		return false;
+		return locked;
 	}
 	
 	@Override
 	public void unlockAnyway() {
-		
+		log.info("Not implemented yet!");
 	}
 	
 	/**
@@ -171,6 +194,11 @@ public class BlockingLock implements Lock {
 	 */
 	public void startListener() {
 		if (this.subscribe == null) {
+			/*
+			 * 因为当前线程自旋获取锁失败, 所以在startListener之后当前线程会被阻塞, 
+			 * 这里把当前线程传给NotifyListener, 这个在监听到事件后, 才可以知道要唤醒的线程是哪个
+			 * 订阅本身是交给JedisPoolOperations.THREAD_POOL线程池去执行的
+			 */
 			this.subscribe = JedisUtils.subscribe(notifyChannel, new NotifyListener(Thread.currentThread()));
 		}
 	}

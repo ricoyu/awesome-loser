@@ -3,6 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <artifactId>commons-lang</artifactId>
+    <version>${project.parent.version}</version>
     <packaging>jar</packaging>
     <name>Commons library</name>
     <url>http://maven.apache.org</url>
@@ -11,7 +12,7 @@
         <groupId>com.loserico</groupId>
         <artifactId>awesome-loser</artifactId>
         <relativePath>../pom.xml</relativePath>
-        <version>4.7.6</version>
+        <version>4.7.9</version>
     </parent>
 
     <dependencies>

@@ -31,17 +31,17 @@ public class NettyByteBuf {
 		log.info("byteBuf={}", buf);
 		
 		for (int i = 0; i < 8; i++) {
-			buf.writeInt(i);
+			buf.writeByte(i);
 		}
 		log.info("byteBuf={}", buf);
 		
 		for (int i = 0; i < 5; i++) {
-			log.info(buf.getByte(i) + "");
+			log.info(buf.getByte(i) + ""); //调getByte方法, 其readIndex不会变
 		}
 		log.info("byteBuf={}", buf);
 		
 		for (int i = 0; i < 5; i++) {
-			log.info(buf.readByte() + "");
+			log.info(buf.readByte() + "");//调readByte方法, 其readIndex会增长
 		}
 		log.info("byteBuf={}", buf);
 		

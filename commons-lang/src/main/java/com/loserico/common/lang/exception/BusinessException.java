@@ -2,6 +2,9 @@ package com.loserico.common.lang.exception;
 
 import com.loserico.common.lang.vo.ErrorType;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * 通用业务异常
  * <p>
@@ -17,15 +20,19 @@ public class BusinessException extends RuntimeException {
 	
 	private String code;
 	
+	private String msgTemplate;
+	
 	private String message;
 	
+	private List<Object> messageParams = new ArrayList<>();
+	
 	public BusinessException() {
-		super();
 	}
 	
 	public BusinessException(ErrorType errorType) {
 		super(errorType.getMsg());
 		this.code = errorType.getCode();
+		this.msgTemplate = errorType.getMsgTemplate();
 		this.message = errorType.getMsg();
 	}
 	
@@ -35,23 +42,17 @@ public class BusinessException extends RuntimeException {
 		this.message = message;
 	}
 	
-	public BusinessException(String message) {
-		super(message);
-		this.message = message;
+	public BusinessException(String code, String messageTemplate, String defaultMesssage) {
+		this.code = code;
+		this.msgTemplate = messageTemplate;
+		this.message = defaultMesssage;
 	}
 	
-	public BusinessException(String message, Throwable cause) {
-		super(message, cause);
-		this.message = message;
-	}
-	
-	public BusinessException(Throwable cause) {
-		super(cause);
-	}
-	
-	protected BusinessException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-		super(message, cause, enableSuppression, writableStackTrace);
-		this.message = message;
+	public BusinessException(String code, String messageTemplate, List<Object> messageParams, String defaultMesssage) {
+		this.code = code;
+		this.msgTemplate = messageTemplate;
+		this.messageParams = messageParams;
+		this.msgTemplate = messageTemplate;
 	}
 	
 	public String getCode() {
@@ -70,4 +71,22 @@ public class BusinessException extends RuntimeException {
 	public void setMessage(String message) {
 		this.message = message;
 	}
+	
+	public String getMsgTemplate() {
+		return msgTemplate;
+	}
+	
+	public void setMsgTemplate(String msgTemplate) {
+		this.msgTemplate = msgTemplate;
+	}
+	
+	public List<Object> getMessageParams() {
+		return messageParams;
+	}
+	
+	public void setMessageParams(List<Object> messageParams) {
+		this.messageParams = messageParams;
+	}
+	
+	
 }

@@ -1,4 +1,4 @@
-package com.loserico.hex;
+package com.loserico.hash;
 
 import com.loserico.codec.HexUtils;
 import org.junit.Test;

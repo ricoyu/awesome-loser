@@ -4,7 +4,9 @@ import com.loserico.common.lang.exception.ApplicationException;
 import com.loserico.common.lang.exception.BusinessException;
 import com.loserico.common.lang.exception.EntityNotFoundException;
 import com.loserico.common.lang.exception.ValidationException;
+import com.loserico.common.lang.i18n.I18N;
 import com.loserico.common.lang.utils.ReflectionUtils;
+import com.loserico.common.lang.vo.CommonErrorType;
 import com.loserico.common.lang.vo.Result;
 import com.loserico.common.lang.vo.Results;
 import com.loserico.validation.bean.ErrorMessage;
@@ -191,6 +193,7 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	
 	/**
 	 * 通用业务异常处理
+	 *
 	 * @param e
 	 * @return
 	 */
@@ -198,7 +201,7 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> handleBusinessException(BusinessException e) {
 		logger.error("", e);
-		Result result = Results.status(e.getCode() + "", e.getMessage()).build();
+		Result result = Results.status(e.getCode(), I18N.i18nMessage(e)).build();
 		return new ResponseEntity(result, HttpStatus.OK);
 	}
 	
@@ -223,7 +226,7 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	@ResponseBody
 	public ResponseEntity<?> handleThrowable(Throwable e) {
 		logger.error("Rest API ERROR happen", e);
-		Result result = Results.status("500", "Internal Server Error").build();
+		Result result = Results.status(CommonErrorType.INTERNAL_SERVER_ERROR).build();
 		return new ResponseEntity(result, HttpStatus.OK);
 	}
 }
