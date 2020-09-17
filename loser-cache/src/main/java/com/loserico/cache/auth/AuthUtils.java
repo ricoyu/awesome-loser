@@ -95,13 +95,13 @@ public final class AuthUtils {
 	/**
 	 * 执行登录操作, 返回登录成功与否, 如果同一账号已经在别处登录, 先对其执行登出, 并将之前的登录信息返回
 	 *
-	 * @param username    用户名
-	 * @param token       token
-	 * @param expires     过期时间
-	 * @param timeUnit    单位
-	 * @param userdetails Spring Security的UserDetails对象
-	 * @param authorities Spring Security的GrantedAuthority对象
-	 * @param additionalInfo   额外的登录信息
+	 * @param username       用户名
+	 * @param token          token
+	 * @param expires        过期时间
+	 * @param timeUnit       单位
+	 * @param userdetails    Spring Security的UserDetails对象
+	 * @param authorities    Spring Security的GrantedAuthority对象
+	 * @param additionalInfo 额外的登录信息
 	 * @return LoginResult<T>
 	 */
 	public static <T> LoginResult<T> login(String username,
@@ -153,10 +153,10 @@ public final class AuthUtils {
 	 * @on
 	 */
 	public static <T> Map<String, T> clearExpired() {
-		log.info("开始清理过期token");
+		log.info("Start cleaning token...");
 		byte[] result = JedisUtils.evalsha(sha1, 0, "clearExpired");
 		String resultJson = StringUtils.toString(result);
-		log.info("清理结果, 过期Token有: {}", resultJson);
+		log.info("Clean done, expired tokens: {}", resultJson);
 		return resultJson == null ? Collections.emptyMap() : JacksonUtils.toMap(resultJson);
 	}
 	
@@ -272,11 +272,11 @@ public final class AuthUtils {
 	 * @param consumer
 	 */
 	public static <T> void onTokenExpire(Consumer<Map<String, T>> consumer) {
-		subscribe(AuthUtils.AUTH_TOKEN_EXPIRE_CHANNEL, (channel, message) -> {
-			log.info("频道{} 收到消息 {}", channel, message);
+		subscribe((channel, message) -> {
+			log.info("Channel {} Received message: {}", channel, message);
 			Map<String, T> result = JacksonUtils.toMap(message);
 			consumer.accept(result);
-		});
+		}, AuthUtils.AUTH_TOKEN_EXPIRE_CHANNEL);
 	}
 	
 	/**

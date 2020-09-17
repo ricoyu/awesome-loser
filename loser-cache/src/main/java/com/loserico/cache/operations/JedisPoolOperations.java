@@ -30,23 +30,10 @@ public class JedisPoolOperations implements JedisOperations {
 	
 	private final Pool<Jedis> pool;
 	
-	/**
-	 * 专门用来发布
-	 */
-	private final Jedis publishJedis;
-	
-	/**
-	 * 专门用来订阅
-	 * 因为发布和订阅的Jedis Instance不能是同一个
-	 */
-	private final Jedis subscribeJedis;
-	
 	private static final ExecutorService THREAD_POOL = ThreadPool.newThreadPool();
 	
 	public JedisPoolOperations(Pool<Jedis> pool) {
 		this.pool = pool;
-		this.publishJedis = pool.getResource();
-		this.subscribeJedis = pool.getResource();
 	}
 	
 	@Override
@@ -326,12 +313,31 @@ public class JedisPoolOperations implements JedisOperations {
 	
 	@Override
 	public Long publish(byte[] channel, byte[] message) {
-		return publishJedis.publish(channel, message);
+		return operate((jedis) -> {
+			return jedis.publish(channel, message);
+		});
 	}
 	
+	/**
+	 * 订阅消息用的Jedis实例不要用完就关掉, 否则接收消息的时候会抛异常
+	 * redis.clients.jedis.exceptions.JedisConnectionException: Unexpected end of stream.
+	 * @param jedisPubSub
+	 * @param channels
+	 */
 	@Override
 	public void subscribe(JedisPubSub jedisPubSub, String... channels) {
-		THREAD_POOL.execute(() -> subscribeJedis.subscribe(jedisPubSub, channels));
+		THREAD_POOL.execute(() -> pool.getResource().subscribe(jedisPubSub, channels));
+	}
+	
+	/**
+	 * 订阅消息用的Jedis实例不要用完就关掉, 否则接收消息的时候会抛异常
+	 * redis.clients.jedis.exceptions.JedisConnectionException: Unexpected end of stream.
+	 * @param jedisPubSub
+	 * @param patterns
+	 */
+	@Override
+	public void psubscribe(JedisPubSub jedisPubSub, String... patterns) {
+		THREAD_POOL.execute(() -> pool.getResource().psubscribe(jedisPubSub, patterns));
 	}
 	
 	@Override

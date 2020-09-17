@@ -2,7 +2,9 @@ package com.loserico.common.spring.utils;
 
 import com.loserico.networking.utils.HttpUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -29,6 +31,8 @@ import static com.loserico.common.lang.utils.Assert.notNull;
  */
 @Slf4j
 public final class ServletUtils {
+	
+	private static final AntPathMatcher antPathMatcher = new AntPathMatcher();
 	
 	public static final String APPLICATION_JSON = "application/json";
 	
@@ -247,7 +251,7 @@ public final class ServletUtils {
 	/**
 	 * 读取HttpServletRequest Body
 	 */
-	public String readRequestBody() {
+	public static String readRequestBody() {
 		BufferedReader br = null;
 		StringBuilder sb = new StringBuilder();
 		
@@ -307,6 +311,41 @@ public final class ServletUtils {
 	}
 	
 	/**
+	 * 获取请求的URI
+	 * @return String
+	 */
+	public static String requestPath() {
+		HttpServletRequest request = getRequest();
+		return requestPath(request);
+	}
+	
+	/**
+	 * 获取请求的URI
+	 * @param request
+	 * @return String
+	 */
+	public static String requestPath(ServletRequest request) {
+		HttpServletRequest httpServletRequest = (HttpServletRequest)request;
+		return requestPath(httpServletRequest);
+	}
+	
+	/**
+	 * 获取请求的URI
+	 * @param request
+	 * @return String
+	 */
+	public static String requestPath(HttpServletRequest request) {
+		String path = request.getServletPath();
+		
+		String pathInfo = request.getPathInfo();
+		if (pathInfo != null) {
+			path = StringUtils.hasLength(path) ? path + pathInfo : pathInfo;
+		}
+		
+		return path;
+	}
+	
+	/**
 	 * 判断请求的URI是否与给定的matchPath匹配(以matchPath结尾)
 	 * @param request
 	 * @param matchPath 要匹配的URI
@@ -314,7 +353,8 @@ public final class ServletUtils {
 	 */
 	public static boolean pathMatch(HttpServletRequest request, String matchPath) {
 		notNull(matchPath, "matchPath cannot be null");
-		return request.getServletPath().endsWith(matchPath.trim());
+		String path = requestPath(request);
+		return antPathMatcher.match(matchPath, path);
 	}
 	
 	/**
@@ -326,6 +366,18 @@ public final class ServletUtils {
 	public static boolean pathMatch(ServletRequest request, String matchPath) {
 		notNull(matchPath, "matchPath cannot be null");
 		return pathMatch((HttpServletRequest)request, matchPath);
+	}
+	
+	/**
+	 * 判断path是否匹配matchPattern定义的规则
+	 * @param path
+	 * @param matchPattern
+	 * @return boolean
+	 */
+	public static boolean pathMatch(String path, String matchPattern) {
+		notNull(matchPattern, "matchPattern cannot be null");
+		notNull(path, "path cannot be null");
+		return antPathMatcher.match(matchPattern, path);
 	}
 	
 	public static class CookieBuilder {

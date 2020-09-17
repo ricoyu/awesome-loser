@@ -121,7 +121,7 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 		logger.error("Rest API ERROR happen", ex);
 		headers.add("Content-Type", "application/json");
 		Result result = Results.status("400", "Bad Request")
-				.debugMessage(ex.getLocalizedMessage())
+				//.debugMessage(ex.getLocalizedMessage())
 				.build();
 		return new ResponseEntity(result, headers, HttpStatus.OK);
 	}
@@ -176,7 +176,7 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	public ResponseEntity<Object> handleUniqueConstraintViolationException(UniqueConstraintViolationException e) {
 		logger.error("", e);
 		Result result = Results.status("400", "Bad Request")
-				.debugMessage(e.getMessage())
+				//.debugMessage(e.getMessage())
 				.build();
 		return new ResponseEntity(result, HttpStatus.OK);
 	}
@@ -186,7 +186,7 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	public ResponseEntity<Object> handleEntityNotFoundException(EntityNotFoundException e) {
 		logger.error("", e);
 		Result result = Results.status("404", e.getMessage())
-				.debugMessage(e.getMessage())
+				//.debugMessage(e.getMessage())
 				.build();
 		return new ResponseEntity(result, HttpStatus.OK);
 	}

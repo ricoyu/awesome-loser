@@ -25,4 +25,11 @@ public class ReflectionTest {
 			System.out.println(field.toGenericString());
 		}
 	}
+	
+	@Test
+	public void testArrayType() {
+		System.out.println(new int[]{}.getClass());
+		System.out.println(new int[]{}.getClass().isArray());
+		System.out.println(new String[]{}.getClass().isArray());
+	}
 }

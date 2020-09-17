@@ -1,6 +1,7 @@
 package com.loserico.netty.base;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +29,8 @@ public class NettyClientHandler extends ChannelInboundHandlerAdapter {
 	 */
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
-		super.channelActive(ctx);
+		ByteBuf buf = Unpooled.copiedBuffer("HelloServer".getBytes(UTF_8));
+		ctx.writeAndFlush(buf);
 	}
 	
 	/**

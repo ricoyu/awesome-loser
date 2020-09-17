@@ -34,7 +34,7 @@ public class Result {
 	/**
 	 * 输出的调试信息
 	 */
-	private Object debugMessage;
+	//private Object debugMessage;
 	
 	/**
 	 * 返回的数据

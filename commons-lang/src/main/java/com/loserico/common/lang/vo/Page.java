@@ -21,7 +21,7 @@ public class Page implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	/**
-	 * 当前第几页
+	 * 当前第几页, 从1开始
 	 */
 	private int currentPage = 1;
 
@@ -92,7 +92,11 @@ public class Page implements Serializable {
 	public int getCurrentPage() {
 		return currentPage;
 	}
-
+	
+	/**
+	 * 页码从1开始
+	 * @param currentPage
+	 */
 	public void setCurrentPage(int currentPage) {
 		this.currentPage = currentPage;
 	}

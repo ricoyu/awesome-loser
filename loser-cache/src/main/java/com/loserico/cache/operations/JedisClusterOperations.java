@@ -319,6 +319,11 @@ public class JedisClusterOperations implements JedisOperations {
 	}
 	
 	@Override
+	public void psubscribe(JedisPubSub jedisPubSub, String... patterns) {
+		log.info("Not implemented yet!");
+	}
+	
+	@Override
 	public Jedis jedis() {
 		throw new UnsupportedOperationException("JedisClusterOperations不支持暴露Jedis");
 	}

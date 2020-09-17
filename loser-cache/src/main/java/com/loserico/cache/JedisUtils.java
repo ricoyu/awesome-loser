@@ -1312,7 +1312,7 @@ public final class JedisUtils {
 			try {
 				return JacksonUtils.objectMapper().readValue(UnMarshaller.toString(data), javaType);
 			} catch (IOException e) {
-				log.error("将value转成集合类型时失败", e);
+				log.error("Convert value to Collection type failed", e);
 				throw new JedisValueOperationException(e);
 			}
 		}
@@ -1378,7 +1378,7 @@ public final class JedisUtils {
 								try {
 									return JacksonUtils.objectMapper().readValue(UnMarshaller.toString(entry.getValue()), javaType);
 								} catch (IOException e) {
-									log.error("将value转成集合类型时失败", e);
+									log.error("Convert value to Collection type failed", e);
 									throw new JedisValueOperationException(e);
 								}
 							}));
@@ -1413,7 +1413,7 @@ public final class JedisUtils {
 								try {
 									return JacksonUtils.objectMapper().readValue(UnMarshaller.toString(entry.getValue()), javaType);
 								} catch (IOException e) {
-									log.error("将value转成集合类型时失败", e);
+									log.error("Convert value to Collection type failed", e);
 									throw new JedisValueOperationException(e);
 								}
 							}));
@@ -1893,20 +1893,45 @@ public final class JedisUtils {
 	/**
 	 * 异步方式订阅频道, 收到消息后回调 messageListener
 	 *
-	 * @param chnannel
+	 * @param chnannels
 	 * @param messageListener
 	 * @return JedisPubSub 用于取消订阅
 	 */
-	public static JedisPubSub subscribe(String chnannel, MessageListener messageListener) {
-			JedisPubSub jedisPubSub = new JedisPubSub() {
-				
-				@Override
-				public void onMessage(String channel, String message) {
-					messageListener.onMessage(channel, message);
-				}
-			};
-			jedisOperations.subscribe(jedisPubSub, chnannel);
-			return jedisPubSub;
+	public static JedisPubSub subscribe(MessageListener messageListener, String... chnannels) {
+		JedisPubSub jedisPubSub = new JedisPubSub() {
+			
+			@Override
+			public void onMessage(String channel, String message) {
+				messageListener.onMessage(channel, message);
+			}
+		};
+		jedisOperations.subscribe(jedisPubSub, chnannels);
+		return jedisPubSub;
+	}
+	
+	/**
+	 * 异步方式订阅频道, 收到消息后回调 messageListener
+	 * Subscribes the client to the given patterns.
+	 *
+	 * Supported glob-style patterns:
+	 *
+	 * h?llo subscribes to hello, hallo and hxllo
+	 * h*llo subscribes to hllo and heeeello
+	 * h[ae]llo subscribes to hello and hallo, but not hillo
+	 * 
+	 * @param chnannelPatterns
+	 * @param messageListener
+	 * @return JedisPubSub 用于取消订阅
+	 */
+	public static JedisPubSub psubscribe(MessageListener messageListener, String... chnannelPatterns) {
+		JedisPubSub jedisPubSub = new JedisPubSub() {
+			@Override
+			public void onPMessage(String pattern, String channel, String message) {
+				messageListener.onMessage(channel, message);
+			}
+		};
+		jedisOperations.psubscribe(jedisPubSub, chnannelPatterns);
+		return jedisPubSub;
 	}
 	
 	/**

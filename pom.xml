@@ -5,7 +5,7 @@
     <groupId>com.loserico</groupId>
     <artifactId>awesome-loser</artifactId>
     <packaging>pom</packaging>
-    <version>4.7.9</version>
+    <version>4.7.10</version>
     <name>Awesome Loser</name>
     <url>http://maven.apache.org</url>
 
@@ -24,6 +24,7 @@
         <module>loser-networking</module>
         <module>loser-security</module>
         <module>loser-mongo</module>
+        <module>loser-token-parser</module>
     </modules>
 
     <properties>

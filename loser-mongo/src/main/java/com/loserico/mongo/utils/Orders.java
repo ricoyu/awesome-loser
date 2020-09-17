@@ -2,10 +2,12 @@ package com.loserico.mongo.utils;
 
 import com.loserico.common.lang.vo.OrderBean;
 import com.loserico.common.lang.vo.Page;
+import org.bson.Document;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.loserico.common.lang.utils.Assert.notNull;
@@ -38,6 +40,7 @@ public final class Orders {
 	
 	/**
 	 * OrderBean[] 转Sort
+	 *
 	 * @param orderBeans
 	 * @return
 	 */
@@ -89,6 +92,19 @@ public final class Orders {
 	}
 	
 	/**
+	 * 将排序json转成Spring Data Sort对象
+	 * @param sortJson
+	 * @return
+	 */
+	public static Sort toSort(String sortJson) {
+		List<Order> orders = new ArrayList<>();
+		Document.parse(sortJson).forEach((field, value) -> {
+			orders.add(new Order(direction((int) value), field));
+		});
+		return Sort.by(orders);
+	}
+	
+	/**
 	 * 获取升降序规则
 	 *
 	 * @param orderBean
@@ -96,5 +112,16 @@ public final class Orders {
 	 */
 	private static Direction direction(OrderBean orderBean) {
 		return orderBean.getDirection() == OrderBean.ORDER_BY.ASC ? Direction.ASC : Direction.DESC;
+	}
+	
+	/**
+	 * 1 升序
+	 * -1 降序(或者说除之外都是降序)
+	 *
+	 * @param direction
+	 * @return Direction
+	 */
+	private static Direction direction(int direction) {
+		return direction == 1 ? Direction.ASC : Direction.DESC;
 	}
 }

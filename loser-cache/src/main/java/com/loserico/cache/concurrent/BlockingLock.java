@@ -199,7 +199,7 @@ public class BlockingLock implements Lock {
 			 * 这里把当前线程传给NotifyListener, 这个在监听到事件后, 才可以知道要唤醒的线程是哪个
 			 * 订阅本身是交给JedisPoolOperations.THREAD_POOL线程池去执行的
 			 */
-			this.subscribe = JedisUtils.subscribe(notifyChannel, new NotifyListener(Thread.currentThread()));
+			this.subscribe = JedisUtils.subscribe(new NotifyListener(Thread.currentThread()), notifyChannel);
 		}
 	}
 	

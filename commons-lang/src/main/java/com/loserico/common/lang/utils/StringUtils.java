@@ -909,6 +909,26 @@ public abstract class StringUtils {
 	}
 	
 	/**
+	 * 移除尾部字符串
+	 * @param str
+	 * @param trailingStr
+	 * @return String
+	 */
+	public static String trimTrailingCharacter(String str, String trailingStr) {
+		return CharMatcher.anyOf(trailingStr).trimTrailingFrom(str);
+	}
+	
+	/**
+	 * 移除头部的字符串
+	 * @param str
+	 * @param leadingStr
+	 * @return String
+	 */
+	public static String trimLeadingCharacter(String str, String leadingStr) {
+		return CharMatcher.anyOf(leadingStr).trimLeadingFrom(str);
+	}
+	
+	/**
 	 * Returns a 'cleaned' representation of the specified argument. 'Cleaned' is defined as the
 	 * following:
 	 * <p/>

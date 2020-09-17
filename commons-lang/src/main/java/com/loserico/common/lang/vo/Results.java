@@ -49,7 +49,7 @@ public class Results {
 		/**
 		 * 调试消息
 		 */
-		private Object debugMessage;
+		//private Object debugMessage;
 		
 		/**
 		 * 单个数据对象
@@ -76,10 +76,10 @@ public class Results {
 			return this;
 		}
 		
-		public Builder debugMessage(Object debugMessage) {
-			this.debugMessage = debugMessage;
-			return this;
-		}
+		//public Builder debugMessage(Object debugMessage) {
+		//	this.debugMessage = debugMessage;
+		//	return this;
+		//}
 		
 		/**
 		 * 设置返回数据
@@ -116,7 +116,7 @@ public class Results {
 		
 		public Result build() {
 			result.setMessage(message);
-			result.setDebugMessage(debugMessage);
+			//result.setDebugMessage(debugMessage);
 			result.setCode(code);
 			
 			if (results != null) {

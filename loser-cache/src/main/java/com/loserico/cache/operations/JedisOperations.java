@@ -382,6 +382,20 @@ public interface JedisOperations {
 	 */
 	public void subscribe(JedisPubSub jedisPubSub, String... channels);
 	
+	/**
+	 * Subscribes the client to the given patterns.
+	 * 
+	 * Supported glob-style patterns:
+	 *
+	 * h?llo subscribes to hello, hallo and hxllo
+	 * h*llo subscribes to hllo and heeeello
+	 * h[ae]llo subscribes to hello and hallo, but not hillo
+	 * 
+	 * @param jedisPubSub
+	 * @param patterns
+	 */
+	public void psubscribe(JedisPubSub jedisPubSub, String... patterns);
+	
 	public default String ping() {
 		throw new UnsupportedOperationException();
 	}

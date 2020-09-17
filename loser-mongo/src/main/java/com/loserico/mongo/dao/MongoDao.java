@@ -5,7 +5,10 @@ import com.loserico.common.lang.exception.EntityNotFoundException;
 import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.common.lang.vo.OrderBean;
 import com.loserico.common.lang.vo.Page;
+import com.loserico.mongo.support.AggregationQuery;
+import com.loserico.mongo.support.ScriptQuery;
 import com.loserico.mongo.utils.Orders;
+import com.loserico.tokenparser.utils.ParserUtils;
 import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.result.DeleteResult;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +16,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.BulkOperations;
 import org.springframework.data.mongodb.core.ExecutableRemoveOperation;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -41,7 +47,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
-public class MongoDao implements EntityOperations, CriteriaOperations {
+public class MongoDao implements EntityOperations, CriteriaOperations, ScriptOperations {
 	
 	/**
 	 * JavaScript 文件后缀
@@ -66,19 +72,24 @@ public class MongoDao implements EntityOperations, CriteriaOperations {
 	
 	@Override
 	public <T> T save(T entity) {
-		notNull(entity, "entity不能为努力了");
+		notNull(entity, "entity can not be null");
 		return mongoTemplate.save(entity);
 	}
 	
 	@Override
 	public <T> List<T> save(List<T> entities) {
-		notNull(entities, "entities 不能为null");
+		notNull(entities, "entities can not be null");
 		if (entities.isEmpty()) {
 			return emptyList();
 		}
 		
-		Collection<T> results = mongoTemplate.insert(entities, entities.get(0).getClass());
-		return new ArrayList<>(results);
+		//Collection<T> results = mongoTemplate.insert(entities, entities.get(0).getClass());
+		List<T> results = new ArrayList<>(entities.size());
+		for (T entity : entities) {
+			T result = mongoTemplate.save(entity);
+			results.add(result);
+		}
+		return results;
 	}
 	
 	@Override
@@ -88,8 +99,13 @@ public class MongoDao implements EntityOperations, CriteriaOperations {
 		}
 		
 		Class<?> clazz = Iterables.getFirst(entities, null).getClass();
-		Collection<T> results = mongoTemplate.insert(entities, clazz);
-		return new ArrayList<>(results);
+		
+		List<T> results = new ArrayList<>(entities.size());
+		for (T entity : entities) {
+			T result = mongoTemplate.save(entity);
+			results.add(result);
+		}
+		return results;
 	}
 	
 	@Override
@@ -296,5 +312,55 @@ public class MongoDao implements EntityOperations, CriteriaOperations {
 		return 0;
 	}
 	
+	@Override
+	public <T> List<T> queryForList(String json, Class<T> entityClass) {
+		return (List<T>) mongoTemplate.find(new ScriptQuery(json), entityClass);
+	}
+	
+	@Override
+	public <T> List<T> queryForList(String json, Class<T> entityClass, Object param) {
+		String content = ParserUtils.parse(json, param);
+		return (List<T>) mongoTemplate.find(new ScriptQuery(content), entityClass);
+	}
+	
+	@Override
+	public <T> List<T> queryForList(String json, Page page, Class<T> entityClass, Object param) {
+		String content = ParserUtils.parse(json, param);
+		ScriptQuery query = new ScriptQuery(content);
+		//查询总记录数
+		Long count = mongoTemplate.count(query, entityClass);
+		page.setTotalCount(count.intValue());
+		
+		query.skip(page.getFirstResult());
+		query.limit(page.getPageSize());
+		Sort sort = Orders.toSort(page);
+		if (sort != null) {
+			query.with(sort);
+		}
+		
+		return mongoTemplate.find(query, entityClass);
+	}
+	
+	@Override
+	public <T> List<T> queryForList(String json, String sortJson, Class<T> entityClass) {
+		ScriptQuery query = new ScriptQuery(json);
+		query.with(Orders.toSort(sortJson));
+		return (List<T>) mongoTemplate.find(query, entityClass);
+	}
+	
+	@Override
+	public <T> List<T> queryForList(String json, String sortJson, Class<T> entityClass, Object param) {
+		String content = ParserUtils.parse(json, param);
+		ScriptQuery query = new ScriptQuery(content);
+		query.with(Orders.toSort(sortJson));
+		return (List<T>) mongoTemplate.find(query, entityClass);
+	}
+	
+	@Override
+	public <T> List<T> aggregationQuery(String json, Class<T> outputType) {
+		TypedAggregation<T> aggregation = Aggregation.newAggregation(outputType, new AggregationQuery(json));
+		AggregationResults<T> aggregationResults = mongoTemplate.aggregate(aggregation, outputType);
+		return aggregationResults.getMappedResults();
+	}
 }
 

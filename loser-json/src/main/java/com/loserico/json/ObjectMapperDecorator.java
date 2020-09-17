@@ -15,9 +15,11 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
+import com.loserico.common.lang.vo.Page;
 import com.loserico.json.jackson.deserializer.EnumDeserializer;
 import com.loserico.json.jackson.deserializer.LocalDateDeserializer;
 import com.loserico.json.jackson.deserializer.LocalDateTimeDeserializer;
+import com.loserico.json.jackson.deserializer.PageDeserializer;
 import com.loserico.json.jackson.deserializer.XssStringJsonDeserializer;
 import com.loserico.json.jackson.serializer.LocalDateTimeSerializer;
 import com.loserico.common.lang.resource.PropertyReader;
@@ -71,24 +73,28 @@ public class ObjectMapperDecorator {
 			stringBasedObjectMapper(objectMapper);
 		}
 		
-		if (!enumProperties.isEmpty()) {
-			SimpleModule customModule = new SimpleModule();
-			customModule.setDeserializerModifier(new BeanDeserializerModifier() {
-				@SuppressWarnings({"unchecked", "rawtypes"})
-				@Override
-				public JsonDeserializer modifyEnumDeserializer(DeserializationConfig config,
-				                                               final JavaType type,
-				                                               BeanDescription beanDesc,
-				                                               final JsonDeserializer<?> deserializer) {
-					
-					EnumDeserializer enumDeserializer = new EnumDeserializer((Class<Enum<?>>) type.getRawClass(), enumProperties);
-					return enumDeserializer;
-				}
-				
-			});
+		/**
+		 * EnumDeserializer支持反序列化字符串到Enum类型, 并且是大小写不敏感的
+		 * 正常的话字符串"ASC" 可以反序列化成 Direction.ASC, 而字符串"asc"是不可以反序列化为Direction.ASC的
+		 * 加上EnumDeserializer后, 就可以支持字符串大小写不敏感匹配了
+		 * 
+		 * 如果指定了enumProperties, 那么可以根据指定enum的属性来反序列化为Enum类型, 默认根据ordinal 或者 name
+		 */
+		SimpleModule customModule = new SimpleModule();
+		customModule.setDeserializerModifier(new BeanDeserializerModifier() {
+			@SuppressWarnings({"unchecked", "rawtypes"})
+			@Override
+			public JsonDeserializer modifyEnumDeserializer(DeserializationConfig config,
+			                                               final JavaType type,
+			                                               BeanDescription beanDesc,
+			                                               final JsonDeserializer<?> deserializer) {
+				return new EnumDeserializer((Class<Enum<?>>) type.getRawClass(), enumProperties);
+			}
 			
-			objectMapper.registerModule(customModule);
-		}
+		});
+		//Page对象在序列化的时候不希望把order输出到json, 但是反序列化的时候要可以接收order
+		customModule.addDeserializer(Page.class, new PageDeserializer(Page.class));
+		objectMapper.registerModule(customModule);
 		
 		objectMapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, ignorePropertiesCase);
 		objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, failOnUnknownProperties);
@@ -177,7 +183,7 @@ public class ObjectMapperDecorator {
 	}
 	
 	
-	public Set<String> getEnumProperties() {
+	/*public Set<String> getEnumProperties() {
 		return enumProperties;
 	}
 	
@@ -207,5 +213,5 @@ public class ObjectMapperDecorator {
 	
 	public void setFailOnUnknownProperties(boolean failOnUnknownProperties) {
 		this.failOnUnknownProperties = failOnUnknownProperties;
-	}
+	}*/
 }

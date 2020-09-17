@@ -1,5 +1,6 @@
 package com.loserico.jackson.nested;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
@@ -20,6 +21,7 @@ public class Product {
 	
 	private String id;
 	
+	@JsonIgnore
 	private String name;
 	
 	private String brandName;
