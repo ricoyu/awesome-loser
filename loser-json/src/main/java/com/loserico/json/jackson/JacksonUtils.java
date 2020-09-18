@@ -5,7 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import com.loserico.json.ObjectMapperDecorator;
-import org.json.JSONException;
+import com.loserico.json.exception.JacksonException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +33,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 public final class JacksonUtils {
 	
 	private static final Logger logger = LoggerFactory.getLogger(JacksonUtils.class);
-
+	
 	private static ObjectMapper objectMapper = null;
 	
 	static {
@@ -61,8 +61,8 @@ public final class JacksonUtils {
 			return objectMapper.readValue(json, clazz);
 		} catch (IOException e) {
 			logger.error(e.getMessage(), e);
+			throw new JacksonException(e);
 		}
-		return null;
 	}
 	
 	public static <T> T toObject(byte[] src, Class<T> clazz) {
@@ -70,8 +70,8 @@ public final class JacksonUtils {
 			return objectMapper.readValue(src, clazz);
 		} catch (IOException e) {
 			logger.error(e.getMessage(), e);
+			throw new JacksonException(e);
 		}
-		return null;
 	}
 	
 	/**
@@ -98,12 +98,12 @@ public final class JacksonUtils {
 		}
 		Map<String, T> map = new HashMap<String, T>();
 		try {
-			map = objectMapper.readValue(json, new TypeReference<Map<String, T>>() {
+			return objectMapper.readValue(json, new TypeReference<Map<String, T>>() {
 			});
 		} catch (IOException e) {
 			logger.error(e.getMessage(), e);
+			throw new JacksonException(e);
 		}
-		return map;
 	}
 	
 	/**
@@ -130,12 +130,12 @@ public final class JacksonUtils {
 		}
 		Map<K, V> map = new HashMap<>();
 		try {
-			map = objectMapper.readValue(json, new TypeReference<Map<K, V>>() {
+			return objectMapper.readValue(json, new TypeReference<Map<K, V>>() {
 			});
 		} catch (IOException e) {
 			logger.error(e.getMessage(), e);
+			throw new JacksonException(e);
 		}
-		return map;
 	}
 	
 	public static <T> List<T> toList(String jsonArray, Class<T> clazz) {
@@ -148,7 +148,7 @@ public final class JacksonUtils {
 			return objectMapper.readValue(jsonArray, javaType);
 		} catch (IOException e) {
 			logger.error("Parse json array \n{} \n to List of type {} failed", jsonArray, clazz, e);
-			return emptyList();
+			throw new JacksonException(e);
 		}
 	}
 	
@@ -163,13 +163,12 @@ public final class JacksonUtils {
 		if (object == null) {
 			return null;
 		}
-		String json = null;
 		try {
-			json = objectMapper.writeValueAsString(object);
+			return objectMapper.writeValueAsString(object);
 		} catch (JsonProcessingException e) {
 			logger.error(e.getMessage(), e);
+			throw new JacksonException(e);
 		}
-		return json;
 	}
 	
 	public static byte[] toBytes(Object object) {
@@ -180,21 +179,20 @@ public final class JacksonUtils {
 			return objectMapper.writeValueAsBytes(object);
 		} catch (JsonProcessingException e) {
 			logger.error(e.getMessage(), e);
+			throw new JacksonException(e);
 		}
-		return new byte[0];
 	}
 	
 	public static <T> String toPrettyJson(T object) {
 		if (object == null) {
 			return null;
 		}
-		String json = null;
 		try {
-			json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(object);
+			return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(object);
 		} catch (JsonProcessingException e) {
 			logger.error(e.getMessage(), e);
+			throw new JacksonException(e);
 		}
-		return json;
 	}
 	
 	public static void writeValue(Writer writer, Object value) {
@@ -202,7 +200,7 @@ public final class JacksonUtils {
 			objectMapper.writeValue(writer, value);
 		} catch (IOException e) {
 			logger.error(e.getMessage(), e);
-			throw new JSONException(e);
+			throw new JacksonException(e);
 		}
 	}
 	

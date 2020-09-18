@@ -7,6 +7,7 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.timeout.IdleStateHandler;
 import lombok.SneakyThrows;
@@ -35,13 +36,14 @@ public class HeartBeatServer {
 		try {
 			ServerBootstrap bootstrap = new ServerBootstrap();
 			bootstrap.group(bossGroup, workerGroup)
+					.channel(NioServerSocketChannel.class)
 					.childHandler(new ChannelInitializer<SocketChannel>() {
 						
 						@Override
 						protected void initChannel(SocketChannel ch) throws Exception {
 							ChannelPipeline pipeline = ch.pipeline();
-							pipeline.addLast(new StringEncoder());
-							pipeline.addLast(new StringEncoder());
+							pipeline.addLast("decoder", new StringEncoder());
+							pipeline.addLast("encoder", new StringEncoder());
 							/*
 							 * IdleStateHandler的readerIdleTime参数指定超过3秒还没收到客户端的连接
 							 * 会触发IdleStateEvent事件并且交给下一个handler处理, 下一个handler必须
@@ -56,8 +58,8 @@ public class HeartBeatServer {
 			ChannelFuture channelFuture = bootstrap.bind("localhost", 9000).sync();
 			channelFuture.channel().closeFuture().sync();
 		} finally {
-			bossGroup.shutdownGracefully();
 			workerGroup.shutdownGracefully();
+			bossGroup.shutdownGracefully();
 		}
 	}
 }

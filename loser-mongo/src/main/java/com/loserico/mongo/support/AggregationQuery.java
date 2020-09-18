@@ -1,5 +1,6 @@
 package com.loserico.mongo.support;
 
+import com.loserico.tokenparser.utils.ParserUtils;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
@@ -21,6 +22,10 @@ public class AggregationQuery implements AggregationOperation {
 	
 	public AggregationQuery(String json) {
 		this.json = json;
+	}
+	
+	public AggregationQuery(String json, Object param) {
+		this.json = ParserUtils.parse(json, param);;
 	}
 	
 	@Override

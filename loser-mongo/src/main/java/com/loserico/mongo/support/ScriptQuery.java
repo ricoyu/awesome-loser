@@ -1,5 +1,6 @@
 package com.loserico.mongo.support;
 
+import com.loserico.tokenparser.utils.ParserUtils;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.query.Query;
 
@@ -21,20 +22,12 @@ public class ScriptQuery extends Query {
 		this.jsonOperation = jsonOperation;
 	}
 	
+	public ScriptQuery(String jsonOperation, Object param) {
+		this.jsonOperation = ParserUtils.parse(jsonOperation, param);
+	}
+	
 	@Override
 	public Document getQueryObject() {
 		return Document.parse(jsonOperation);
 	}
-	
-	
-	public static void main(String[] args) {
-		for (int i = 0; i < 1000; i++) {
-			Document sort = Document.parse("{\"salary\": -1, \"dep\": 1}");
-			sort.forEach((key, value) -> {
-				System.out.println("key: " + key + ", value: " + value);
-			});
-			System.out.println("------------");
-		}
-	}
-	
 }

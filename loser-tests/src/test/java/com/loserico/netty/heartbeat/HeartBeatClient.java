@@ -53,7 +53,8 @@ public class HeartBeatClient {
 			
 			while (channel.isActive()) {
 				int num = ThreadLocalRandom.current().nextInt(10);
-				TimeUnit.MILLISECONDS.sleep(num * 1000);
+				TimeUnit.MILLISECONDS.sleep(2 * 1000);
+				log.info("发送消息: {}", text);
 				channel.writeAndFlush(text);
 			}
 		} finally {

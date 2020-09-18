@@ -2,6 +2,7 @@ package com.loserico.json;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.BeanDescription;
 import com.fasterxml.jackson.databind.DeserializationConfig;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -98,6 +99,8 @@ public class ObjectMapperDecorator {
 		
 		objectMapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, ignorePropertiesCase);
 		objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, failOnUnknownProperties);
+		//JSON字符串field允许使用单引号括起来, 标准JSON是不允许的, 只可以使用双引号
+		objectMapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
 		/*
 		 * 用来处理没有默认构造函数的bean
 		 * POJO的有参构造函数需要标注@JsonCreator

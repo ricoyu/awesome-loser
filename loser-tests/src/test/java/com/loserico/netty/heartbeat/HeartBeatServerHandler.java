@@ -26,7 +26,8 @@ public class HeartBeatServerHandler extends SimpleChannelInboundHandler<String> 
 	}
 	
 	@Override
-	protected void channelRead0(ChannelHandlerContext ctx, String msg) throws Exception {
+	public void channelRead0(ChannelHandlerContext ctx, String msg) throws Exception {
+		log.info(msg);
 		log.info(" ====== > [server] message received : ", msg);
 		if ("Heartbeat Packet".equals(msg)) {
 			ctx.channel().writeAndFlush("ok");
@@ -57,7 +58,7 @@ public class HeartBeatServerHandler extends SimpleChannelInboundHandler<String> 
 		
 		log.info(ctx.channel().remoteAddress() + "超时事件" + eventType);
 		if (readIdleTimes > 3) {
-			log.info("[server]读空闲超过3次，关闭连接，释放更多资源");
+			log.info("[server]读空闲超过3次, 关闭连接, 释放更多资源");
 			ctx.channel().writeAndFlush("idle close");
 			ctx.channel().close();
 		}

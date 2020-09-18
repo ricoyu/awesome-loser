@@ -7,10 +7,12 @@ import com.loserico.common.lang.vo.OrderBean;
 import com.loserico.common.lang.vo.Page;
 import com.loserico.mongo.support.AggregationQuery;
 import com.loserico.mongo.support.ScriptQuery;
+import com.loserico.mongo.support.ScriptUpdate;
 import com.loserico.mongo.utils.Orders;
 import com.loserico.tokenparser.utils.ParserUtils;
 import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.result.DeleteResult;
+import com.mongodb.client.result.UpdateResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.BulkOperations;
@@ -22,13 +24,15 @@ import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 
 import javax.annotation.PostConstruct;
 import java.io.Serializable;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import static com.loserico.common.lang.utils.Assert.notNull;
@@ -233,51 +237,6 @@ public class MongoDao implements EntityOperations, CriteriaOperations, ScriptOpe
 	}
 	
 	@Override
-	public <T> T findUniqueByProperty(Class<T> entityClass, String propertyName, Object value) {
-		return null;
-	}
-	
-	@Override
-	public <T> T findUniqueByProperty(Class<T> entityClass, String propertyName, Object value, OrderBean... orders) {
-		return null;
-	}
-	
-	@Override
-	public <T> List<T> findBetween(Class<T> entityClass, String propertyName, LocalDateTime begin, LocalDateTime end) {
-		return null;
-	}
-	
-	@Override
-	public <T> List<T> findBetween(Class<T> entityClass, String propertyName, LocalDateTime begin, LocalDateTime end, OrderBean... orders) {
-		return null;
-	}
-	
-	@Override
-	public <T> List<T> findBetween(Class<T> entityClass, String propertyName, LocalDateTime begin, LocalDateTime end, Page page) {
-		return null;
-	}
-	
-	@Override
-	public <T> List<T> findBetween(Class<T> entityClass, String propertyName, LocalDateTime begin, LocalDateTime end, boolean includeDeleted) {
-		return null;
-	}
-	
-	@Override
-	public <T> List<T> findIn(Class<T> entityClass, String propertyName, Collection<?> value) {
-		return null;
-	}
-	
-	@Override
-	public <T> List<T> findIn(Class<T> entityClass, String propertyName, Collection<?> value, OrderBean... orders) {
-		return null;
-	}
-	
-	@Override
-	public <T> List<T> findIn(Class<T> entityClass, String propertyName, Collection<?> value, Page page) {
-		return null;
-	}
-	
-	@Override
 	public <T> boolean ifExists(Class<T> entityClass, String propertyName, Object value) {
 		return false;
 	}
@@ -319,14 +278,12 @@ public class MongoDao implements EntityOperations, CriteriaOperations, ScriptOpe
 	
 	@Override
 	public <T> List<T> queryForList(String json, Class<T> entityClass, Object param) {
-		String content = ParserUtils.parse(json, param);
-		return (List<T>) mongoTemplate.find(new ScriptQuery(content), entityClass);
+		return (List<T>) mongoTemplate.find(new ScriptQuery(json, param), entityClass);
 	}
 	
 	@Override
 	public <T> List<T> queryForList(String json, Page page, Class<T> entityClass, Object param) {
-		String content = ParserUtils.parse(json, param);
-		ScriptQuery query = new ScriptQuery(content);
+		ScriptQuery query = new ScriptQuery(json, param);
 		//查询总记录数
 		Long count = mongoTemplate.count(query, entityClass);
 		page.setTotalCount(count.intValue());
@@ -350,17 +307,133 @@ public class MongoDao implements EntityOperations, CriteriaOperations, ScriptOpe
 	
 	@Override
 	public <T> List<T> queryForList(String json, String sortJson, Class<T> entityClass, Object param) {
-		String content = ParserUtils.parse(json, param);
-		ScriptQuery query = new ScriptQuery(content);
-		query.with(Orders.toSort(sortJson));
+		ScriptQuery query = new ScriptQuery(json, param);
+		
+		String sortContent = ParserUtils.parse(sortJson, param);
+		query.with(Orders.toSort(sortContent));
+		
 		return (List<T>) mongoTemplate.find(query, entityClass);
 	}
 	
 	@Override
-	public <T> List<T> aggregationQuery(String json, Class<T> outputType) {
-		TypedAggregation<T> aggregation = Aggregation.newAggregation(outputType, new AggregationQuery(json));
-		AggregationResults<T> aggregationResults = mongoTemplate.aggregate(aggregation, outputType);
+	public <T> List<T> aggregationQuery(Class<T> entityClass, String... scripts) {
+		AggregationQuery[] aggregationQueries = Arrays.stream(scripts)
+				.filter(Objects::nonNull)
+				.map(script -> new AggregationQuery(script))
+				.toArray(AggregationQuery[]::new);
+		TypedAggregation<T> aggregation = Aggregation.newAggregation(entityClass, aggregationQueries);
+		AggregationResults<T> aggregationResults = mongoTemplate.aggregate(aggregation, entityClass);
 		return aggregationResults.getMappedResults();
+	}
+	
+	@Override
+	public <T> List<T> aggregationQuery(String collection, Class<T> entityClass, String... scripts) {
+		AggregationQuery[] aggregationQueries = Arrays.stream(scripts)
+				.filter(Objects::nonNull)
+				.map(script -> new AggregationQuery(script))
+				.toArray(AggregationQuery[]::new);
+		TypedAggregation<T> aggregation = Aggregation.newAggregation(entityClass, aggregationQueries);
+		AggregationResults<T> aggregationResults = mongoTemplate.aggregate(aggregation, collection, entityClass);
+		return aggregationResults.getMappedResults();
+	}
+	
+	@Override
+	public <T> List<T> aggregationQuery(Class<T> entityClass, Object param, List<String> scripts) {
+		AggregationQuery[] aggregationQueries = scripts.stream()
+				.map((script) -> {
+					return new AggregationQuery(script, param);
+				}).toArray(AggregationQuery[]::new);
+		TypedAggregation<T> aggregation = Aggregation.newAggregation(entityClass, aggregationQueries);
+		AggregationResults<T> aggregationResults = mongoTemplate.aggregate(aggregation, entityClass);
+		return aggregationResults.getMappedResults();
+	}
+	
+	@Override
+	public <T> List<T> aggregationQuery(String collection, Class<T> entityClass, Object param, List<String> scripts) {
+		AggregationQuery[] aggregationQueries = scripts.stream()
+				.map((script) -> {
+					return new AggregationQuery(script, param);
+				}).toArray(AggregationQuery[]::new);
+		TypedAggregation<T> aggregation = Aggregation.newAggregation(entityClass, aggregationQueries);
+		AggregationResults<T> aggregationResults = mongoTemplate.aggregate(aggregation, collection, entityClass);
+		return aggregationResults.getMappedResults();
+	}
+	
+	@Override
+	public <T> T findOne(String json, Class<T> entityClass) {
+		return mongoTemplate.findOne(new ScriptQuery(json), entityClass);
+	}
+	
+	@Override
+	public <T> T findOne(String json, Class<T> entityClass, Object param) {
+		return mongoTemplate.findOne(new ScriptQuery(json, param), entityClass);
+	}
+	
+	@Override
+	public <T> T findOne(String json, String sortJson, Class<T> entityClass) {
+		ScriptQuery query = new ScriptQuery(json);
+		query.with(Orders.toSort(sortJson));
+		return mongoTemplate.findOne(query, entityClass);
+	}
+	
+	@Override
+	public <T> T findOne(String json, String sortJson, Class<T> entityClass, Object param) {
+		ScriptQuery query = new ScriptQuery(json, param);
+		
+		String sortContent = ParserUtils.parse(sortJson, param);
+		query.with(Orders.toSort(sortContent));
+		
+		return mongoTemplate.findOne(query, entityClass);
+	}
+	
+	@Override
+	public UpdateResult updateOne(String collectionName, String query, String update) {
+		ScriptQuery scriptQuery = new ScriptQuery(query);
+		Update upd = ScriptUpdate.toUpdate(update);
+		return mongoTemplate.updateFirst(scriptQuery, upd, collectionName);
+	}
+	
+	@Override
+	public UpdateResult updateOne(String collectionName, String query, String update, Object param) {
+		notNull(query, "query cannot be null!");
+		notNull(update, "update cannot be null!");
+		ScriptQuery scriptQuery = new ScriptQuery(query, param);
+		Update upd = ScriptUpdate.toUpdate(update, param);
+		return mongoTemplate.updateFirst(scriptQuery, upd, collectionName);
+	}
+	
+	@Override
+	public UpdateResult updateMany(String collectionName, String query, String update) {
+		ScriptQuery scriptQuery = new ScriptQuery(query);
+		Update upd = ScriptUpdate.toUpdate(update);
+		return mongoTemplate.updateMulti(scriptQuery, upd, collectionName);
+	}
+	
+	@Override
+	public UpdateResult updateMany(String collectionName, String query, String update, Object param) {
+		notNull(query, "query cannot be null!");
+		notNull(update, "update cannot be null!");
+		ScriptQuery scriptQuery = new ScriptQuery(query, param);
+		Update upd = ScriptUpdate.toUpdate(update, param);
+		return mongoTemplate.updateMulti(scriptQuery, upd, collectionName);
+	}
+	
+	@Override
+	public <T> T replaceOne(String collectionName, String query, T replacement) {
+		ScriptQuery scriptQuery = new ScriptQuery(query);
+		return mongoTemplate.findAndReplace(scriptQuery, replacement, collectionName);
+	}
+	
+	@Override
+	public DeleteResult delete(String collectionName, String query) {
+		ScriptQuery scriptQuery = new ScriptQuery(query);
+		return mongoTemplate.remove(scriptQuery, collectionName);
+	}
+	
+	@Override
+	public <T> DeleteResult delete(String query, Class<T> entityClass) {
+		ScriptQuery scriptQuery = new ScriptQuery(query);
+		return mongoTemplate.remove(scriptQuery, entityClass);
 	}
 }
 
