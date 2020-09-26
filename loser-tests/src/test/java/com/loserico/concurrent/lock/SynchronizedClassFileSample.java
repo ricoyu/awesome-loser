@@ -17,8 +17,4 @@ public class SynchronizedClassFileSample {
 			System.out.println("do in synchronized");
 		}
 	}
-	
-	public static void main(String[] args) {
-		
-	}
 }
