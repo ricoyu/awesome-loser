@@ -22,7 +22,7 @@ public class SqlFakeDataTest {
 		for(int i=0; i< 10000000; i++) {
 			sb.append(ThreadLocalRandom.current().nextInt(3000000)).append(",")
 					.append(ThreadLocalRandom.current().nextInt(3000000)).append(",")
-					.append(ThreadLocalRandom.current().nextInt(3000000)).append(IOUtils.LINE_SEPARATOR_UNIX);
+					.append(ThreadLocalRandom.current().nextInt(3000000)).append(System.lineSeparator());
 		}
 		IOUtils.write("d:/multi_col.txt", sb.toString());
 	}

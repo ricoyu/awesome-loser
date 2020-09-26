@@ -27,8 +27,7 @@ public class HeartBeatServerHandler extends SimpleChannelInboundHandler<String> 
 	
 	@Override
 	public void channelRead0(ChannelHandlerContext ctx, String msg) throws Exception {
-		log.info(msg);
-		log.info(" ====== > [server] message received : ", msg);
+		log.info(" ====== > [server] message received : {}", msg);
 		if ("Heartbeat Packet".equals(msg)) {
 			ctx.channel().writeAndFlush("ok");
 		} else {

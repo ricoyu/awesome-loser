@@ -3,6 +3,7 @@ package com.loserico.web.filter;
 import com.loserico.common.lang.context.ThreadContext;
 import com.loserico.common.lang.vo.Results;
 import com.loserico.web.utils.RestUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 
 import javax.servlet.Filter;
@@ -25,6 +26,7 @@ import static com.loserico.common.lang.vo.CommonErrorType.INTERNAL_SERVER_ERROR;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
+@Slf4j
 public class ExceptionFilter implements Filter {
 	
 	public static final String ROUTE_CAUSE = "routeCause";
@@ -34,6 +36,7 @@ public class ExceptionFilter implements Filter {
 		try {
 			chain.doFilter(request, response);
 		} catch (Throwable e) {
+			log.error("", e);
 			ThreadContext.put(ROUTE_CAUSE, e);
 			RestUtils.writeJson(response, HttpStatus.INTERNAL_SERVER_ERROR, Results.status(INTERNAL_SERVER_ERROR).build());
 		}

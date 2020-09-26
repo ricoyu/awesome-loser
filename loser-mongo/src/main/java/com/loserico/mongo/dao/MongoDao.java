@@ -6,6 +6,7 @@ import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.common.lang.vo.OrderBean;
 import com.loserico.common.lang.vo.Page;
 import com.loserico.mongo.support.AggregationQuery;
+import com.loserico.mongo.support.ExternalScriptsHelper;
 import com.loserico.mongo.support.ScriptQuery;
 import com.loserico.mongo.support.ScriptUpdate;
 import com.loserico.mongo.utils.Orders;
@@ -39,6 +40,7 @@ import static com.loserico.common.lang.utils.Assert.notNull;
 import static java.text.MessageFormat.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 /**
@@ -65,6 +67,9 @@ public class MongoDao implements EntityOperations, CriteriaOperations, ScriptOpe
 	
 	@Autowired
 	private MongoTemplate mongoTemplate;
+	
+	@Autowired
+	private ExternalScriptsHelper externalScriptsHelper;
 	
 	private Operations operations;
 	
@@ -273,16 +278,27 @@ public class MongoDao implements EntityOperations, CriteriaOperations, ScriptOpe
 	
 	@Override
 	public <T> List<T> queryForList(String json, Class<T> entityClass) {
-		return (List<T>) mongoTemplate.find(new ScriptQuery(json), entityClass);
+		if (externalScriptsHelper.isFileName(json)) {
+			String[] scripts = externalScriptsHelper.get(json);
+			return doQueryForList(first(scripts), second(scripts), entityClass, null);
+		}
+		return doQueryForList(json, null, entityClass, null);
 	}
 	
 	@Override
 	public <T> List<T> queryForList(String json, Class<T> entityClass, Object param) {
-		return (List<T>) mongoTemplate.find(new ScriptQuery(json, param), entityClass);
+		if (externalScriptsHelper.isFileName(json)) {
+			String[] scripts = externalScriptsHelper.get(json);
+			return doQueryForList(first(scripts), second(scripts), entityClass, param);
+		}
+		return doQueryForList(json, null, entityClass, param);
 	}
 	
 	@Override
-	public <T> List<T> queryForList(String json, Page page, Class<T> entityClass, Object param) {
+	public <T> List<T> queryForList(String json, Class<T> entityClass, Object param, Page page) {
+		if (externalScriptsHelper.isFileName(json)) {
+			json = externalScriptsHelper.getSingle(json);
+		}
 		ScriptQuery query = new ScriptQuery(json, param);
 		//查询总记录数
 		Long count = mongoTemplate.count(query, entityClass);
@@ -300,23 +316,34 @@ public class MongoDao implements EntityOperations, CriteriaOperations, ScriptOpe
 	
 	@Override
 	public <T> List<T> queryForList(String json, String sortJson, Class<T> entityClass) {
-		ScriptQuery query = new ScriptQuery(json);
-		query.with(Orders.toSort(sortJson));
-		return (List<T>) mongoTemplate.find(query, entityClass);
+		if (externalScriptsHelper.isFileName(json)) {
+			json = externalScriptsHelper.getSingle(json);
+		}
+		return doQueryForList(json, sortJson, entityClass, null);
 	}
 	
 	@Override
 	public <T> List<T> queryForList(String json, String sortJson, Class<T> entityClass, Object param) {
+		if (externalScriptsHelper.isFileName(json)) {
+			json = externalScriptsHelper.getSingle(json);
+		}
+		return doQueryForList(json, sortJson, entityClass, param);
+	}
+	
+	private <T> List<T> doQueryForList(String json, String sortJson, Class<T> entityClass, Object param) {
 		ScriptQuery query = new ScriptQuery(json, param);
 		
-		String sortContent = ParserUtils.parse(sortJson, param);
-		query.with(Orders.toSort(sortContent));
+		if (isNotBlank(sortJson)) {
+			String sortContent = ParserUtils.parse(sortJson, param);
+			query.with(Orders.toSort(sortContent));
+		}
 		
 		return (List<T>) mongoTemplate.find(query, entityClass);
 	}
 	
 	@Override
-	public <T> List<T> aggregationQuery(Class<T> entityClass, String... scripts) {
+	public <T> List<T> aggregationQuery(Class<T> entityClass, String filename) {
+		String[] scripts = externalScriptsHelper.get(filename);
 		AggregationQuery[] aggregationQueries = Arrays.stream(scripts)
 				.filter(Objects::nonNull)
 				.map(script -> new AggregationQuery(script))
@@ -327,7 +354,8 @@ public class MongoDao implements EntityOperations, CriteriaOperations, ScriptOpe
 	}
 	
 	@Override
-	public <T> List<T> aggregationQuery(String collection, Class<T> entityClass, String... scripts) {
+	public <T> List<T> aggregationQuery(String collection, Class<T> entityClass, String filename) {
+		String[] scripts = externalScriptsHelper.get(filename);
 		AggregationQuery[] aggregationQueries = Arrays.stream(scripts)
 				.filter(Objects::nonNull)
 				.map(script -> new AggregationQuery(script))
@@ -338,8 +366,9 @@ public class MongoDao implements EntityOperations, CriteriaOperations, ScriptOpe
 	}
 	
 	@Override
-	public <T> List<T> aggregationQuery(Class<T> entityClass, Object param, List<String> scripts) {
-		AggregationQuery[] aggregationQueries = scripts.stream()
+	public <T> List<T> aggregationQuery(Class<T> entityClass, Object param, String filename) {
+		String[] scripts = externalScriptsHelper.get(filename);
+		AggregationQuery[] aggregationQueries = Arrays.stream(scripts)
 				.map((script) -> {
 					return new AggregationQuery(script, param);
 				}).toArray(AggregationQuery[]::new);
@@ -349,8 +378,9 @@ public class MongoDao implements EntityOperations, CriteriaOperations, ScriptOpe
 	}
 	
 	@Override
-	public <T> List<T> aggregationQuery(String collection, Class<T> entityClass, Object param, List<String> scripts) {
-		AggregationQuery[] aggregationQueries = scripts.stream()
+	public <T> List<T> aggregationQuery(String collection, Class<T> entityClass, Object param, String filename) {
+		String[] scripts = externalScriptsHelper.get(filename);
+		AggregationQuery[] aggregationQueries = Arrays.stream(scripts)
 				.map((script) -> {
 					return new AggregationQuery(script, param);
 				}).toArray(AggregationQuery[]::new);
@@ -361,40 +391,66 @@ public class MongoDao implements EntityOperations, CriteriaOperations, ScriptOpe
 	
 	@Override
 	public <T> T findOne(String json, Class<T> entityClass) {
-		return mongoTemplate.findOne(new ScriptQuery(json), entityClass);
+		if (externalScriptsHelper.isFileName(json)) {
+			String[] scripts = externalScriptsHelper.get(json);
+			return doFindOne(first(scripts), second(scripts), entityClass, null);
+		}
+		return doFindOne(json, null, entityClass, null);
 	}
 	
 	@Override
 	public <T> T findOne(String json, Class<T> entityClass, Object param) {
-		return mongoTemplate.findOne(new ScriptQuery(json, param), entityClass);
+		if (externalScriptsHelper.isFileName(json)) {
+			String[] scripts = externalScriptsHelper.get(json);
+			return doFindOne(first(scripts), second(scripts), entityClass, param);
+		}
+		return doFindOne(json, null, entityClass, param);
 	}
 	
 	@Override
 	public <T> T findOne(String json, String sortJson, Class<T> entityClass) {
-		ScriptQuery query = new ScriptQuery(json);
-		query.with(Orders.toSort(sortJson));
-		return mongoTemplate.findOne(query, entityClass);
+		return doFindOne(json, sortJson, entityClass, null);
 	}
 	
 	@Override
 	public <T> T findOne(String json, String sortJson, Class<T> entityClass, Object param) {
+		return doFindOne(json, sortJson, entityClass, param);
+	}
+	
+	private <T> T doFindOne(String json, String sortJson, Class<T> entityClass, Object param) {
 		ScriptQuery query = new ScriptQuery(json, param);
 		
-		String sortContent = ParserUtils.parse(sortJson, param);
-		query.with(Orders.toSort(sortContent));
+		if (isNotBlank(sortJson)) {
+			String sortContent = ParserUtils.parse(sortJson, param);
+			query.with(Orders.toSort(sortContent));
+		}
 		
 		return mongoTemplate.findOne(query, entityClass);
 	}
 	
 	@Override
+	public UpdateResult updateOne(String collectionName, String filename) {
+		String[] scripts = externalScriptsHelper.get(filename);
+		return doUpdateOne(collectionName, first(scripts), second(scripts), null);
+	}
+	
+	@Override
+	public UpdateResult updateOne(String collectionName, String filename, Object param) {
+		String[] scripts = externalScriptsHelper.get(filename);
+		return doUpdateOne(collectionName, first(scripts), second(scripts), param);
+	}
+	
+	@Override
 	public UpdateResult updateOne(String collectionName, String query, String update) {
-		ScriptQuery scriptQuery = new ScriptQuery(query);
-		Update upd = ScriptUpdate.toUpdate(update);
-		return mongoTemplate.updateFirst(scriptQuery, upd, collectionName);
+		return doUpdateOne(collectionName, query, update, null);
 	}
 	
 	@Override
 	public UpdateResult updateOne(String collectionName, String query, String update, Object param) {
+		return doUpdateOne(collectionName, query, update, param);
+	}
+	
+	private UpdateResult doUpdateOne(String collectionName, String query, String update, Object param) {
 		notNull(query, "query cannot be null!");
 		notNull(update, "update cannot be null!");
 		ScriptQuery scriptQuery = new ScriptQuery(query, param);
@@ -403,14 +459,28 @@ public class MongoDao implements EntityOperations, CriteriaOperations, ScriptOpe
 	}
 	
 	@Override
+	public UpdateResult updateMany(String collectionName, String filename) {
+		String[] scripts = externalScriptsHelper.get(filename);
+		return doUpdateMany(collectionName, first(scripts), second(scripts), null);
+	}
+	
+	@Override
+	public UpdateResult updateMany(String collectionName, String filename, Object param) {
+		String[] scripts = externalScriptsHelper.get(filename);
+		return doUpdateMany(collectionName, first(scripts), second(scripts), param);
+	}
+	
+	@Override
 	public UpdateResult updateMany(String collectionName, String query, String update) {
-		ScriptQuery scriptQuery = new ScriptQuery(query);
-		Update upd = ScriptUpdate.toUpdate(update);
-		return mongoTemplate.updateMulti(scriptQuery, upd, collectionName);
+		return doUpdateMany(collectionName, query, update, null);
 	}
 	
 	@Override
 	public UpdateResult updateMany(String collectionName, String query, String update, Object param) {
+		return doUpdateMany(collectionName, query, update, param);
+	}
+	
+	private UpdateResult doUpdateMany(String collectionName, String query, String update, Object param) {
 		notNull(query, "query cannot be null!");
 		notNull(update, "update cannot be null!");
 		ScriptQuery scriptQuery = new ScriptQuery(query, param);
@@ -420,20 +490,71 @@ public class MongoDao implements EntityOperations, CriteriaOperations, ScriptOpe
 	
 	@Override
 	public <T> T replaceOne(String collectionName, String query, T replacement) {
-		ScriptQuery scriptQuery = new ScriptQuery(query);
+		if (externalScriptsHelper.isFileName(query)) {
+			query = externalScriptsHelper.getSingle(query);
+		}
+		return doReplaceOne(collectionName, query, replacement, null);
+	}
+	
+	@Override
+	public <T> T replaceOne(String collectionName, String query, T replacement, Object param) {
+		if (externalScriptsHelper.isFileName(query)) {
+			query = externalScriptsHelper.getSingle(query);
+		}
+		return doReplaceOne(collectionName, query, replacement, param);
+	}
+	
+	private <T> T doReplaceOne(String collectionName, String query, T replacement, Object param) {
+		ScriptQuery scriptQuery = new ScriptQuery(query, param);
+		if (replacement instanceof String) {
+			replacement = (T)ParserUtils.parse((String) replacement, param);
+		}
 		return mongoTemplate.findAndReplace(scriptQuery, replacement, collectionName);
 	}
 	
 	@Override
 	public DeleteResult delete(String collectionName, String query) {
+		if (externalScriptsHelper.isFileName(query)) {
+			query = externalScriptsHelper.getSingle(query);
+		}
 		ScriptQuery scriptQuery = new ScriptQuery(query);
 		return mongoTemplate.remove(scriptQuery, collectionName);
 	}
 	
 	@Override
 	public <T> DeleteResult delete(String query, Class<T> entityClass) {
+		if (externalScriptsHelper.isFileName(query)) {
+			query = externalScriptsHelper.getSingle(query);
+		}
 		ScriptQuery scriptQuery = new ScriptQuery(query);
 		return mongoTemplate.remove(scriptQuery, entityClass);
+	}
+	
+	/**
+	 * 取数组中第一个元素, 数组为null或者长度为0则返回null
+	 *
+	 * @param scripts
+	 * @return String
+	 */
+	private String first(String[] scripts) {
+		if (scripts != null && scripts.length > 0) {
+			return scripts[0];
+		}
+		
+		return null;
+	}
+	
+	/**
+	 * 取数组中第二个元素, 数组为null或者长度为0则返回null
+	 *
+	 * @param scripts
+	 * @return
+	 */
+	private String second(String[] scripts) {
+		if (scripts != null && scripts.length > 1) {
+			return scripts[1];
+		}
+		return null;
 	}
 }
 

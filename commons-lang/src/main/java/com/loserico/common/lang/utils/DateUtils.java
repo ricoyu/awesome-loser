@@ -1,6 +1,11 @@
 package com.loserico.common.lang.utils;
 
 import com.loserico.common.lang.constants.DateConstants;
+import com.loserico.common.lang.exception.DateParseException;
+import com.loserico.common.lang.exception.NoDateFormatFoundException;
+import com.loserico.common.lang.exception.UnsupportedLocalDateFormatException;
+import com.loserico.common.lang.exception.UnsupportedLocalDateTimeFormatException;
+import com.loserico.common.lang.exception.UnsupportedLocalTimeFormatException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.text.MessageFormat;
@@ -212,9 +217,10 @@ public final class DateUtils {
 		try {
 			return simpleDateFormat.parse(source);
 		} catch (ParseException e) {
-			log.error(MessageFormat.format("Parse date string:[{0}]", source));
+			String message = MessageFormat.format("Parse date string:[{0}]", source);
+			log.error(message);
+			throw new DateParseException(message, e);
 		}
-		return null;
 	}
 	
 	/**
@@ -233,9 +239,10 @@ public final class DateUtils {
 		try {
 			return simpleDateFormat.parse(source);
 		} catch (ParseException e) {
-			log.error(MessageFormat.format("Parse date string:[{0}]", source));
+			String message = MessageFormat.format("Parse date string:[{0}]", source);
+			log.error(message);
+			throw new DateParseException(message, e);
 		}
-		return null;
 	}
 	
 	/**
@@ -253,16 +260,18 @@ public final class DateUtils {
 		SimpleDateFormat simpleDateFormat = getSimpleDateFormat(source, timezone);
 		
 		if (simpleDateFormat == null) {
-			log.info("No suitable Dateformat found!");
-			return null;
+			String msg = "No suitable Dateformat found!";
+			log.info(msg);
+			throw new NoDateFormatFoundException(msg);
 		}
 		
 		try {
 			return simpleDateFormat.parse(source);
 		} catch (ParseException e) {
-			log.error(MessageFormat.format("Parse date string:[{0}]", source));
+			String message = MessageFormat.format("Parse date string:[{0}]", source);
+			log.error(message);
+			throw new DateParseException(message, e);
 		}
-		return null;
 	}
 	
 	/**
@@ -281,11 +290,12 @@ public final class DateUtils {
 		try {
 			return simpleDateFormat.parse(source);
 		} catch (ParseException e) {
-			log.error(MessageFormat.format("Parse date string:[{0}] with timezone:[{1}] and format:[{2}] failed!",
+			String message = MessageFormat.format("Parse date string:[{0}] with timezone:[{1}] and format:[{2}] failed!",
 					source, timezone,
-					format));
+					format);
+			log.error(message);
+			throw new DateParseException(message, e);
 		}
-		return null;
 	}
 	
 	/**
@@ -304,11 +314,12 @@ public final class DateUtils {
 		try {
 			return simpleDateFormat.parse(source);
 		} catch (ParseException e) {
-			log.error(MessageFormat.format("Parse date string:[{0}] with locale:[{1}] and format:[{2}] failed!",
+			String message = MessageFormat.format("Parse date string:[{0}] with locale:[{1}] and format:[{2}] failed!",
 					source, locale,
-					format));
+					format);
+			log.error(message);
+			throw new DateParseException(message, e);
 		}
-		return null;
 	}
 	
 	/**
@@ -327,11 +338,12 @@ public final class DateUtils {
 		try {
 			return simpleDateFormat.parse(source);
 		} catch (ParseException e) {
-			log.error(MessageFormat.format(
+			String message = MessageFormat.format(
 					"Parse date string:[{0}] with timezone:[{1}], locale:[{2}] and format:[{3}] failed!",
-					source, timezone, locale, FMT_ISO_DATETIME));
+					source, timezone, locale, FMT_ISO_DATETIME);
+			log.error(message);
+			throw new DateParseException(message, e);
 		}
-		return null;
 	}
 	
 	/**
@@ -349,11 +361,12 @@ public final class DateUtils {
 		try {
 			return simpleDateFormat.parse(source);
 		} catch (ParseException e) {
-			log.error(MessageFormat.format(
+			String message = MessageFormat.format(
 					"Parse date string:[{0}] with timezone:[{1}], locale:[{2}] and format:[{3}] failed!",
-					source, timezone, locale, format));
+					source, timezone, locale, format);
+			log.error(message);
+			throw new DateParseException(message, e);
 		}
-		return null;
 	}
 	
 	// -----------------------------------------------------------------------------------------------------------------
@@ -476,7 +489,7 @@ public final class DateUtils {
 		} catch (DateTimeParseException e) {
 		}
 		log.warn("{} does not match any LocalDate format! ", source);
-		return null;
+		throw new UnsupportedLocalDateFormatException(source + " does not match any LocalDate format!");
 	}
 	
 	/**
@@ -672,7 +685,7 @@ public final class DateUtils {
 			return LocalDateTime.parse(source, DTF_DATETIME_FORMAT_EN_9);
 		}
 		log.warn("{} does not match any LocalDateTime format! ", source);
-		return null;
+		throw new UnsupportedLocalDateTimeFormatException(source + " does not match any LocalDateTime format!");
 	}
 	
 	/**
@@ -791,7 +804,7 @@ public final class DateUtils {
 			return LocalTime.parse(source, DateConstants.DTF_TIME_FORMAT3);
 		}
 		
-		return null;
+		throw new UnsupportedLocalTimeFormatException(source + " does not match any known LocalTime format");
 	}
 	
 	/**

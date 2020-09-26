@@ -28,6 +28,7 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.nio.charset.Charset;
 import java.nio.file.CopyOption;
+import java.nio.file.DirectoryStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.OpenOption;
@@ -37,11 +38,14 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Scanner;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
 import static java.lang.Thread.currentThread;
@@ -54,6 +58,7 @@ import static java.nio.file.StandardOpenOption.READ;
 import static java.text.MessageFormat.format;
 import static java.time.format.DateTimeFormatter.ofPattern;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.join;
@@ -81,10 +86,6 @@ public class IOUtils {
 	 * The Windows directory separator character.
 	 */
 	public static final char DIR_SEPARATOR_WINDOWS = '\\';
-	/**
-	 * The Unix line separator string.
-	 */
-	public static final String LINE_SEPARATOR_UNIX = "\n";
 	
 	public static final String CLASSPATH_PREFIX = "classpath*:";
 	
@@ -111,7 +112,7 @@ public class IOUtils {
 		try (Scanner scanner = new Scanner(in)) {
 			while (scanner.hasNextLine()) {
 				String line = scanner.nextLine();
-				result.append(line).append(LINE_SEPARATOR_UNIX);
+				result.append(line).append(System.lineSeparator());
 			}
 			scanner.close();
 		} catch (Exception e) {
@@ -133,7 +134,30 @@ public class IOUtils {
 		try (Scanner scanner = new Scanner(file)) {
 			while (scanner.hasNextLine()) {
 				String line = scanner.nextLine();
-				result.append(line).append(LINE_SEPARATOR_UNIX);
+				result.append(line).append(System.lineSeparator());
+			}
+			scanner.close();
+		} catch (IOException e) {
+			log.error(e.getMessage(), e);
+		}
+		return result.toString();
+	}
+	
+	/**
+	 * 读取文件系统中的文件
+	 *
+	 * @param file
+	 * @return String
+	 */
+	public static String readFileAsString(File file) {
+		if (file == null) {
+			return null;
+		}
+		StringBuilder result = new StringBuilder();
+		try (Scanner scanner = new Scanner(file)) {
+			while (scanner.hasNextLine()) {
+				String line = scanner.nextLine();
+				result.append(line).append(System.lineSeparator());
 			}
 			scanner.close();
 		} catch (IOException e) {
@@ -157,20 +181,46 @@ public class IOUtils {
 		return readFileAsString(in);
 	}
 	
+	/**
+	 * 读取classpath下指定文件夹下的文件内容,文件不存在则返回null PathMatchingResourcePatternResolver
+	 *
+	 * @param dir
+	 * @param fileName
+	 * @return String
+	 */
+	public static String readClassPathFileAsString(String dir, String fileName) {
+		InputStream in = readClasspathFileAsInputStream(dir, fileName);
+		if (in == null) {
+			log.debug("Cannot file {} under classpath", fileName);
+			return null;
+		}
+		return readFileAsString(in);
+	}
+	
+	public static String readFile(Path path, Charset charset) {
+		Objects.requireNonNull(path, "path cannot be null!");
+		byte[] bytes = new byte[0];
+		try {
+			bytes = Files.readAllBytes(path);
+		} catch (IOException e) {
+			log.error("", e);
+			throw new RuntimeException(e);
+		}
+		
+		return new String(bytes, charset);
+	}
 	
 	public static String readFile(Path path) {
 		Objects.requireNonNull(path, "path cannot be null!");
-		StringBuilder result = new StringBuilder();
-		try (Scanner scanner = new Scanner(path.toFile())) {
-			while (scanner.hasNextLine()) {
-				String line = scanner.nextLine();
-				result.append(line).append(LINE_SEPARATOR_UNIX);
-			}
-			scanner.close();
+		byte[] bytes = new byte[0];
+		try {
+			bytes = Files.readAllBytes(path);
 		} catch (IOException e) {
-			log.error(e.getMessage(), e);
+			log.error("", e);
+			throw new RuntimeException(e);
 		}
-		return result.toString();
+		
+		return new String(bytes, UTF_8);
 	}
 	
 	/**
@@ -210,22 +260,15 @@ public class IOUtils {
 	}
 	
 	/**
-	 * 将classpath的文件读到byte[]中
+	 * 将classpath的文件读到byte[]中, classpath中的文件只能通过InputStream操作, 不能通过File对象来操作
+	 * 因为打成jar包后, 是读不到jar包中classpath下的某个文件的, 记住一定要通过流来操作
 	 *
 	 * @param fileName
-	 * @return
+	 * @return byte[]
 	 */
 	public static byte[] readClassPathFileAsBytes(String fileName) {
-		File file = readClasspathFileAsFile(fileName);
-		if (file == null) {
-			return new byte[0];
-		}
-		try {
-			return Files.readAllBytes(file.toPath());
-		} catch (IOException e) {
-			log.error("Read file as bytes failed!", e);
-		}
-		return new byte[0];
+		InputStream in = readClasspathFileAsInputStream(fileName);
+		return toByteArray(in);
 	}
 	
 	
@@ -245,6 +288,35 @@ public class IOUtils {
 	 */
 	public static InputStream readFileAsStream(String filePath) throws IOException {
 		return Files.newInputStream(Paths.get(filePath), READ);
+	}
+	
+	/**
+	 * 读取classpath下某个文件夹下的某个文件，返回InputStream
+	 *
+	 * @param dir
+	 * @param fileName
+	 * @return
+	 */
+	public static InputStream readClasspathFileAsInputStream(String dir, String fileName) {
+		if (isBlank(dir)) {
+			return readClasspathFileAsInputStream(fileName);
+		}
+		
+		ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+		try {
+			if (!fileName.startsWith(DIR_SEPARATOR_UNIX)) {
+				fileName = CLASSPATH_PREFIX + DIR_SEPARATOR_UNIX + dir + DIR_SEPARATOR_UNIX + "**" + DIR_SEPARATOR_UNIX + fileName;
+			}
+			Resource[] resources = resolver.getResources(fileName);
+			if (resources.length > 0) {
+				return resources[0].getInputStream();
+			}
+		} catch (IOException e) {
+			log.error("", e);
+			return null;
+		}
+		
+		return null;
 	}
 	
 	/**
@@ -379,7 +451,7 @@ public class IOUtils {
 		} catch (IOException e) {
 			log.error(e.getMessage(), e);
 		}
-		return join(lines, "\n");
+		return join(lines, System.lineSeparator());
 	}
 	
 	
@@ -891,9 +963,18 @@ public class IOUtils {
 	 * @throws NullPointerException if the input is null
 	 * @throws IOException          if an I/O error occurs
 	 */
-	public static byte[] toByteArray(final InputStream input) throws IOException {
+	public static byte[] toByteArray(final InputStream input) {
+		if (input == null) {
+			return new byte[0];
+		}
 		byte[] initialBuffer = new byte[MIN_BUFFER_SIZE];
-		int read = input.read(initialBuffer);
+		int read = 0;
+		try {
+			read = input.read(initialBuffer);
+		} catch (IOException e) {
+			log.error("", e);
+			throw new IORuntimeException(e);
+		}
 		
 		//如果input已经结束, 或者发送的数据小于MIN_BUFFER_SIZE, 那么一次就读完了, 不需要再次读取
 		if (read == -1) {
@@ -910,16 +991,20 @@ public class IOUtils {
 			output.write(initialBuffer, 0, initialBuffer.length);
 			copy(input, output);
 			return output.toByteArray();
+		} catch (IOException e) {
+			log.error("", e);
+			throw new IORuntimeException(e);
 		}
 	}
 	
 	/**
 	 * 从channel中读取数据
+	 *
 	 * @param channel
 	 * @return byte[]
 	 * @throws IOException
 	 */
-	public static byte[] toByteArray(final ByteChannel channel) throws IOException{
+	public static byte[] toByteArray(final ByteChannel channel) throws IOException {
 		ByteBuffer buffer = ByteBuffer.allocate(MIN_BUFFER_SIZE);
 		int read = channel.read(buffer);
 		
@@ -1044,6 +1129,140 @@ public class IOUtils {
 			count += n;
 		}
 		return count;
+	}
+	
+	/**
+	 * 列出指定目录下所有普通文件
+	 *
+	 * @param dir
+	 * @return List<String>
+	 */
+	public static List<String> listFileNames(String dir) {
+		List<String> fileList = new ArrayList<>();
+		try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(dir))) {
+			for (Path path : stream) {
+				if (!Files.isDirectory(path)) {
+					fileList.add(path.getFileName().toString());
+				}
+			}
+		} catch (IOException e) {
+			log.error("", e);
+			throw new RuntimeException(e);
+		}
+		return fileList;
+	}
+	
+	/**
+	 * 返回指定目录下所有普通文件对象
+	 *
+	 * @param dir
+	 * @return List<File>
+	 */
+	public static List<File> listFiles(String dir) {
+		List<File> fileList = new ArrayList<>();
+		try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(dir))) {
+			for (Path path : stream) {
+				if (!Files.isDirectory(path)) {
+					fileList.add(path.toFile());
+				}
+			}
+		} catch (IOException e) {
+			log.error("", e);
+			throw new RuntimeException(e);
+		}
+		return fileList;
+	}
+	
+	/**
+	 * 从指定目录开始, 递归列出所有文件以及子目录下的文件
+	 *
+	 * @param dir
+	 * @param depth
+	 * @return List<String>
+	 */
+	public static List<String> listFileNames(String dir, int depth) {
+		try {
+			try (Stream<Path> stream = Files.walk(Paths.get(dir), depth)) {
+				return stream.filter(path -> !Files.isDirectory(path))
+						.map(Path::getFileName)
+						.map(Path::toString)
+						.collect(Collectors.toList());
+			}
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	/**
+	 * 从指定目录开始, 递归列出所有文件以及子目录下的文件
+	 *
+	 * @param dir
+	 * @param depth
+	 * @return List<File>
+	 */
+	public static List<File> listFiles(String dir, int depth) {
+		try {
+			try (Stream<Path> stream = Files.walk(Paths.get(dir), depth)) {
+				return stream.filter(path -> !Files.isDirectory(path))
+						.map(Path::getFileName)
+						.map(Path::toFile)
+						.collect(Collectors.toList());
+			}
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	/**
+	 * 列出classpath下指定目录及其子目录中的所有文件
+	 *
+	 * @param classpathDir
+	 * @return List<String>
+	 */
+	public static List<String> listClasspathFileNames(String classpathDir) {
+		ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+		if (!classpathDir.startsWith(DIR_SEPARATOR_UNIX)) {
+			classpathDir = CLASSPATH_PREFIX + DIR_SEPARATOR_UNIX + classpathDir + DIR_SEPARATOR_UNIX + "**" + DIR_SEPARATOR_UNIX + "*.*";
+		} else {
+			classpathDir = CLASSPATH_PREFIX + classpathDir + DIR_SEPARATOR_UNIX + "**" + DIR_SEPARATOR_UNIX + "*.*";
+		}
+		try {
+			Resource[] resources = resolver.getResources(classpathDir);
+			List<String> fileNames = Arrays.asList(resources)
+					.stream()
+					.map(Resource::getFilename)
+					.collect(toList());
+			return fileNames;
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	/**
+	 * 列出classpath下指定目录及其子目录中的所有文件
+	 *
+	 * @param classpathDir
+	 * @param filePattern
+	 * @return List<String>
+	 */
+	public static List<String> listClasspathFileNames(String classpathDir, String filePattern) {
+		filePattern = (isBlank(filePattern) ? "*.*" : filePattern);
+		ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+		if (!classpathDir.startsWith(DIR_SEPARATOR_UNIX)) {
+			classpathDir = CLASSPATH_PREFIX + DIR_SEPARATOR_UNIX + classpathDir + DIR_SEPARATOR_UNIX + "**" + DIR_SEPARATOR_UNIX + filePattern;
+		} else {
+			classpathDir = CLASSPATH_PREFIX + classpathDir + DIR_SEPARATOR_UNIX + "**" + DIR_SEPARATOR_UNIX + filePattern;
+		}
+		try {
+			Resource[] resources = resolver.getResources(classpathDir);
+			List<String> fileNames = Arrays.asList(resources)
+					.stream()
+					.map(Resource::getFilename)
+					.collect(toList());
+			return fileNames;
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
 }
