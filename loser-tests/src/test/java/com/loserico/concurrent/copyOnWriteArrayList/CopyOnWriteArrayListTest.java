@@ -1,4 +1,4 @@
-package com.loserico.collections;
+package com.loserico.concurrent.copyOnWriteArrayList;
 
 import java.util.Arrays;
 import java.util.Iterator;

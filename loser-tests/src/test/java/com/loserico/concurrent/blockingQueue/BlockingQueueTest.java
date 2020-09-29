@@ -1,4 +1,4 @@
-package com.loserico.collections;
+package com.loserico.concurrent.blockingQueue;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
