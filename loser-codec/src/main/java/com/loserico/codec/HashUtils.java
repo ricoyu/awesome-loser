@@ -113,6 +113,11 @@ public final class HashUtils {
 	}
 	
 	public static String sha256(String source) {
+		byte[] bytes = source.getBytes(StandardCharsets.UTF_8);
+		return sha256(bytes);
+	}
+	
+	public static String sha256(byte[] bytes) {
 		MessageDigest digest = null;
 		try {
 			digest = MessageDigest.getInstance("SHA-256");
@@ -120,7 +125,7 @@ public final class HashUtils {
 			log.error("不支持该Hash算法[{}]", "SHA-256");
 			throw new NoSuchHashAlgorithmException(e);
 		}
-		byte[] encodedhash = digest.digest(source.getBytes(StandardCharsets.UTF_8));
+		byte[] encodedhash = digest.digest(bytes);
 		
 		StringBuffer hexString = new StringBuffer();
 		for (int i = 0; i < encodedhash.length; i++) {
@@ -161,9 +166,20 @@ public final class HashUtils {
 	/**
 	 * 使用UTF-8编码进行MD5加密
 	 * MD5 is a widely used cryptographic hash function, which produces a hash of 128 bit.
-	 * 
+	 *
+	 * @param bytes
+	 * @return String
+	 */
+	public static String md5Hex(byte[] bytes) {
+		return DigestUtils.md5Hex(bytes);
+	}
+	
+	/**
+	 * 使用UTF-8编码进行MD5加密
+	 * MD5 is a widely used cryptographic hash function, which produces a hash of 128 bit.
+	 *
 	 * @param source
-	 * @return 
+	 * @return String
 	 */
 	public static String md5Hex(String source) {
 		return DigestUtils.md5Hex(source);
@@ -171,6 +187,7 @@ public final class HashUtils {
 	
 	/**
 	 * Generates 32 bit murmur2 hash from byte array
+	 *
 	 * @param data byte array to hash
 	 * @return 32 bit hash of the given array
 	 */
@@ -224,7 +241,7 @@ public final class HashUtils {
 	 * positive, the original value is returned. When the input number is negative, the returned
 	 * positive value is the original value bit AND against 0x7fffffff which is not its absolutely
 	 * value.
-	 * 
+	 * <p>
 	 * 原来是正数, 那么原样返回
 	 * 原来是负数, 那么转成正数, 因为符号位会变成0, 其他低位都和1位与, 所以原来是什么还是什么
 	 *

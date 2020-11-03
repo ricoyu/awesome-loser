@@ -1,4 +1,6 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?><project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <artifactId>loser-tests</artifactId>
     <version>${project.parent.version}</version>
@@ -9,7 +11,7 @@
         <groupId>com.loserico</groupId>
         <artifactId>awesome-loser</artifactId>
         <relativePath>../pom.xml</relativePath>
-        <version>4.7.13</version>
+        <version>4.7.14</version>
     </parent>
 
     <dependencies>
@@ -273,8 +275,7 @@
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-transport-native-epoll</artifactId>
-            <version>4.1.48.Final</version>
-            <scope>test</scope>
+            <version>4.1.35.Final</version>
         </dependency>
 
         <dependency>
@@ -283,7 +284,18 @@
             <version>1.2.70</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-transport</artifactId>
+            <version>4.1.35.Final</version>
+        </dependency>
         <!-- =================== Redisson 依赖 =================== -->
+
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+            <version>4.1.35.Final</version>
+        </dependency>
 
         <dependency>
             <groupId>cglib</groupId>
@@ -348,12 +360,21 @@
             <version>3.2.15</version>
             <scope>compile</scope>
         </dependency>
-    <dependency>
-<scope>compile</scope>
-<groupId>com.google.code.gson</groupId>
-<artifactId>gson</artifactId>
-<version>2.3.1</version>
-</dependency>
-</dependencies>
+        <dependency>
+            <scope>compile</scope>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.3.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.protostuff</groupId>
+            <artifactId>protostuff-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.protostuff</groupId>
+            <artifactId>protostuff-runtime</artifactId>
+        </dependency>
+    </dependencies>
 
 </project>

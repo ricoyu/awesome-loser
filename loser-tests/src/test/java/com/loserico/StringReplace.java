@@ -28,4 +28,8 @@ public class StringReplace {
 		String s = "rocketmq.namesrv";
 		System.out.println(s.replace("rocketmq.", ""));
 	}
+	
+	@Test
+	public void testTemplateFormat() {
+	}
 }

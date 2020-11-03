@@ -166,7 +166,7 @@ public interface ScriptOperations {
 	/**
 	 * 更新一篇文档
 	 * 如: { "_id" : 1005, "name" : "Joshi", "marks" : { "english" : 15, "maths" : 18 }, "result" : "fail" }<br/>
-	 * db.student.updateOne({"name": "Joshi"}, {$set: {"marks.english": 20}})
+	 * db.student.updateOne({"name": "Joshi"}, {"marks.english": 20})
 	 *
 	 * @param filename       更新脚本所在文件名, 该文件中应该包含一个查询语句, 一个更新语句
 	 * @param collectionName 集合名称
@@ -177,7 +177,7 @@ public interface ScriptOperations {
 	/**
 	 * 更新一篇文档
 	 * 如: { "_id" : 1005, "name" : "Joshi", "marks" : { "english" : 15, "maths" : 18 }, "result" : "fail" }<br/>
-	 * db.student.updateOne({"name": "Joshi"}, {$set: {"marks.english": 20}})
+	 * db.student.updateOne({"name": "Joshi"}, {"marks.english": 20})
 	 *
 	 * @param filename       更新脚本所在文件名, 该文件中应该包含一个查询语句, 一个更新语句
 	 * @param collectionName 集合名称
@@ -192,11 +192,107 @@ public interface ScriptOperations {
 	 * db.student.updateOne({"name": "Joshi"}, {$set: {"marks.english": 20}})
 	 *
 	 * @param query          查询语句 如 {"name": "Joshi"}
-	 * @param update         更新语句 如 {$set: {"marks.english": 20}}
+	 * @param update         更新语句 如 {"marks.english": 20}
 	 * @param collectionName 集合名称
 	 * @return UpdateResult
 	 */
 	public UpdateResult updateOne(String collectionName, String query, String update);
+	
+	/**
+	 * 更新一篇文档, 支持变量占位符#{varName}
+	 * 如: { "_id" : 1005, "name" : "Joshi", "marks" : { "english" : 15, "maths" : 18 }, "result" : "fail" }<br/>
+	 * db.student.updateOne({"name": "Joshi"}, {"marks.english": 20})
+	 *
+	 * @param query          查询语句 如 {"name": "Joshi"}
+	 * @param update         更新语句 如 {"marks.english": 20}
+	 * @param param          用于替换#{xxx}占位符的参数
+	 * @param collectionName 集合名称
+	 * @return UpdateResult
+	 */
+	public UpdateResult updateOne(String collectionName, String query, String update, Object param);
+	
+	/**
+	 * 更新多篇文档
+	 * 如: { "_id" : 1005, "name" : "Joshi", "marks" : { "english" : 15, "maths" : 18 }, "result" : "fail" }<br/>
+	 * db.student.updateOne({"name": "Joshi"}, {"marks.english": 20})
+	 *
+	 * @param filename       查询语句/更新语句所在脚本文件名
+	 * @param collectionName 集合名称
+	 * @return UpdateResult
+	 */
+	public UpdateResult updateMany(String collectionName, String filename);
+	
+	/**
+	 * 更新多篇文档
+	 * 如: { "_id" : 1005, "name" : "Joshi", "marks" : { "english" : 15, "maths" : 18 }, "result" : "fail" }<br/>
+	 * db.student.updateOne({"name": "Joshi"}, {"marks.english": 20})
+	 *
+	 * @param collectionName 集合名称
+	 * @param filename       查询语句/更新语句所在脚本文件名
+	 * @param param          用于替换#{xxx}占位符的参数
+	 * @return UpdateResult
+	 */
+	public UpdateResult updateMany(String collectionName, String filename, Object param);
+	
+	/**
+	 * 更新多篇文档
+	 * 如: { "_id" : 1005, "name" : "Joshi", "marks" : { "english" : 15, "maths" : 18 }, "result" : "fail" }<br/>
+	 * db.student.updateOne({"name": "Joshi"}, {"marks.english": 20})
+	 *
+	 * @param query          查询语句 如 {"name": "Joshi"}
+	 * @param update         更新语句 如 {"marks.english": 20}
+	 * @param collectionName 集合名称
+	 * @return UpdateResult
+	 */
+	public UpdateResult updateMany(String collectionName, String query, String update);
+	
+	/**
+	 * 更新多篇文档, 支持变量占位符#{varName}
+	 * 如: { "_id" : 1005, "name" : "Joshi", "marks" : { "english" : 15, "maths" : 18 }, "result" : "fail" }<br/>
+	 * db.student.updateOne({"name": "Joshi"}, {"marks.english": 20})
+	 *
+	 * @param query          查询语句 如 {"name": "Joshi"}
+	 * @param update         更新语句 如 {$set: {"marks.english": 20}}
+	 * @param param          用于替换#{xxx}占位符的参数
+	 * @param collectionName 集合名称
+	 * @return UpdateResult
+	 */
+	public UpdateResult updateMany(String collectionName, String query, String update, Object param);
+	
+	/**
+	 * 更新一篇文档
+	 * 如: { "_id" : 1005, "name" : "Joshi", "marks" : { "english" : 15, "maths" : 18 }, "result" : "fail" }<br/>
+	 * db.student.updateOne({"name": "Joshi"}, {$set: {"marks.english": 20}})
+	 *
+	 * @param filename       更新脚本所在文件名, 该文件中应该包含一个查询语句, 一个更新语句
+	 * @param collectionName 集合名称
+	 * @return UpdateResult
+	 */
+	public UpdateResult setOne(String collectionName, String filename);
+	
+	/**
+	 * 更新一篇文档
+	 * 如: { "_id" : 1005, "name" : "Joshi", "marks" : { "english" : 15, "maths" : 18 }, "result" : "fail" }<br/>
+	 * db.student.updateOne({"name": "Joshi"}, {$set: {"marks.english": 20}})
+	 *
+	 * @param filename       更新脚本所在文件名, 该文件中应该包含一个查询语句, 一个更新语句
+	 * @param collectionName 集合名称
+	 * @param param          用于替换#{xxx}占位符的参数
+	 * @return UpdateResult
+	 */
+	public UpdateResult setOne(String collectionName, String filename, Object param);
+	
+	/**
+	 * 更新一篇文档
+	 * 如: { "_id" : 1005, "name" : "Joshi", "marks" : { "english" : 15, "maths" : 18 }, "result" : "fail" }<br/>
+	 * db.student.updateOne({"name": "Joshi"}, {$set: {"marks.english": 20}})
+	 *
+	 * @param query          查询语句 如 {"name": "Joshi"}
+	 * @param update         更新语句 如 {$set: {"marks.english": 20}}
+	 * @param collectionName 集合名称
+	 * @return UpdateResult
+	 */
+	public UpdateResult setOne(String collectionName, String query, String update);
 	
 	/**
 	 * 更新一篇文档, 支持变量占位符#{varName}
@@ -209,7 +305,7 @@ public interface ScriptOperations {
 	 * @param collectionName 集合名称
 	 * @return UpdateResult
 	 */
-	public UpdateResult updateOne(String collectionName, String query, String update, Object param);
+	public UpdateResult setOne(String collectionName, String query, String update, Object param);
 	
 	/**
 	 * 更新多篇文档
@@ -220,7 +316,7 @@ public interface ScriptOperations {
 	 * @param collectionName 集合名称
 	 * @return UpdateResult
 	 */
-	public UpdateResult updateMany(String collectionName, String filename);
+	public UpdateResult setMany(String collectionName, String filename);
 	
 	/**
 	 * 更新多篇文档
@@ -232,7 +328,7 @@ public interface ScriptOperations {
 	 * @param param          用于替换#{xxx}占位符的参数
 	 * @return UpdateResult
 	 */
-	public UpdateResult updateMany(String collectionName, String filename, Object param);
+	public UpdateResult setMany(String collectionName, String filename, Object param);
 	
 	/**
 	 * 更新多篇文档
@@ -244,7 +340,7 @@ public interface ScriptOperations {
 	 * @param collectionName 集合名称
 	 * @return UpdateResult
 	 */
-	public UpdateResult updateMany(String collectionName, String query, String update);
+	public UpdateResult setMany(String collectionName, String query, String update);
 	
 	/**
 	 * 更新多篇文档, 支持变量占位符#{varName}
@@ -257,7 +353,17 @@ public interface ScriptOperations {
 	 * @param collectionName 集合名称
 	 * @return UpdateResult
 	 */
-	public UpdateResult updateMany(String collectionName, String query, String update, Object param);
+	public UpdateResult setMany(String collectionName, String query, String update, Object param);
+	
+	/**
+	 * 把文档中fieldName指定的字段的值更新为fieldValue
+	 * @param collectionName
+	 * @param query
+	 * @param fieldName
+	 * @param fieldValue
+	 * @return UpdateResult
+	 */
+	public UpdateResult updateField(String collectionName, String query, String fieldName, Object fieldValue);
 	
 	/**
 	 * 替换文档

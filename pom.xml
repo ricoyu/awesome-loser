@@ -5,14 +5,14 @@
     <groupId>com.loserico</groupId>
     <artifactId>awesome-loser</artifactId>
     <packaging>pom</packaging>
-    <version>4.7.13</version>
+    <version>4.7.14</version>
     <name>Awesome Loser</name>
     <url>http://maven.apache.org</url>
 
     <modules>
         <module>commons-lang</module>
-        <module>loser-codec</module>
         <module>commons-spring</module>
+        <module>loser-codec</module>
         <module>loser-cache</module>
         <module>loser-json</module>
         <module>loser-orm</module>
@@ -25,6 +25,7 @@
         <module>loser-security</module>
         <module>loser-mongo</module>
         <module>loser-token-parser</module>
+        <module>loser-netty</module>
     </modules>
 
     <properties>
@@ -685,7 +686,18 @@
             <dependency>
                 <groupId>com.github.ben-manes.caffeine</groupId>
                 <artifactId>caffeine</artifactId>
-                <version>2.8.5</version>
+                <version>2.8.6</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.protostuff</groupId>
+                <artifactId>protostuff-core</artifactId>
+                <version>1.7.2</version>
+            </dependency>
+            <dependency>
+                <groupId>io.protostuff</groupId>
+                <artifactId>protostuff-runtime</artifactId>
+                <version>1.7.2</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -695,7 +707,7 @@
         <repository>
             <id>phantom-maven2</id>
             <name>phantom-maven2</name>
-            <url>http://10.20.25.15:9091/repository/phantom-maven2/</url>
+            <url>http://172.16.0.9:8081/repository/phantom-maven2/</url>
         </repository>
     </distributionManagement>
 
@@ -703,7 +715,7 @@
         <repository>
             <id>public</id>
             <name>Public Repositories</name>
-            <url>http://10.20.25.15:9091/repository/maven-public/</url>
+            <url>http://172.16.0.9:8081/repository/maven-public/</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
@@ -716,7 +728,7 @@
         <pluginRepository>
             <id>public</id>
             <name>Public Repositories</name>
-            <url>http://10.20.25.15:9091/repository/maven-public</url>
+            <url>http://172.16.0.9:8081/repository/maven-public</url>
             <releases>
                 <enabled>true</enabled>
             </releases>

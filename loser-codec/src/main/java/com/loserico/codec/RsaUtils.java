@@ -3,6 +3,7 @@ package com.loserico.codec;
 import com.loserico.codec.exception.PrivateDecryptException;
 import com.loserico.codec.exception.RsaPrivateKeyException;
 import com.loserico.codec.exception.RsaPublicKeyException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +32,7 @@ import java.text.MessageFormat;
 import java.util.Base64;
 import java.util.Objects;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.codec.binary.Base64.decodeBase64;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -46,6 +48,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
+@Slf4j
 public final class RsaUtils {
 	
 	private static Logger log = LoggerFactory.getLogger(RsaUtils.class);
@@ -302,7 +305,7 @@ public final class RsaUtils {
 	 * @param data
 	 * @return String
 	 */
-	public String privateEncrypt(String data) {
+	public static String privateEncrypt(String data) {
 		try {
 			Cipher cipher = Cipher.getInstance(ALGORITHM_RSA);
 			cipher.init(Cipher.ENCRYPT_MODE, privateKey);
@@ -363,11 +366,27 @@ public final class RsaUtils {
 	 * @return RSA私钥签名后的经过Base64编码的字符串
 	 */
 	public static String sign(String data) {
+		if (data == null) {
+			return null;
+		}
+		return sign(data.getBytes(UTF_8));
+	}
+	
+	/**
+	 * RSA算法使用私钥对数据生成数字签名
+	 *
+	 * @param data 待签名的明文字符串
+	 * @return RSA私钥签名后的经过Base64编码的字符串
+	 */
+	public static String sign(byte[] data) {
+		if (data == null || data.length == 0) {
+			return null;
+		}
 		try {
 			//sign
 			Signature signature = Signature.getInstance(ALGORITHM_RSA_SIGN);
 			signature.initSign(privateKey);
-			signature.update(data.getBytes(CHARSET));
+			signature.update(data);
 			return encodeBase64String(signature.sign());
 		} catch (Exception e) {
 			throw new RuntimeException("签名字符串[" + data + "]时遇到异常", e);
@@ -381,7 +400,11 @@ public final class RsaUtils {
 	 * @param privateKeyStr RSA私钥字符串
 	 * @return RSA私钥签名后的经过Base64编码的字符串
 	 */
-	public static String sign(String data, String privateKeyStr) {
+	public static String sign(byte[] data, String privateKeyStr) {
+		if (data == null || data.length == 0) {
+			log.info("data is null or data.length == 0");
+			return null;
+		}
 		Objects.requireNonNull(data, "data不能为null");
 		try {
 			//通过PKCS#8编码的Key指令获得私钥对象
@@ -390,11 +413,26 @@ public final class RsaUtils {
 			PrivateKey key = keyFactory.generatePrivate(pkcs8KeySpec);
 			Signature signature = Signature.getInstance(ALGORITHM_RSA_SIGN);
 			signature.initSign(key);
-			signature.update(data.getBytes(CHARSET));
+			signature.update(data);
 			return base64Encode(signature.sign());
 		} catch (Exception e) {
 			throw new RuntimeException("签名字符串[" + data + "]时遇到异常", e);
 		}
+	}
+	
+	/**
+	 * RSA算法使用私钥对数据生成数字签名
+	 *
+	 * @param data          待签名的明文字符串
+	 * @param privateKeyStr RSA私钥字符串
+	 * @return RSA私钥签名后的经过Base64编码的字符串
+	 */
+	public static String sign(String data, String privateKeyStr) {
+		if (data == null) {
+			log.info("data is null!");
+			return null;
+		}
+		return sign(data.getBytes(UTF_8), privateKeyStr);
 	}
 	
 	/**
@@ -405,10 +443,25 @@ public final class RsaUtils {
 	 * @return true--验签通过,false--验签未通过
 	 */
 	public boolean verify(String data, String sign) {
+		return verify(data.getBytes(UTF_8), sign);
+	}
+	
+	/**
+	 * RSA算法使用公钥校验数字签名
+	 *
+	 * @param data 参与签名的明文字符串
+	 * @param sign RSA签名得到的经过Base64编码的字符串
+	 * @return true--验签通过,false--验签未通过
+	 */
+	public boolean verify(byte[] data, String sign) {
+		if (data == null || data.length == 0 || sign == null) {
+			log.info("data or sign is null");
+			return false;
+		}
 		try {
 			Signature signature = Signature.getInstance(ALGORITHM_RSA_SIGN);
 			signature.initVerify(publicKey);
-			signature.update(data.getBytes(CHARSET));
+			signature.update(data);
 			return signature.verify(decodeBase64(sign));
 		} catch (Exception e) {
 			throw new RuntimeException("验签字符串[" + data + "]时遇到异常", e);
@@ -424,6 +477,10 @@ public final class RsaUtils {
 	 * @return true--验签通过,false--验签未通过
 	 */
 	public static boolean verify(String data, String sign, String publicKeyStr) {
+		if (data == null || sign == null) {
+			log.info("data or sign is null");
+			return false;
+		}
 		try {
 			//通过X509编码的Key指令获得公钥对象
 			X509EncodedKeySpec x509KeySpec = new X509EncodedKeySpec(base64Decode(publicKeyStr));

@@ -237,7 +237,7 @@ public class BlockingLock implements Lock {
 			public void run() {
 				JedisUtils.expire(key, defaultTimeout, TimeUnit.SECONDS);
 			}
-		}, 20L, 20);
+		}, 20L, 1000);
 	}
 	
 	private void stopWatchDog() {

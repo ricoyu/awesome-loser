@@ -1693,6 +1693,22 @@ public final class JedisUtils {
 		}
 	}
 	
+	/**
+	 * 地理位置信息查询 
+	 * <p>
+	 * Copyright: Copyright (c) 2020-10-16 17:35
+	 * <p>
+	 * Company: Sexy Uncle Inc.
+	 * <p>
+	 
+	 * @author Rico Yu  ricoyu520@gmail.com
+	 * @version 1.0
+	 */
+	public static final class GEO {
+		
+	}
+	
+	
 	
 	/**
 	 * 指定key是否存在

@@ -1,10 +1,12 @@
 package com.loserico.codec;
 
 import com.loserico.common.lang.utils.DateUtils;
+import com.loserico.common.lang.utils.IOUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 
 public class HashUtilsTest {
 	
@@ -77,5 +79,22 @@ public class HashUtilsTest {
 		long timestamp = DateUtils.toEpochMilis("2020-09-07 10:10:00");
 		String myChecksum = HashUtils.md5Hex(timestamp + secretKey);
 		assertThat(checksum.equals(myChecksum)).isTrue();
+	}
+	
+	@Test
+	public void testDegistTest() {
+		byte[] bytes = IOUtils.readFileAsBytes("D:\\aa.pcap");
+		String hash = HashUtils.sha256(bytes);
+		String encrypt = RsaUtils.privateEncrypt(hash);
+		
+		String decrypt = RsaUtils.publicDecrypt(encrypt);
+		assertEquals(decrypt, HashUtils.sha256(IOUtils.readFileAsBytes("D:\\aa.pcap")));
+	}
+	
+	@Test
+	public void testSha256Hash() {
+		String hash = HashUtils.sha256("deepdata$");
+		System.out.println(hash);
+		assertEquals(hash, "3af7b98967ca04ad21ef6512a561e27b00bf4e8501772fe0e5273175998e7c2b");
 	}
 }

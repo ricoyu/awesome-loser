@@ -216,6 +216,11 @@ public class MongoDao implements EntityOperations, CriteriaOperations, ScriptOpe
 	}
 	
 	@Override
+	public <T> T findOneByProperty(Class<T> entityClass, String propertyName, Object value) {
+		return mongoTemplate.findOne(Query.query(Criteria.where(propertyName).is(value)), entityClass);
+	}
+	
+	@Override
 	public <T> List<T> findByProperty(Class<T> entityClass, String propertyName, Object value, OrderBean... orderBeans) {
 		Query query = Query.query(where(propertyName).is(value));
 		Sort sort = Orders.toSort(orderBeans);
@@ -489,6 +494,76 @@ public class MongoDao implements EntityOperations, CriteriaOperations, ScriptOpe
 	}
 	
 	@Override
+	public UpdateResult setOne(String collectionName, String filename) {
+		String[] scripts = externalScriptsHelper.get(filename);
+		return doSetUpdateOne(collectionName, first(scripts), second(scripts), null);
+	}
+	
+	@Override
+	public UpdateResult setOne(String collectionName, String filename, Object param) {
+		String[] scripts = externalScriptsHelper.get(filename);
+		return doSetUpdateOne(collectionName, first(scripts), second(scripts), param);
+	}
+	
+	@Override
+	public UpdateResult setOne(String collectionName, String query, String update) {
+		return doSetUpdateOne(collectionName, query, update, null);
+	}
+	
+	@Override
+	public UpdateResult setOne(String collectionName, String query, String update, Object param) {
+		return doSetUpdateOne(collectionName, query, update, param);
+	}
+	
+	@Override
+	public UpdateResult setMany(String collectionName, String filename) {
+		String[] scripts = externalScriptsHelper.get(filename);
+		return doSetUpdateMany(collectionName, first(scripts), second(scripts), null);
+	}
+	
+	@Override
+	public UpdateResult setMany(String collectionName, String filename, Object param) {
+		String[] scripts = externalScriptsHelper.get(filename);
+		return doSetUpdateMany(collectionName, first(scripts), second(scripts), param);
+	}
+	
+	@Override
+	public UpdateResult setMany(String collectionName, String query, String update) {
+		return doSetUpdateMany(collectionName, query, update, null);
+	}
+	
+	@Override
+	public UpdateResult setMany(String collectionName, String query, String update, Object param) {
+		return doSetUpdateMany(collectionName, query, update, param);
+	}
+	
+	private UpdateResult doSetUpdateOne(String collectionName, String query, String update, Object param) {
+		notNull(query, "query cannot be null!");
+		notNull(update, "update cannot be null!");
+		ScriptQuery scriptQuery = new ScriptQuery(query, param);
+		Update upd = ScriptUpdate.toUpdate(update, param);
+		return mongoTemplate.updateFirst(scriptQuery, upd, collectionName);
+	}
+	
+	private UpdateResult doSetUpdateMany(String collectionName, String query, String update, Object param) {
+		notNull(query, "query cannot be null!");
+		notNull(update, "update cannot be null!");
+		ScriptQuery scriptQuery = new ScriptQuery(query, param);
+		Update upd = ScriptUpdate.toUpdate(update, param);
+		return mongoTemplate.updateMulti(scriptQuery, upd, collectionName);
+	}
+	
+	@Override
+	public UpdateResult updateField(String collectionName, String query, String fieldName, Object fieldValue) {
+		notNull(query, "query cannot be null!");
+		notNull(fieldName, "fieldName cannot be null!");
+		Update update = new Update();
+		update.set(fieldName, fieldValue);
+		ScriptQuery scriptQuery = new ScriptQuery(query, fieldValue);
+		return  mongoTemplate.updateMulti(scriptQuery, update, collectionName);
+	}
+	
+	@Override
 	public <T> T replaceOne(String collectionName, String query, T replacement) {
 		if (externalScriptsHelper.isFileName(query)) {
 			query = externalScriptsHelper.getSingle(query);
@@ -528,6 +603,12 @@ public class MongoDao implements EntityOperations, CriteriaOperations, ScriptOpe
 		}
 		ScriptQuery scriptQuery = new ScriptQuery(query);
 		return mongoTemplate.remove(scriptQuery, entityClass);
+	}
+	
+	@Override
+	public <T> int count(T entity) {
+		//mongoTemplate.count(, entity.getClass());
+		return 0;//TODO
 	}
 	
 	/**

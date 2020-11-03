@@ -16,10 +16,33 @@ import org.springframework.data.mongodb.core.query.Update;
  */
 public class ScriptUpdate extends Update {
 	
+	private static final String SET_BEGIN = "{'$set': ";
+	private static final String SET_END = "}";
+	
 	public static Update toUpdate(String update) {
 		return Update.fromDocument(Document.parse(update));
 	}
 	
+	/**
+	 * Mongo $set 用法
+	 * 只更新指定的字段, 而不是整片文档替换
+	 *
+	 * @param update
+	 * @param param
+	 * @return
+	 */
+	public static Update toSetUpdate(String update, Object param) {
+		String updatejson = ParserUtils.parse(update, param);
+		String setJson = SET_BEGIN + updatejson + SET_END;
+		return Update.fromDocument(Document.parse(setJson));
+	}
+	
+	/**
+	 * 更新整篇文档
+	 * @param update
+	 * @param param
+	 * @return
+	 */
 	public static Update toUpdate(String update, Object param) {
 		String updatejson = ParserUtils.parse(update, param);
 		return Update.fromDocument(Document.parse(updatejson));

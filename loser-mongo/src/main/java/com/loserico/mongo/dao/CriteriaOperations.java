@@ -31,6 +31,18 @@ public interface CriteriaOperations {
 	
 	public <T> List<T> findByProperty(Class<T> entityClass, String propertyName, Object value);
 	
+	
+	/**
+	 * 根据某个属性查找
+	 * @param entityClass
+	 * @param propertyName
+	 * @param value
+	 * @param <T>
+	 * @return List<T>
+	 */
+	
+	public <T> T findOneByProperty(Class<T> entityClass, String propertyName, Object value);
+	
 	/**
 	 * 根据某个属性查找, 支持排序
 	 * @param entityClass
@@ -123,5 +135,13 @@ public interface CriteriaOperations {
 	 * @return 删除的数量
 	 */
 	public <T> int deleteIn(Class<T> entityClass, String propertyName, Object... values);
+	
+	/**
+	 * 查找匹配的记录数; 只会用entity中非null字段去匹配, 如果字段是null则不管
+	 * @param entity
+	 * @param <T>
+	 * @return
+	 */
+	public <T> int count(T entity);
 	
 }
