@@ -5,7 +5,7 @@
     <groupId>com.loserico</groupId>
     <artifactId>awesome-loser</artifactId>
     <packaging>pom</packaging>
-    <version>4.7.14</version>
+    <version>4.7.15</version>
     <name>Awesome Loser</name>
     <url>http://maven.apache.org</url>
 
@@ -166,12 +166,12 @@
             <dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-jms</artifactId>
-                <version>5.1.9.RELEASE</version>
+                <version>${springframework.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-messaging</artifactId>
-                <version>5.1.10.RELEASE</version>
+                <version>${springframework.version}</version>
             </dependency>
 
             <dependency>

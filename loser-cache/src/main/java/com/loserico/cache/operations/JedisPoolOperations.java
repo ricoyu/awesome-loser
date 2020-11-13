@@ -6,12 +6,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
+import redis.clients.jedis.Pipeline;
 import redis.clients.util.Pool;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -321,6 +323,7 @@ public class JedisPoolOperations implements JedisOperations {
 	/**
 	 * 订阅消息用的Jedis实例不要用完就关掉, 否则接收消息的时候会抛异常
 	 * redis.clients.jedis.exceptions.JedisConnectionException: Unexpected end of stream.
+	 *
 	 * @param jedisPubSub
 	 * @param channels
 	 */
@@ -332,6 +335,7 @@ public class JedisPoolOperations implements JedisOperations {
 	/**
 	 * 订阅消息用的Jedis实例不要用完就关掉, 否则接收消息的时候会抛异常
 	 * redis.clients.jedis.exceptions.JedisConnectionException: Unexpected end of stream.
+	 *
 	 * @param jedisPubSub
 	 * @param patterns
 	 */
@@ -348,6 +352,21 @@ public class JedisPoolOperations implements JedisOperations {
 	@Override
 	public Jedis jedis() {
 		return pool.getResource();
+	}
+	
+	@Override
+	public List<Object> executePipelined(Consumer<Pipeline> consumer) {
+		Jedis jedis = pool.getResource();
+		try {
+			Pipeline pipelined = jedis.pipelined();
+			consumer.accept(pipelined);
+			return pipelined.syncAndReturnAll();
+		} catch (Throwable e) {
+			log.error("", e);
+			throw new JedisException(e);
+		} finally {
+			jedis.close();
+		}
 	}
 	
 	private <R> R operate(Function<Jedis, R> func) {

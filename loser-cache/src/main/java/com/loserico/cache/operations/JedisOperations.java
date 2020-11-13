@@ -3,10 +3,12 @@ package com.loserico.cache.operations;
 import com.loserico.cache.exception.OperationNotSupportedException;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
+import redis.clients.jedis.Pipeline;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * <p>
@@ -395,6 +397,14 @@ public interface JedisOperations {
 	 * @param patterns
 	 */
 	public void psubscribe(JedisPubSub jedisPubSub, String... patterns);
+	
+	/**
+	 * 通过Redis pipeline执行
+	 * @return
+	 */
+	public default List<Object> executePipelined(Consumer<Pipeline> consumer) {
+		throw new UnsupportedOperationException();
+	};
 	
 	public default String ping() {
 		throw new UnsupportedOperationException();

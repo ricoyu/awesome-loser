@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -61,6 +62,16 @@ public class JedisUtilsTests {
 		System.out.println(value);
 		TimeUnit.SECONDS.sleep(20);
 		System.out.println(JedisUtils.incr("retryCount", 1, TimeUnit.MINUTES));
+	}
+	
+	@Test
+	public void testPipelined() {
+		List<Object> users = JedisUtils.pipeline((pipeline) -> {
+			for (int i = 0; i < 10; i++) {
+				pipeline.lpop("users");
+			}
+		});
+		users.forEach(System.out::println);
 	}
 	
 	/*@SneakyThrows

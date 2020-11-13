@@ -28,6 +28,7 @@ public class Result {
 	/**
 	 * message表示在API调用失败的情况下详细的错误信息, 这个信息可以由客户端直接呈现给用户
 	 * 调用成功则固定为OK；
+	 * 数据校验失败时的验证错误页放到这个字段里面
 	 */
 	private Object message = "OK";
 	
@@ -40,6 +41,11 @@ public class Result {
 	 * 返回的数据
 	 */
 	private Object data;
+	
+	/**
+	 * 分页对象, 如果没有分页, 这个字段不会输出到json串中
+	 */
+	private Page page;
 	
 	public <K, V> Result put(K key, V value) {
 		if (data instanceof Map) {

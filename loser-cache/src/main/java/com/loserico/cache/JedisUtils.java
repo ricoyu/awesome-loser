@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
+import redis.clients.jedis.Pipeline;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -37,6 +38,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLongArray;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -2110,6 +2112,10 @@ public final class JedisUtils {
 			log.error("", e);
 			throw new RuntimeException("", e);
 		}
+	}
+	
+	public static List<Object> pipeline(Consumer<Pipeline> consumer) {
+		return jedisOperations.executePipelined(consumer);
 	}
 	
 	private static boolean isEmpty(Collection<?> collection) {

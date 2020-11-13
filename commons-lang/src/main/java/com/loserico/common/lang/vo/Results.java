@@ -1,9 +1,5 @@
 package com.loserico.common.lang.vo;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
 import static com.loserico.common.lang.i18n.I18N.i18nMessage;
 
 /**
@@ -52,14 +48,9 @@ public class Results {
 		//private Object debugMessage;
 		
 		/**
-		 * 单个数据对象
+		 * 单个数据或集合类型对象
 		 */
 		private Object data;
-		
-		/**
-		 * 返回集合类型对象
-		 */
-		private Collection<?> results;
 		
 		private Page page;
 		
@@ -76,11 +67,6 @@ public class Results {
 			return this;
 		}
 		
-		//public Builder debugMessage(Object debugMessage) {
-		//	this.debugMessage = debugMessage;
-		//	return this;
-		//}
-		
 		/**
 		 * 设置返回数据
 		 *
@@ -89,17 +75,6 @@ public class Results {
 		 */
 		public Result result(Object data) {
 			this.data = data;
-			return build();
-		}
-		
-		/**
-		 * 设置返回数据, 数据是集合类型
-		 *
-		 * @param results
-		 * @return Result
-		 */
-		public Result results(Collection<?> results) {
-			this.results = results;
 			return build();
 		}
 		
@@ -116,19 +91,9 @@ public class Results {
 		
 		public Result build() {
 			result.setMessage(message);
-			//result.setDebugMessage(debugMessage);
 			result.setCode(code);
-			
-			if (results != null) {
-				Map<String, Object> resultMap = new HashMap<>();
-				resultMap.put("items", results);
-				if (page != null) {
-					resultMap.put("page", page);
-				}
-				result.setData(resultMap);
-			} else {
-				result.setData(data);
-			}
+			result.setData(data);
+			result.setPage(page);
 			return result;
 		}
 	}

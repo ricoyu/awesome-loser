@@ -17,6 +17,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import com.loserico.common.lang.vo.Page;
+import com.loserico.common.lang.vo.Result;
 import com.loserico.json.jackson.deserializer.EnumDeserializer;
 import com.loserico.json.jackson.deserializer.LocalDateDeserializer;
 import com.loserico.json.jackson.deserializer.LocalDateTimeDeserializer;
@@ -24,6 +25,7 @@ import com.loserico.json.jackson.deserializer.PageDeserializer;
 import com.loserico.json.jackson.deserializer.XssStringJsonDeserializer;
 import com.loserico.json.jackson.serializer.LocalDateTimeSerializer;
 import com.loserico.common.lang.resource.PropertyReader;
+import com.loserico.json.jackson.serializer.ResultSerializer;
 
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -82,6 +84,7 @@ public class ObjectMapperDecorator {
 		 * 如果指定了enumProperties, 那么可以根据指定enum的属性来反序列化为Enum类型, 默认根据ordinal 或者 name
 		 */
 		SimpleModule customModule = new SimpleModule();
+		customModule.addSerializer(Result.class, new ResultSerializer());
 		customModule.setDeserializerModifier(new BeanDeserializerModifier() {
 			@SuppressWarnings({"unchecked", "rawtypes"})
 			@Override
