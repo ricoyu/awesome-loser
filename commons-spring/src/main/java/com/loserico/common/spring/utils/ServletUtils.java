@@ -180,6 +180,7 @@ public final class ServletUtils {
 	
 	/**
 	 * 获取请求的URL
+	 * http://localhost:8080/pic_code
 	 *
 	 * @return String
 	 */

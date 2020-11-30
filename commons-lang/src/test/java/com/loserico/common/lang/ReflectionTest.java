@@ -1,7 +1,5 @@
 package com.loserico.common.lang;
 
-import com.loserico.common.lang.utils.ReflectionUtils;
-import org.junit.Test;
 import org.springframework.context.annotation.Bean;
 
 /**
@@ -16,12 +14,6 @@ import org.springframework.context.annotation.Bean;
  */
 public class ReflectionTest {
 	
-	@Test
-	public void test() {
-		boolean exists = ReflectionUtils.existsAnnotation(Bean.class, MyClass.class);
-		System.out.println(exists);
-	}
-	
 	static class MyClass {
 		
 		@Bean
@@ -29,4 +21,5 @@ public class ReflectionTest {
 			System.out.println("...");
 		}
 	}
+	
 }

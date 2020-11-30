@@ -12,7 +12,7 @@ https://github.com/xetorthio/jedis/wiki
 * **redis.db 0**
 
 * **redis.maxTotal 默认 400**
-  最大连接数，如果赋值为-1，则表示不限制；如果pool已经分配了maxActive个jedis实例，则此时pool的状态为exhausted(耗尽)。
+  最大连接数，如果赋值为-1，则表示不限制; 如果pool已经分配了maxActive个jedis实例, 则此时pool的状态为exhausted(耗尽)。
 * **redis.maxIdle 默认 100**
   最大空闲数，控制一个pool最多有多少个状态为idle(空闲的)的jedis实例，默认值是8。
 * **redis.minIdle 10**

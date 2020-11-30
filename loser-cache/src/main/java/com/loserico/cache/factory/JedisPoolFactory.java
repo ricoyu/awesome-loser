@@ -21,10 +21,13 @@ public class JedisPoolFactory implements PoolFactory {
 
 	@Override
 	public JedisPool createPool(PropertyReader propertyReader) {
+		//是否启用默认配置, 默认Redis为localhost:6379
 		boolean defaultPoolEnabled = propertyReader.getBoolean("redis.default.enabled", true);
 		if (!defaultPoolEnabled) {
 			return null;
 		}
+		
+		//Redis host, 默认localhost
 		String host = propertyReader.getString("redis.host", "localhost");
 		String overrideHost = System.getProperty("LOSER_REDIS_HOST");
 		if (overrideHost != null && !overrideHost.isEmpty()) {
@@ -35,6 +38,8 @@ public class JedisPoolFactory implements PoolFactory {
 				host = overrideHost;
 			}
 		}
+		
+		//Redis port, 默认6379
 		int port = propertyReader.getInt("redis.port", 6379);
 		String overridePort = System.getProperty("LOSER_REDIS_PORT");
 		if (overridePort != null && !overridePort.isEmpty()) {
@@ -45,6 +50,8 @@ public class JedisPoolFactory implements PoolFactory {
 				port = Integer.parseInt(overridePort);
 			}
 		}
+		
+		//Redis 密码, 默认没有密码
 		String password = propertyReader.getString("redis.password");
 		String overridePassword = System.getProperty("LOSER_REDIS_PASSWORD");
 		if (overridePassword != null && !overridePassword.isEmpty()) {

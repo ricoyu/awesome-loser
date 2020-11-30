@@ -5,6 +5,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
@@ -31,7 +32,7 @@ public abstract class AbstractRequestBuilder {
 	 */
 	protected Consumer<Exception> errorCallback;
 	
-	public AbstractRequestBuilder addHeader(String headerName, String headerValue) {
+	protected AbstractRequestBuilder addHeader(String headerName, String headerValue) {
 		Assert.notNull(headerName, "Header name cannot be null");
 		Assert.notNull(headerValue, "Header value cannot be null");
 		headers.add(headerName, headerValue);
@@ -87,4 +88,15 @@ public abstract class AbstractRequestBuilder {
 		this.errorCallback = errorCallback;
 		return this;
 	}
+	
+	/**
+	 * 自动从Spring容器中获取RestTemplate发送HTTP请求, 返回结果
+	 *
+	 * @return T
+	 */
+	public <T> T request() {
+		return request(null);
+	}
+	
+	public abstract <T> T request(RestTemplate restTemplate);
 }

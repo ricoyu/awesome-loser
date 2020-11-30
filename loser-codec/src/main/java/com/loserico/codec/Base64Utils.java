@@ -2,6 +2,7 @@ package com.loserico.codec;
 
 import org.apache.commons.codec.binary.Base64;
 
+import java.nio.charset.Charset;
 import java.util.Objects;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -29,6 +30,12 @@ public final class Base64Utils {
 		Objects.requireNonNull(encoded, "encoded cannot be null");
 		byte[] bytes = Base64.decodeBase64(encoded);
 		return new String(bytes, UTF_8);
+	}
+	
+	public static String decode(String encoded, Charset charset) {
+		Objects.requireNonNull(encoded, "encoded cannot be null");
+		byte[] bytes = Base64.decodeBase64(encoded);
+		return new String(bytes, charset);
 	}
 	
 	/**

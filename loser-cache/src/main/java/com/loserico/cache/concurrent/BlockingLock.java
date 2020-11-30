@@ -90,19 +90,20 @@ public class BlockingLock implements Lock {
 	}
 	
 	/**
-	 * 加锁, 锁有效期30秒
-	 * 如果本线程被杀死, 30秒后自动释放锁
+	 * 加锁, 锁有效期默认2秒
+	 * 如果本线程被杀死, 2秒后自动释放锁
 	 * 如果本线程一直在执行并且没有释放锁, 会有一条watchDog定时刷新锁的过期时间, 防止被其他线程获取锁
 	 */
 	@Override
 	public void lock() {
+		//自旋计数
 		int i = 0;
 		String threadName = Thread.currentThread().getName();
 		
-		/**
+		/*
 		 * 尝试第一次加锁, 加锁成功则启动watchDog并返回
 		 */
-		boolean locked = JedisUtils.setnx(key, value, 30, TimeUnit.SECONDS);
+		boolean locked = JedisUtils.setnx(key, value, defaultTimeout, TimeUnit.SECONDS);
 		if (locked) {
 			log.info(">>>>>> {} 获取锁成功 <<<<<<", threadName);
 			this.locked = true;
@@ -115,7 +116,7 @@ public class BlockingLock implements Lock {
 		 * 尝试maxTimedSpins次自旋获取锁, 加锁成功则启动watchDog并返回
 		 */
 		while (i++ < maxTimedSpins) {
-			locked = JedisUtils.setnx(key, value, 30, TimeUnit.SECONDS);
+			locked = JedisUtils.setnx(key, value, defaultTimeout, TimeUnit.SECONDS);
 			if (locked) {
 				log.info(">>>>>> {} 自旋{}次获取锁成功 <<<<<<", threadName, i);
 				this.locked = true;
@@ -137,9 +138,9 @@ public class BlockingLock implements Lock {
 			 * 期间如果Listener收到通知, 则提前唤醒本线程
 			 * 如果获取锁的线程一直没有解锁, 或者那个线程被杀死了, 也就是锁一直没有被释放, 本线程过30秒也会自动醒来, 防止死锁
 			 */
-			LockSupport.parkNanos(TimeUnit.SECONDS.toNanos(30));
+			LockSupport.parkNanos(TimeUnit.SECONDS.toNanos(defaultTimeout));
 			
-			locked = JedisUtils.setnx(key, value, 30, TimeUnit.SECONDS);
+			locked = JedisUtils.setnx(key, value, defaultTimeout, TimeUnit.SECONDS);
 			if (locked) {
 				log.info(">>>>>> {} 醒来后终获成功 <<<<<<", threadName);
 				this.locked = true;
@@ -161,6 +162,10 @@ public class BlockingLock implements Lock {
 		//解锁
 		boolean unlockSuccess = JedisUtils.unlock(key, value);
 		if (!unlockSuccess) {
+			/*
+			 * 关掉看门狗
+			 */
+			stopWatchDog();
 			throw new OperationNotSupportedException("解锁失败了哟");
 		}
 		log.info(">>>>>> {} 解锁成功 <<<<<<", threadName);
@@ -172,7 +177,7 @@ public class BlockingLock implements Lock {
 		 */
 		JedisUtils.publish(notifyChannel, Thread.currentThread().getName());
 		log.info(">>>>>> {} 发布消息, 现在其他线程可以重新获取锁 <<<<<<", threadName);
-		/**
+		/*
 		 * 关掉看门狗
 		 */
 		stopWatchDog();
@@ -195,7 +200,7 @@ public class BlockingLock implements Lock {
 	public void startListener() {
 		if (this.subscribe == null) {
 			/*
-			 * 因为当前线程自旋获取锁失败, 所以在startListener之后当前线程会被阻塞, 
+			 * 因为当前线程自旋获取锁失败, 所以在startListener之后当前线程会被阻塞,
 			 * 这里把当前线程传给NotifyListener, 这个在监听到事件后, 才可以知道要唤醒的线程是哪个
 			 * 订阅本身是交给JedisPoolOperations.THREAD_POOL线程池去执行的
 			 */
@@ -235,9 +240,17 @@ public class BlockingLock implements Lock {
 		watchDog.schedule(new TimerTask() {
 			@Override
 			public void run() {
-				JedisUtils.expire(key, defaultTimeout, TimeUnit.SECONDS);
+				//如果key已经过期了, 那么watchDog就不用再去刷新key过期时间了
+				boolean isSuccess = JedisUtils.expire(key, defaultTimeout, TimeUnit.SECONDS);
+				if (!isSuccess) {
+					log.info("Key {} already expired, Watch dog stop refresh", key);
+					watchDog.cancel();
+					watchDog = null;
+				} else {
+					log.info("Watch dog refresh lock {} timeout to default {} seconds", key, defaultTimeout);
+				}
 			}
-		}, 20L, 1000);
+		}, 0L, 200);
 	}
 	
 	private void stopWatchDog() {

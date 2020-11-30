@@ -50,19 +50,19 @@ public interface PoolFactory {
 	 */
 	public default JedisPoolConfig config(PropertyReader propertyReader) {
 		JedisPoolConfig config = new JedisPoolConfig();
-		//最大连接数，如果赋值为-1，则表示不限制；如果pool已经分配了maxActive个jedis实例，则此时pool的状态为exhausted(耗尽)。
+		//最大连接数, 如果赋值为-1, 则表示不限制; 如果pool已经分配了maxActive个jedis实例, 则此时pool的状态为exhausted(耗尽)
 		config.setMaxTotal(propertyReader.getInt("redis.maxTotal", 400));
-		//最大空闲数，控制一个pool最多有多少个状态为idle(空闲的)的jedis实例，默认值也是8。
+		//最大空闲数, 控制一个pool最多有多少个状态为idle(空闲的)的jedis实例, 默认值也是8
 		config.setMaxIdle(propertyReader.getInt("redis.maxIdle", 100));
 		//最小空闲数
 		config.setMinIdle(propertyReader.getInt("redis.minIdle", 10));
-		//是否在从池中取出连接前进行检验，如果检验失败，则从池中去除连接并尝试取出另一个
+		//是否在从池中取出连接前进行检验, 如果检验失败, 则从池中去除连接并尝试取出另一个
 		config.setTestOnBorrow(propertyReader.getBoolean("redis.testOnBorrow", false));
-		//在return给pool时，是否提前进行validate操作
+		//在return给pool时, 是否提前进行validate操作
 		config.setTestOnReturn(propertyReader.getBoolean("redis.testOnReturn", false));
-		//在空闲时检查有效性，默认false
+		//在空闲时检查有效性, 默认false
 		config.setTestWhileIdle(propertyReader.getBoolean("redis.testWhileIdle", false));
-		//表示一个对象至少停留在idle状态的最短时间，然后才能被idle object evitor扫描并驱逐；
+		//表示一个对象至少停留在idle状态的最短时间, 然后才能被idle object evitor扫描并驱逐
 		//表示idle object evitor两次扫描之间要sleep的毫秒数
 		config.setTimeBetweenEvictionRunsMillis(propertyReader.getInt("redis.timeBetweenEvictionRunsMillis", 60000));
 		//这一项只有在timeBetweenEvictionRunsMillis大于0时才有意义

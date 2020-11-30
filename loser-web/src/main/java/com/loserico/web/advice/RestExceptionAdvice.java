@@ -23,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -176,7 +177,6 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	public ResponseEntity<Object> handleUniqueConstraintViolationException(UniqueConstraintViolationException e) {
 		logger.error("", e);
 		Result result = Results.status("400", "Bad Request")
-				//.debugMessage(e.getMessage())
 				.build();
 		return new ResponseEntity(result, HttpStatus.OK);
 	}
@@ -186,9 +186,16 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	public ResponseEntity<Object> handleEntityNotFoundException(EntityNotFoundException e) {
 		logger.error("", e);
 		Result result = Results.status("404", e.getMessage())
-				//.debugMessage(e.getMessage())
 				.build();
 		return new ResponseEntity(result, HttpStatus.OK);
+	}
+	
+	@Override
+	protected ResponseEntity<Object> handleHttpRequestMethodNotSupported(HttpRequestMethodNotSupportedException ex, HttpHeaders headers, HttpStatus status,
+	                                                                     WebRequest request) {
+		headers.add("Content-Type", "application/json");
+		Result result = Results.status("405", "Method not allowed").build();
+		return new ResponseEntity(result, headers, HttpStatus.METHOD_NOT_ALLOWED);
 	}
 	
 	/**
@@ -227,6 +234,6 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	public ResponseEntity<?> handleThrowable(Throwable e) {
 		logger.error("Rest API ERROR happen", e);
 		Result result = Results.status(CommonErrorType.INTERNAL_SERVER_ERROR).build();
-		return new ResponseEntity(result, HttpStatus.OK);
+		return new ResponseEntity(result, HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 }

@@ -47,4 +47,32 @@ public final class RestUtils {
 		httpServletResponse.setContentType(MediaType.APPLICATION_JSON_VALUE);
 		JacksonUtils.writeValue(response.getWriter(), result);
 	}
+	
+	/**
+	 * 将结果以application/json形式写入输出流
+	 * @param response
+	 * @param result
+	 */
+	@SneakyThrows
+	public static void writeRawJson(ServletResponse response, String result) {
+		HttpServletResponse httpServletResponse = (HttpServletResponse)response;
+		CORS.builder().allowAll().build(httpServletResponse);
+		httpServletResponse.setStatus(HttpStatus.OK.value());
+		httpServletResponse.setContentType(MediaType.APPLICATION_JSON_VALUE);
+		response.getWriter().write(result);
+	}
+	
+	/**
+	 * 将结果以application/json形式以指定的Http Status写入输出流
+	 * @param response
+	 * @param result
+	 */
+	@SneakyThrows
+	public static void writeRawJson(ServletResponse response, HttpStatus httpStatus, String result) {
+		HttpServletResponse httpServletResponse = (HttpServletResponse)response;
+		CORS.builder().allowAll().build(httpServletResponse);
+		httpServletResponse.setStatus(httpStatus.value());
+		httpServletResponse.setContentType(MediaType.APPLICATION_JSON_VALUE);
+		response.getWriter().write(result);
+	}
 }

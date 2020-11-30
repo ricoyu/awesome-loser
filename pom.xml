@@ -5,7 +5,7 @@
     <groupId>com.loserico</groupId>
     <artifactId>awesome-loser</artifactId>
     <packaging>pom</packaging>
-    <version>4.7.15</version>
+    <version>4.7.19</version>
     <name>Awesome Loser</name>
     <url>http://maven.apache.org</url>
 
@@ -26,6 +26,7 @@
         <module>loser-mongo</module>
         <module>loser-token-parser</module>
         <module>loser-netty</module>
+        <module>loser-search</module>
     </modules>
 
     <properties>
@@ -46,9 +47,9 @@
         <jaxb-api.versioin>2.2.12</jaxb-api.versioin>
         <json.version>20170516</json.version>
         <jsonpath.version>2.4.0</jsonpath.version>
-
         <jedis.version>2.9.3</jedis.version>
-        <lucene.version>8.0.0</lucene.version>
+
+        <elasticsearch.version>7.6.2</elasticsearch.version>
         <redisson.version>3.11.5</redisson.version>
 
         <guava.version>29.0-jre</guava.version>
@@ -93,6 +94,16 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
+                <groupId>org.elasticsearch.client</groupId>
+                <artifactId>elasticsearch-rest-high-level-client</artifactId>
+                <version>${elasticsearch.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.elasticsearch</groupId>
+                <artifactId>elasticsearch</artifactId>
+                <version>${elasticsearch.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-core</artifactId>
                 <version>${springframework.version}</version>
@@ -122,11 +133,11 @@
                 <artifactId>spring-webmvc</artifactId>
                 <version>${springframework.version}</version>
             </dependency>
-            <dependency>
+            <!--<dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-websocket</artifactId>
                 <version>5.1.9.RELEASE</version>
-            </dependency>
+            </dependency>-->
             <dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-orm</artifactId>
@@ -161,16 +172,6 @@
             <dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-expression</artifactId>
-                <version>${springframework.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-jms</artifactId>
-                <version>${springframework.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-messaging</artifactId>
                 <version>${springframework.version}</version>
             </dependency>
 
@@ -468,11 +469,11 @@
                 <artifactId>javax.inject</artifactId>
                 <version>${javax.inject.version}</version>
             </dependency>
-            <dependency>
+            <!--<dependency>
                 <groupId>com.esotericsoftware</groupId>
                 <artifactId>reflectasm</artifactId>
                 <version>1.11.9</version>
-            </dependency>
+            </dependency>-->
 
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
@@ -573,87 +574,6 @@
                 <artifactId>dom4j</artifactId>
                 <version>1.6.1</version>
             </dependency>
-
-            <dependency>
-                <groupId>org.apache.lucene</groupId>
-                <artifactId>lucene-core</artifactId>
-                <version>${lucene.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.lucene</groupId>
-                <artifactId>lucene-queryparser</artifactId>
-                <version>${lucene.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.lucene</groupId>
-                <artifactId>lucene-analyzers-smartcn</artifactId>
-                <version>${lucene.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.lucene</groupId>
-                <artifactId>lucene-queries</artifactId>
-                <version>${lucene.version}</version>
-            </dependency>
-            <!--<dependency>
-                <groupId>org.apache.lucene</groupId>
-                <artifactId>lucene-expressions</artifactId>
-                <version>${lucene.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.lucene</groupId>
-                <artifactId>lucene-memory</artifactId>
-                <version>${lucene.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.lucene</groupId>
-                <artifactId>lucene-analyzers-common</artifactId>
-                <version>${lucene.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.lucene</groupId>
-                <artifactId>lucene-grouping</artifactId>
-                <version>${lucene.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.lucene</groupId>
-                <artifactId>lucene-join</artifactId>
-                <version>${lucene.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.lucene</groupId>
-                <artifactId>lucene-suggest</artifactId>
-                <version>${lucene.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.lucene</groupId>
-                <artifactId>lucene-highlighter</artifactId>
-                <version>${lucene.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.lucene</groupId>
-                <artifactId>lucene-replicator</artifactId>
-                <version>${lucene.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.lucene</groupId>
-                <artifactId>lucene-spellchecker</artifactId>
-                <version>${lucene-spellchecker.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.lucene</groupId>
-                <artifactId>lucene-misc</artifactId>
-                <version>${lucene.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.lucene</groupId>
-                <artifactId>lucene-facet</artifactId>
-                <version>${lucene.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.lucene</groupId>
-                <artifactId>lucene-demo</artifactId>
-                <version>${lucene.version}</version>
-            </dependency>-->
 
             <dependency>
                 <groupId>org.apache.velocity</groupId>

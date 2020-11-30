@@ -2,6 +2,7 @@ package org.loser.cache;
 
 import com.loserico.cache.JedisUtils;
 import com.loserico.cache.concurrent.Lock;
+import com.loserico.common.lang.utils.IOUtils;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
@@ -30,6 +31,11 @@ public class JedisUtilsTests {
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	@Test
+	public void testLPush() {
+		JedisUtils.LIST.lpush("ids-alert", IOUtils.readFileAsString("D:\\Work\\观安信息上海有限公司\\NTA资料\\测试数据\\ids-alert-http-post.json"));
 	}
 	
 	@Test
@@ -66,7 +72,7 @@ public class JedisUtilsTests {
 	
 	@Test
 	public void testPipelined() {
-		List<Object> users = JedisUtils.pipeline((pipeline) -> {
+		List<String> users = JedisUtils.pipeline((pipeline) -> {
 			for (int i = 0; i < 10; i++) {
 				pipeline.lpop("users");
 			}

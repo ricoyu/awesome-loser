@@ -2114,8 +2114,13 @@ public final class JedisUtils {
 		}
 	}
 	
-	public static List<Object> pipeline(Consumer<Pipeline> consumer) {
-		return jedisOperations.executePipelined(consumer);
+	/**
+	 * 在pipeline中执行多条命令, 一次返回所有结果
+	 * @param consumer
+	 * @return
+	 */
+	public static <T> List<T> pipeline(Consumer<Pipeline> consumer) {
+		return (List<T>)jedisOperations.executePipelined(consumer);
 	}
 	
 	private static boolean isEmpty(Collection<?> collection) {

@@ -1,13 +1,14 @@
 package com.loserico;
 
-import static java.text.MessageFormat.format;
+import org.junit.Test;
 
 import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.text.NumberFormat;
+import java.util.Date;
 import java.util.Locale;
 
-import org.junit.Test;
+import static java.text.MessageFormat.format;
 
 public class MessageFormatTest {
 
@@ -47,5 +48,15 @@ public class MessageFormatTest {
         // Format numbers in percentage.
         message = MessageFormat.format("This is a formatted percentage {0,number,percent} and {1,number,percent} numbers", 0.10, 0.75);
         System.out.println(message);
+	}
+	
+	@Test
+	public void testFormatTypes() {
+		String pattern = "On {0, date}, {1} sent you {2, choice, 0#no messages|1#a message|2#two messages|2<{2, number, integer} messages}.";
+		MessageFormat format = new MessageFormat(pattern, Locale.UK);
+		
+		Object[] arguments;
+		String message = format.format(new Object[]{new Date(), "Alice", 2});
+		System.out.println(message);
 	}
 }

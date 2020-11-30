@@ -2,6 +2,8 @@ package com.loserico.json;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.loserico.common.lang.utils.IOUtils;
 import com.loserico.json.jackson.JacksonUtils;
@@ -15,6 +17,7 @@ import org.junit.Test;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,6 +33,20 @@ import java.util.Map;
  */
 public class JacksonUtilsTest {
 	
+	@Test
+	public void testSerDeserPlainString() throws JsonProcessingException {
+		ObjectMapper objectMapper = new ObjectMapper();
+		String str = "aa";
+		System.out.println(str + " , length=" + str.length());
+		
+		String json = objectMapper.writeValueAsString(str);
+		String toJson = JacksonUtils.toJson(str);
+		System.out.println(toJson + " , length=" + str.length());
+		System.out.println(json + " , length=" + str.length());
+		
+		/*String simpleJson = IOUtils.readClassPathFileAsString("simple-json.txt");
+		System.out.println(JacksonUtils.toObject(simpleJson, String.class));*/
+	}
 	@Test
 	public void testDeserialLocalDateTime() {
 		String s = "2019-12-21 19:15:34";
@@ -74,6 +91,13 @@ public class JacksonUtilsTest {
 		String json = IOUtils.readClassPathFileAsString("mongodbDocumentJson.json");
 		UserInfo userInfo = JacksonUtils.toObject(json, UserInfo.class);
 		System.out.println(userInfo.getId());
+	}
+	
+	@Test
+	public void testSerializeSingleValue() {
+		System.out.println(JacksonUtils.toJson(1L));
+		System.out.println(JacksonUtils.toJson("hi"));
+		System.out.println(JacksonUtils.toJson(new Object[]{1L, new Date(), null}));
 	}
 	
 	@Data

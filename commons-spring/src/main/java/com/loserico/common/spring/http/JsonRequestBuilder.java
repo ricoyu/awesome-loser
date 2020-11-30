@@ -91,18 +91,15 @@ public class JsonRequestBuilder extends AbstractRequestBuilder {
 	}
 	
 	@Override
-	public JsonRequestBuilder onError(Consumer<Exception> errorCallback) {
-		super.onError(errorCallback);
+	public JsonRequestBuilder addHeader(String headerName, String headerValue) {
+		super.addHeader(headerName, headerValue);
 		return this;
 	}
 	
-	/**
-	 * 自动从Spring容器中获取RestTemplate发送HTTP请求, 返回结果
-	 *
-	 * @return T
-	 */
-	public <T> T request() {
-		return request(null);
+	@Override
+	public JsonRequestBuilder onError(Consumer<Exception> errorCallback) {
+		super.onError(errorCallback);
+		return this;
 	}
 	
 	/**
@@ -110,6 +107,7 @@ public class JsonRequestBuilder extends AbstractRequestBuilder {
 	 *
 	 * @return T
 	 */
+	@Override
 	public <T> T request(RestTemplate restTemplate) {
 		if (restTemplate == null) {
 			restTemplate = ApplicationContextHolder.getBean(RestTemplate.class);
@@ -132,7 +130,10 @@ public class JsonRequestBuilder extends AbstractRequestBuilder {
 				responseEntity = restTemplate.exchange(url, httpMethod, entity, typeReference);
 			} else if (responseType != null) {
 				responseEntity = restTemplate.exchange(url, httpMethod, entity, responseType);
+			} else {
+				responseEntity = restTemplate.exchange(url, httpMethod, entity, (Class<T>) String.class);
 			}
+			
 			return responseEntity.getBody();
 		} catch (Exception e) {
 			log.error("", e);

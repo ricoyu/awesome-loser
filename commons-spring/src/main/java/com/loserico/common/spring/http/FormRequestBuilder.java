@@ -42,6 +42,12 @@ public class FormRequestBuilder extends AbstractRequestBuilder implements OAuth2
 		return this;
 	}
 	
+	@Override
+	public FormRequestBuilder addHeader(String headerName, String headerValue) {
+		super.addHeader(headerName, headerValue);
+		return this;
+	}
+	
 	/**
 	 * 设置请求参数
 	 *
@@ -136,9 +142,17 @@ public class FormRequestBuilder extends AbstractRequestBuilder implements OAuth2
 	 *
 	 * @return T
 	 */
+	@Override
 	public <T> T request() {
+		return request(null);
+	}
+	
+	@Override
+	public <T> T request(RestTemplate restTemplate) {
+		if (restTemplate == null) {
+			restTemplate = ApplicationContextHolder.getBean(RestTemplate.class);
+		}
 		try {
-			RestTemplate restTemplate = ApplicationContextHolder.getBean(RestTemplate.class);
 			HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(params, headers);
 			ResponseEntity<T> responseEntity = restTemplate.exchange(url, httpMethod, entity, responseType);
 			return responseEntity.getBody();

@@ -5,8 +5,6 @@ import com.loserico.codec.exception.RsaPrivateKeyException;
 import com.loserico.codec.exception.RsaPublicKeyException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.crypto.Cipher;
 import java.io.ByteArrayOutputStream;
@@ -50,8 +48,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
  */
 @Slf4j
 public final class RsaUtils {
-	
-	private static Logger log = LoggerFactory.getLogger(RsaUtils.class);
 	
 	public static final String CHARSET = "UTF-8";
 	

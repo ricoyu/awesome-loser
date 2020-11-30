@@ -54,9 +54,6 @@ public final class JacksonUtils {
 			return null;
 		}
 		
-		if (clazz.isAssignableFrom(String.class)) {
-			return (T) json;
-		}
 		try {
 			return objectMapper.readValue(json, clazz);
 		} catch (IOException e) {

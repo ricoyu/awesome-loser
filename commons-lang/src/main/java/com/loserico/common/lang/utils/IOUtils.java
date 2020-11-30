@@ -109,10 +109,15 @@ public class IOUtils {
 	 */
 	public static String readFileAsString(InputStream in) {
 		StringBuilder result = new StringBuilder();
+		boolean firstLine = true;
 		try (Scanner scanner = new Scanner(in)) {
 			while (scanner.hasNextLine()) {
+				if (!firstLine) {
+					result.append(System.lineSeparator());
+				}
 				String line = scanner.nextLine();
-				result.append(line).append(System.lineSeparator());
+				result.append(line);
+				firstLine = false;
 			}
 			scanner.close();
 		} catch (Exception e) {
@@ -131,10 +136,15 @@ public class IOUtils {
 	public static String readFileAsString(String filePath) {
 		StringBuilder result = new StringBuilder();
 		File file = new File(filePath);
+		boolean firstLine = true;
 		try (Scanner scanner = new Scanner(file)) {
 			while (scanner.hasNextLine()) {
+				if (!firstLine) {
+					result.append(System.lineSeparator());
+				}
 				String line = scanner.nextLine();
-				result.append(line).append(System.lineSeparator());
+				result.append(line);
+				firstLine = false;
 			}
 			scanner.close();
 		} catch (IOException e) {
@@ -153,11 +163,17 @@ public class IOUtils {
 		if (file == null) {
 			return null;
 		}
+		
+		boolean firstLine = true;
 		StringBuilder result = new StringBuilder();
 		try (Scanner scanner = new Scanner(file)) {
 			while (scanner.hasNextLine()) {
+				if (!firstLine) {
+					result.append(System.lineSeparator());
+				}
 				String line = scanner.nextLine();
-				result.append(line).append(System.lineSeparator());
+				result.append(line);
+				firstLine = false;
 			}
 			scanner.close();
 		} catch (IOException e) {

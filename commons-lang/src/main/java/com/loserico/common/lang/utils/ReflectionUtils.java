@@ -7,7 +7,6 @@ import org.springframework.cglib.proxy.UndeclaredThrowableException;
 import org.springframework.util.Assert;
 import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.MethodInvoker;
-import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import java.lang.annotation.Annotation;
@@ -19,11 +18,16 @@ import java.lang.reflect.Modifier;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Pattern;
+
+import static org.springframework.util.ObjectUtils.nullSafeToString;
 
 /**
  * 反射工具类
@@ -70,12 +74,12 @@ public class ReflectionUtils {
 			new ConcurrentReferenceHashMap<Class<?>, Field[]>(256);
 	
 	/**
-	 * 这个类声明的或者时其父类中声明的field缓存
+	 * 这个类声明的或者是其父类中声明的field缓存
 	 */
 	private static final Map<Class<?>, Field[]> fieldsCache = new ConcurrentReferenceHashMap<Class<?>, Field[]>(256);
 	
 	/**
-	 * 跟你fieldName查找Field对象时, 宽松模式会去掉fieldName中的 "-" "_" "空白符"
+	 * 根据fieldName查找Field对象时, 宽松模式会去掉fieldName中的 "-" "_" "空白符"
 	 */
 	private static final Pattern flaxableNamePattern = Pattern.compile("[-_\\s]");
 	
@@ -93,8 +97,7 @@ public class ReflectionUtils {
 	}
 	
 	/**
-	 * Callback optionally used to filter methods to be operated on by a method
-	 * callback.
+	 * Callback optionally used to filter methods to be operated on by a method callback.
 	 */
 	public interface MethodFilter {
 		
@@ -134,7 +137,7 @@ public class ReflectionUtils {
 	}
 	
 	/**
-	 * 检查制定对象是否有name属性，会往上找其父类，单不包括Object
+	 * 检查指定对象是否有name属性, 会往上找其父类, 但不包括Object
 	 *
 	 * @param obj
 	 * @param name
@@ -143,7 +146,9 @@ public class ReflectionUtils {
 	public static boolean existsField(Object obj, String name) {
 		Assert.notNull(obj, "obj must not be null");
 		Assert.notNull(name, "name must not be null");
+		
 		Class<?> searchType = obj.getClass();
+		
 		while (Object.class != searchType && searchType != null) {
 			Field[] fields = getDeclaredFields(searchType);
 			for (Field field : fields) {
@@ -563,8 +568,7 @@ public class ReflectionUtils {
 		while (searchType != null) {
 			Method[] methods = (searchType.isInterface() ? searchType.getMethods() : getDeclaredMethods(searchType));
 			for (Method method : methods) {
-				if (name.equals(method.getName()) &&
-						(paramTypes == null || Arrays.equals(paramTypes, method.getParameterTypes()))) {
+				if (name.equals(method.getName()) && (paramTypes == null || Arrays.equals(paramTypes, method.getParameterTypes()))) {
 					return method;
 				}
 			}
@@ -643,8 +647,7 @@ public class ReflectionUtils {
 			methodInvoker.prepare();
 			
 			if (logger.isDebugEnabled()) {
-				logger.debug(String.format("Invoking method '%s' on %s with arguments %s", name, safeToString(target),
-						ObjectUtils.nullSafeToString(args)));
+				logger.debug(String.format("Invoking method '%s' on %s with arguments %s", name, safeToString(target), nullSafeToString(args)));
 			}
 			
 			return (T) methodInvoker.invoke();
@@ -659,8 +662,11 @@ public class ReflectionUtils {
 		try {
 			Method method = target.getClass().getMethod(methodName, String.class);
 			return (T) method.invoke(target, arg);
-		} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
-				| InvocationTargetException e) {
+		} catch (NoSuchMethodException |
+				SecurityException |
+				IllegalAccessException |
+				IllegalArgumentException |
+				InvocationTargetException e) {
 			log.error("", e);
 			throw new RuntimeException(e);
 		}
@@ -670,8 +676,11 @@ public class ReflectionUtils {
 		try {
 			Method method = target.getClass().getMethod(methodName, Runnable.class);
 			return (T) method.invoke(target, arg);
-		} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
-				| InvocationTargetException e) {
+		} catch (NoSuchMethodException |
+				SecurityException |
+				IllegalAccessException |
+				IllegalArgumentException |
+				InvocationTargetException e) {
 			log.error("", e);
 			throw new RuntimeException(e);
 		}
@@ -681,8 +690,11 @@ public class ReflectionUtils {
 		try {
 			Method method = target.getClass().getMethod(methodName, Class.class);
 			return (T) method.invoke(target, type);
-		} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
-				| InvocationTargetException e) {
+		} catch (NoSuchMethodException |
+				SecurityException |
+				IllegalAccessException |
+				IllegalArgumentException |
+				InvocationTargetException e) {
 			log.error("", e);
 			throw new RuntimeException(e);
 		}
@@ -692,8 +704,11 @@ public class ReflectionUtils {
 		try {
 			Method method = target.getClass().getMethod(methodName, Class.class);
 			return (T) method.invoke(target, beanName, type);
-		} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
-				| InvocationTargetException e) {
+		} catch (NoSuchMethodException |
+				SecurityException |
+				IllegalAccessException |
+				IllegalArgumentException |
+				InvocationTargetException e) {
 			log.error("", e);
 			throw new RuntimeException(e);
 		}
@@ -890,9 +905,7 @@ public class ReflectionUtils {
 	public static Object invokeStatic(Class clazz, String methodName, Object... args) {
 		Objects.requireNonNull(clazz, "clazz can not be null");
 		
-		/**
-		 * 确定参数类型
-		 */
+		// 确定参数类型
 		Class<?>[] parameterTypes = null;
 		if (args != null && args.length != 0) {
 			parameterTypes = new Class[args.length];
@@ -990,31 +1003,86 @@ public class ReflectionUtils {
 	}
 	
 	/**
-	 * 检查targetClasses的任意public方法是否标注了annotationClass注解
+	 * 检查targetClasses是否标注了annotationClass注解
 	 *
 	 * @param annotationClass
-	 * @param targetClasses
-	 * @return
+	 * @param targetClass
+	 * @return boolean
 	 */
-	public static boolean existsAnnotation(Class<? extends Annotation> annotationClass, Class... targetClasses) {
-		if (targetClasses == null || targetClasses.length == 0) {
+	public static boolean existsAnnotation(Class<? extends Annotation> annotationClass, Class targetClass) {
+		if (targetClass == null || annotationClass == null) {
 			return false;
 		}
 		
-		for (Class clazz : targetClasses) {
-			if (clazz == null) {
-				continue;
-			}
-			Method[] methods = clazz.getMethods();
-			for (Method method : methods) {
-				Annotation anno = method.getAnnotation(annotationClass);
-				if (anno != null) {
-					return true;
+		return targetClass.getAnnotation(annotationClass) != null;
+	}
+	
+	/**
+	 * 检查targetClasses的任意public方法(包含父类中的)是否标注了annotationClass注解
+	 *
+	 * @param annotationClass
+	 * @param method
+	 * @return
+	 */
+	public static boolean existsAnnotation(Class<? extends Annotation> annotationClass, Method method) {
+		if (annotationClass == null || method == null) {
+			return false;
+		}
+		Annotation annotation = method.getAnnotation(annotationClass);
+		return annotation != null;
+	}
+	
+	/**
+	 * 在targetClass的public方法上找所有的由annotationClasses指定的注解instance
+	 *
+	 * @param targetClass
+	 * @param annotationClasses
+	 * @return List<Annotation>
+	 */
+	public static List<Annotation> getMethodAnnotations(Class targetClass, Class<? extends Annotation>... annotationClasses) {
+		if (targetClass == null || annotationClasses == null || annotationClasses.length == 0) {
+			return Collections.emptyList();
+		}
+		
+		List<Annotation> annotations = new ArrayList<>();
+		Method[] methods = targetClass.getMethods();
+		for (Method method : methods) {
+			for (Class annorationClass : annotationClasses) {
+				Annotation annotation = method.getAnnotation(annorationClass);
+				if (annotation != null) {
+					annotations.add(annotation);
 				}
 			}
 		}
 		
-		return false;
+		return annotations;
+	}
+	
+	/**
+	 * 在targetClass的公共方法找找所有标注了指定注解的方法
+	 *
+	 * @param targetClass
+	 * @param annotationClasses
+	 * @return Set<Method>
+	 */
+	public static Set<Method> filterMethodByAnnotation(Class targetClass, Class<? extends Annotation>... annotationClasses) {
+		if (targetClass == null || annotationClasses == null || annotationClasses.length == 0) {
+			return Collections.emptySet();
+		}
+		
+		Set<Method> methodSet = new HashSet<>();
+		Method[] methods = targetClass.getMethods();
+		
+		for (Method method : methods) {
+			for (Class annorationClass : annotationClasses) {
+				Annotation annotation = method.getAnnotation(annorationClass);
+				if (annotation != null) {
+					methodSet.add(method);
+				}
+			}
+		}
+		
+		return methodSet;
 	}
 	
 	/**
@@ -1352,6 +1420,7 @@ public class ReflectionUtils {
 	
 	/**
 	 * 判断某个类是否存在
+	 *
 	 * @param className
 	 * @return
 	 */
