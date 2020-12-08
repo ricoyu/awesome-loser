@@ -1,8 +1,13 @@
 package com.loserico.codec;
 
 import com.loserico.codec.exception.PrivateDecryptException;
+import com.loserico.codec.exception.PrivateEncryptException;
+import com.loserico.codec.exception.PublicDecryptException;
+import com.loserico.codec.exception.PublicEncryptException;
 import com.loserico.codec.exception.RsaPrivateKeyException;
 import com.loserico.codec.exception.RsaPublicKeyException;
+import com.loserico.codec.exception.RsaSignException;
+import com.loserico.codec.exception.RsaSignVerifyException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 
@@ -205,7 +210,7 @@ public final class RsaUtils {
 			cipher.init(Cipher.ENCRYPT_MODE, publicKey);
 			return base64Encode(rsaSplitCodec(cipher, Cipher.ENCRYPT_MODE, data.getBytes(CHARSET)));
 		} catch (Exception e) {
-			throw new RuntimeException("加密字符串[" + data + "]时遇到异常", e);
+			throw new PublicEncryptException("加密字符串[" + data + "]时遇到异常", e);
 		}
 	}
 	
@@ -227,7 +232,7 @@ public final class RsaUtils {
 			cipher.init(Cipher.ENCRYPT_MODE, key);
 			return base64Encode(rsaSplitCodec(cipher, Cipher.ENCRYPT_MODE, data.getBytes(CHARSET)));
 		} catch (Exception e) {
-			throw new RuntimeException("加密字符串[" + data + "]时遇到异常", e);
+			throw new PublicEncryptException("加密字符串[" + data + "]时遇到异常", e);
 		}
 	}
 	
@@ -246,7 +251,7 @@ public final class RsaUtils {
 			cipher.init(Cipher.DECRYPT_MODE, publicKey);
 			return new String(rsaSplitCodec(cipher, Cipher.DECRYPT_MODE, base64Decode(data)), CHARSET);
 		} catch (Exception e) {
-			throw new RuntimeException("解密字符串[" + data + "]时遇到异常", e);
+			throw new PublicDecryptException("解密字符串[" + data + "]时遇到异常", e);
 		}
 	}
 	
@@ -270,7 +275,7 @@ public final class RsaUtils {
 			cipher.init(Cipher.DECRYPT_MODE, key);
 			return new String(rsaSplitCodec(cipher, Cipher.DECRYPT_MODE, base64Decode(data)), CHARSET);
 		} catch (Exception e) {
-			throw new RuntimeException("解密字符串[" + data + "]时遇到异常", e);
+			throw new PublicDecryptException("解密字符串[" + data + "]时遇到异常", e);
 		}
 	}
 	
@@ -291,7 +296,7 @@ public final class RsaUtils {
 			cipher.init(Cipher.ENCRYPT_MODE, privateKey);
 			return base64Encode(rsaSplitCodec(cipher, Cipher.ENCRYPT_MODE, data.getBytes(CHARSET)));
 		} catch (Exception e) {
-			throw new RuntimeException("加密字符串[" + data + "]时遇到异常", e);
+			throw new PrivateEncryptException("加密字符串[" + data + "]时遇到异常", e);
 		}
 	}
 	
@@ -307,7 +312,7 @@ public final class RsaUtils {
 			cipher.init(Cipher.ENCRYPT_MODE, privateKey);
 			return base64Encode(rsaSplitCodec(cipher, Cipher.ENCRYPT_MODE, data.getBytes(CHARSET)));
 		} catch (Exception e) {
-			throw new RuntimeException("加密字符串[" + data + "]时遇到异常", e);
+			throw new PrivateEncryptException("加密字符串[" + data + "]时遇到异常", e);
 		}
 	}
 	
@@ -350,7 +355,7 @@ public final class RsaUtils {
 			cipher.init(Cipher.DECRYPT_MODE, privateKey);
 			return new String(rsaSplitCodec(cipher, Cipher.DECRYPT_MODE, base64Decode(data)), CHARSET);
 		} catch (Exception e) {
-			throw new RuntimeException("解密字符串[" + data + "]时遇到异常", e);
+			throw new PrivateDecryptException("解密字符串[" + data + "]时遇到异常", e);
 		}
 	}
 	
@@ -385,7 +390,7 @@ public final class RsaUtils {
 			signature.update(data);
 			return encodeBase64String(signature.sign());
 		} catch (Exception e) {
-			throw new RuntimeException("签名字符串[" + data + "]时遇到异常", e);
+			throw new RsaSignException("签名字符串[" + data + "]时遇到异常", e);
 		}
 	}
 	
@@ -412,7 +417,7 @@ public final class RsaUtils {
 			signature.update(data);
 			return base64Encode(signature.sign());
 		} catch (Exception e) {
-			throw new RuntimeException("签名字符串[" + data + "]时遇到异常", e);
+			throw new RsaSignException("签名字符串[" + data + "]时遇到异常", e);
 		}
 	}
 	
@@ -460,7 +465,7 @@ public final class RsaUtils {
 			signature.update(data);
 			return signature.verify(decodeBase64(sign));
 		} catch (Exception e) {
-			throw new RuntimeException("验签字符串[" + data + "]时遇到异常", e);
+			throw new RsaSignVerifyException("验签字符串[" + data + "]时遇到异常", e);
 		}
 	}
 	
@@ -487,7 +492,7 @@ public final class RsaUtils {
 			signature.update(data.getBytes(CHARSET));
 			return signature.verify(base64Decode(sign));
 		} catch (Exception e) {
-			throw new RuntimeException("验签字符串[" + data + "]时遇到异常", e);
+			throw new RsaSignVerifyException("验签字符串[" + data + "]时遇到异常", e);
 		}
 	}
 	

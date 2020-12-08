@@ -5,7 +5,7 @@
     <groupId>com.loserico</groupId>
     <artifactId>awesome-loser</artifactId>
     <packaging>pom</packaging>
-    <version>4.7.19</version>
+    <version>4.7.20</version>
     <name>Awesome Loser</name>
     <url>http://maven.apache.org</url>
 
@@ -627,7 +627,7 @@
         <repository>
             <id>phantom-maven2</id>
             <name>phantom-maven2</name>
-            <url>http://172.16.0.9:8081/repository/phantom-maven2/</url>
+            <url>http://172.16.0.69:8081/repository/phantom-maven2/</url>
         </repository>
     </distributionManagement>
 
@@ -635,7 +635,7 @@
         <repository>
             <id>public</id>
             <name>Public Repositories</name>
-            <url>http://172.16.0.9:8081/repository/maven-public/</url>
+            <url>http://172.16.0.69:8081/repository/maven-public/</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
@@ -648,7 +648,7 @@
         <pluginRepository>
             <id>public</id>
             <name>Public Repositories</name>
-            <url>http://172.16.0.9:8081/repository/maven-public</url>
+            <url>http://172.16.0.69:8081/repository/maven-public</url>
             <releases>
                 <enabled>true</enabled>
             </releases>

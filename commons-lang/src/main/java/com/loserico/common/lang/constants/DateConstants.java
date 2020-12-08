@@ -33,6 +33,9 @@ public final class DateConstants {
 	 */
 	public static final Pattern PT_ISO_DATE = compile("\\d{4}-\\d{2}-\\d{2}");
 	public static final String FMT_ISO_DATE = "yyyy-MM-dd";
+	/**
+	 * yyyy-MM-dd
+	 */
 	public static final DateTimeFormatter DTF_ISO_DATE = ofPattern(FMT_ISO_DATE);
 	
 	/**

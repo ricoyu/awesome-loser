@@ -33,7 +33,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * @author Rico Yu  ricoyu520@gmail.com
  * @version 1.0
  */
-public class ThreadPoolExecutor extends AbstractExecutorService {
+public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	/**
 	 * The main pool control state, ctl, is an atomic integer packing
 	 * two conceptual fields
@@ -1234,11 +1234,11 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 	 *                                  {@code maximumPoolSize < corePoolSize}
 	 * @throws NullPointerException     if {@code workQueue} is null
 	 */
-	public ThreadPoolExecutor(int corePoolSize,
-	                          int maximumPoolSize,
-	                          long keepAliveTime,
-	                          TimeUnit unit,
-	                          BlockingQueue<Runnable> workQueue) {
+	public LoserThreadPoolExecutor(int corePoolSize,
+	                               int maximumPoolSize,
+	                               long keepAliveTime,
+	                               TimeUnit unit,
+	                               BlockingQueue<Runnable> workQueue) {
 		this(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue,
 				Executors.defaultThreadFactory(), defaultHandler);
 	}
@@ -1268,12 +1268,12 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 	 * @throws NullPointerException     if {@code workQueue}
 	 *                                  or {@code threadFactory} is null
 	 */
-	public ThreadPoolExecutor(int corePoolSize,
-	                          int maximumPoolSize,
-	                          long keepAliveTime,
-	                          TimeUnit unit,
-	                          BlockingQueue<Runnable> workQueue,
-	                          ThreadFactory threadFactory) {
+	public LoserThreadPoolExecutor(int corePoolSize,
+	                               int maximumPoolSize,
+	                               long keepAliveTime,
+	                               TimeUnit unit,
+	                               BlockingQueue<Runnable> workQueue,
+	                               ThreadFactory threadFactory) {
 		this(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue,
 				threadFactory, defaultHandler);
 	}
@@ -1303,12 +1303,12 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 	 * @throws NullPointerException     if {@code workQueue}
 	 *                                  or {@code handler} is null
 	 */
-	public ThreadPoolExecutor(int corePoolSize,
-	                          int maximumPoolSize,
-	                          long keepAliveTime,
-	                          TimeUnit unit,
-	                          BlockingQueue<Runnable> workQueue,
-	                          RejectedExecutionHandler handler) {
+	public LoserThreadPoolExecutor(int corePoolSize,
+	                               int maximumPoolSize,
+	                               long keepAliveTime,
+	                               TimeUnit unit,
+	                               BlockingQueue<Runnable> workQueue,
+	                               RejectedExecutionHandler handler) {
 		this(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue,
 				Executors.defaultThreadFactory(), handler);
 	}
@@ -1340,13 +1340,13 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 	 * @throws NullPointerException     if {@code workQueue}
 	 *                                  or {@code threadFactory} or {@code handler} is null
 	 */
-	public ThreadPoolExecutor(int corePoolSize,
-	                          int maximumPoolSize,
-	                          long keepAliveTime,
-	                          TimeUnit unit,
-	                          BlockingQueue<Runnable> workQueue,
-	                          ThreadFactory threadFactory,
-	                          RejectedExecutionHandler handler) {
+	public LoserThreadPoolExecutor(int corePoolSize,
+	                               int maximumPoolSize,
+	                               long keepAliveTime,
+	                               TimeUnit unit,
+	                               BlockingQueue<Runnable> workQueue,
+	                               ThreadFactory threadFactory,
+	                               RejectedExecutionHandler handler) {
 		if (corePoolSize < 0 ||
 				maximumPoolSize <= 0 ||
 				maximumPoolSize < corePoolSize ||
@@ -2150,7 +2150,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 		 * @param r the runnable task requested to be executed
 		 * @param e the executor attempting to execute this task
 		 */
-		public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
+		public void rejectedExecution(Runnable r, LoserThreadPoolExecutor e) {
 			if (!e.isShutdown()) {
 				r.run();
 			}
@@ -2175,7 +2175,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 		 * @param e the executor attempting to execute this task
 		 * @throws RejectedExecutionException always
 		 */
-		public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
+		public void rejectedExecution(Runnable r, LoserThreadPoolExecutor e) {
 			throw new RejectedExecutionException("Task " + r.toString() +
 					" rejected from " +
 					e.toString());
@@ -2199,7 +2199,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 		 * @param r the runnable task requested to be executed
 		 * @param e the executor attempting to execute this task
 		 */
-		public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
+		public void rejectedExecution(Runnable r, LoserThreadPoolExecutor e) {
 		}
 	}
 	
@@ -2224,7 +2224,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 		 * @param r the runnable task requested to be executed
 		 * @param e the executor attempting to execute this task
 		 */
-		public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
+		public void rejectedExecution(Runnable r, LoserThreadPoolExecutor e) {
 			if (!e.isShutdown()) {
 				e.getQueue().poll();
 				e.execute(r);

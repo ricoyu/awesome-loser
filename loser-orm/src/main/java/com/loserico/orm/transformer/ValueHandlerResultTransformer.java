@@ -1,5 +1,6 @@
 package com.loserico.orm.transformer;
 
+import com.loserico.common.lang.transformer.ValueHandlerFactory;
 import com.loserico.common.lang.utils.EnumUtils;
 import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.common.lang.utils.StringUtils;

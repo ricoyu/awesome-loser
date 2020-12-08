@@ -39,6 +39,11 @@ public class JedisUtilsTests {
 	}
 	
 	@Test
+	public void testLPushIdsMetadata() {
+		JedisUtils.LIST.lpush("ids-metadata", IOUtils.readFileAsString("D:\\Work\\观安信息上海有限公司\\NTA资料\\测试数据\\ids-metadata.json"));
+	}
+	
+	@Test
 	public void testSet() {
 		JedisUtils.set("k1", "aaa");
 		Assert.assertEquals("aaa", JedisUtils.get("k1"));

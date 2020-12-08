@@ -409,7 +409,7 @@ public class ReflectionUtils {
 	}
 	
 	/**
-	 * 拿所有的field, 包括父类的field
+	 * 拿所有的field, 包括父类的field, 但是不包括Object类中的字段
 	 *
 	 * @param clazz
 	 * @return Field[]

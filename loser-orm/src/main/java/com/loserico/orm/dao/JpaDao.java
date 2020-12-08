@@ -13,7 +13,7 @@ import com.loserico.orm.exception.SQLCountQueryException;
 import com.loserico.orm.exception.SQLQueryException;
 import com.loserico.orm.predicate.Predicate;
 import com.loserico.orm.transformer.ResultTransformerFactory;
-import com.loserico.orm.transformer.ValueHandlerFactory;
+import com.loserico.common.lang.transformer.ValueHandlerFactory;
 import com.loserico.orm.utils.Defaults;
 import com.loserico.orm.utils.HashUtils;
 import com.loserico.orm.utils.JacksonUtils;

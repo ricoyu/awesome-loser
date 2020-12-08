@@ -1,181 +1,231 @@
-package com.loserico.orm.transformer;
+package com.loserico.common.lang.transformer;
+
+import com.loserico.common.lang.utils.DateUtils;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Date;
 
 /**
- * 
  * @author Loser
  * @since May 29, 2016
- * @version
- *
  */
 public class ValueHandlerFactory {
 	
 	private ValueHandlerFactory() {
 	}
-
+	
 	public static interface ValueHandler<T> {
 		public T convert(Object value);
-
+		
 		public String render(T value);
 	}
-
+	
 	public static abstract class BaseValueHandler<T> implements ValueHandler<T>, Serializable {
 		private static final long serialVersionUID = 1L;
-
+		
 		@Override
 		public String render(T value) {
 			return value.toString();
 		}
 	}
-
+	
 	public static class NoOpValueHandler<T> extends BaseValueHandler<T> {
 		private static final long serialVersionUID = 1L;
-
-		@SuppressWarnings({ "unchecked" })
+		
+		@SuppressWarnings({"unchecked"})
 		public T convert(Object value) {
 			return (T) value;
 		}
 	}
-
+	
 	public static class IntegerValueHandler extends BaseValueHandler<Integer> implements Serializable {
 		private static final long serialVersionUID = 1L;
 		public static final IntegerValueHandler INSTANCE = new IntegerValueHandler();
-
+		
 		@Override
 		public Integer convert(Object value) {
 			if (value == null) {
 				return null;
 			}
+			
+			if (value instanceof Integer) {
+				return (Integer) value;
+			}
+			
 			if (BigDecimal.class.isInstance(value)) {
 				return ((BigDecimal) value).intValue();
-			} else if (Long.class.isInstance(value)) {
+			}
+			
+			if (Long.class.isInstance(value)) {
 				return ((Long) value).intValue();
-			} else if (BigInteger.class.isInstance(value)) {
+			}
+			
+			if (BigInteger.class.isInstance(value)) {
 				return ((BigInteger) value).intValue();
-			} else if (String.class.isInstance(value)) {
+			}
+			
+			if (String.class.isInstance(value)) {
 				return Integer.parseInt((String) value);
 			}
 			throw unknownConversion(value, Integer.class);
 		}
 	}
-
+	
 	public static class LongValueHandler extends BaseValueHandler<Long> implements Serializable {
 		private static final long serialVersionUID = 1L;
 		public static final LongValueHandler INSTANCE = new LongValueHandler();
-
+		
 		@Override
 		public Long convert(Object value) {
 			if (value == null) {
 				return null;
 			}
+			
+			if (value instanceof Long) {
+				return (Long) value;
+			}
+			
 			if (BigDecimal.class.isInstance(value)) {
 				return Long.valueOf(((BigDecimal) value).longValue());
-			} else if (BigInteger.class.isInstance(value)) {
+			}
+			
+			if (BigInteger.class.isInstance(value)) {
 				return ((BigInteger) value).longValue();
-			} else if (Integer.class.isInstance(value)) {
+			}
+			
+			if (Integer.class.isInstance(value)) {
 				return ((Integer) value).longValue();
-			} else if (String.class.isInstance(value)) {
+			}
+			
+			if (String.class.isInstance(value)) {
 				return Long.parseLong((String) value);
-			} else if (Short.class.isInstance(value)) {
-				return ((Short)value).longValue();
+			}
+			
+			if (Short.class.isInstance(value)) {
+				return ((Short) value).longValue();
 			}
 			throw unknownConversion(value, Long.class);
 		}
-
+		
 		@Override
 		public String render(Long value) {
 			return value.toString() + 'L';
 		}
 	}
-
+	
 	public static class FloatValueHandler extends BaseValueHandler<Float> implements Serializable {
 		private static final long serialVersionUID = 1L;
 		public static final FloatValueHandler INSTANCE = new FloatValueHandler();
-
+		
 		@Override
 		public Float convert(Object value) {
 			if (value == null) {
 				return null;
 			}
+			
+			if (value instanceof Float) {
+				return (Float) value;
+			}
+			
 			if (BigDecimal.class.isInstance(value)) {
 				return ((BigDecimal) value).floatValue();
 			}
 			throw unknownConversion(value, Float.class);
 		}
-
+		
 		@Override
 		public String render(Float value) {
 			return value.toString() + 'F';
 		}
 	}
-
+	
 	public static class BigDecimalValueHandler extends BaseValueHandler<BigDecimal> implements Serializable {
 		private static final long serialVersionUID = 1L;
 		public static final BigDecimalValueHandler INSTANCE = new BigDecimalValueHandler();
-
+		
 		@Override
 		public BigDecimal convert(Object value) {
 			if (value == null) {
 				return null;
 			}
+			
+			if (value instanceof BigDecimal) {
+				return (BigDecimal) value;
+			}
+			
 			if (Float.class.isInstance(value)) {
 				return new BigDecimal(((Float) value).toString());
 			}
+			
 			if (Double.class.isInstance(value)) {
 				return new BigDecimal(((Double) value).toString());
 			}
+			
 			if (Integer.class.isInstance(value)) {
 				return BigDecimal.valueOf(((Integer) value).doubleValue());
 			}
+			
 			throw unknownConversion(value, Float.class);
 		}
-
+		
 		@Override
 		public String render(BigDecimal value) {
 			return value.toString();
 		}
 	}
-
+	
 	public static class DateValueHandler extends BaseValueHandler<Date> implements Serializable {
 		private static final long serialVersionUID = 1L;
 		public static final DateValueHandler INSTANCE = new DateValueHandler();
-
+		
 		@Override
 		public Date convert(Object value) {
 			if (value == null) {
 				return null;
 			}
+			
+			if (value instanceof Date) {
+				return (Date) value;
+			}
+			
 			if (Timestamp.class.isInstance(value)) {
 				return new Date(((Timestamp) value).getTime());
-			} else if (java.sql.Date.class.isInstance(value)) {
+			}
+			
+			if (java.sql.Date.class.isInstance(value)) {
 				return new Date(((java.sql.Date) value).getTime());
+			}
+			
+			if (value instanceof LocalDateTime) {
+				return DateUtils.toDate((LocalDateTime) value);
 			}
 			throw unknownConversion(value, Date.class);
 		}
-
+		
 		@Override
 		public String render(Date value) {
 			return value.toString() + 'F';
 		}
 	}
-
+	
 	public static class StringValueHandler extends BaseValueHandler<String> implements Serializable {
 		private static final long serialVersionUID = -3809324482933886451L;
 		public static final StringValueHandler INSTANCE = new StringValueHandler();
-
+		
 		@Override
 		public String convert(Object value) {
 			if (value == null) {
 				return null;
+			}
+			if (value instanceof String) {
+				return (String) value;
 			}
 			if (Character.class.isInstance(value) || Integer.class.isInstance(value)
 					|| Long.class.isInstance(value) || Double.class.isInstance(value)
@@ -184,74 +234,120 @@ public class ValueHandlerFactory {
 					|| Long.TYPE.isInstance(value) || Double.TYPE.isInstance(value)) {
 				return value.toString();
 			}
+			
+			if (value instanceof Date) {
+				return DateUtils.format((Date) value);
+			}
+			
+			if (value instanceof LocalDateTime) {
+				return DateUtils.format((LocalDateTime) value);
+			}
+			
+			if (value instanceof LocalDate) {
+				return DateUtils.format((LocalDate) value);
+			}
+			
+			if (value instanceof LocalTime) {
+				return DateUtils.format((LocalTime) value);
+			}
 			throw unknownConversion(value, String.class);
 		}
-
+		
 		@Override
 		public String render(String value) {
 			return value.toString() + 'F';
 		}
 	}
-
+	
 	public static class LocalDateTimeValueHandler extends BaseValueHandler<LocalDateTime> implements Serializable {
 		private static final long serialVersionUID = 1L;
 		public static final LocalDateTimeValueHandler INSTANCE = new LocalDateTimeValueHandler();
-
+		
 		@Override
 		public LocalDateTime convert(Object value) {
 			if (value == null) {
 				return null;
 			}
+			
+			if (value instanceof LocalDateTime) {
+				return (LocalDateTime) value;
+			}
+			
 			if (Timestamp.class.isInstance(value)) {
 				return ((Timestamp) value).toLocalDateTime();
 			}
+			
+			if (value instanceof Date) {
+				return DateUtils.toLocalDateTime((Date) value);
+			}
 			return null;
 		}
-
+		
 	}
 	
 	public static class LocalTimeValueHandler extends BaseValueHandler<LocalTime> implements Serializable {
 		private static final long serialVersionUID = 1L;
 		public static final LocalTimeValueHandler INSTANCE = new LocalTimeValueHandler();
-
+		
 		@Override
 		public LocalTime convert(Object value) {
 			if (value == null) {
 				return null;
 			}
+			
+			if (value instanceof LocalTime) {
+				return (LocalTime) value;
+			}
+			
 			if (Time.class.isInstance(value)) {
 				return ((Time) value).toLocalTime();
+			}
+			
+			if (value instanceof String) {
+				String time = (String) value;
+				return DateUtils.toLocalTime(time);
 			}
 			return null;
 		}
 	}
-
+	
 	@SuppressWarnings("rawtypes")
 	public static class LocalDateValueHandler extends BaseValueHandler<LocalDate> implements Serializable {
 		private static final long serialVersionUID = 1L;
 		public static final LocalDateValueHandler INSTANCE = new LocalDateValueHandler();
 		private static final Class DATE_TYPE = Date.class;
 		private static final Class TIMESTAMP_TYPE = Timestamp.class;
-
+		
 		@Override
 		public LocalDate convert(Object value) {
 			if (value == null) {
 				return null;
 			}
+			
+			if (value instanceof LocalDate) {
+				return (LocalDate) value;
+			}
+			
 			if (DATE_TYPE.isInstance(value)) {
-				return ((Date) value).toLocalDate();
-			} else if(TIMESTAMP_TYPE.isInstance(value)) {
-				return ((Timestamp)value).toLocalDateTime().toLocalDate();
+				return DateUtils.toLocalDate((Date) value);
+			}
+			
+			if (TIMESTAMP_TYPE.isInstance(value)) {
+				return ((Timestamp) value).toLocalDateTime().toLocalDate();
+			}
+			
+			if (value instanceof String) {
+				return DateUtils.toLocalDate((String)value);
 			}
 			return null;
 		}
-
+		
 	}
-
+	
 	public static class BooleanValueHandler extends BaseValueHandler<Boolean> implements Serializable {
 		private static final long serialVersionUID = 1L;
 		public static final BooleanValueHandler INSTANCE = new BooleanValueHandler();
-
+		
 		@Override
 		public Boolean convert(Object value) {
 			if (value == null) {
@@ -263,30 +359,30 @@ public class ValueHandlerFactory {
 			if (String.class.isInstance(value)) {
 				return Boolean.getBoolean((String) value);
 			}
-			if(Integer.class.isInstance(value)) {
-				Integer integerValue = (Integer)value;
-				if(integerValue.intValue() == 0) {
+			if (Integer.class.isInstance(value)) {
+				Integer integerValue = (Integer) value;
+				if (integerValue.intValue() == 0) {
 					return false;
 				}
 				return true;
 			}
-			if(Long.class.isInstance(value)) {
-				Long longValue = (Long)value;
-				if(longValue.intValue() == 0) {
+			if (Long.class.isInstance(value)) {
+				Long longValue = (Long) value;
+				if (longValue.intValue() == 0) {
 					return false;
 				}
 				return true;
 			}
-			if(BigInteger.class.isInstance(value)) {
-				BigInteger bigInteger = (BigInteger)value;
-				if(bigInteger.intValue() == 0 ) {
+			if (BigInteger.class.isInstance(value)) {
+				BigInteger bigInteger = (BigInteger) value;
+				if (bigInteger.intValue() == 0) {
 					return false;
 				}
 				return true;
 			}
-			if(Byte.class.isInstance(value)) {
-				Byte byteValue = (Byte)value;
-				if(byteValue.byteValue() == (byte)1) {
+			if (Byte.class.isInstance(value)) {
+				Byte byteValue = (Byte) value;
+				if (byteValue.byteValue() == (byte) 1) {
 					return true;
 				} else {
 					return false;
@@ -294,13 +390,13 @@ public class ValueHandlerFactory {
 			}
 			return (Boolean) value;
 		}
-
+		
 	}
-
+	
 	public static class ShortValueHandler extends BaseValueHandler<Short> implements Serializable {
 		private static final long serialVersionUID = 1L;
 		public static final ShortValueHandler INSTANCE = new ShortValueHandler();
-
+		
 		@Override
 		public Short convert(Object value) {
 			if (value == null) {
@@ -314,28 +410,27 @@ public class ValueHandlerFactory {
 			}
 			return (Short) value;
 		}
-
+		
 	}
-
+	
 	@SuppressWarnings("rawtypes")
 	private static IllegalArgumentException unknownConversion(Object value, Class type) {
 		return new IllegalArgumentException("Unaware how to convert value [" + value + " : " + typeName(value)
 				+ "] to requested type [" + type.getName() + "]");
 	}
-
+	
 	private static String typeName(Object value) {
 		return value == null ? "???" : value.getClass().getName();
 	}
-
+	
 	/**
 	 * Convert the given value into the specified target type.
 	 *
-	 * @param value The value to convert
+	 * @param value      The value to convert
 	 * @param targetType The type to which it should be converted
-	 *
 	 * @return The converted value.
 	 */
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings({"unchecked"})
 	public static <T> T convert(Object value, Class<T> targetType) {
 		if (value == null) {
 			return null;
@@ -346,23 +441,23 @@ public class ValueHandlerFactory {
 		if (targetType.isAssignableFrom(value.getClass())) {
 			return (T) value;
 		}
-
+		
 		ValueHandler<T> valueHandler = determineAppropriateHandler(targetType);
 		if (valueHandler == null) {
 			throw unknownConversion(value, targetType);
 		}
 		return valueHandler.convert(value);
 	}
-
+	
 	/**
 	 * Determine the appropriate {@link ValueHandlerFactory.ValueHandler} strategy for
 	 * converting a value to the given target type
 	 *
 	 * @param targetType The target type (to which we want to convert values).
-	 * @param <T> parameterized type for the target type.
+	 * @param <T>        parameterized type for the target type.
 	 * @return The conversion
 	 */
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings({"unchecked"})
 	public static <T> ValueHandler<T> determineAppropriateHandler(Class<T> targetType) {
 		if (Integer.class.equals(targetType) || Integer.TYPE.equals(targetType)) {
 			return (ValueHandler<T>) IntegerValueHandler.INSTANCE;
@@ -397,8 +492,8 @@ public class ValueHandlerFactory {
 		if (LocalTime.class.equals(targetType)) {
 			return (ValueHandler<T>) LocalTimeValueHandler.INSTANCE;
 		}
-		 
+		
 		return null;
 	}
-
+	
 }

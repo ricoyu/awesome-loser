@@ -76,6 +76,7 @@ public final class DateUtils {
 	
 	/**
 	 * 根据指定的format格式化Date对象, 指定Locale
+	 *
 	 * @param date
 	 * @param format
 	 * @param locale
@@ -155,6 +156,20 @@ public final class DateUtils {
 	}
 	
 	/**
+	 * 用yyyy-MM-dd格式化LocalDate对象
+	 *
+	 * @param localDate
+	 * @return String
+	 */
+	public static String format(LocalDate localDate) {
+		if (localDate == null) {
+			return null;
+		}
+		
+		return localDate.format(DTF_ISO_DATE);
+	}
+	
+	/**
 	 * 根据指定的format格式化LocalDate对象
 	 *
 	 * @param localDate
@@ -193,6 +208,36 @@ public final class DateUtils {
 			return null;
 		}
 		return localDateTime.format(ofPattern(FMT_ISO_DATETIME));
+	}
+	
+	/**
+	 * 用HH:mm:ss格式化LocalTime
+	 *
+	 * @param localTime
+	 * @return
+	 */
+	public static String format(LocalTime localTime) {
+		if (localTime == null) {
+			return null;
+		}
+		
+		return localTime.format(DTF_TIME_FORMAT);
+	}
+	
+	/**
+	 * 用指定格式格式化LocalTime对象
+	 *
+	 * @param localTime
+	 * @param format
+	 * @return
+	 */
+	public static String format(LocalTime localTime, String format) {
+		if (localTime == null) {
+			return null;
+		}
+		
+		Objects.requireNonNull(format, "format cannot be null!");
+		return localTime.format(ofPattern(format));
 	}
 	
 	// -----------------------------------------------------------------------------------------------------------------
@@ -397,7 +442,7 @@ public final class DateUtils {
 	 * @return String
 	 */
 	public static String convert2TargetTimezone(String source, String format, TimeZone srcTimezone,
-												TimeZone destTimezone) {
+	                                            TimeZone destTimezone) {
 		if (isBlank(source)) {
 			return null;
 		}
@@ -417,8 +462,8 @@ public final class DateUtils {
 	 * @return String
 	 */
 	public static String convert2TargetTimezone(String source, String srcFormat, String destFormat,
-												TimeZone srcTimezone,
-												TimeZone destTimezone) {
+	                                            TimeZone srcTimezone,
+	                                            TimeZone destTimezone) {
 		if (isBlank(source)) {
 			return null;
 		}
@@ -431,7 +476,9 @@ public final class DateUtils {
 	// -----------------------------------------------------------------------------------------------------------------
 	
 	public static LocalDate toLocalDate(String source) {
-		Objects.nonNull(source);
+		if (isBlank(source)) {
+			return null;
+		}
 		if (PT_ISO_DATE.matcher(source).matches()) {
 			return LocalDate.parse(source, DTF_ISO_DATE);
 		}
@@ -733,6 +780,7 @@ public final class DateUtils {
 	
 	/**
 	 * 毫秒数转成LocalDateTime, 默认时区Asia/Shanghai
+	 *
 	 * @param millis
 	 * @return
 	 */
@@ -743,6 +791,7 @@ public final class DateUtils {
 	
 	/**
 	 * 秒数转成LocalDateTime, 默认时区Asia/Shanghai
+	 *
 	 * @param seconds
 	 * @return
 	 */
@@ -786,6 +835,29 @@ public final class DateUtils {
 		return LocalDateTime.ofInstant(Instant.ofEpochMilli(milis), ZONE_ID_SHANG_HAI);
 	}
 	
+	/**
+	 * 用系统默认时区将LocalDateTime转成Date对象
+	 *
+	 * @param localDateTime
+	 * @return Date
+	 */
+	public static Date toDate(LocalDateTime localDateTime) {
+		ZoneId zone = ZoneId.systemDefault();
+		Instant instant = localDateTime.atZone(zone).toInstant();
+		return Date.from(instant);
+	}
+	
+	/**
+	 * 用指定时区将LocalDateTime转成Date对象
+	 *
+	 * @param localDateTime
+	 * @return Date
+	 */
+	public static Date toDate(LocalDateTime localDateTime, ZoneId zoneId) {
+		Instant instant = localDateTime.atZone(zoneId).toInstant();
+		return Date.from(instant);
+	}
+	
 	public static LocalTime toLocalTime(String source) {
 		if (isBlank(source)) {
 			return null;
@@ -808,7 +880,21 @@ public final class DateUtils {
 	}
 	
 	/**
-	 * 在指定日期上+/-天数
+	 * 获取当前时间点到下一个整点之间相差的毫秒数
+	 *
+	 * @return long
+	 */
+	public static long milisToNextHour() {
+		Calendar calendar = Calendar.getInstance();
+		//加一个小时
+		calendar.add(Calendar.HOUR, 1);
+		calendar.set(Calendar.MINUTE, 0);
+		calendar.set(Calendar.SECOND, 0);
+		return calendar.getTimeInMillis() - System.currentTimeMillis();
+	}
+	
+	/**
+	 * 在指定日期上+天数
 	 *
 	 * @param date
 	 * @param days
@@ -826,7 +912,18 @@ public final class DateUtils {
 	}
 	
 	/**
-	 * 在指定日期上+/-小时
+	 * 在指定日期上-天数
+	 *
+	 * @param date
+	 * @param days
+	 * @return
+	 */
+	public static Date dateMinus(Date date, int days) {
+		return datePlus(date, 0 - days);
+	}
+	
+	/**
+	 * 在指定日期上+小时
 	 *
 	 * @param date
 	 * @param hours
@@ -844,7 +941,18 @@ public final class DateUtils {
 	}
 	
 	/**
-	 * 在指定日期上+/-分钟
+	 * 在指定日期上-小时
+	 *
+	 * @param date
+	 * @param hours
+	 * @return
+	 */
+	public static Date hourMinus(Date date, int hours) {
+		return hourPlus(date, 0 - hours);
+	}
+	
+	/**
+	 * 在指定日期上+分钟
 	 *
 	 * @param date
 	 * @param minutes
@@ -862,7 +970,46 @@ public final class DateUtils {
 	}
 	
 	/**
-	 * 在指定日期上+/-秒数
+	 * 在指定日期上+分钟
+	 *
+	 * @param date
+	 * @param minutes
+	 * @return LocalDateTime
+	 */
+	public static LocalDateTime minutePlus(LocalDateTime date, int minutes) {
+		if (date == null) {
+			return null;
+		}
+		return date.plusMinutes(minutes);
+	}
+	
+	/**
+	 * 在指定日期上-分钟
+	 *
+	 * @param date
+	 * @param minutes
+	 * @return
+	 */
+	public static Date minuteMinus(Date date, int minutes) {
+		return minutePlus(date, 0 - minutes);
+	}
+	
+	/**
+	 * 在指定日期上-分钟
+	 *
+	 * @param date
+	 * @param minutes
+	 * @return LocalDateTime
+	 */
+	public static LocalDateTime minuteMinus(LocalDateTime date, int minutes) {
+		if (date == null) {
+			return null;
+		}
+		return date.minusMinutes(minutes);
+	}
+	
+	/**
+	 * 在指定日期上+秒数
 	 *
 	 * @param date
 	 * @param seconds
@@ -880,7 +1027,18 @@ public final class DateUtils {
 	}
 	
 	/**
-	 * 在指定日期上+/-毫秒数
+	 * 在指定日期上-秒数
+	 *
+	 * @param date
+	 * @param seconds
+	 * @return
+	 */
+	public static Date secondMonus(Date date, int seconds) {
+		return secondPlus(date, 0 - seconds);
+	}
+	
+	/**
+	 * 在指定日期上+毫秒数
 	 *
 	 * @param date
 	 * @param millis
@@ -895,6 +1053,17 @@ public final class DateUtils {
 		calendar.add(Calendar.MILLISECOND, millis);
 		
 		return calendar.getTime();
+	}
+	
+	/**
+	 * 在指定日期上-毫秒数
+	 *
+	 * @param date
+	 * @param millis
+	 * @return
+	 */
+	public static Date milliSecondMinus(Date date, int millis) {
+		return milliSecondPlus(date, 0 - millis);
 	}
 	
 	/**
