@@ -2,6 +2,11 @@ package com.loserico.search;
 
 import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.search.document.DocumentRequests;
+import com.loserico.search.enums.Analyzer;
+import com.loserico.search.enums.Dynamic;
+import com.loserico.search.enums.FieldType;
+import com.loserico.search.support.FieldDef;
+import lombok.Data;
 import lombok.SneakyThrows;
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.DocWriteResponse;
@@ -28,6 +33,7 @@ import java.util.Map;
 
 import static com.loserico.json.jackson.JacksonUtils.toJson;
 import static java.util.Arrays.asList;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -59,6 +65,12 @@ public class ESTest {
 	@SneakyThrows
 	public static void close() {
 		client.close();
+	}
+	
+	@Test
+	public void testCreateIndex() {
+		boolean created = operations.createIndex("dynamic_mapping_test");
+		System.out.println(created);
 	}
 	
 	/**
@@ -102,7 +114,7 @@ public class ESTest {
 	
 	@Test
 	public void testDeleteIndex() {
-		boolean deleted = operations.deleteIndex("rico");
+		boolean deleted = operations.deleteIndex("dynamic_mapping_test");
 		System.out.println(deleted);
 	}
 	
@@ -114,7 +126,7 @@ public class ESTest {
 	
 	/**
 	 * https://www.elastic.co/guide/en/elasticsearch/client/java-rest/7.6/java-rest-high-count.html
-	 * 
+	 * <p>
 	 * 查看索引文档总数
 	 * GET kibana_sample_data_ecommerce/_count
 	 */
@@ -133,9 +145,8 @@ public class ESTest {
 	 * 不指定ID创建文档
 	 */
 	@Test
-	public void testCreateDocument() {
-		DocumentRequests documentRequests = new DocumentRequests(client);
-		String id = operations.create("rico", "{\"name\": \"三少爷\"}");
+	public void xtestCreateDocument() {
+		String id = operations.index("rico", "{\"name\": \"三少爷\"}");
 		System.out.println(id);
 	}
 	
@@ -145,7 +156,7 @@ public class ESTest {
 	@Test
 	public void testCreateDocumentWithId() {
 		DocumentRequests documentRequests = new DocumentRequests(client);
-		String id = operations.create("rico", "1", "{\"name\": \"三少爷\"}");
+		String id = operations.indexIfNotExists("rico", "1", "{\"name\": \"三少爷\"}");
 		System.out.println(id);
 	}
 	
@@ -154,13 +165,13 @@ public class ESTest {
 	 */
 	@Test
 	public void testSaveDocumentWithId() {
-		String id = operations.save("rico", "1", "{\"name\": \"三少爷1\"}");
+		String id = operations.index("rico", "1", "{\"name\": \"三少爷1\"}");
 		System.out.println(id);
 	}
 	
 	@Test
 	public void testUpdateDoc() {
-		DocWriteResponse.Result result = operations.update("rico", "3", "{\"age\": 39}");
+		DocWriteResponse.Result result = operations.update("rico", "ShNSknYBCTOc63k_prHg", "{\"age\": 39}");
 		System.out.println(result);
 	}
 	
@@ -178,7 +189,7 @@ public class ESTest {
 	
 	@Test
 	public void testBulkCreate() {
-		int count = operations.bulkCreate("rico", asList("{\"age\": 39}", "{\"age\": 39}", "{\"age\": 39}"));
+		int count = operations.index("rico", asList("{\"age\": 39}", "{\"age\": 39}", "{\"age\": 39}"));
 		System.out.println(count);
 	}
 	
@@ -188,5 +199,56 @@ public class ESTest {
 	@Test
 	public void testSqlQuery() {
 		
+	}
+	
+	@Test
+	public void testGet() {
+		Person person = operations.get("my_index", "2", Person.class);
+		assertEquals(person.getUser(), "mike");
+	}
+	
+	@Test
+	public void testMGet() {
+		List<Person> persons = operations.mget().add("my_index", "1")
+				.add("my_index", "2")
+				.resultType(Person.class)
+				.request();
+		persons.forEach(System.out::println);
+	}
+	
+	@Test
+	public void testGetMapping() {
+		Object dynamic_mapping_test = operations.getMapping("dynamic_mapping_test");
+		System.out.println(toJson(dynamic_mapping_test));
+	}
+	
+	@Test
+	public void testPutMapping() {
+		//operations.putMapping("dynamic_mapping_test");
+		operations.putMapping("dynamic_mapping_test")
+				.copy("dynamic_mapping_test")
+				.dynamic(Dynamic.FALSE)
+				.field("firstName", FieldType.KEYWORD, false)
+				.field(FieldDef.builder("fullName", FieldType.TEXT)
+						.analyzer(Analyzer.ICU)
+						.index(true)
+						.build())
+				.field("birthday", FieldType.DATE)
+				.field(FieldDef.builder("workDate", FieldType.DATE)
+						.format("yyyy-MM-dd")
+						.build())
+				.execute();
+	}
+	
+	@Test
+	public void testSearchAll() {
+		Object response = operations.searchAll("kibana_sample_data_ecommerce");
+		System.out.println(response);
+	}
+	
+	@Data
+	private static class Person {
+		private String user;
+		private String comment;
 	}
 }

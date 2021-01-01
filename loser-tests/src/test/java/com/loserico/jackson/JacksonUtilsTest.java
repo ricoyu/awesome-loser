@@ -4,11 +4,14 @@ import com.loserico.common.lang.utils.IOUtils;
 import com.loserico.json.jackson.JacksonUtils;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.loserico.json.jackson.JacksonUtils.toJson;
 import static java.util.Arrays.asList;
+import static org.junit.Assert.assertEquals;
 
 public class JacksonUtilsTest {
 
@@ -81,7 +84,7 @@ public class JacksonUtilsTest {
 //		params.put(null, "sss");
 //		params.put(new int[] {1}, 1);
 
-		String output = JacksonUtils.toJson(params);
+		String output = toJson(params);
 		System.out.println(output);
 	}
 	
@@ -124,6 +127,24 @@ public class JacksonUtilsTest {
 	@Test
 	public void testArrayToJson() {
 		List<Long> centreIds = asList(3L);
-		System.out.println(JacksonUtils.toJson(centreIds));
+		System.out.println(toJson(centreIds));
+	}
+	
+	@Test
+	public void testToMap() {
+		//String detail = null;
+		String detail = "{\"username\":\"admin\",\"password\":\"123456\",\"srcport\":\"11995\",\"pid\":\"43\"}";
+		Map<String, Object> map = JacksonUtils.toMap(detail);
+		System.out.println(toJson(map));
+		assertEquals(toJson(map), detail);
+	}
+	
+	@Test
+	public void testToList2() {
+		List<String> list = new ArrayList<>();
+		String jsonArr = JacksonUtils.toJson(list);
+		System.out.println(jsonArr);
+		List<String> list2 = JacksonUtils.toList(jsonArr, String.class);
+		assertEquals(0, list2.size());
 	}
 }

@@ -1,6 +1,6 @@
 package com.loserico.concurrent.threadpool;
 
-import com.loserico.concurrent.aqs.AbstractQueuedSynchronizer;
+import com.loserico.concurrent.aqs.LoserAbstractQueuedSynchronizer;
 
 import java.security.AccessControlContext;
 import java.security.AccessController;
@@ -437,7 +437,7 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	 *
 	 * 所以, Worker继承自AQS, 用于判断线程是否空闲以及是否可以被中断
 	 */
-	private final class Worker extends AbstractQueuedSynchronizer implements Runnable {
+	private final class Worker extends LoserAbstractQueuedSynchronizer implements Runnable {
 		/**
 		 * This class will never be serialized, but we provide a
 		 * serialVersionUID to suppress a javac warning.

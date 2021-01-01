@@ -1,5 +1,7 @@
 package com.loserico.concurrent.queue;
 
+import com.loserico.unsafe.LoserUnsafe;
+
 import java.util.AbstractQueue;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -67,7 +69,7 @@ import java.util.function.Consumer;
  * @author Doug Lea
  * @param <E> the type of elements held in this collection
  */
-public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
+public class LoserConcurrentLinkedQueue<E> extends AbstractQueue<E>
         implements Queue<E>, java.io.Serializable {
     private static final long serialVersionUID = 196745693267521676L;
 
@@ -180,13 +182,13 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
 
         // Unsafe mechanics
 
-        private static final sun.misc.Unsafe UNSAFE;
+        private static final LoserUnsafe UNSAFE;
         private static final long itemOffset;
         private static final long nextOffset;
 
         static {
             try {
-                UNSAFE = sun.misc.Unsafe.getUnsafe();
+                UNSAFE = LoserUnsafe.getUnsafe();
                 Class<?> k = Node.class;
                 itemOffset = UNSAFE.objectFieldOffset
                     (k.getDeclaredField("item"));
@@ -229,7 +231,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     /**
      * Creates a {@code ConcurrentLinkedQueue} that is initially empty.
      */
-    public ConcurrentLinkedQueue() {
+    public LoserConcurrentLinkedQueue() {
         head = tail = new Node<E>(null);
     }
 
@@ -242,7 +244,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      * @throws NullPointerException if the specified collection or any
      *         of its elements are null
      */
-    public ConcurrentLinkedQueue(Collection<? extends E> c) {
+    public LoserConcurrentLinkedQueue(Collection<? extends E> c) {
         Node<E> h = null, t = null;
         for (E e : c) {
             checkNotNull(e);
@@ -823,17 +825,17 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     /** A customized variant of Spliterators.IteratorSpliterator */
     static final class CLQSpliterator<E> implements Spliterator<E> {
         static final int MAX_BATCH = 1 << 25;  // max batch array size;
-        final ConcurrentLinkedQueue<E> queue;
+        final LoserConcurrentLinkedQueue<E> queue;
         Node<E> current;    // current node; null until initialized
         int batch;          // batch size for splits
         boolean exhausted;  // true when no more nodes
-        CLQSpliterator(ConcurrentLinkedQueue<E> queue) {
+        CLQSpliterator(LoserConcurrentLinkedQueue<E> queue) {
             this.queue = queue;
         }
 
         public Spliterator<E> trySplit() {
             Node<E> p;
-            final ConcurrentLinkedQueue<E> q = this.queue;
+            final LoserConcurrentLinkedQueue<E> q = this.queue;
             int b = batch;
             int n = (b <= 0) ? 1 : (b >= MAX_BATCH) ? MAX_BATCH : b + 1;
             if (!exhausted &&
@@ -867,7 +869,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
 	        if (action == null) {
 		        throw new NullPointerException();
 	        }
-            final ConcurrentLinkedQueue<E> q = this.queue;
+            final LoserConcurrentLinkedQueue<E> q = this.queue;
             if (!exhausted &&
                 ((p = current) != null || (p = q.first()) != null)) {
                 exhausted = true;
@@ -888,7 +890,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
 	        if (action == null) {
 		        throw new NullPointerException();
 	        }
-            final ConcurrentLinkedQueue<E> q = this.queue;
+            final LoserConcurrentLinkedQueue<E> q = this.queue;
             if (!exhausted &&
                 ((p = current) != null || (p = q.first()) != null)) {
                 E e;
@@ -965,7 +967,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     static {
         try {
             UNSAFE = sun.misc.Unsafe.getUnsafe();
-            Class<?> k = ConcurrentLinkedQueue.class;
+            Class<?> k = LoserConcurrentLinkedQueue.class;
             headOffset = UNSAFE.objectFieldOffset
                 (k.getDeclaredField("head"));
             tailOffset = UNSAFE.objectFieldOffset

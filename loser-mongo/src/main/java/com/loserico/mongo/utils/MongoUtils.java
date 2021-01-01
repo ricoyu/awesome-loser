@@ -3,6 +3,7 @@ package com.loserico.mongo.utils;
 import com.loserico.common.lang.transformer.Transformers;
 import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.mongo.annotation.MongoField;
+import com.loserico.mongo.annotation.MongoId;
 import com.loserico.mongo.annotation.MongoTransient;
 import com.loserico.mongo.exception.InstanceCreationException;
 import com.mongodb.client.MongoCursor;
@@ -92,6 +93,16 @@ public final class MongoUtils {
 				continue;
 			}
 			
+			/*
+			 * 处理主键_id
+			 */
+			MongoId mongoId = field.getAnnotation(MongoId.class);
+			if (mongoId != null) {
+				String value = document.get("_id").toString();
+				ReflectionUtils.setField(field, target, Transformers.convert(value, field.getType()));
+				continue;
+			}
+			
 			Class fieldType = field.getType();
 			
 			//TODO 字段为Map类型的暂时先不处理?
@@ -155,6 +166,14 @@ public final class MongoUtils {
 				}
 				
 				ReflectionUtils.setField(field, target, results);
+				continue;
+			}
+			
+			/*
+			 * 如果字段是原子类型, 但是Mongo中取出的值是null, 或者说某个document不存在这个字段, 此时取出的值也是null
+			 * 那么就不要给原子类型字段赋值了
+			 */
+			if (fieldType.isPrimitive() && docFieldValue == null) {
 				continue;
 			}
 			

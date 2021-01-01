@@ -333,6 +333,11 @@ public final class DateConstants {
 	public static final String FMT_TIME_FORMAT3 = "H:mm";
 	public static final DateTimeFormatter DTF_TIME_FORMAT3 = ofPattern(FMT_TIME_FORMAT3);
 	
+	/**
+	 * 2020-12-23T12:51:18.456019+0200
+	 */
+	public static final Pattern PT_ALL = Pattern.compile("(\\d{2,4})-(\\d{1,2})-(\\d{1,2})(T?)\\s*(\\d{1,2}):(\\d{1,2}):(\\d{1,2})\\.?(\\d*)(\\+\\d+)?");
+	
 	
 	public static final String UTC_DATETIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
 	public static final String UTC_DATETIME_FORMAT2 = "yyyy-MM-dd'T'HH:mm:ss.SSS";

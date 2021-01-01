@@ -91,7 +91,7 @@ public final class JacksonUtils {
 	 */
 	public static <T> Map<String, T> toMap(String json) {
 		if (isBlank(json)) {
-			return emptyMap();
+			return null;
 		}
 		Map<String, T> map = new HashMap<String, T>();
 		try {

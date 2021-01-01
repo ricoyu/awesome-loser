@@ -159,4 +159,5 @@ public class JacksonUtilsTest {
 		
 		private LocalDate birthday;
 	}
+
 }

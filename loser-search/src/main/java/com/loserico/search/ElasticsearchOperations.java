@@ -2,15 +2,20 @@ package com.loserico.search;
 
 import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.json.jackson.JacksonUtils;
+import com.loserico.search.builder.MultiGetBuilder;
+import com.loserico.search.builder.PutMappingBuilder;
 import com.loserico.search.exception.BulkOperationException;
 import com.loserico.search.exception.DocumentDeleteException;
 import com.loserico.search.exception.DocumentExistsException;
+import com.loserico.search.exception.DocumentGetException;
 import com.loserico.search.exception.DocumentSaveException;
 import com.loserico.search.exception.DocumentUpdateException;
 import com.loserico.search.exception.IndexCreateException;
 import com.loserico.search.exception.IndexDeleteException;
 import com.loserico.search.exception.IndexExistsException;
+import com.loserico.search.exception.IndexSearchException;
 import com.loserico.search.exception.ListIndicesException;
+import com.loserico.search.exception.MappingException;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.ElasticsearchStatusException;
@@ -24,8 +29,11 @@ import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetRequest;
+import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
@@ -34,9 +42,16 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.CreateIndexResponse;
 import org.elasticsearch.client.indices.GetIndexRequest;
+import org.elasticsearch.client.indices.GetMappingsRequest;
+import org.elasticsearch.client.indices.GetMappingsResponse;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
+import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -44,7 +59,9 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -143,7 +160,9 @@ public class ElasticsearchOperations {
 	public List<String> listIndices() {
 		String[] indices = new String[0];
 		try {
-			Map<String, Set<AliasMetaData>> aliases = client.indices().getAlias(new GetAliasesRequest(), RequestOptions.DEFAULT).getAliases();
+			Map<String, Set<AliasMetaData>> aliases = client.indices()
+					.getAlias(new GetAliasesRequest(), RequestOptions.DEFAULT)
+					.getAliases();
 			return aliases.keySet().stream().collect(toList());
 		} catch (IOException e) {
 			throw new ListIndicesException(e);
@@ -153,12 +172,13 @@ public class ElasticsearchOperations {
 	
 	/**
 	 * 创建一个新的文档, 返回新创建文档的ID
+	 * 对应REST API POST 方式
 	 *
 	 * @param index
 	 * @param doc
 	 * @return String 文档ID
 	 */
-	public String create(String index, String doc) {
+	public String index(String index, String doc) {
 		IndexRequest request = new IndexRequest(index);
 		//request.opType(OpType.CREATE);
 		request.source(doc, XContentType.JSON);
@@ -172,13 +192,48 @@ public class ElasticsearchOperations {
 	}
 	
 	/**
+	 * Index方式创建文档
+	 * 如果索引不存在, 就创建新的文档;
+	 * 如果文档存在, 就删除文档, 新的文档将被索引, id不变, 版本信息+1
+	 *
+	 * @param index
+	 * @param doc
+	 * @return String 文档ID
+	 */
+	public String index(String index, String id, String doc) {
+		IndexRequest request = new IndexRequest(index);
+		request.source(doc, XContentType.JSON);
+		request.opType(OpType.INDEX);
+		if (isNotBlank(id)) {
+			request.id(id);
+		}
+		
+		try {
+			IndexResponse indexResponse = client.index(request, DEFAULT);
+			String docId = indexResponse.getId();
+			if (indexResponse.getResult() == Result.CREATED) {
+				log.info("已创建 {}", docId);
+			} else if (indexResponse.getResult() == Result.UPDATED) {
+				log.info("已更新 {}", docId);
+			}
+			return docId;
+		} catch (ElasticsearchException e) {
+			log.error("", e);
+			throw new DocumentSaveException(e);
+		} catch (IOException e) {
+			log.error("保存文档失败", e);
+			throw new DocumentSaveException(e);
+		}
+	}
+	
+	/**
 	 * 指定ID创建文档, 如果已经存在同样ID的文档则抛出异常
 	 *
 	 * @param index
 	 * @param doc
 	 * @return String 文档ID
 	 */
-	public String create(String index, String id, String doc) {
+	public String indexIfNotExists(String index, String id, String doc) {
 		IndexRequest request = new IndexRequest(index);
 		request.opType(OpType.CREATE);
 		request.id(id).source(doc, XContentType.JSON);
@@ -186,18 +241,19 @@ public class ElasticsearchOperations {
 		try {
 			response = client.index(request, DEFAULT);
 		} catch (Exception e) {
-			throw new IndexCreateException(e);
+			throw new DocumentExistsException(e);
 		}
 		return response.getId();
 	}
 	
 	/**
 	 * 批量创建文档
+	 *
 	 * @param index
 	 * @param docs
 	 * @return int 批量创建文档成功的数量
 	 */
-	public int bulkCreate(String index, List<String> docs) {
+	public int index(String index, List<String> docs) {
 		BulkRequest request = new BulkRequest(index);
 		
 		docs.stream().map((doc) -> {
@@ -222,38 +278,36 @@ public class ElasticsearchOperations {
 	}
 	
 	/**
-	 * Index方式创建文档
-	 * 如果索引不存在, 就创建新的文档;
-	 * 如果文档存在, 就删除文档, 新的文档将被索引, id不变, 版本信息+1
-	 *
-	 * @param index
-	 * @param doc
-	 * @return String 文档ID
+	 * @param index 索引名
+	 * @param id    文档id
+	 * @param clazz
+	 * @param <T>
+	 * @return
 	 */
-	public String save(String index, String id, String doc) {
-		IndexRequest request = new IndexRequest(index);
-		request.source(doc, XContentType.JSON);
-		request.opType(OpType.INDEX);
-		if (isNotBlank(id)) {
-			request.id(id);
+	public <T> T get(String index, String id, Class<T> clazz) {
+		Objects.requireNonNull(index, "索引名不能为null");
+		Objects.requireNonNull(id, "id 不能为null");
+		Objects.requireNonNull(clazz, "clazz不能为null");
+		
+		GetRequest request = new GetRequest(index, id);
+		request.fetchSourceContext(FetchSourceContext.FETCH_SOURCE);
+		try {
+			GetResponse response = client.get(request, DEFAULT);
+			return JacksonUtils.toObject(response.getSourceAsString(), clazz);
+		} catch (IOException e) {
+			log.error("", e);
+			throw new DocumentGetException(e);
 		}
 		
-		try {
-			IndexResponse indexResponse = client.index(request, DEFAULT);
-			String docId = indexResponse.getId();
-			if (indexResponse.getResult() == Result.CREATED) {
-				log.info("已创建 {}", docId);
-			} else if (indexResponse.getResult() == Result.UPDATED) {
-				log.info("已更新 {}", docId);
-			}
-			return docId;
-		} catch (ElasticsearchException e) {
-			log.error("", e);
-			throw new DocumentSaveException(e);
-		} catch (IOException e) {
-			log.error("保存文档失败", e);
-			throw new DocumentSaveException(e);
-		}
+	}
+	
+	/**
+	 * MGET 操作
+	 *
+	 * @return
+	 */
+	public MultiGetBuilder mget() {
+		return new MultiGetBuilder(client);
 	}
 	
 	/**
@@ -310,6 +364,24 @@ public class ElasticsearchOperations {
 	}
 	
 	/**
+	 * 检查指定索引中是否存在指定id的文档
+	 *
+	 * @param index
+	 * @param id
+	 * @return boolean
+	 */
+	public boolean exists(String index, String id) {
+		GetRequest request = new GetRequest(index, id);
+		request.fetchSourceContext(new FetchSourceContext(false));
+		request.storedFields("_none_");
+		try {
+			return client.exists(request, DEFAULT);
+		} catch (IOException e) {
+			throw new DocumentExistsException(e);
+		}
+	}
+	
+	/**
 	 * 删除一篇文档
 	 *
 	 * @param index
@@ -326,6 +398,75 @@ public class ElasticsearchOperations {
 		}
 	}
 	
+	/**
+	 * 获取所有的Mapping信息
+	 *
+	 * @param indices
+	 * @return Map<String, MappingMetaData>
+	 */
+	public Map<String, MappingMetaData> getMapping(String... indices) {
+		GetMappingsRequest request = new GetMappingsRequest();
+		request.indices(indices);
+		try {
+			GetMappingsResponse response = client.indices().getMapping(request, DEFAULT);
+			return response.mappings();
+		} catch (IOException e) {
+			log.error("", e);
+			throw new MappingException(e);
+		}
+	}
+	
+	public PutMappingBuilder putMapping(String index) {
+		return new PutMappingBuilder(client, index);
+	}
+	
+	public List<String> searchAll(String index) {
+		SearchRequest searchRequest = new SearchRequest(index);
+		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+		searchSourceBuilder.query(QueryBuilders.matchAllQuery());
+		searchRequest.source(searchSourceBuilder);
+		searchSourceBuilder.fetchSource(true);
+		
+		try {
+			SearchResponse response = client.search(searchRequest, DEFAULT);
+			SearchHits hits = response.getHits();
+			return Stream.of(hits.getHits())
+					.map(SearchHit::getSourceAsString)
+					.collect(toList());
+		} catch (IOException e) {
+			log.error("", e);
+			throw new IndexSearchException(e);
+		}
+	}
+	
+	public Object search(String... indices) {
+		//return new SearchBuilder(indices);
+		return null;
+	}
+	
+	/**
+	 * 查询指定索引, 默认返回前十条记录
+	 * @param index
+	 * @return List<String>
+	 */
+	public List<String> search(String index) {
+		SearchRequest searchRequest = new SearchRequest(index);
+		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+		searchRequest.source(searchSourceBuilder);
+		searchSourceBuilder.fetchSource(true);
+		
+		try {
+			SearchResponse response = client.search(searchRequest, DEFAULT);
+			SearchHits hits = response.getHits();
+			return Stream.of(hits.getHits())
+					.map(SearchHit::getSourceAsString)
+					.collect(toList());
+		} catch (IOException e) {
+			log.error("", e);
+			throw new IndexSearchException(e);
+		}
+	}
+	
 	private String toJson(Object doc) {
 		if (doc == null) {
 			return null;
@@ -338,14 +479,4 @@ public class ElasticsearchOperations {
 		return JacksonUtils.toJson(doc);
 	}
 	
-	public boolean exists(String index, String id) {
-		GetRequest request = new GetRequest(index, id);
-		request.fetchSourceContext(new FetchSourceContext(false));
-		request.storedFields("_none_");
-		try {
-			return client.exists(request, DEFAULT);
-		} catch (IOException e) {
-			throw new DocumentExistsException(e);
-		}
-	}
 }

@@ -1,18 +1,4 @@
 package com.loserico.concurrent.aqs;
-/*
- * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
- */
-
-/*
- *
- *
- *
- *
- *
- * Written by Doug Lea with assistance from members of JCP JSR-166
- * Expert Group and released to the public domain, as explained at
- * http://creativecommons.org/publicdomain/zero/1.0/
- */
 
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
@@ -85,7 +71,7 @@ import java.util.concurrent.locks.Lock;
  * @author Doug Lea
  * @since 1.5
  */
-public class ReentrantLock implements Lock, java.io.Serializable {
+public class LoserReentrantLock implements Lock, java.io.Serializable {
 	private static final long serialVersionUID = 7373984872572414699L;
 	/**
 	 * 内部调用AQS的动作，都基于该成员属性实现
@@ -96,7 +82,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 	 * ReentrantLock锁同步操作的基础类,继承自AQS框架.
 	 * 该类有两个继承类，1、NonfairSync 非公平锁，2、FairSync公平锁
 	 */
-	abstract static class Sync extends AbstractQueuedSynchronizer {
+	abstract static class Sync extends LoserAbstractQueuedSynchronizer {
 		private static final long serialVersionUID = -5179523762034025860L;
 		
 		/**
@@ -269,14 +255,14 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 	/**
 	 * 默认构造函数，创建非公平锁对象
 	 */
-	public ReentrantLock() {
+	public LoserReentrantLock() {
 		sync = new NonfairSync();
 	}
 	
 	/**
 	 * 根据要求创建公平锁或非公平锁
 	 */
-	public ReentrantLock(boolean fair) {
+	public LoserReentrantLock(boolean fair) {
 		sync = fair ? new FairSync() : new NonfairSync();
 	}
 	
@@ -410,10 +396,10 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         if (condition == null) {
             throw new NullPointerException();
         }
-        if (!(condition instanceof AbstractQueuedSynchronizer.ConditionObject)) {
+        if (!(condition instanceof LoserAbstractQueuedSynchronizer.ConditionObject)) {
             throw new IllegalArgumentException("not owner");
         }
-		return sync.hasWaiters((AbstractQueuedSynchronizer.ConditionObject) condition);
+		return sync.hasWaiters((LoserAbstractQueuedSynchronizer.ConditionObject) condition);
 	}
 	
 	/**
@@ -435,10 +421,10 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         if (condition == null) {
             throw new NullPointerException();
         }
-        if (!(condition instanceof AbstractQueuedSynchronizer.ConditionObject)) {
+        if (!(condition instanceof LoserAbstractQueuedSynchronizer.ConditionObject)) {
             throw new IllegalArgumentException("not owner");
         }
-		return sync.getWaitQueueLength((AbstractQueuedSynchronizer.ConditionObject) condition);
+		return sync.getWaitQueueLength((LoserAbstractQueuedSynchronizer.ConditionObject) condition);
 	}
 	
 	/**
@@ -462,10 +448,10 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         if (condition == null) {
             throw new NullPointerException();
         }
-        if (!(condition instanceof AbstractQueuedSynchronizer.ConditionObject)) {
+        if (!(condition instanceof LoserAbstractQueuedSynchronizer.ConditionObject)) {
             throw new IllegalArgumentException("not owner");
         }
-		return sync.getWaitingThreads((AbstractQueuedSynchronizer.ConditionObject) condition);
+		return sync.getWaitingThreads((LoserAbstractQueuedSynchronizer.ConditionObject) condition);
 	}
 	
 	/**

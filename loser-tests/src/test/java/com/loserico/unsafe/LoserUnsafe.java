@@ -26,8 +26,8 @@
    package com.loserico.unsafe;
 
    import java.lang.reflect.Field;
-   import java.lang.reflect.Modifier;
-   import java.security.ProtectionDomain;
+import java.lang.reflect.Modifier;
+import java.security.ProtectionDomain;
 
 
    /**
@@ -39,19 +39,19 @@
     * @see #getUnsafe
     */
 
-   public final class Unsafe {
+   public final class LoserUnsafe {
 	
 	   private static native void registerNatives();
 	
 	   static {
 		   registerNatives();
-		   sun.reflect.Reflection.registerMethodsToFilter(Unsafe.class, "getUnsafe");
+		   sun.reflect.Reflection.registerMethodsToFilter(LoserUnsafe.class, "getUnsafe");
 	   }
 	
-	   private Unsafe() {
+	   private LoserUnsafe() {
 	   }
 	
-	   private static final Unsafe theUnsafe = new Unsafe();
+	   private static final LoserUnsafe theUnsafe = new LoserUnsafe();
 	
 	   /**
 	    * Provides the caller with the capability of performing unsafe
@@ -83,12 +83,19 @@
 	    *                           <code>checkPropertiesAccess</code> method doesn't allow
 	    *                           access to the system properties.
 	    */
-	   public static Unsafe getUnsafe() {
-		   Class cc = sun.reflect.Reflection.getCallerClass(2);
+	   public static LoserUnsafe getUnsafe() {
+		   /*Class cc = sun.reflect.Reflection.getCallerClass(2);
 		   if (cc.getClassLoader() != null) {
 			   throw new SecurityException("Unsafe");
 		   }
-		   return theUnsafe;
+		   return theUnsafe;*/
+		   try {
+			   Field field = LoserUnsafe.class.getDeclaredField("theUnsafe");
+			   field.setAccessible(true);
+			   return (LoserUnsafe) field.get(null);
+		   } catch (Throwable e) {
+			   throw new RuntimeException(e);
+		   }
 	   }
 	
 	   /// peek and poke operations

@@ -224,9 +224,13 @@ public class ValueHandlerFactory {
 			if (value == null) {
 				return null;
 			}
+			
+			//本身是字符串类型的, 直接强转
 			if (value instanceof String) {
 				return (String) value;
 			}
+			
+			//基本类型的包装器类型, 直接调用其toString方法转成字符串
 			if (Character.class.isInstance(value) || Integer.class.isInstance(value)
 					|| Long.class.isInstance(value) || Double.class.isInstance(value)
 					|| BigDecimal.class.isInstance(value) || BigInteger.class.isInstance(value)
@@ -235,22 +239,28 @@ public class ValueHandlerFactory {
 				return value.toString();
 			}
 			
+			//Date类型默认按照 yyyy-MM-dd HH:mm:ss 转成字符串
 			if (value instanceof Date) {
 				return DateUtils.format((Date) value);
 			}
 			
+			//LocalDateTime类型默认按照 yyyy-MM-dd HH:mm:ss 转成字符串
 			if (value instanceof LocalDateTime) {
 				return DateUtils.format((LocalDateTime) value);
 			}
 			
+			//LocalDate默认按照 yyyy-MM-dd 格式转成字符串
 			if (value instanceof LocalDate) {
 				return DateUtils.format((LocalDate) value);
 			}
 			
+			//LocalTime默认按照 HH:mm:ss 格式转成字符串
 			if (value instanceof LocalTime) {
 				return DateUtils.format((LocalTime) value);
 			}
-			throw unknownConversion(value, String.class);
+			
+			//其他未检测到的类型默认调用其toString方法完成转换
+			return value.toString();
 		}
 		
 		@Override

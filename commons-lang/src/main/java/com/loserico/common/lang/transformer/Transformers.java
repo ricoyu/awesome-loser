@@ -40,4 +40,18 @@ public final class Transformers {
 		}
 		return (T) valueHandler.convert(value);
 	}
+	
+	/**
+	 * 转成字符串类型
+	 * @param value
+	 * @return String
+	 */
+	public static String convert(Object value) {
+		if (value == null) {
+			return null;
+		}
+		
+		ValueHandlerFactory.ValueHandler<String> valueHandler = ValueHandlerFactory.StringValueHandler.INSTANCE;
+		return valueHandler.convert(value);
+	}
 }

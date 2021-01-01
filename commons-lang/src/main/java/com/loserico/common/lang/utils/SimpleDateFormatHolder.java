@@ -11,6 +11,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.loserico.common.lang.constants.DateConstants.*;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
  * A factory for {@link SimpleDateFormat}s. The instances are stored in a threadlocal way
@@ -272,7 +273,8 @@ final class SimpleDateFormatHolder {
 		if (PT_DATE_EN_7.matcher(source).matches()) {
 			return SimpleDateFormatHolder.formatFor(FMT_DATE_FORMAT_EN_7);
 		}
-		return null;
+		
+		return finalShot(source);
 	}
 	
 	public static SimpleDateFormat getSimpleDateFormat(String source, TimeZone timeZone) {
@@ -421,7 +423,7 @@ final class SimpleDateFormatHolder {
 			return SimpleDateFormatHolder.formatFor(FMT_DATE_FORMAT_EN_7, timeZone);
 		}
 		
-		return null;
+		return finalShot(source, timeZone);
 	}
 	
 	public static void clearThreadLocal() {
@@ -438,6 +440,98 @@ final class SimpleDateFormatHolder {
 	
 	private static boolean isBlank(String s) {
 		return s == null || "".equals(s.trim());
+	}
+	
+	private static SimpleDateFormat finalShot(String source) {
+		return finalShot(source, null);
+	}
+	
+	private static SimpleDateFormat finalShot(String source, TimeZone timeZone) {
+		Matcher matcher = PT_ALL.matcher(source);
+		if (!matcher.matches()) {
+			return null;
+		}
+		
+		String year = matcher.group(1);
+		String month = matcher.group(2);
+		String day = matcher.group(3);
+		String t = matcher.group(4);
+		String hour = matcher.group(5);
+		String minute = matcher.group(6);
+		String second = matcher.group(7);
+		String milli = matcher.group(8);
+		String zone = matcher.group(9);
+		
+		StringBuilder format = new StringBuilder();
+		//yyyy
+		if (isNotBlank(year)) {
+			for (int i = 0; i < year.length(); i++) {
+				format.append("y");
+			}
+		}
+		format.append("-");
+		
+		//MM
+		if (isNotBlank(month)) {
+			for (int i = 0; i < month.length(); i++) {
+				format.append("M");
+			}
+		}
+		format.append("-");
+		
+		//dd
+		if (isNotBlank(day)) {
+			for (int i = 0; i < day.length(); i++) {
+				format.append("d");
+			}
+		}
+		
+		//"yyyy-MM-dd'T'HH:mm:ss.SSSSSSZ"
+		if (isNotBlank(t)) {
+			format.append("'T'");
+		} else {
+			format.append(" ");
+		}
+		
+		//HH
+		if (isNotBlank(hour)) {
+			for (int i = 0; i < hour.length(); i++) {
+				format.append("H");
+			}
+		}
+		
+		//:mm
+		if (isNotBlank(minute)) {
+			format.append(":");
+			for (int i = 0; i < minute.length(); i++) {
+				format.append("m");
+			}
+		}
+		
+		//:ss
+		if (isNotBlank(second)) {
+			format.append(":");
+			for (int i = 0; i < second.length(); i++) {
+				format.append("s");
+			}
+		}
+		//.SSSSSS
+		if (isNotBlank(milli)) {
+			format.append(".");
+			for (int i = 0; i < milli.length(); i++) {
+				format.append("S");
+			}
+		}
+		//Z
+		if (isNotBlank(zone)) {
+			format.append("Z");
+		}
+		
+		if (timeZone != null) {
+			return SimpleDateFormatHolder.formatFor(format.toString(), timeZone);
+		}
+		
+		return SimpleDateFormatHolder.formatFor(format.toString());
 	}
 	
 }

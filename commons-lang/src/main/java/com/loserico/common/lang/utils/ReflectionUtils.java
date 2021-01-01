@@ -18,6 +18,7 @@ import java.lang.reflect.Modifier;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -1532,6 +1533,36 @@ public class ReflectionUtils {
 		if (ancesterClazz.getSuperclass() != Object.class) {
 			getFieldsFromSuper(originalClazz, ancesterClazz.getSuperclass());
 		}
+	}
+	
+	/**
+	 * 判断一个对象是否为POJO<p/>
+	 * 以下这些认为false:<ol>
+	 *  <li/>null
+	 *  <li/>String
+	 *  <li/>Map
+	 *  <li/>Collection
+	 * </ol>
+	 * @return
+	 */
+	public static boolean isPojo(Object value) {
+		if (value == null) {
+			return false;
+		}
+		
+		if (value instanceof String) {
+			return false;
+		}
+		
+		if (value instanceof Collection) {
+			return false;
+		}
+		
+		if (value instanceof Map) {
+			return false;
+		}
+		
+		return true;
 	}
 	
 }

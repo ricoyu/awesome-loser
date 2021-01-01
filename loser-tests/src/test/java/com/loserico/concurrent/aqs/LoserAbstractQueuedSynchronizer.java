@@ -1,7 +1,8 @@
 package com.loserico.concurrent.aqs;
 
-import sun.misc.Unsafe;
+import com.loserico.unsafe.LoserUnsafe;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -21,16 +22,15 @@ import java.util.concurrent.locks.LockSupport;
  * @author Rico Yu  ricoyu520@gmail.com
  * @version 1.0
  */
-public abstract class AbstractQueuedSynchronizer
-		extends AbstractOwnableSynchronizer
-		implements java.io.Serializable {
+public abstract class LoserAbstractQueuedSynchronizer extends AbstractOwnableSynchronizer implements Serializable {
+	
 	private static final long serialVersionUID = 7373984972572414691L;
 	
 	/**
 	 * Creates a new {@code AbstractQueuedSynchronizer} instance
 	 * with initial synchronization state of zero.
 	 */
-	protected AbstractQueuedSynchronizer() {
+	protected LoserAbstractQueuedSynchronizer() {
 	}
 	
 	/**
@@ -1418,7 +1418,7 @@ public abstract class AbstractQueuedSynchronizer
 	/**
 	 * 条件对象，实现基于条件的具体行为
 	 */
-	public class ConditionObject implements Condition, java.io.Serializable {
+	public class ConditionObject implements Condition, Serializable {
 		private static final long serialVersionUID = 1173984872572414699L;
 		/**
 		 * First node of condition queue.
@@ -1802,13 +1802,13 @@ public abstract class AbstractQueuedSynchronizer
 		 *
 		 * @return {@code true} if owned
 		 */
-		final boolean isOwnedBy(AbstractQueuedSynchronizer sync) {
-			return sync == AbstractQueuedSynchronizer.this;
+		final boolean isOwnedBy(LoserAbstractQueuedSynchronizer sync) {
+			return sync == LoserAbstractQueuedSynchronizer.this;
 		}
 		
 		/**
 		 * Queries whether any threads are waiting on this condition.
-		 * Implements {@link AbstractQueuedSynchronizer#hasWaiters(ConditionObject)}.
+		 * Implements {@link LoserAbstractQueuedSynchronizer#hasWaiters(ConditionObject)}.
 		 *
 		 * @return {@code true} if there are any waiting threads
 		 * @throws IllegalMonitorStateException if {@link #isHeldExclusively}
@@ -1829,7 +1829,7 @@ public abstract class AbstractQueuedSynchronizer
 		/**
 		 * Returns an estimate of the number of threads waiting on
 		 * this condition.
-		 * Implements {@link AbstractQueuedSynchronizer#getWaitQueueLength(ConditionObject)}.
+		 * Implements {@link LoserAbstractQueuedSynchronizer#getWaitQueueLength(ConditionObject)}.
 		 *
 		 * @return the estimated number of waiting threads
 		 * @throws IllegalMonitorStateException if {@link #isHeldExclusively}
@@ -1878,7 +1878,7 @@ public abstract class AbstractQueuedSynchronizer
 	 * otherwise be done with atomic field updaters).
 	 * unsafe魔法类，直接绕过虚拟机内存管理机制，修改内存
 	 */
-	private static final Unsafe unsafe = Unsafe.getUnsafe();
+	private static final LoserUnsafe unsafe = LoserUnsafe.getUnsafe();
 	private static final long stateOffset;
 	private static final long headOffset;
 	private static final long tailOffset;
@@ -1888,11 +1888,11 @@ public abstract class AbstractQueuedSynchronizer
 	static {
 		try {
 			stateOffset = unsafe.objectFieldOffset
-					(AbstractQueuedSynchronizer.class.getDeclaredField("state"));
+					(LoserAbstractQueuedSynchronizer.class.getDeclaredField("state"));
 			headOffset = unsafe.objectFieldOffset
-					(AbstractQueuedSynchronizer.class.getDeclaredField("head"));
+					(LoserAbstractQueuedSynchronizer.class.getDeclaredField("head"));
 			tailOffset = unsafe.objectFieldOffset
-					(AbstractQueuedSynchronizer.class.getDeclaredField("tail"));
+					(LoserAbstractQueuedSynchronizer.class.getDeclaredField("tail"));
 			waitStatusOffset = unsafe.objectFieldOffset
 					(Node.class.getDeclaredField("waitStatus"));
 			nextOffset = unsafe.objectFieldOffset
