@@ -10,13 +10,13 @@ import java.util.Map;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
- * 封装字段定义 
+ * 封装字段定义
  * <p>
  * Copyright: Copyright (c) 2020-12-28 11:03
  * <p>
  * Company: Information & Data Security Solutions Co., Ltd.
  * <p>
- 
+ *
  * @author Rico Yu  ricoyu520@gmail.com
  * @version 1.0
  */
@@ -45,9 +45,21 @@ public class FieldDef {
 	private Boolean index;
 	
 	/**
+	 * 将字段的数值拷贝到目标字段, 实现类似 _all 的作用, 目标字段不出现在 _source 中
+	 * 即可以用copyTo字段来实现搜索, 但是返回的source里面是没有copyTo指定的这个字段的
+	 */
+	private String copyTo;
+	
+	/**
 	 * 为该字段指定分词器
 	 */
 	private Analyzer analyzer;
+	
+	/**
+	 * 指定检索时使用的分词器, 不指定的话采用跟analyzer一样的分词器
+	 * Ik分词在建立的时候要注意: 建索引采用ik_max_word 检索采用ik_smart
+	 */
+	private Analyzer searchAnalyzer;
 	
 	public FieldDef(String fieldName, FieldType fieldType) {
 		this.fieldName = fieldName;
@@ -86,6 +98,18 @@ public class FieldDef {
 		 */
 		private Analyzer analyzer;
 		
+		/**
+		 * 指定检索时使用的分词器, 不指定的话采用跟analyzer一样的分词器
+		 * Ik分词在建立的时候要注意: 建索引采用ik_max_word 检索采用ik_smart
+		 */
+		private Analyzer searchAnalyzer;
+		
+		/**
+		 * 将字段的数值拷贝到目标字段, 实现类似 _all 的作用, 目标字段不出现在 _source 中
+		 * 即可以用copyTo字段来实现搜索, 但是返回的source里面是没有copyTo指定的这个字段的
+		 */
+		private String copyTo;
+		
 		public FieldDefBuilder(String fieldName, FieldType fieldType) {
 			this.fieldName = fieldName;
 			this.fieldType = fieldType;
@@ -102,6 +126,7 @@ public class FieldDef {
 		
 		/**
 		 * 该字段是否可以被搜索, 不设置默认为true
+		 *
 		 * @param index
 		 * @return
 		 */
@@ -112,11 +137,36 @@ public class FieldDef {
 		
 		/**
 		 * 为该字段指定分词器
+		 *
 		 * @param analyzer
 		 * @return
 		 */
 		public FieldDefBuilder analyzer(Analyzer analyzer) {
 			this.analyzer = analyzer;
+			return this;
+		}
+		
+		/**
+		 * 指定检索时使用的分词器, 不指定的话采用跟analyzer一样的分词器
+		 * Ik分词在建立的时候要注意: 建索引采用ik_max_word 检索采用ik_smart
+		 *
+		 * @param searchAnalyzer
+		 * @return FieldDefBuilder
+		 */
+		public FieldDefBuilder searchAnalyzer(Analyzer searchAnalyzer) {
+			this.searchAnalyzer = searchAnalyzer;
+			return this;
+		}
+		
+		/**
+		 * 将字段的数值拷贝到目标字段, 实现类似 _all 的作用, 目标字段不出现在 _source 中
+		 * 即可以用copyTo字段来实现搜索, 但是返回的source里面是没有copyTo指定的这个字段的
+		 *
+		 * @param destField
+		 * @return FieldDefBuilder
+		 */
+		public FieldDefBuilder copyTo(String destField) {
+			this.copyTo = destField;
 			return this;
 		}
 		
@@ -136,6 +186,8 @@ public class FieldDef {
 			}
 			
 			fieldDef.analyzer = analyzer;
+			fieldDef.searchAnalyzer = searchAnalyzer;
+			fieldDef.copyTo = copyTo;
 			
 			return fieldDef;
 		}
@@ -162,6 +214,12 @@ public class FieldDef {
 		}
 		if (analyzer != null) {
 			defMap.put("analyzer", analyzer);
+		}
+		if (searchAnalyzer != null) {
+			defMap.put("search_analyzer", searchAnalyzer);
+		}
+		if (copyTo != null) {
+			defMap.put("copy_to", copyTo);
 		}
 		
 		return defMap;

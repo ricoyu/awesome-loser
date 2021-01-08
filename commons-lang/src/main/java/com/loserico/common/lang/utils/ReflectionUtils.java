@@ -518,7 +518,7 @@ public class ReflectionUtils {
 		}
 		
 		try {
-			field.setAccessible(true);
+			makeAccessible(field);
 			return (T) field.get(target);
 		} catch (IllegalAccessException ex) {
 			handleReflectionException(ex);
@@ -542,6 +542,7 @@ public class ReflectionUtils {
 	 */
 	public static Object getFieldValue(Field field, Object target) {
 		try {
+			makeAccessible(field);
 			return field.get(target);
 		} catch (IllegalAccessException ex) {
 			handleReflectionException(ex);

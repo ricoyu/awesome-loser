@@ -5,9 +5,6 @@ import com.loserico.search.enums.Dynamic;
 import com.loserico.search.enums.FieldType;
 import com.loserico.search.support.FieldDef;
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
-import org.elasticsearch.action.support.master.AcknowledgedResponse;
-import org.elasticsearch.client.transport.TransportClient;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -26,16 +23,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
-@Deprecated
 @Slf4j
-public final class PutMappingBuilder {
-	
-	private TransportClient client;
-	
-	/**
-	 * 索引名
-	 */
-	private String index;
+public final class MappingBuilder {
 	
 	/**
 	 * 指定从这个索引复制Mapping设置
@@ -57,9 +46,10 @@ public final class PutMappingBuilder {
 	 */
 	private Set<String> deleteFields = new HashSet<>();
 	
-	public PutMappingBuilder(TransportClient client, String index) {
-		this.client = client;
-		this.index = index;
+	private MappingBuilder() {}
+	
+	public static MappingBuilder newInstance() {
+		return new MappingBuilder();
 	}
 	
 	/**
@@ -68,7 +58,7 @@ public final class PutMappingBuilder {
 	 * @param copyIndex
 	 * @return PutMappingBuilder
 	 */
-	public PutMappingBuilder copy(String copyIndex) {
+	public MappingBuilder copy(String copyIndex) {
 		this.copyIndex = copyIndex;
 		return this;
 	}
@@ -79,7 +69,7 @@ public final class PutMappingBuilder {
 	 * @param dynamic
 	 * @return PutMappingBuilder
 	 */
-	public PutMappingBuilder dynamic(Dynamic dynamic) {
+	public MappingBuilder dynamic(Dynamic dynamic) {
 		this.dynamic = dynamic;
 		return this;
 	}
@@ -91,7 +81,7 @@ public final class PutMappingBuilder {
 	 * @param fieldType
 	 * @return PutMappingBuilder
 	 */
-	public PutMappingBuilder field(String fieldName, FieldType fieldType) {
+	public MappingBuilder field(String fieldName, FieldType fieldType) {
 		fields.add(new FieldDef(fieldName, fieldType));
 		return this;
 	}
@@ -104,27 +94,27 @@ public final class PutMappingBuilder {
 	 * @param index     控制该字段是否被编入索引
 	 * @return PutMappingBuilder
 	 */
-	public PutMappingBuilder field(String fieldName, FieldType fieldType, boolean index) {
+	public MappingBuilder field(String fieldName, FieldType fieldType, boolean index) {
 		fields.add(new FieldDef(fieldName, fieldType, index));
 		return this;
 	}
 	
-	public PutMappingBuilder field(FieldDef fieldDef) {
+	public MappingBuilder field(FieldDef fieldDef) {
 		fields.add(fieldDef);
 		return this;
 	}
 	
-	public PutMappingBuilder delete(String... fields) {
+	public MappingBuilder delete(String... fields) {
 		for (int i = 0; i < fields.length; i++) {
 			deleteFields.add(fields[i]);
 		}
 		return this;
 	}
 	
-	public boolean execute() {
-		PutMappingRequestBuilder putMappingRequestBuilder = client.admin().indices().preparePutMapping(index);
+	public Map<String, Object> build() {
 		
 		Map<String, Object> source = new HashMap<>();
+		
 		/*
 		 * 从已有索引中拷贝mapping信息
 		 */
@@ -162,10 +152,7 @@ public final class PutMappingBuilder {
 			}
 		}
 		
-		AcknowledgedResponse acknowledgedResponse = putMappingRequestBuilder.setType(ElasticUtils.ONLY_TYPE)
-				.setSource(source)
-				.get();
-		return acknowledgedResponse.isAcknowledged();
+		return source;
 	}
 	
 }

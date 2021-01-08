@@ -2,6 +2,8 @@ package com.loserico.search.enums;
 
 /**
  * 定义文档字段类型 
+ * https://www.elastic.co/guide/en/elasticsearch/reference/7.x/mapping-types.html
+ * 
  * <p>
  * Copyright: Copyright (c) 2020-12-26 10:00
  * <p>
@@ -19,6 +21,16 @@ public enum FieldType {
 	TEXT("text"),
 	
 	/**
+	 * Used for auto-complete suggestions.
+	 */
+	COMPLETION("completion"),
+	
+	/**
+	 * text-like type for as-you-type completion.
+	 */
+	SEARCH_AS_YOU_TYPE("search_as_you_type"),
+	
+	/**
 	 * 精确匹配, 该类型字段不会被Analyze
 	 */
 	KEYWORD("keyword"), 
@@ -27,15 +39,21 @@ public enum FieldType {
 	
 	LONG("long"), 
 	
-	INTEGER("integer"), 
+	INTEGER("integer"),
 	
-	ARRAY("array"), 
+	DOUBLE("double"),
 	
 	OBJECT("object"), 
 	
 	IP("ip"), 
 	
-	GEO_POINT("geo_point");
+	GEO_POINT("geo_point"),
+	
+	/**
+	 * Binary value encoded as a Base64 string
+	 * 二进制类型以base64方式存储
+	 */
+	BINARY("binary");
 	
 	/**
 	 * 类型名称

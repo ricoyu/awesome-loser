@@ -2,8 +2,8 @@ package com.loserico.search;
 
 import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.json.jackson.JacksonUtils;
-import com.loserico.search.builder.MultiGetBuilder;
-import com.loserico.search.builder.PutMappingBuilder;
+import com.loserico.search.builder.RestMultiGetBuilder;
+import com.loserico.search.builder.RestPutMappingBuilder;
 import com.loserico.search.exception.BulkOperationException;
 import com.loserico.search.exception.DocumentDeleteException;
 import com.loserico.search.exception.DocumentExistsException;
@@ -306,8 +306,8 @@ public class ElasticsearchOperations {
 	 *
 	 * @return
 	 */
-	public MultiGetBuilder mget() {
-		return new MultiGetBuilder(client);
+	public RestMultiGetBuilder mget() {
+		return new RestMultiGetBuilder(client);
 	}
 	
 	/**
@@ -416,8 +416,8 @@ public class ElasticsearchOperations {
 		}
 	}
 	
-	public PutMappingBuilder putMapping(String index) {
-		return new PutMappingBuilder(client, index);
+	public RestPutMappingBuilder putMapping(String index) {
+		return new RestPutMappingBuilder(client, index);
 	}
 	
 	public List<String> searchAll(String index) {
