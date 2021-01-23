@@ -4,7 +4,7 @@ import com.jayway.jsonpath.*;
 import com.jayway.jsonpath.internal.Utils;
 import com.jayway.jsonpath.spi.cache.Cache;
 import com.jayway.jsonpath.spi.cache.CacheProvider;
-import com.loserico.json.jsonpath.mapper.MappingProvider;
+import com.loserico.json.jsonpath.mapper.LoserMappingProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -106,7 +106,7 @@ public class JsonContext implements DocumentContext {
 
 	@Override
 	public <T> T read(String path, Type type) {
-		return ((MappingProvider)configuration.mappingProvider()).map(read(path), type, configuration);
+		return ((LoserMappingProvider)configuration.mappingProvider()).map(read(path), type, configuration);
 	}
 	
     @Override

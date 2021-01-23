@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * 限制: 反序列化需要提供Class对象
+ * 优势: 对象不需要有默认构造函数也不需要实现Serializble接口
  * <p>
  * Copyright: (C), 2020-10-10 17:31
  * <p>
@@ -34,7 +36,7 @@ public final class ProtostuffUtils {
 	 * @param <T>
 	 * @return byte[]
 	 */
-	public static <T> byte[] serialize(T obj) {
+	public static <T> byte[] toBytes(T obj) {
 		if (obj == null) {
 			log.info("obj is null, return byte[0]");
 			return new byte[0];
@@ -57,7 +59,7 @@ public final class ProtostuffUtils {
 	 * @param <T>
 	 * @return T
 	 */
-	public static <T> T deserialize(byte[] bytes, Class<T> clazz) {
+	public static <T> T toObject(byte[] bytes, Class<T> clazz) {
 		Schema<T> schema = getSchema(clazz);
 		T obj = schema.newMessage();
 		ProtobufIOUtil.mergeFrom(bytes, obj, schema);

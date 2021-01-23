@@ -28,10 +28,12 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-core</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -78,7 +80,7 @@
             <artifactId>jackson-core</artifactId>
         </dependency>
     </dependencies>
-    
+
     <build>
         <resources>
             <resource>

@@ -8,6 +8,7 @@ import com.loserico.codec.exception.RsaPrivateKeyException;
 import com.loserico.codec.exception.RsaPublicKeyException;
 import com.loserico.codec.exception.RsaSignException;
 import com.loserico.codec.exception.RsaSignVerifyException;
+import com.loserico.common.lang.resource.PropertyReader;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 
@@ -54,6 +55,8 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 @Slf4j
 public final class RsaUtils {
 	
+	private static final PropertyReader propertyReader = new PropertyReader("codec.properties");
+	
 	public static final String CHARSET = "UTF-8";
 	
 	/**
@@ -80,6 +83,24 @@ public final class RsaUtils {
 	 * String to hold name of the public key file.
 	 */
 	public static final String PUBLIC_KEY_FILE = System.getProperty("user.home") + "/public.key";
+	
+	/**
+	 * PEM格式的公钥以一行 -----BEGIN PUBLIC KEY----- 开头
+	 * 中间是公钥字符串
+	 * 最后是一行         -----END PUBLIC KEY-----
+	 */
+	public static final String PEM_PUBLIC_KEY_BEGIN = "-----BEGIN PUBLIC KEY-----";
+	
+	public static final String PEM_PUBLIC_KEY_END = "-----END PUBLIC KEY-----";
+	
+	/**
+	 * PEM格式的私钥以一行 -----BEGIN PRIVATE KEY----- 开头
+	 * 中间是私钥字符串
+	 * 最后是一行         -----END PRIVATE KEY-----
+	 */
+	public static final String PEM_PRIVATE_KEY_BEGIN = "-----BEGIN PRIVATE KEY-----";
+	
+	public static final String PEM_PRIVATE_KEY_END = "-----END PRIVATE KEY-----";
 	
 	/**
 	 * 公钥

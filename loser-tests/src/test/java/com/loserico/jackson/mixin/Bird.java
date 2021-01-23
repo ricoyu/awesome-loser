@@ -1,6 +1,8 @@
 package com.loserico.jackson.mixin;
 
-public class Bird {
+import java.io.Serializable;
+
+public class Bird implements Serializable {
 	
 	private String name;
 	private String sound;

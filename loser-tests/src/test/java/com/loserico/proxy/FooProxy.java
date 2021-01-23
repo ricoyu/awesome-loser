@@ -23,6 +23,7 @@ public class FooProxy implements InvocationHandler {
 	
 	@Override
 	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+		System.out.println("这是来自代理类的问候~");
 		return method.invoke(target, args);
 	}
 }

@@ -16,7 +16,6 @@
     </parent>
 
     <dependencies>
-
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
@@ -24,6 +23,11 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.loserico</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-codec</groupId>

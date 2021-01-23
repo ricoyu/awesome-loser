@@ -31,6 +31,7 @@ import static org.elasticsearch.client.RequestOptions.DEFAULT;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
+@Deprecated
 @Slf4j
 public final class SearchBuilder {
 	

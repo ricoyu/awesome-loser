@@ -1,0 +1,9 @@
+spring:
+  profiles:
+    active: prod
+  redis:
+    host: 172.16.0.63
+    port: 6379
+    password: ics12345
+    database: 0
+    timeout: 50000

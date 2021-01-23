@@ -1,6 +1,7 @@
 package com.loserico.jackson.mixin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.loserico.common.lang.utils.FstUtils;
 import lombok.SneakyThrows;
 
 /**
@@ -28,5 +29,9 @@ public class SerializeExample {
 		
 		Bird bird1 = mapper.readValue("{\"name\":\"scarlet Ibis\",\"sound\":\"eee\",\"habitat\":\"water\"}", Bird.class);
 		System.out.println(bird1);
+		
+		byte[] bytes = FstUtils.toBytes(bird);
+		bird1 = FstUtils.toObject(bytes);
+		System.out.println(bird1.getHabitat());
 	}
 }

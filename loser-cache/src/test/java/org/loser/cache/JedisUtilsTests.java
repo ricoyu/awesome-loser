@@ -11,6 +11,9 @@ import org.junit.Test;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.*;
+
 /**
  * <p>
  * Copyright: (C), 2019/10/25 17:47
@@ -84,12 +87,25 @@ public class JedisUtilsTests {
 	
 	@Test
 	public void testPipelined() {
-		List<String> users = JedisUtils.pipeline((pipeline) -> {
-			for (int i = 0; i < 10; i++) {
-				pipeline.lpop("users");
+		/*List<String> users = JedisUtils.pipeline((pipeline) -> {
+			for (int i = 0; i < 100; i++) {
+				pipeline.lpop("ids-traffic");
 			}
 		});
-		users.forEach(System.out::println);
+		users.forEach(System.out::println);*/
+		while (true) {
+			List<String> users = JedisUtils.pipeline((pipeline) -> {
+				for (int i = 0; i < 100; i++) {
+					pipeline.lpop("ids-traffic");
+				}
+			});
+			users.forEach(System.out::println);
+			try {
+				TimeUnit.SECONDS.sleep(3);
+			} catch (Throwable e) {
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	/*@SneakyThrows
@@ -154,4 +170,37 @@ public class JedisUtilsTests {
 		}
 	}*/
 	
+	@Test
+	public void testDelGet() {
+		JedisUtils.set("k2", "三少爷");
+		String value = JedisUtils.get("k2");
+		System.out.println("value " + value);
+		assertThat(value, value.equals("三少爷"));
+		
+		String value2 = JedisUtils.delGet("k2");
+		System.out.println("value2 " + value2);
+		assertThat(value2, value2.equals(value));
+		
+		String value3 = JedisUtils.get("k2");
+		System.out.println("value3 " + value3);
+		assertTrue(value3 == null);
+	}
+	
+	@Test
+	public void testHashLen() {
+		JedisUtils.del("hash-len");
+		JedisUtils.HASH.hset("hash-len", "f1", "v1");
+		assertEquals(1, JedisUtils.HASH.hlen("hash-len"));
+		JedisUtils.HASH.hset("hash-len", "f2", "v2");
+		assertEquals(2, JedisUtils.HASH.hlen("hash-len"));
+		JedisUtils.HASH.hdel("hash-len", "f1");
+		assertEquals(1, JedisUtils.HASH.hlen("hash-len"));
+	}
+	
+	@Test
+	public void testHDelGet() {
+		JedisUtils.del("hash-delget");
+		JedisUtils.HASH.hset("hash-delget", "f1", "v1");
+		assertEquals("v1", JedisUtils.HASH.hdelGet("hash-delget", "f1"));
+	}
 }

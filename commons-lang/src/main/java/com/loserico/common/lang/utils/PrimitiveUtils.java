@@ -110,6 +110,14 @@ public final class PrimitiveUtils {
 		}
 		return 0;
 	}
+	
+	public static int toInt(byte[] data) {
+		if (data == null || data.length == 0) {
+			return 0;
+		}
+		
+		return Integer.valueOf(toString(data));
+	}
 
 
 	public static String toString(Object value) {
@@ -139,6 +147,9 @@ public final class PrimitiveUtils {
 		}
 		if (value instanceof Byte) {
 			return ((Byte) value).toString();
+		}
+		if (value instanceof byte[]) {
+			return new String((byte[])value, UTF_8);
 		}
 		return null;
 	}

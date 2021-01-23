@@ -1,28 +1,23 @@
 package com.loserico.search;
 
-import com.loserico.search.annotation.DocId;
-import com.loserico.search.builder.MappingBuilder;
-import com.loserico.search.enums.Analyzer;
-import com.loserico.search.enums.Dynamic;
-import com.loserico.search.enums.FieldType;
-import com.loserico.search.support.BulkResult;
-import com.loserico.search.support.FieldDef;
-import com.loserico.search.support.UpdateResult;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.elasticsearch.cluster.metadata.IndexTemplateMetaData;
-import org.elasticsearch.common.settings.Settings;
-import org.junit.Test;
+import com.loserico.search.annotation.*;
+import com.loserico.search.builder.*;
+import com.loserico.search.enums.*;
+import com.loserico.search.support.*;
+import lombok.*;
+import org.elasticsearch.cluster.metadata.*;
+import org.elasticsearch.common.settings.*;
+import org.elasticsearch.index.query.*;
+import org.junit.*;
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import static com.loserico.json.jackson.JacksonUtils.toJson;
-import static java.util.Arrays.asList;
+import static com.loserico.json.jackson.JacksonUtils.*;
+import static java.util.Arrays.*;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.junit.Assert.*;
 
 /**
  * <p>
@@ -258,6 +253,28 @@ public class ElasticUtilsTest {
 	}
 	
 	@Test
+	public void testPutMappingWithChildField() {
+		/*boolean created = ElasticUtils.createIndex("titles").create();
+		boolean acknowledged = ElasticUtils.putMapping("titles", MappingBuilder.newInstance()
+				.field(FieldDef.builder("title", FieldType.TEXT)
+						.fields(FieldDef.builder("std", FieldType.TEXT)
+								.analyzer(Analyzer.STANDARD)
+								.build())
+						.build()));
+		System.out.println(acknowledged);*/
+		
+		ElasticUtils.deleteIndex("titles");
+		boolean acknowledged = ElasticUtils.createIndex("titles")
+				.mapping(MappingBuilder.newInstance()
+						.field(FieldDef.builder("title", FieldType.TEXT)
+								.fields(FieldDef.builder("std", FieldType.TEXT)
+										.analyzer(Analyzer.STANDARD)
+										.build())
+								.build()))
+				.create();
+	}
+	
+	@Test
 	public void testPutIndexTemplate() {
 		boolean created = ElasticUtils.putIndexTemplate("demo-index-template")
 				.order(0)
@@ -309,5 +326,91 @@ public class ElasticUtilsTest {
 		private Integer id;
 		private String user;
 		private String comment;
+	}
+	
+	@Test
+	public void testBoolQuery() {
+		List<String> products = ElasticUtils.query("products")
+				.queryBuilder(boolQuery()
+						.must(QueryBuilders.termQuery("price", 30))
+						.filter(QueryBuilders.termQuery("avaliable", true))
+						.mustNot(QueryBuilders.rangeQuery("price").lte(10))
+						.should(QueryBuilders.termQuery("productID.keyword", "JODL-X-1937-#pV7"))
+						.minimumShouldMatch(1)
+				)
+				.queryForList();
+		
+		products.forEach(System.out::println);
+		List<String> blogs = ElasticUtils.query("blogs")
+				.queryBuilder(boolQuery()
+						.should(matchQuery("title", "apple,ipad").boost(1.1f))
+						.should(matchQuery("Content", "apple,ipad").boost(2f)))
+				.queryForList();
+		
+		blogs.forEach(System.out::println);
+	}
+	
+	@Data
+	@NoArgsConstructor
+	@AllArgsConstructor
+	private static class News {
+		
+		@DocId
+		private String id;
+		
+		private String content;
+	}
+	
+	@Test
+	public void testBoolQuery2() {
+		/*ElasticUtils.deleteIndex("news");
+		
+		News news1 = new News("1", "Apple Mac");
+		News news2 = new News("2", "Apple iPad");
+		News news3 = new News("3", "Apple employee like Apple Pie and Apple Juice");
+		BulkResult bulkResult = ElasticUtils.bulkIndex("news", asList(news1, news2, news3));
+		System.out.println(bulkResult);*/
+		
+		BoolQueryBuilder boolQueryBuilder = boolQuery()
+				.must(matchQuery("content", "apple"))
+				.mustNot(matchQuery("content", "pie"));
+		List<String> news = ElasticUtils.query("news")
+				.queryBuilder(boolQueryBuilder)
+				.queryForList();
+		news.forEach(System.out::println);
+		
+	}
+	
+	@Test
+	public void testBoolBoostingQuery() {
+		BoostingQueryBuilder queryBuilder = boostingQuery(matchQuery("content", "apple"), matchQuery("content", "pie"));
+		queryBuilder.negativeBoost(0.5f);
+		List<String> news = ElasticUtils.query("news")
+				.queryBuilder(queryBuilder)
+				.queryForList();
+		news.forEach(System.out::println);
+	}
+	
+	@Test
+	public void testDisjunctionQuery() {
+		DisMaxQueryBuilder queryBuilder = disMaxQuery()
+				.add(matchQuery("title", "Brown fox"))
+				.add(matchQuery("body", "Brown fox"));
+		List<String> blogs = ElasticUtils.query("blogs")
+				.queryBuilder(queryBuilder)
+				.queryForList();
+		blogs.forEach(System.out::println);
+	}
+	
+	@Test
+	public void testMultiMatchQuery() {
+		MultiMatchQueryBuilder multiMatchQueryBuilder = multiMatchQuery("Quick pets", "title", "body")
+				.tieBreaker(0.2f)
+				.type(MultiMatchQueryBuilder.Type.BEST_FIELDS)
+				.minimumShouldMatch("20%");
+		List<Object> blogs = ElasticUtils.query("blogs")
+				.queryBuilder(multiMatchQueryBuilder)
+				.queryForList();
+		blogs.forEach(System.out::println);
 	}
 }

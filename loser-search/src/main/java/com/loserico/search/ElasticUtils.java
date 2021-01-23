@@ -1,12 +1,11 @@
 package com.loserico.search;
 
-import com.loserico.common.lang.transformer.Transformers;
-import com.loserico.common.lang.utils.ReflectionUtils;
-import com.loserico.search.annotation.DocId;
+import com.loserico.search.builder.ElasticQueryBuilder;
 import com.loserico.search.builder.IndexBuilder;
 import com.loserico.search.builder.IndexTemplateBuilder;
 import com.loserico.search.builder.MappingBuilder;
 import com.loserico.search.builder.MultiGetBuilder;
+import com.loserico.search.cache.ElasticCacheUtils;
 import com.loserico.search.factory.TransportClientFactory;
 import com.loserico.search.support.BulkResult;
 import com.loserico.search.support.UpdateResult;
@@ -43,7 +42,6 @@ import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.index.reindex.DeleteByQueryRequestBuilder;
 import org.elasticsearch.indices.IndexTemplateMissingException;
 
-import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -153,7 +151,7 @@ public final class ElasticUtils {
 			return null;
 		}
 		
-		String id = findId(doc);
+		String id = ElasticCacheUtils.findId(doc);
 		return index(index, doc, id);
 	}
 	
@@ -244,7 +242,7 @@ public final class ElasticUtils {
 		docs.stream()
 				.filter(Objects::nonNull)
 				.map((doc) -> {
-					String id = findId(doc);
+					String id = ElasticCacheUtils.findId(doc);
 					return client.prepareIndex()
 							.setSource(toJson(doc), XContentType.JSON)
 							.setId(id);
@@ -534,30 +532,15 @@ public final class ElasticUtils {
 	}
 	
 	/**
-	 * 如果对象是一个pojo(不是String, 不是List, 不是Map, 不是简单类型)<br/>
-	 * 那么看一下这个POJO中有没有加了@DocId注解的字段, 有的话把这个字段的值当作整片文档的id
+	 * 通用查询接口, 既可以基于值查询, 如: Term Query, Match Query
+	 * 可以基于字段存在性查询, 比如 Exists Query
+	 * 给ElasticQueryBuilder传入不同的 QueryBuilder即可
 	 *
-	 * @param pojo
-	 * @return String
+	 * @param indices
+	 * @return ElasticQueryBuilder
 	 */
-	private static String findId(Object pojo) {
-		if (!ReflectionUtils.isPojo(pojo)) {
-			return null;
-		}
-		/*
-		 * 拿到这个class的所有字段, 包括自己定义的和父类中定义的字段, 但是不包括Object对象中的字段
-		 */
-		Field[] fields = ReflectionUtils.getFields(pojo.getClass());
-		for (Field field : fields) {
-			//找到标记了@DocId注解的字段, 把这个字段的值作为文档的_id
-			DocId elasticId = field.getAnnotation(DocId.class);
-			if (elasticId != null) {
-				Object value = ReflectionUtils.getFieldValue(field, pojo);
-				//只能由一个id字段, 找到了就不用再找了
-				return Transformers.convert(value);
-			}
-		}
-		
-		return null;
+	public static ElasticQueryBuilder query(String... indices) {
+		return ElasticQueryBuilder.instance(indices);
 	}
+	
 }

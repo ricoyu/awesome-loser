@@ -38,7 +38,7 @@ public final class TransportClientFactory {
 	@SneakyThrows
 	public static TransportClient create() {
 		/**
-		 * 默认读取classpath下redis.properties文件
+		 * 默认读取classpath下elastic.properties文件
 		 */
 		PropertyReader propertyReader = new PropertyReader("elastic");
 		

@@ -84,6 +84,14 @@ public class PropertyReader {
 	}
 	
 	/**
+	 * 判断是否找打了resource文件
+	 * @return
+	 */
+	public boolean resourceExists() {
+		return resourceBundle != null || resourceBundle2 != null || resourceBundle3 != null;
+	}
+	
+	/**
 	 * 返回属性对应的int值，值不存在或者不是数字则返回-1
 	 *
 	 * @param property

@@ -2,6 +2,8 @@ package com.loserico.cache.operations;
 
 import com.loserico.cache.concurrent.ThreadPool;
 import com.loserico.cache.exception.JedisException;
+import com.loserico.cache.utils.ByteUtils;
+import com.loserico.json.jackson.JacksonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
@@ -76,6 +78,36 @@ public class JedisPoolOperations implements JedisOperations {
 	@Override
 	public Double zscore(String key, String member) {
 		return operate((jedis) -> jedis.zscore(key, member));
+	}
+	
+	@Override
+	public Long zadd(String key, double score, String member) {
+		return operate((jedis) -> jedis.zadd(key, score, member));
+	}
+	
+	@Override
+	public Long zadd(byte[] key, double score, byte[] member) {
+		return operate((jedis) -> jedis.zadd(key, score, member));
+	}
+	
+	@Override
+	public Long zadd(String key, double score, Object member) {
+		return operate((jedis) -> jedis.zadd(ByteUtils.toBytes(key), score, JacksonUtils.toBytes(member)));
+	}
+	
+	@Override
+	public Long zcard(String key) {
+		return operate((jedis) -> jedis.zcard(key));
+	}
+	
+	@Override
+	public Long zremByRank(String key, long start, long end) {
+		return operate((jedis) -> jedis.zremrangeByRank(key, start, end));
+	}
+	
+	@Override
+	public Set<String> zrange(String key, long start, long end) {
+		return operate((jedis) -> jedis.zrange(key, start, end));
 	}
 	
 	@Override
@@ -234,8 +266,18 @@ public class JedisPoolOperations implements JedisOperations {
 	}
 	
 	@Override
+	public List<String> hvals(String key) {
+		return operate((jedis) -> jedis.hvals(key));
+	}
+	
+	@Override
 	public Long expire(byte[] key, int seconds) {
 		return operate((jedis) -> jedis.expire(key, seconds));
+	}
+	
+	@Override
+	public Long hlen(byte[] key) {
+		return operate((jedis) -> jedis.hlen(key));
 	}
 	
 	@Override

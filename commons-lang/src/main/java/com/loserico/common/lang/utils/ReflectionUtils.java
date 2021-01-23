@@ -15,6 +15,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1541,6 +1542,14 @@ public class ReflectionUtils {
 	 * 以下这些认为false:<ol>
 	 *  <li/>null
 	 *  <li/>String
+	 *  <li/>Integer
+	 *  <li/>Long
+	 *  <li/>Boolean
+	 *  <li/>Float
+	 *  <li/>Double
+	 *  <li/>Character
+	 *  <li/>Byte
+	 *  <li/>BigDecimal
 	 *  <li/>Map
 	 *  <li/>Collection
 	 * </ol>
@@ -1560,6 +1569,38 @@ public class ReflectionUtils {
 		}
 		
 		if (value instanceof Map) {
+			return false;
+		}
+		
+		if (value instanceof Integer) {
+			return false;
+		}
+		
+		if (value instanceof Long) {
+			return false;
+		}
+		
+		if (value instanceof Boolean) {
+			return false;
+		}
+		
+		if (value instanceof Float) {
+			return false;
+		}
+		
+		if (value instanceof Double) {
+			return false;
+		}
+		
+		if (value instanceof Character) {
+			return false;
+		}
+		
+		if (value instanceof Byte) {
+			return false;
+		}
+		
+		if (value instanceof BigDecimal) {
 			return false;
 		}
 		

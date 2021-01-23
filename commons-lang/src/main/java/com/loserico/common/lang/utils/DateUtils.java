@@ -858,6 +858,19 @@ public final class DateUtils {
 		return Date.from(instant);
 	}
 	
+	/**
+	 * java.sql.Date 转 java.util.Date
+	 * @param date
+	 * @return
+	 */
+	public static Date toDate(java.sql.Date date) {
+		if (date == null) {
+			return null;
+		}
+		
+		return new Date(date.getTime());
+	}
+	
 	public static LocalTime toLocalTime(String source) {
 		if (isBlank(source)) {
 			return null;

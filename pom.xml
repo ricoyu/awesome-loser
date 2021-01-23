@@ -27,6 +27,7 @@
         <module>loser-token-parser</module>
         <module>loser-netty</module>
         <module>loser-search</module>
+        <module>loser-messages</module>
     </modules>
 
     <properties>
@@ -618,6 +619,18 @@
                 <groupId>io.protostuff</groupId>
                 <artifactId>protostuff-runtime</artifactId>
                 <version>1.7.2</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.esotericsoftware.kryo</groupId>
+                <artifactId>kryo5</artifactId>
+                <version>5.0.3</version>
+            </dependency>
+
+            <dependency>
+                <groupId>de.ruedigermoeller</groupId>
+                <artifactId>fst</artifactId>
+                <version>2.56</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

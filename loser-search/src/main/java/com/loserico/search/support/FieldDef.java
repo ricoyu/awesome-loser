@@ -4,7 +4,9 @@ import com.loserico.search.enums.Analyzer;
 import com.loserico.search.enums.FieldType;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -61,6 +63,11 @@ public class FieldDef {
 	 */
 	private Analyzer searchAnalyzer;
 	
+	/**
+	 * Elasticsearch多字段特性
+	 */
+	private List<FieldDef> fields = new ArrayList<>();
+	
 	public FieldDef(String fieldName, FieldType fieldType) {
 		this.fieldName = fieldName;
 		this.fieldType = fieldType;
@@ -109,6 +116,11 @@ public class FieldDef {
 		 * 即可以用copyTo字段来实现搜索, 但是返回的source里面是没有copyTo指定的这个字段的
 		 */
 		private String copyTo;
+		
+		/**
+		 * Elasticsearch多字段特性
+		 */
+		private List<FieldDef> fields = new ArrayList<>();
 		
 		public FieldDefBuilder(String fieldName, FieldType fieldType) {
 			this.fieldName = fieldName;
@@ -170,6 +182,17 @@ public class FieldDef {
 			return this;
 		}
 		
+		/**
+		 * 为字段添加多字段特性
+		 *
+		 * @param fieldDef
+		 * @return
+		 */
+		public FieldDefBuilder fields(FieldDef fieldDef) {
+			this.fields.add(fieldDef);
+			return this;
+		}
+		
 		public FieldDef build() {
 			FieldDef fieldDef = new FieldDef(fieldName, fieldType);
 			//默认用DATE类型的默认格式
@@ -188,6 +211,7 @@ public class FieldDef {
 			fieldDef.analyzer = analyzer;
 			fieldDef.searchAnalyzer = searchAnalyzer;
 			fieldDef.copyTo = copyTo;
+			fieldDef.fields = fields;
 			
 			return fieldDef;
 		}
@@ -220,6 +244,13 @@ public class FieldDef {
 		}
 		if (copyTo != null) {
 			defMap.put("copy_to", copyTo);
+		}
+		if (fields != null && !fields.isEmpty()) {
+			Map<String, Object> fieldsMap = new HashMap<>(fields.size());
+			for (FieldDef fieldDef : fields) {
+				fieldsMap.put(fieldDef.fieldName, fieldDef.toDefMap());
+			}
+			defMap.put("fields", fieldsMap);
 		}
 		
 		return defMap;

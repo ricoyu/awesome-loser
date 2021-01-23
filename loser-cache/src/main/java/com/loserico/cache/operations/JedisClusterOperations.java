@@ -1,5 +1,6 @@
 package com.loserico.cache.operations;
 
+import com.loserico.json.jackson.JacksonUtils;
 import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisCluster;
@@ -8,6 +9,8 @@ import redis.clients.jedis.JedisPubSub;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static com.loserico.cache.utils.ByteUtils.toBytes;
 
 /**
  * <p>
@@ -66,6 +69,31 @@ public class JedisClusterOperations implements JedisOperations {
 	@Override
 	public Double zscore(String key, String member) {
 		return jedisCluster.zscore(key, member);
+	}
+	
+	@Override
+	public Long zadd(String key, double score, String member) {
+		return jedisCluster.zadd(key, score, member);
+	}
+	
+	@Override
+	public Long zadd(byte[] key, double score, byte[] member) {
+		return jedisCluster.zadd(key, score, member);
+	}
+	
+	@Override
+	public Long zadd(String key, double score, Object member) {
+		return jedisCluster.zadd(toBytes(key), score, JacksonUtils.toBytes(member));
+	}
+	
+	@Override
+	public Long zremByRank(String key, long start, long end) {
+		return jedisCluster.zremrangeByRank(key, start, end);
+	}
+	
+	@Override
+	public Long zcard(String key) {
+		return jedisCluster.zcard(key);
 	}
 	
 	@Override
@@ -221,6 +249,21 @@ public class JedisClusterOperations implements JedisOperations {
 	@Override
 	public Map<String, String> hgetAll(String key) {
 		return jedisCluster.hgetAll(key);
+	}
+	
+	@Override
+	public List<String> hvals(String key) {
+		return jedisCluster.hvals(key);
+	}
+	
+	@Override
+	public Set<String> zrange(String key, long start, long end) {
+		return jedisCluster.zrange(key, start, end);
+	}
+	
+	@Override
+	public Long hlen(byte[] key) {
+		return jedisCluster.hlen(key);
 	}
 	
 	@Override

@@ -18,7 +18,7 @@ import java.lang.reflect.Type;
  * @author Rico Yu  ricoyu520@gmail.com
  * @version 1.0
  */
-public class JacksonMappingProvider implements MappingProvider {
+public class JacksonMappingProvider implements LoserMappingProvider {
 
 	private final ObjectMapper objectMapper;
 

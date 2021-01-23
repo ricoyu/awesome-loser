@@ -14,7 +14,7 @@ import java.lang.reflect.Type;
  * @author Rico Yu  ricoyu520@gmail.com
  * @version 1.0
  */
-public interface MappingProvider extends com.jayway.jsonpath.spi.mapper.MappingProvider{
+public interface LoserMappingProvider extends com.jayway.jsonpath.spi.mapper.MappingProvider{
 
 
     /**

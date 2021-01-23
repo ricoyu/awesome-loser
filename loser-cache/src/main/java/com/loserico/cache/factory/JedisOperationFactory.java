@@ -1,9 +1,12 @@
 package com.loserico.cache.factory;
 
+import com.loserico.cache.config.RedisProperties;
 import com.loserico.cache.operations.JedisClusterOperations;
 import com.loserico.cache.operations.JedisOperations;
 import com.loserico.cache.operations.JedisPoolOperations;
 import com.loserico.common.lang.resource.PropertyReader;
+import com.loserico.common.lang.resource.YamlOps;
+import com.loserico.common.lang.resource.YamlProfileReaders;
 import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisCluster;
@@ -37,6 +40,37 @@ public final class JedisOperationFactory {
 		 * 默认读取classpath下redis.properties文件
 		 */
 		PropertyReader propertyReader = new PropertyReader("redis");
+		RedisProperties redisProperties = null;
+		
+		/*
+		 * 如果没有找到redis.properties, 那么先尝试从SpringBoot Redis配置里面获取配置信息
+		 */
+		if (!propertyReader.resourceExists()) {
+			YamlOps yamlOps = YamlProfileReaders.instance("application");
+			if (yamlOps.exists()) {
+				String host = yamlOps.getString("spring.redis.host", "localhost");
+				int port = yamlOps.getInt("spring.redis.port", 6379);
+				String password = yamlOps.getString("spring.redis.password");
+				int database = yamlOps.getInt("spring.redis.database", 0);
+				int timeout = yamlOps.getInt("spring.redis.timeout", 5000);
+				
+				redisProperties = new RedisProperties();
+				redisProperties.setHost(host);
+				redisProperties.setPort(port);
+				redisProperties.setPassword(password);
+				redisProperties.setDatabase(database);
+				redisProperties.setTimeout(timeout);
+			}
+		}
+		
+		/*
+		 * 如果是采用spring-data-redis的配置的话, 暂时先只支持单节点模式
+		 */
+		if (redisProperties != null) {
+			JedisPool jedisPool = new JedisPoolFactory().createPool(redisProperties);
+			return new JedisPoolOperations(jedisPool);
+		}
+		
 		/*
 		 * Redis的部署类型：single, sentinel, cluster
 		 * redis.sentinels 属性存在则采用sentinel形式

@@ -47,6 +47,23 @@ public interface JedisOperations {
 	 */
 	public Double zscore(final String key, final String member);
 	
+	public Long zadd(String key, double score, String member);
+	
+	public Long zadd(String key, double score, Object member);
+	
+	public Long zadd(byte[] key, double score, byte[] member);
+	
+	public Long zcard(String key);
+	
+	/**
+	 * 移除有序集合中给定的排名区间的所有成员
+	 * @param key
+	 * @return Long
+	 */
+	public Long zremByRank(String key, long start, long end);
+	
+	public Set<String> zrange(String key, long start, long end);
+	
 	/**
 	 * Removes and returns the first element of the list stored at key.
 	 *
@@ -236,6 +253,13 @@ public interface JedisOperations {
 	
 	public Boolean hexists(final String key, final String field);
 	
+	/**
+	 * 获取hash的长度(包含field的数量)
+	 * @param key
+	 * @return int
+	 */
+	public Long hlen(final byte[] key);
+	
 	public byte[] hget(final byte[] key, final byte[] field);
 	
 	public Long hset(final byte[] key, final byte[] field, final byte[] value);
@@ -249,6 +273,8 @@ public interface JedisOperations {
 	public Map<byte[], byte[]> hgetAll(final byte[] key);
 	
 	public Map<String, String> hgetAll(final String key);
+	
+	public List<String> hvals(String key);
 	
 	/**
 	 * Set a timeout on key.
@@ -345,11 +371,18 @@ public interface JedisOperations {
 	
 	public Object eval(final String script, final int keyCount, final String... params);
 	
+	/**
+	 * 这个是默认实现, Redis单节点适用
+	 * @param script
+	 * @return
+	 */
 	public default String scriptLoad(final String script) {
 		throw new OperationNotSupportedException();
 	}
 	
 	/**
+	 * 这个是基于Redis集群环境的实现, 需要提供一个sampleKey
+	 * 暂时没有实现
 	 * @param script
 	 * @param sampleKey Command will be executed in the node where the hash slot of this key is assigned to
 	 * @return
@@ -358,6 +391,35 @@ public interface JedisOperations {
 		throw new OperationNotSupportedException();
 	}
 	
+	/**
+	 * 这个是基于Redis集群环境的实现, 需要提供一个sampleKey
+	 * 暂时没有实现
+	 * @param script
+	 * @param sampleKey
+	 * @return
+	 */
+	public default String scriptLoad(String script, Object sampleKey) {
+		throw new OperationNotSupportedException();
+	}
+	
+	/**
+	 * 这个是基于Redis集群环境的实现, 需要提供一个sampleKey
+	 * 暂时没有实现
+	 * @param script
+	 * @param sampleKey
+	 * @return
+	 */
+	public default String scriptLoad(String script, byte[] sampleKey) {
+		throw new OperationNotSupportedException();
+	}
+	
+	/**
+	 * 这个是基于Redis集群环境的实现, 需要提供一个sampleKey
+	 * 暂时没有实现
+	 * @param script
+	 * @param sampleKey
+	 * @return
+	 */
 	public default byte[] scriptLoad(byte[] script, byte[] sampleKey) {
 		throw new OperationNotSupportedException();
 	}

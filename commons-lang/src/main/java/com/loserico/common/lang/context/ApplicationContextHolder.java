@@ -31,6 +31,14 @@ public class ApplicationContextHolder implements ApplicationContextAware {
 		return applicationContext;
 	}
 	
+	/**
+	 * 判断是否在Spring环境
+	 * @return
+	 */
+	public static boolean isSpringApp() {
+		return applicationContext != null;
+	}
+	
 	public static Object getBean(String beanName) {
 		if (applicationContext == null) {
 			log.warn("applicationContext is null, consider add bean of ApplicationContextHolder type or add dependency loser-spring-boot-starter");

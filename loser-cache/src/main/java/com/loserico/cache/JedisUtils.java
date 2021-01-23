@@ -1,5 +1,6 @@
 package com.loserico.cache;
 
+
 import com.fasterxml.jackson.databind.JavaType;
 import com.loserico.cache.collection.QueueListener;
 import com.loserico.cache.concurrent.BlockingLock;
@@ -41,6 +42,7 @@ import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static com.loserico.cache.status.HSet.INSERTED;
 import static com.loserico.cache.status.HSet.UPDATED;
@@ -54,7 +56,7 @@ import static com.loserico.cache.utils.UnMarshaller.toSeconds;
 import static com.loserico.json.jackson.JacksonUtils.toJson;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.MINUTES;
-import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.*;
 
 /**
  * Jedis 的工具类, key/value 支持任意类型
@@ -467,7 +469,7 @@ public final class JedisUtils {
 	 * @return List<T>
 	 */
 	public static <T> List<T> getList(String key, Class<T> clazz, Supplier<List<T>> supplier, long expires,
-									  TimeUnit timeUnit) {
+	                                  TimeUnit timeUnit) {
 		Objects.requireNonNull(timeUnit);
 		
 		List<T> list = getList(key, clazz);
@@ -1145,6 +1147,52 @@ public final class JedisUtils {
 		public static double zscore(String key, String member) {
 			return jedisOperations.zscore(key, member);
 		}
+		
+		public static Long zadd(String key, double score, String member) {
+			return jedisOperations.zadd(key, score, member);
+		}
+		
+		public static Long zadd(String key, double score, Object member) {
+			return jedisOperations.zadd(key, score, member);
+		}
+		
+		public static Long zadd(byte[] key, double score, byte[] member) {
+			return jedisOperations.zadd(key, score, member);
+		}
+		
+		/**
+		 * 返回zset的size
+		 *
+		 * @param key
+		 * @return Long
+		 */
+		public static Long zcard(String key) {
+			return jedisOperations.zcard(key);
+		}
+		
+		/**
+		 * 移除有序集合中给定的排名区间的所有成员
+		 *
+		 * @param key
+		 * @param start
+		 * @param end
+		 * @return Long
+		 */
+		public static Long zremRangeByRank(String key, long start, long end) {
+			return jedisOperations.zremByRank(key, start, end);
+		}
+		
+		public static Set<String> zrange(String key, long start, long end) {
+			return jedisOperations.zrange(key, start, end);
+		}
+		
+		public static <T> Set<T> zrange(String key, long start, long end, Class<T> clazz) {
+			return jedisOperations.zrange(key, start, end)
+					.stream()
+					.map(json -> JacksonUtils.toObject(json, clazz))
+					.collect(toSet());
+			
+		}
 	}
 	
 	/**
@@ -1177,7 +1225,23 @@ public final class JedisUtils {
 		 * @return int
 		 */
 		public static int hset(String key, Object field, Object value) {
-			Long result = (Long) jedisOperations.hset(toBytes(key), toBytes(field), toBytes(value));
+			return hset(toBytes(key), toBytes(field), toBytes(value));
+		}
+		
+		/**
+		 * key 是Map的名字
+		 * field 是Map里面的field
+		 * <ul>返回
+		 * <li>0 表示更新了map中的field
+		 * <li>1 表示在map上新增了一个field
+		 *
+		 * @param key
+		 * @param field
+		 * @param value
+		 * @return int
+		 */
+		public static int hset(byte[] key, byte[] field, byte[] value) {
+			Long result = (Long) jedisOperations.hset(key, field, value);
 			return result.intValue();
 		}
 		
@@ -1195,6 +1259,23 @@ public final class JedisUtils {
 		 * @return HSetStatus
 		 */
 		public static HSet hset(String key, Object field, Object value, int ttl) {
+			return hset(toBytes(key), toBytes(field), toBytes(value), ttl);
+		}
+		
+		/**
+		 * 设置Hash某个field值,同时指定其过期时间,单位秒
+		 * <ul>返回
+		 * <li>UPDATED(0) 表示更新了map中的field
+		 * <li>INSERTED(1) 表示在map上新增了一个field
+		 * </ul>
+		 *
+		 * @param key
+		 * @param field
+		 * @param value
+		 * @param ttl   field过期时间,秒
+		 * @return HSetStatus
+		 */
+		public static HSet hset(byte[] key, byte[] field, byte[] value, int ttl) {
 			String hashSha = shaHashs.computeIfAbsent("hash.lua", x -> {
 				log.debug("Load script {}", "hash.lua");
 				if (jedisOperations instanceof JedisClusterOperations) {
@@ -1207,11 +1288,11 @@ public final class JedisUtils {
 			String zsetKey = joinKey(HASH_EXPIRE_ZSET_PREFIX, key);
 			Long result = (Long) jedisOperations.evalsha(toBytes(hashSha),
 					2,
-					toBytes(key), // hash key
+					key, // hash key
 					toBytes(zsetKey), // zset key
 					toBytes("hset"), // 调用的lua function名字
-					toBytes(field),
-					toBytes(value),
+					field,
+					value,
 					toBytes(ttl));
 			return result.intValue() == 0 ? UPDATED : INSERTED;
 		}
@@ -1265,6 +1346,19 @@ public final class JedisUtils {
 				return null;
 			}
 			
+			byte[] data = hget(toBytes(key), toBytes(field));
+			return UnMarshaller.toString(data);
+		}
+		
+		/**
+		 * field 和 value 都是字符串的情况调这个接口
+		 *
+		 * @param key
+		 * @param field
+		 * @return String
+		 */
+		
+		public static byte[] hget(byte[] key, byte[] field) {
 			String hashSha = shaHashs.computeIfAbsent("hash.lua", x -> {
 				log.debug("Load script {}", "hash.lua");
 				String script = IOUtils.readClassPathFileAsString("/lua-scripts/hash.lua");
@@ -1281,7 +1375,7 @@ public final class JedisUtils {
 					toBytes(zsetKey), // zset key
 					toBytes("hget"), // 调用的lua function名字
 					toBytes(field));
-			return UnMarshaller.toString(data);
+			return data;
 		}
 		
 		/**
@@ -1438,6 +1532,21 @@ public final class JedisUtils {
 		}
 		
 		/**
+		 * 拿到HASH的所有value
+		 *
+		 * @param key
+		 * @param clazz
+		 * @param <T>
+		 * @return List<T>
+		 */
+		public static <T> List<T> hvals(String key, Class<T> clazz) {
+			List<String> values = jedisOperations.hvals(key);
+			return values.stream()
+					.map((value) -> JacksonUtils.toObject(value, clazz))
+					.collect(Collectors.toList());
+		}
+		
+		/**
 		 * 根据指定的key和要获取的field列表, 找到对应的value, 最后以Map形式返回
 		 *
 		 * @param key
@@ -1494,13 +1603,23 @@ public final class JedisUtils {
 		}
 		
 		/**
+		 * 返回Hash包含的field数量
+		 *
+		 * @param key
+		 * @return int
+		 */
+		public static long hlen(String key) {
+			return jedisOperations.hlen(toBytes(key));
+		}
+		
+		/**
 		 * 删除Hash的某个field
 		 *
 		 * @param key
 		 * @param field
 		 * @return int 删除的field数量
 		 */
-		public static int hdel(String key, Object field) {
+		public static Long hdel(String key, Object field) {
 			String hashSha = shaHashs.computeIfAbsent("hash.lua", x -> {
 				log.debug("Load script {}", "hash.lua");
 				if (jedisOperations instanceof JedisClusterOperations) {
@@ -1510,13 +1629,38 @@ public final class JedisUtils {
 			});
 			
 			String zsetKey = joinKey(HASH_EXPIRE_ZSET_PREFIX, key);
-			Long result = (Long) jedisOperations.evalsha(toBytes(hashSha),
+			return (Long) jedisOperations.evalsha(toBytes(hashSha),
 					2,
 					toBytes(key), // hash key
 					toBytes(zsetKey), // zset key
 					toBytes("hdel"), // 调用的lua function名字
 					toBytes(field));
-			return result.intValue();
+		}
+		
+		/**
+		 * 删除Hash的某个field, 并返回该字段的值
+		 *
+		 * @param key
+		 * @param field
+		 * @return int 删除的field数量
+		 */
+		public static String hdelGet(String key, Object field) {
+			String hashSha = shaHashs.computeIfAbsent("hash.lua", x -> {
+				log.debug("Load script {}", "hash.lua");
+				if (jedisOperations instanceof JedisClusterOperations) {
+					return jedisOperations.scriptLoad(IOUtils.readClassPathFileAsString("/lua-scripts/hash.lua"), key);
+				}
+				return jedisOperations.scriptLoad(IOUtils.readClassPathFileAsString("/lua-scripts/hash.lua"));
+			});
+			
+			String zsetKey = joinKey(HASH_EXPIRE_ZSET_PREFIX, key);
+			byte[] data = (byte[]) jedisOperations.evalsha(toBytes(hashSha),
+					2,
+					toBytes(key), // hash key
+					toBytes(zsetKey), // zset key
+					toBytes("hdelGet"), // 调用的lua function名字
+					toBytes(field));
+			return PrimitiveUtils.toString(data);
 		}
 		
 		/**
@@ -1696,20 +1840,19 @@ public final class JedisUtils {
 	}
 	
 	/**
-	 * 地理位置信息查询 
+	 * 地理位置信息查询
 	 * <p>
 	 * Copyright: Copyright (c) 2020-10-16 17:35
 	 * <p>
 	 * Company: Sexy Uncle Inc.
 	 * <p>
-	 
+	 *
 	 * @author Rico Yu  ricoyu520@gmail.com
 	 * @version 1.0
 	 */
 	public static final class GEO {
 		
 	}
-	
 	
 	
 	/**
@@ -1844,6 +1987,80 @@ public final class JedisUtils {
 		jedisOperations.del(toBytes(key));
 	}
 	
+	/**
+	 * 删除并返回key对应的value
+	 *
+	 * @param key
+	 * @return String
+	 */
+	public static String delGet(String key) {
+		Objects.requireNonNull(key);
+		byte[] data = delGet(toBytes(key));
+		return UnMarshaller.toString(data);
+	}
+	
+	/**
+	 * 删除并返回key对应的value
+	 *
+	 * @param key
+	 * @param clazz
+	 * @param <T>
+	 * @return T
+	 */
+	public static <T> T delGet(String key, Class<T> clazz) {
+		Objects.requireNonNull(key);
+		byte[] data = delGet(toBytes(key));
+		return toObject(data, clazz);
+	}
+	
+	/**
+	 * 删除并返回key对应的value
+	 *
+	 * @param key
+	 * @return String
+	 */
+	public static String delGet(Object key) {
+		Objects.requireNonNull(key);
+		byte[] data = delGet(toBytes(key));
+		return UnMarshaller.toString(data);
+	}
+	
+	/**
+	 * 删除并返回key对应的value
+	 *
+	 * @param key
+	 * @return String
+	 */
+	public static <T> T delGet(Object key, Class<T> clazz) {
+		Objects.requireNonNull(key);
+		byte[] data = delGet(toBytes(key));
+		return toObject(data, clazz);
+	}
+	
+	/**
+	 * 删除并返回key对应的value
+	 *
+	 * @param key
+	 * @return String
+	 */
+	public static byte[] delGet(byte[] key) {
+		Objects.requireNonNull(key);
+		
+		String delGetSha1 = shaHashs.computeIfAbsent("delGet.lua", x -> {
+			log.debug("Load script {}", "delGet.lua");
+			if (jedisOperations instanceof JedisClusterOperations) {
+				return jedisOperations.scriptLoad(IOUtils.readClassPathFileAsString("/lua-scripts/delGet.lua"), key);
+			}
+			return jedisOperations.scriptLoad(IOUtils.readClassPathFileAsString("/lua-scripts/delGet.lua"));
+		});
+		
+		byte[] value = (byte[]) jedisOperations.evalsha(toBytes(delGetSha1),
+				1,
+				key);
+		
+		return value;
+	}
+	
 	@SuppressWarnings("unchecked")
 	public static <T> T eval(String script) {
 		return (T) jedisOperations.eval(script);
@@ -1930,13 +2147,13 @@ public final class JedisUtils {
 	/**
 	 * 异步方式订阅频道, 收到消息后回调 messageListener
 	 * Subscribes the client to the given patterns.
-	 *
+	 * <p>
 	 * Supported glob-style patterns:
-	 *
+	 * <p>
 	 * h?llo subscribes to hello, hallo and hxllo
 	 * h*llo subscribes to hllo and heeeello
 	 * h[ae]llo subscribes to hello and hallo, but not hillo
-	 * 
+	 *
 	 * @param chnannelPatterns
 	 * @param messageListener
 	 * @return JedisPubSub 用于取消订阅
@@ -2037,6 +2254,7 @@ public final class JedisUtils {
 	
 	/**
 	 * 阻塞非公平锁
+	 *
 	 * @param key
 	 * @return
 	 */
@@ -2046,6 +2264,7 @@ public final class JedisUtils {
 	
 	/**
 	 * 非阻塞非公平锁
+	 *
 	 * @param key
 	 * @return
 	 */
@@ -2094,6 +2313,7 @@ public final class JedisUtils {
 	
 	/**
 	 * lua脚本加载到Redis
+	 *
 	 * @param luaPath
 	 * @return lua脚本加载到Redis之后得到的SHA1值
 	 */
@@ -2106,7 +2326,7 @@ public final class JedisUtils {
 	}
 	
 	public static <R> R execute(Function<Jedis, R> func) {
-		try(Jedis jedis = jedisOperations.jedis()) {
+		try (Jedis jedis = jedisOperations.jedis()) {
 			return func.apply(jedis);
 		} catch (Exception e) {
 			log.error("", e);
@@ -2116,11 +2336,12 @@ public final class JedisUtils {
 	
 	/**
 	 * 在pipeline中执行多条命令, 一次返回所有结果
+	 *
 	 * @param consumer
 	 * @return
 	 */
 	public static <T> List<T> pipeline(Consumer<Pipeline> consumer) {
-		return (List<T>)jedisOperations.executePipelined(consumer);
+		return (List<T>) jedisOperations.executePipelined(consumer);
 	}
 	
 	private static boolean isEmpty(Collection<?> collection) {

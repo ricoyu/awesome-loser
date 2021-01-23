@@ -22,9 +22,11 @@ public class ProtostuffUtilsTest {
 	public static void main(String[] args) {
 		SimpleGrantedAuthority grantedAuthority = new SimpleGrantedAuthority("ROLE_USER");
 		System.out.println(grantedAuthority);
-		byte[] bytes = ProtostuffUtils.serialize(grantedAuthority);
-		SimpleGrantedAuthority grantedAuthority1 = ProtostuffUtils.deserialize(bytes, SimpleGrantedAuthority.class);
+		byte[] bytes = ProtostuffUtils.toBytes(grantedAuthority);
+		SimpleGrantedAuthority grantedAuthority1 = ProtostuffUtils.toObject(bytes, SimpleGrantedAuthority.class);
 		System.out.println(grantedAuthority1);
+		Object object = ProtostuffUtils.toObject(bytes, Object.class);
+		System.out.println(object);
 	}
 	
 	static class SimpleGrantedAuthority  {

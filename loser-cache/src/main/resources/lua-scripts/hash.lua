@@ -103,6 +103,16 @@ local hdel = function(key, zsetKey, field)
 end
 
 --[[
+删除hash的field并返回该field对应的值
+]]
+local hdelGet = function(key, zsetKey, field)
+  redis.call("ZREM", zsetKey, field)
+  local value = redis.call("HGET", key, field)
+  redis.call("HDEL", key, field)
+  return value
+end
+
+--[[
   返回-3 表示HASH key不存在
   返回-2 表示字段不存在 
   返回-1 表示字段存在但是没有过期时间
@@ -194,6 +204,11 @@ elseif operate == "hdel" then
   local zsetKey = KEYS[2]
   local field = ARGV[2]
   return hdel(key, zsetKey, field)
+elseif operate == "hdelGet" then
+  local key = KEYS[1]
+  local zsetKey = KEYS[2]
+  local field = ARGV[2]
+  return hdelGet(key, zsetKey, field)
 elseif operate == "expire" then
   local key = KEYS[1]
   local zsetKey = KEYS[2]
