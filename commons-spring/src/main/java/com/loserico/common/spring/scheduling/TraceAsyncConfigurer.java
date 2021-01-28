@@ -42,7 +42,14 @@ public class TraceAsyncConfigurer implements AsyncConfigurer {
 		executor.setMaxPoolSize(maxPoolSize);
 		executor.setThreadNamePrefix(threadNamePrefix);
 		executor.setTaskDecorator(new MDCTaskDecorator());
+		/*
+		 * 设置线程池关闭的时候等待所有任务完成
+		 */
 		executor.setWaitForTasksToCompleteOnShutdown(true);
+		/*
+		 * 设置线程池中任务的等待时间，如果超过这个时候还没有销毁就强制销毁，以确保应用最后能够被关闭，而不是阻塞住。
+		 */
+		executor.setAwaitTerminationSeconds(60);
 		executor.initialize();
 		return executor;
 	}

