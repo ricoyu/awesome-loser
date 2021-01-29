@@ -5,6 +5,7 @@ import com.loserico.json.jackson.JacksonUtils;
 import com.loserico.search.ElasticUtils;
 import com.loserico.search.enums.SortOrder;
 import com.loserico.search.exception.ElasticQueryException;
+import org.apache.lucene.search.TotalHits;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -18,7 +19,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.*;
 
 /**
  * <p>
@@ -50,12 +51,12 @@ public final class ElasticQueryBuilder {
 	/**
 	 * 分页相关, 起始位置
 	 */
-	private int from;
+	private Integer from;
 	
 	/**
 	 * 分页相关, 每页大小
 	 */
-	private int size;
+	private Integer size;
 	
 	/**
 	 * 排序 ASC DESC
@@ -245,6 +246,29 @@ public final class ElasticQueryBuilder {
 	}
 	
 	/**
+	 * 返回查询到的记录数, 查询不会真正返回文档
+	 * @return
+	 */
+	public long getCount() {
+		if (this.builder == null) {
+			throw new ElasticQueryException("请先设置QueryBuilder");
+		}
+		
+		SearchRequestBuilder builder = ElasticUtils.client.prepareSearch(indices)
+				.setQuery(this.builder)
+				.setSize(0) //count 不需要真正返回数据
+				.setFetchSource(false);
+		
+		SearchResponse response = builder.get();
+		TotalHits totalHits = response.getHits().getTotalHits();
+		if (totalHits == null) {
+			return 0L;
+		}
+		
+		return totalHits.value;
+	}
+	
+	/**
 	 * 作为查询的公共部分抽取出来
 	 *
 	 * @return
@@ -265,6 +289,13 @@ public final class ElasticQueryBuilder {
 				.setQuery(this.builder)
 				.setFetchSource(fetchSource);
 		sortOrders.forEach(sortOrder -> sortOrder.addTo(builder));
+		
+		if (from != null) {
+			builder.setFrom(from);
+		}
+		if (size != null) {
+			builder.setSize(size);
+		}
 		
 		SearchResponse response = builder.get();
 		SearchHits searchHits = response.getHits();

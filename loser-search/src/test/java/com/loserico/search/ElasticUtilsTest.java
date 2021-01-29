@@ -428,4 +428,26 @@ public class ElasticUtilsTest {
 		System.out.println("Alias deleted: " + deleted);
 		assertTrue(deleted);
 	}
+	
+	@Test
+	public void test() {
+		System.out.println(new Date(1611763200000L));
+		System.out.println(new Date(1614527999000L));
+	}
+	
+	@Test
+	public void testCount() {
+		Date begin = new Date(1611763200000L); //Thu Jan 28 00:00:00 CST 2021
+		Date end = new Date(1614527999000L); //Sun Feb 28 23:59:59 CST 2021
+		String[] indices =
+				new String[]{"event_2021_02_08", "event_2021_02_09", "event_2021_02_04", "event_2021_02_26", "event_2021_02_05", "event_2021_02_27", "event_2021_02_06", "event_2021_02_28", "event_2021_02_07", "event_2021_02_22", "event_2021_02_01", "event_2021_02_23", "event_2021_02_02", "event_2021_02_24", "event_2021_02_03", "event_2021_02_25", "event_2021_02_10", "event_2021_01_29", "event_2021_02_19", "event_2021_02_15", "event_2021_02_16", "event_2021_02_17", "event_2021_02_18", "event_2021_01_28", "event_2021_02_11", "event_2021_02_12", "event_2021_02_13", "event_2021_02_14", "event_2021_02_20", "event_2021_02_21", "event_2021_01_31", "event_2021_01_30"};
+		RangeQueryBuilder builder = rangeQuery("datetime")
+				.gte(begin)
+				.lte(end);
+		Long totalCount = ElasticUtils.query(indices)
+				.queryBuilder(builder)
+				.fetchSource(false)
+				.getCount();
+		System.out.println(totalCount);
+	}
 }

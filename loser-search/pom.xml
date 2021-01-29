@@ -16,6 +16,7 @@
     </parent>
     
     <properties>
+        <!--<elasticsearch.version>5.6.16</elasticsearch.version>-->
         <elasticsearch.version>7.1.1</elasticsearch.version>
         <!--<elasticsearch.version>7.6.2</elasticsearch.version>-->
     </properties>
@@ -59,6 +60,7 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- 原来封装的基于High Level API的代码需要这个, 暂时先留着-->
         <dependency>
             <groupId>org.elasticsearch.client</groupId>
             <artifactId>elasticsearch-rest-client</artifactId>
@@ -109,6 +111,12 @@
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.searchbox</groupId>
+            <artifactId>jest</artifactId>
+            <version>6.3.1</version>
         </dependency>
     </dependencies>
 
