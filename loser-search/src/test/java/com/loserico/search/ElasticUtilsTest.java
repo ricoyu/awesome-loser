@@ -31,8 +31,8 @@ import static org.junit.Assert.*;
  */
 public class ElasticUtilsTest {
 	
-	@Test
-	public void testInitialize() {
+	@BeforeClass
+	public static void testInitialize() {
 		Class<ElasticUtils> elasticUtilsClass = ElasticUtils.class;
 		assertThat(ElasticUtils.client != null);
 	}
@@ -412,5 +412,20 @@ public class ElasticUtilsTest {
 				.queryBuilder(multiMatchQueryBuilder)
 				.queryForList();
 		blogs.forEach(System.out::println);
+	}
+	
+	@Test
+	public void testCreateDelteAlias() {
+		boolean indexDeleted = ElasticUtils.deleteIndex("test-2021-01-28");
+		System.out.println("Index deleted: " + indexDeleted);
+		boolean indexCreated = ElasticUtils.createIndex("test-2021-01-28").create();
+		System.out.println("Index created: " + indexCreated);
+		assertTrue(indexCreated);
+		boolean created = ElasticUtils.createIndexAlias("test-2021-01-28", "test");
+		assertTrue(created);
+		System.out.println("Alias created: " + created);
+		boolean deleted = ElasticUtils.deleteIndexAlias("test-2021-01-28", "test");
+		System.out.println("Alias deleted: " + deleted);
+		assertTrue(deleted);
 	}
 }

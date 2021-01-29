@@ -11,6 +11,7 @@ import com.loserico.search.support.BulkResult;
 import com.loserico.search.support.UpdateResult;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.DocWriteResponse;
+import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesResponse;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
@@ -105,6 +106,10 @@ public final class ElasticUtils {
 	 * @return boolean 删除成功与否
 	 */
 	public static boolean deleteIndex(String... indices) {
+		if (!existsIndex(indices)) {
+			log.info("索引{}不存在", indices);
+			return false;
+		}
 		AcknowledgedResponse response = client.admin()
 				.indices()
 				.prepareDelete(indices)
@@ -124,6 +129,35 @@ public final class ElasticUtils {
 				.actionGet();
 		String[] indices = response.getAliases().keys().toArray(String.class);
 		return asList(indices);
+	}
+	
+	/**
+	 * 为Index创建别名
+	 *
+	 * @param index
+	 * @param alias
+	 * @return 创建成功与否
+	 */
+	public static boolean createIndexAlias(String index, String alias) {
+		IndicesAliasesRequestBuilder builder = client.admin().indices().prepareAliases().addAlias(index, alias);
+		AcknowledgedResponse response = builder.get();
+		return response.isAcknowledged();
+	}
+	
+	/**
+	 * 删除Index的别名
+	 *
+	 * @param index
+	 * @param alias
+	 * @return 删除成功与否
+	 */
+	public static boolean deleteIndexAlias(String index, String alias) {
+		AcknowledgedResponse response = client.admin()
+				.indices()
+				.prepareAliases()
+				.removeAlias(index, alias)
+				.get();
+		return response.isAcknowledged();
 	}
 	
 	/**

@@ -1,9 +1,13 @@
 package com.loserico.concurrent.queue;
 
+import com.loserico.common.lang.utils.StringUtils;
+import lombok.Data;
 import org.junit.Test;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+
+import static org.assertj.core.api.Assertions.*;
 
 /**
  * BlockingQueue分有界和无界两种队列
@@ -46,5 +50,51 @@ public class BlockingQueueTest {
 		//System.out.println(blockingQueue.offer("a"));
 		blockingQueue.put("a");
 		System.out.println("done");
+	}
+	
+	@Test
+	public void testRemote() {
+		User u1 = new User("rico");
+		User u2 = new User("俞雪华");
+		User u3 = new User("rico");
+		
+		BlockingQueue<User> queue = new LinkedBlockingQueue<>(12);
+		queue.add(u1);
+		queue.add(u2);
+		queue.add(u3);
+		
+		boolean remoted = queue.remove(new User("rico"));
+		boolean remoted2 = queue.remove(new User("rico"));
+		assertThat(queue.size() == 1);
+		System.out.println(queue.poll());
+		boolean remoted3 = queue.remove(new User("rico"));
+		assertThat(remoted3 == false);
+	}
+	
+	@Data
+	private class User{
+		private String name;
+		
+		public User(String name) {
+			this.name = name;
+		}
+		
+		@Override
+		public boolean equals(Object obj) {
+			if (obj == null) {
+				return false;
+			}
+			
+			if (!(obj instanceof User)) {
+				return false;
+			}
+			
+			return StringUtils.equalTo(this.name, ((User)obj).getName());
+		}
+		
+		@Override
+		public String toString() {
+			return this.name;
+		}
 	}
 }
