@@ -19,7 +19,6 @@ import com.loserico.common.lang.utils.IOUtils;
 import com.loserico.common.lang.utils.PrimitiveUtils;
 import com.loserico.json.jackson.JacksonUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
 import redis.clients.jedis.Pipeline;
@@ -57,6 +56,7 @@ import static com.loserico.json.jackson.JacksonUtils.toJson;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.*;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
  * Jedis 的工具类, key/value 支持任意类型
@@ -923,6 +923,19 @@ public final class JedisUtils {
 			}
 		}
 		
+		public static String rpop(String key) {
+			return jedisOperations.rpop(key);
+		}
+		
+		public static <T> T rpop(String key, Class<T> clazz) {
+			String value = jedisOperations.rpop(key);
+			if (isBlank(value)) {
+				return null;
+			}
+			
+			return JacksonUtils.toObject(value, clazz);
+		}
+		
 		/**
 		 * llen 返回指定列表的长度
 		 *
@@ -1045,7 +1058,7 @@ public final class JedisUtils {
 		 * @return long 本次添加的元素个数
 		 */
 		public static long sadd(String key, String element) {
-			if (StringUtils.isBlank(element)) {
+			if (isBlank(element)) {
 				return 0;
 			}
 			return jedisOperations.sadd(key, element);
@@ -1166,20 +1179,54 @@ public final class JedisUtils {
 		 * @param key
 		 * @return Long
 		 */
+		public static Long size(String key) {
+			return jedisOperations.zcard(key);
+		}
+		
+		/**
+		 * 返回zset的size
+		 *
+		 * @param key
+		 * @return Long
+		 */
 		public static Long zcard(String key) {
 			return jedisOperations.zcard(key);
 		}
 		
 		/**
 		 * 移除有序集合中给定的排名区间的所有成员
+		 * 按元素的索引下标
 		 *
 		 * @param key
-		 * @param start
-		 * @param end
-		 * @return Long
+		 * @param start 开始, 第一个是0
+		 * @param end   结束
+		 * @return Long 删除的个数
 		 */
 		public static Long zremRangeByRank(String key, long start, long end) {
 			return jedisOperations.zremByRank(key, start, end);
+		}
+		
+		/**
+		 * 同zremRangeByRank, 根据元素的index下标删除, index从0开始
+		 * @param key
+		 * @param start
+		 * @param end
+		 * @return Long 删除的个数
+		 */
+		public static Long remoteByIndex(String key, long start, long end) {
+			return jedisOperations.zremByRank(key, start, end);
+		}
+		
+		/**
+		 * 移除有序集key中, 所有score值介于min和max之间(包括等于min或max)的成员
+		 *
+		 * @param key
+		 * @param min
+		 * @param max
+		 * @return
+		 */
+		public static Long zremRangeByScore(String key, String min, String max) {
+			return jedisOperations.zremRangeByScore(key, min, max);
 		}
 		
 		public static Set<String> zrange(String key, long start, long end) {
@@ -1192,6 +1239,39 @@ public final class JedisUtils {
 					.map(json -> JacksonUtils.toObject(json, clazz))
 					.collect(toSet());
 			
+		}
+		
+		/**
+		 * 默认min, max都是包含的, 可以通过 (1 5 设置不包含最小值,
+		 * 如:
+		 * ZRANGEBYSCORE zset (1 5    返回 1 < score <= 5
+		 * ZRANGEBYSCORE zset (5 (10  返回 5 < score < 10
+		 *
+		 * @param key
+		 * @param min score最小值, 包含, -inf 表示负无穷大
+		 * @param max score最大值, 包含, +inf 表示正无穷大
+		 * @return Set<String>
+		 */
+		public static Set<String> zrangeByScore(String key, String min, String max) {
+			return jedisOperations.zrangeByScore(key, min, max);
+		}
+		
+		/**
+		 * 默认min, max都是包含的, 可以通过 (1 5 设置不包含最小值,
+		 * 如:
+		 * ZRANGEBYSCORE zset (1 5    返回 1 < score <= 5
+		 * ZRANGEBYSCORE zset (5 (10  返回 5 < score < 10
+		 *
+		 * @param key
+		 * @param min score最小值, 包含, -inf 表示负无穷大
+		 * @param max score最大值, 包含, +inf 表示正无穷大
+		 * @return Set<T>
+		 */
+		public static <T> Set<T> zrangeByScore(String key, String min, String max, Class<T> clazz) {
+			return jedisOperations.zrangeByScore(key, min, max)
+					.stream()
+					.map(json -> JacksonUtils.toObject(json, clazz))
+					.collect(Collectors.toSet());
 		}
 	}
 	

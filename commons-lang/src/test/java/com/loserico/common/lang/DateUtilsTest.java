@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
 
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.junit.Assert.*;
 
 /**
  * <p>
@@ -172,5 +173,14 @@ public class DateUtilsTest {
 			}
 			
 		}
+	}
+	
+	@Test
+	public void testReverse() {
+		Date date = new Date(1611715800000L);
+		String dateStr = DateUtils.format(date);
+		System.out.println(dateStr);
+		Date date1 = DateUtils.parse(dateStr);
+		assertTrue(date1.getTime() == date.getTime());
 	}
 }

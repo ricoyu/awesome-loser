@@ -1,22 +1,46 @@
 package com.loserico.search;
 
-import com.loserico.search.annotation.*;
-import com.loserico.search.builder.*;
-import com.loserico.search.enums.*;
-import com.loserico.search.support.*;
-import lombok.*;
-import org.elasticsearch.cluster.metadata.*;
-import org.elasticsearch.common.settings.*;
-import org.elasticsearch.index.query.*;
-import org.junit.*;
+import com.loserico.search.annotation.DocId;
+import com.loserico.search.builder.MappingBuilder;
+import com.loserico.search.enums.Analyzer;
+import com.loserico.search.enums.Dynamic;
+import com.loserico.search.enums.FieldType;
+import com.loserico.search.pojo.Movie;
+import com.loserico.search.support.BulkResult;
+import com.loserico.search.support.FieldDef;
+import com.loserico.search.support.UpdateResult;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.elasticsearch.cluster.metadata.IndexTemplateMetaData;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.BoostingQueryBuilder;
+import org.elasticsearch.index.query.DisMaxQueryBuilder;
+import org.elasticsearch.index.query.MultiMatchQueryBuilder;
+import org.elasticsearch.index.query.Operator;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.QueryStringQueryBuilder;
+import org.elasticsearch.index.query.RangeQueryBuilder;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
-import static com.loserico.json.jackson.JacksonUtils.*;
-import static java.util.Arrays.*;
+import static com.loserico.json.jackson.JacksonUtils.toJson;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
+import static org.elasticsearch.index.query.QueryBuilders.boostingQuery;
+import static org.elasticsearch.index.query.QueryBuilders.disMaxQuery;
+import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
+import static org.elasticsearch.index.query.QueryBuilders.multiMatchQuery;
+import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
+import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
+import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 import static org.junit.Assert.*;
 
 /**
@@ -415,6 +439,25 @@ public class ElasticUtilsTest {
 	}
 	
 	@Test
+	public void testQueryStringQuery() {
+		List<Object> objects = ElasticUtils.query("users")
+				.queryBuilder(queryStringQuery("Ruan AND Yiming").field("name"))
+				.queryForList();
+		objects.forEach(System.out::println);
+	}
+	
+	@Test
+	public void testQueryStringQuery2() {
+		//QueryStringQueryBuilder queryBuilder = queryStringQuery("name:Ruan AND Yiming");
+		QueryStringQueryBuilder queryBuilder = queryStringQuery("-Ruan +Yiming").field("name");
+		//QueryStringQueryBuilder queryBuilder = queryStringQuery("NOT Ruan Yiming").field("name");
+		List<Object> users = ElasticUtils.query("users")
+				.queryBuilder(queryBuilder)
+				.queryForList();
+		users.forEach(System.out::println);
+	}
+	
+	@Test
 	public void testCreateDelteAlias() {
 		boolean indexDeleted = ElasticUtils.deleteIndex("test-2021-01-28");
 		System.out.println("Index deleted: " + indexDeleted);
@@ -449,5 +492,51 @@ public class ElasticUtilsTest {
 				.fetchSource(false)
 				.getCount();
 		System.out.println(totalCount);
+	}
+	
+	@Test
+	public void testSuggest() {
+		ElasticUtils.suggester("articles");
+	}
+	
+	@Test
+	public void testTermQuery() {
+		/*
+		 * ES 不会对你输入的条件做任何的分词处理
+		 * 但是文档在被加入索引的时候, desc字段又是被分词了的, 大写字母转成了小写
+		 * 所以这里term query查desc字段的话必须用小写的iphone
+		 */
+		List<Object> objects = ElasticUtils.query("products")
+				.queryBuilder(termQuery("desc", "iphone"))
+				.queryForList();
+		objects.forEach(System.out::println);
+		
+		/*
+		 * 如果非要精确匹配大小写, 那么可以term query查desc.keyword
+		 * 这是ES的一个多字段特定, 默认会为text类型的字段创建一个keyword类型的子字段
+		 */
+		objects = ElasticUtils.query("products")
+				.queryBuilder(termQuery("desc.keyword", "iPhone"))
+				.queryForList();
+		objects.forEach(System.out::println);
+	}
+	
+	@Test
+	public void testConstantScoreQuery() {
+		List<Object> products = ElasticUtils.constantScoreQuery("products")
+				.queryBuilder(termQuery("productID.keyword", "JODL-X-1937-#pV7"))
+				.queryForList();
+		products.forEach(System.out::println);
+	}
+	
+	@Test
+	public void testMatchQuery() {
+		List<Movie> movies = ElasticUtils.query("movies")
+				//查询结果纪要包含matrix, 又要包含reload
+				.queryBuilder(matchQuery("title", "Matrix reloaded").operator(Operator.AND))
+				.type(Movie.class)
+				.queryForList();
+		
+		movies.forEach(movie -> System.out.println(toJson(movie)));
 	}
 }

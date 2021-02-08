@@ -106,8 +106,18 @@ public class JedisPoolOperations implements JedisOperations {
 	}
 	
 	@Override
+	public Long zremRangeByScore(String key, String min, String max) {
+		return operate(jedis -> jedis.zremrangeByScore(key, min, max));
+	}
+	
+	@Override
 	public Set<String> zrange(String key, long start, long end) {
 		return operate((jedis) -> jedis.zrange(key, start, end));
+	}
+	
+	@Override
+	public Set<String> zrangeByScore(String key, String min, String max) {
+		return operate(jedis -> jedis.zrangeByScore(key, min, max));
 	}
 	
 	@Override
@@ -163,6 +173,11 @@ public class JedisPoolOperations implements JedisOperations {
 	@Override
 	public List<byte[]> brpop(int timeout, byte[]... keys) {
 		return operate((jedis) -> jedis.brpop(timeout, keys));
+	}
+	
+	@Override
+	public String rpop(String key) {
+		return operate(jedis -> jedis.rpop(key));
 	}
 	
 	@Override

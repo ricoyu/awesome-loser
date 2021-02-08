@@ -62,7 +62,11 @@ public interface JedisOperations {
 	 */
 	public Long zremByRank(String key, long start, long end);
 	
+	public Long zremRangeByScore(String key, String min, String max);
+	
 	public Set<String> zrange(String key, long start, long end);
+	
+	public Set<String> zrangeByScore(String key, String min, String max);
 	
 	/**
 	 * Removes and returns the first element of the list stored at key.
@@ -122,6 +126,13 @@ public interface JedisOperations {
 	public List<String> brpop(final int timeout, final String... keys);
 	
 	public List<byte[]> brpop(final int timeout, final byte[]... keys);
+	
+	/**
+	 * 从list右侧弹出一个元素
+	 * @param key
+	 * @return String
+	 */
+	public String rpop(String key);
 	
 	/**
 	 * Returns the length of the list stored at key.

@@ -77,17 +77,6 @@ public final class HashUtils {
 		return crc & 0xFFFF;
 	}
 	
-	private static byte[] encode(final String str) {
-		try {
-			if (str == null) {
-				throw new IllegalArgumentException("value sent to redis cannot be null");
-			}
-			return str.getBytes(CHARSET_UTF8);
-		} catch (UnsupportedEncodingException e) {
-			throw new EncodeException(e);
-		}
-	}
-	
 	
 	/**
 	 * 使用FNV1_32_HASH算法计算服务器的Hash值
@@ -251,6 +240,17 @@ public final class HashUtils {
 	public static int toPositive(int number) {
 		//0x7fffffff的二进制表示: 01111111 11111111 11111111 11111111
 		return number & 0x7fffffff;
+	}
+	
+	private static byte[] encode(final String str) {
+		try {
+			if (str == null) {
+				throw new IllegalArgumentException("value sent to redis cannot be null");
+			}
+			return str.getBytes(CHARSET_UTF8);
+		} catch (UnsupportedEncodingException e) {
+			throw new EncodeException(e);
+		}
 	}
 	
 }

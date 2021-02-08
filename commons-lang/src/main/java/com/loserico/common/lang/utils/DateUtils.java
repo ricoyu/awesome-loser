@@ -1085,7 +1085,7 @@ public final class DateUtils {
 	 * @param source
 	 * @return long
 	 */
-	public static long toEpochMilis(String source) {
+	public static Long toEpochMilis(String source) {
 		LocalDateTime localDateTime = toLocalDateTime(source);
 		return toEpochMilis(localDateTime);
 	}
@@ -1097,8 +1097,11 @@ public final class DateUtils {
 	 * @param zoneId
 	 * @return long
 	 */
-	public static long toEpochMilis(String source, ZoneId zoneId) {
+	public static Long toEpochMilis(String source, ZoneId zoneId) {
 		LocalDateTime localDateTime = toLocalDateTime(source);
+		if (localDateTime == null) {
+			return null;
+		}
 		return localDateTime.atZone(zoneId).toInstant().toEpochMilli();
 	}
 	
@@ -1108,8 +1111,10 @@ public final class DateUtils {
 	 * @param localDateTime
 	 * @return
 	 */
-	public static long toEpochMilis(LocalDateTime localDateTime) {
-		Objects.nonNull(localDateTime);
+	public static Long toEpochMilis(LocalDateTime localDateTime) {
+		if (localDateTime == null) {
+			return null;
+		}
 		return localDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
 	}
 	

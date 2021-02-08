@@ -64,6 +64,13 @@ public class FieldDef {
 	private Analyzer searchAnalyzer;
 	
 	/**
+	 * https://www.elastic.co/guide/en/elasticsearch/reference/7.10/text.html#fielddata-mapping-param
+	 * 不建议开启, 会影响性能; 要对text类型做聚合, 排序可以使用多字段特性, 比如content.keyword
+	 * For example, a full text field like New York would get analyzed as new and york. To aggregate on these tokens requires field data.
+	 */
+	private boolean fieldData = false;
+	
+	/**
 	 * Elasticsearch多字段特性
 	 */
 	private List<FieldDef> fields = new ArrayList<>();
@@ -116,6 +123,13 @@ public class FieldDef {
 		 * 即可以用copyTo字段来实现搜索, 但是返回的source里面是没有copyTo指定的这个字段的
 		 */
 		private String copyTo;
+		
+		/**
+		 * https://www.elastic.co/guide/en/elasticsearch/reference/7.10/text.html#fielddata-mapping-param
+		 * 不建议开启, 会影响性能; 要对text类型做聚合, 排序可以使用多字段特性, 比如content.keyword
+		 * For example, a full text field like New York would get analyzed as new and york. To aggregate on these tokens requires field data.
+		 */
+		private boolean fieldData = false;
 		
 		/**
 		 * Elasticsearch多字段特性
@@ -193,6 +207,16 @@ public class FieldDef {
 			return this;
 		}
 		
+		/**
+		 * https://www.elastic.co/guide/en/elasticsearch/reference/7.10/text.html#fielddata-mapping-param
+		 * 不建议开启, 会影响性能; 要对text类型做聚合, 排序可以使用多字段特性, 比如content.keyword
+		 * For example, a full text field like New York would get analyzed as new and york. To aggregate on these tokens requires field data.
+		 */
+		public FieldDefBuilder fieldData(boolean fieldData) {
+			this.fieldData = fieldData;
+			return this;
+		}
+		
 		public FieldDef build() {
 			FieldDef fieldDef = new FieldDef(fieldName, fieldType);
 			//默认用DATE类型的默认格式
@@ -212,6 +236,7 @@ public class FieldDef {
 			fieldDef.searchAnalyzer = searchAnalyzer;
 			fieldDef.copyTo = copyTo;
 			fieldDef.fields = fields;
+			fieldDef.fieldData = fieldData;
 			
 			return fieldDef;
 		}
@@ -244,6 +269,9 @@ public class FieldDef {
 		}
 		if (copyTo != null) {
 			defMap.put("copy_to", copyTo);
+		}
+		if (fieldData) {
+			defMap.put("fieldData", fieldData);
 		}
 		if (fields != null && !fields.isEmpty()) {
 			Map<String, Object> fieldsMap = new HashMap<>(fields.size());

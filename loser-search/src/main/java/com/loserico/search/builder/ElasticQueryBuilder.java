@@ -5,6 +5,7 @@ import com.loserico.json.jackson.JacksonUtils;
 import com.loserico.search.ElasticUtils;
 import com.loserico.search.enums.SortOrder;
 import com.loserico.search.exception.ElasticQueryException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.lucene.search.TotalHits;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
@@ -31,6 +32,7 @@ import static java.util.stream.Collectors.*;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
+@Slf4j
 public final class ElasticQueryBuilder {
 	
 	/**
@@ -75,6 +77,7 @@ public final class ElasticQueryBuilder {
 	
 	/**
 	 * 是否要将Query转为constant_scre query, 以避免算分, 提高查询性能
+	 * 适用于有时候我们根本不关心 TF/IDF ，只想知道一个词是否在某个字段中出现过。
 	 */
 	private boolean constantScore = false;
 	
@@ -297,6 +300,7 @@ public final class ElasticQueryBuilder {
 			builder.setSize(size);
 		}
 		
+		log.debug(builder.toString());
 		SearchResponse response = builder.get();
 		SearchHits searchHits = response.getHits();
 		return searchHits.getHits();

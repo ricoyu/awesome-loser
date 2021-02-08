@@ -22,6 +22,16 @@ public class RedixUtilsTest {
 	
 	@Test
 	public void testHex2Int() {
-		System.out.println(RedixUtils.hex2Int("180"));
+		System.out.println(RedixUtils.hex2Int("0015"));
+	}
+	
+	@Test
+	public void testBinary2Int() {
+		System.out.println(RedixUtils.binaryToInt("11111111"));
+	}
+	
+	@Test
+	public void testhexToBinary() {
+		System.out.println(RedixUtils.hexToBinary("0015"));
 	}
 }

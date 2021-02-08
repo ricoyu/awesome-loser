@@ -7,6 +7,9 @@
             </pattern>
         </layout>
     </appender>
+    
+    <logger name="com.loserico.search.ElasticUtils" level="debug"/>
+    <logger name="com.loserico.search.builder.ElasticQueryBuilder" level="debug"/>
 
     <root level="INFO">
         <appender-ref ref="STDOUT" />

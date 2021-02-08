@@ -8,7 +8,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -51,6 +53,31 @@ public class JedisUtilsTests {
 		//JedisUtils.LIST.lpush("dga-metadata", IOUtils.readFileAsString("D:\\Work\\观安信息上海有限公司\\NTA资料\\测试数据\\dga-metadata-request.json"));
 		//JedisUtils.LIST.lpush("dga-metadata", IOUtils.readFileAsString("D:\\Work\\观安信息上海有限公司\\NTA资料\\测试数据\\dga-metadata-response.json"));
 		JedisUtils.LIST.lpush("dga-metadata", IOUtils.readFileAsString("D:\\Work\\观安信息上海有限公司\\NTA资料\\测试数据\\dga-metadata-response - failed.json"));
+	}
+	
+	@SneakyThrows
+	@Test
+	public void testIdsTraffic() {
+		int i = 0;
+		while (i < 10) {
+			NetFlowBean netFlowBean = new NetFlowBean();
+			netFlowBean.setBytesRecvd(ThreadLocalRandom.current().nextLong(1000));
+			netFlowBean.setMeshPort("ens224");
+			netFlowBean.setPktsDrooped(ThreadLocalRandom.current().nextLong(100));
+			netFlowBean.setPktsRecvd(ThreadLocalRandom.current().nextLong(1000));
+			netFlowBean.setTs(new Date().getTime());
+			//netFlowBean.setTs(DateUtils.toEpochMilis(LocalDateTime.of(2021, 1, 1, ThreadLocalRandom.current().nextInt(24), ThreadLocalRandom.current().nextInt(60))));
+			
+			JedisUtils.LIST.lpush("ids-traffic", netFlowBean);
+			//TimeUnit.SECONDS.sleep(1L);
+			i++;
+		}
+	}
+	
+	@Test
+	public void testRpopIdsTraffic() {
+		String brpop = JedisUtils.LIST.rpop("ids-traffic");
+		System.out.println(brpop);
 	}
 	
 	@Test

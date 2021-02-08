@@ -60,6 +60,10 @@ public class RedixUtils {
 		return new BigInteger(hex, 16).toString(2);
 	}
 	
+	public static int binaryToInt(String binaryStr) {
+		return Integer.parseInt(binaryStr, 2);
+	}
+	
 	/**
 	 * int型转二进制字符串
 	 * @param i
@@ -113,8 +117,8 @@ public class RedixUtils {
 	 * @return String
 	 */
 	private static String preCheck(String hex) {
-		if (hex == null || hex.trim().equals("")) {
-			throw new NullPointerException();
+		if (isBlank(hex)) {
+			throw new IllegalArgumentException("Can not be blank!");
 		}
 		
 		hex = hex.trim().toUpperCase();

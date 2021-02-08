@@ -67,7 +67,7 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	}
 	
 	/**
-	 * 表单提交数据校验错误，或者提交的数据转换成目标数据类型时候出错
+	 * 表单提交数据校验错误, 或者提交的数据转换成目标数据类型时候出错
 	 */
 	@SuppressWarnings("rawtypes")
 	@Override

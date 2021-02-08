@@ -321,6 +321,11 @@ public final class EnumUtils {
 			throw new IllegalArgumentException("Invalid value " + name + " for " + clazz.getName() + ", must be" + EnumSet.allOf(clazz));
 		}
 		try {
+			return Enum.valueOf(clazz, name);
+		} catch (IllegalArgumentException e) {
+			logger.trace("msg", e);
+		}
+		try {
 			return Enum.valueOf(clazz, name.toUpperCase());
 		} catch (IllegalArgumentException e) {
 			logger.trace("msg", e);

@@ -126,9 +126,4 @@ public final class HexUtils {
 		return (b >> (position)) & 1;
 	}
 	
-	public static void main(String[] args) {
-		System.out.println(Integer.toHexString(475));
-		System.out.println(Integer.toHexString(473));
-		System.out.println(Integer.toHexString(471));
-	}
 }

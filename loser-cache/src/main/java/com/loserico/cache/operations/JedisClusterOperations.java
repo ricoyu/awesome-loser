@@ -92,6 +92,11 @@ public class JedisClusterOperations implements JedisOperations {
 	}
 	
 	@Override
+	public Long zremRangeByScore(String key, String min, String max) {
+		return jedisCluster.zremrangeByScore(key, min, max);
+	}
+	
+	@Override
 	public Long zcard(String key) {
 		return jedisCluster.zcard(key);
 	}
@@ -149,6 +154,11 @@ public class JedisClusterOperations implements JedisOperations {
 	@Override
 	public List<byte[]> brpop(int timeout, byte[]... keys) {
 		return jedisCluster.brpop(timeout, keys);
+	}
+	
+	@Override
+	public String rpop(String key) {
+		return jedisCluster.rpop(key);
 	}
 	
 	@Override
@@ -259,6 +269,11 @@ public class JedisClusterOperations implements JedisOperations {
 	@Override
 	public Set<String> zrange(String key, long start, long end) {
 		return jedisCluster.zrange(key, start, end);
+	}
+	
+	@Override
+	public Set<String> zrangeByScore(String key, String min, String max) {
+		return jedisCluster.zrangeByScore(key, min, max);
 	}
 	
 	@Override

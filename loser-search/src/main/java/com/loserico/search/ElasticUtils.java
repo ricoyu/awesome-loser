@@ -28,6 +28,7 @@ import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
@@ -42,6 +43,11 @@ import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.index.reindex.DeleteByQueryRequestBuilder;
 import org.elasticsearch.indices.IndexTemplateMissingException;
+import org.elasticsearch.search.suggest.Suggest;
+import org.elasticsearch.search.suggest.SuggestBuilder;
+import org.elasticsearch.search.suggest.SuggestBuilders;
+import org.elasticsearch.search.suggest.term.TermSuggestion;
+import org.elasticsearch.search.suggest.term.TermSuggestionBuilder;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -53,7 +59,7 @@ import java.util.Optional;
 import static com.loserico.json.jackson.JacksonUtils.toJson;
 import static com.loserico.json.jackson.JacksonUtils.toObject;
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.*;
 
 /**
  * Elasticsearch 的工具类, 开箱即用的ES操作
@@ -566,7 +572,7 @@ public final class ElasticUtils {
 	}
 	
 	/**
-	 * 通用查询接口, 既可以基于值查询, 如: Term Query, Match Query
+	 * 通用查询接口, 既可以基于值查询, 如: Term Query, Match Query, Query string, Simple query string
 	 * 可以基于字段存在性查询, 比如 Exists Query
 	 * 给ElasticQueryBuilder传入不同的 QueryBuilder即可
 	 *
@@ -577,4 +583,40 @@ public final class ElasticUtils {
 		return ElasticQueryBuilder.instance(indices);
 	}
 	
+	/**
+	 * https://www.elastic.co/guide/cn/elasticsearch/guide/current/ignoring-tfidf.html
+	 * 
+	 * 即便是对Keyword 进行 Term 查询, 同样会被算分
+	 * 可以将查询转为 Filtering, 取消相关性算分的环节, 以提升性能
+	 * filter可以有效利用缓存
+	 * 
+	 * @param indices
+	 * @return
+	 */
+	public static ElasticQueryBuilder constantScoreQuery(String... indices) {
+		ElasticQueryBuilder builder = ElasticQueryBuilder.instance(indices);
+		builder.constantScore(true);
+		return builder;
+	}
+	
+	/**
+	 * https://www.programcreek.com/java-api-examples/?api=org.elasticsearch.search.suggest.term.TermSuggestionBuilder
+	 * https://www.elastic.co/guide/en/elasticsearch/client/java-rest/master/java-rest-high-search.html#_requesting_suggestions
+	 *
+	 * @param indices
+	 */
+	public static void suggester(String... indices) {
+		TermSuggestionBuilder suggestionBuilder = SuggestBuilders.termSuggestion("title_completion").suggestMode(TermSuggestionBuilder.SuggestMode.ALWAYS).text("luce");
+		SuggestBuilder suggestBuilder = new SuggestBuilder();
+		suggestBuilder.addSuggestion("article_suggester", suggestionBuilder);
+		
+		SearchResponse searchResponse = client.prepareSearch(indices).suggest(suggestBuilder).get();
+		
+		Suggest suggest = searchResponse.getSuggest();
+		TermSuggestion termSuggestion = suggest.getSuggestion("article_suggester");
+		for (TermSuggestion.Entry entry : termSuggestion.getEntries()) {
+				String suggestText = entry.getText().string();
+				System.out.println(suggestText);
+		}
+	}
 }
