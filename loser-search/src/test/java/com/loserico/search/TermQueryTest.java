@@ -65,7 +65,7 @@ public class TermQueryTest {
 				.queryBuilder(QueryBuilders.termQuery("productID", "jodl"))
 				.type(Product.class)
 				.fetchSource(true)
-				.selectOne();
+				.queryForOne();
 		System.out.println(product);
 	}
 	

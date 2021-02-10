@@ -191,7 +191,7 @@ public final class ElasticUtils {
 			return null;
 		}
 		
-		String id = ElasticCacheUtils.findId(doc);
+		String id = ElasticCacheUtils.getIdValue(doc);
 		return index(index, doc, id);
 	}
 	
@@ -282,7 +282,7 @@ public final class ElasticUtils {
 		docs.stream()
 				.filter(Objects::nonNull)
 				.map((doc) -> {
-					String id = ElasticCacheUtils.findId(doc);
+					String id = ElasticCacheUtils.getIdValue(doc);
 					return client.prepareIndex()
 							.setSource(toJson(doc), XContentType.JSON)
 							.setId(id);

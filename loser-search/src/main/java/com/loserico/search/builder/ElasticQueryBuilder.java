@@ -1,8 +1,10 @@
 package com.loserico.search.builder;
 
+import com.loserico.common.lang.transformer.Transformers;
 import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.json.jackson.JacksonUtils;
 import com.loserico.search.ElasticUtils;
+import com.loserico.search.cache.ElasticCacheUtils;
 import com.loserico.search.enums.SortOrder;
 import com.loserico.search.exception.ElasticQueryException;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +16,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -21,6 +24,7 @@ import java.util.Objects;
 
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.*;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
  * <p>
@@ -202,21 +206,36 @@ public final class ElasticQueryBuilder {
 			return Collections.emptyList();
 		}
 		
-		//先拿到所有的source
-		List<String> sources = asList(hits).stream()
-				.filter(Objects::nonNull)
-				.map(SearchHit::getSourceAsString)
-				.filter(Objects::nonNull)
-				.collect(toList());
+		//pojo是否标注了@DocId
+		Field id = ElasticCacheUtils.idField(resultType);
+		boolean hasDocId = id != null;
+		//@DocId标注的字段是String类型
+		boolean isStringId = hasDocId && id.getType() == String.class;
 		
-		//不需要封装成POJO的情况
-		if (resultType == null) {
-			return (List<T>) sources;
-		}
-		
-		return (List<T>) sources.stream()
-				.map(source -> JacksonUtils.toObject(source, resultType))
-				.collect(toList());
+		return (List<T>) asList(hits).stream()
+				.filter(Objects::nonNull)
+				.map((hit) -> {
+					//不需要转成POJO的情况
+					if (resultType == null) {
+						return hit.getSourceAsString();
+					}
+					
+					String source = hit.getSourceAsString();
+					if (isBlank(source)) {
+						return null;
+					}
+					
+					T obj = (T) JacksonUtils.toObject(source, resultType);
+					if (hasDocId) {
+						if (isStringId) {
+							ReflectionUtils.setField(id, obj, hit.getId());
+						} else {
+							ReflectionUtils.setField(id, obj, Transformers.convert(hit.getId(), id.getType()));
+						}
+					}
+					
+					return obj;
+				}).collect(toList());
 	}
 	
 	/**
@@ -225,7 +244,7 @@ public final class ElasticQueryBuilder {
 	 * @param <T>
 	 * @return T
 	 */
-	public <T> T selectOne() {
+	public <T> T queryForOne() {
 		SearchHit[] hits = getSearchHits();
 		
 		if (hits.length == 0) {
@@ -250,6 +269,7 @@ public final class ElasticQueryBuilder {
 	
 	/**
 	 * 返回查询到的记录数, 查询不会真正返回文档
+	 *
 	 * @return
 	 */
 	public long getCount() {
@@ -300,7 +320,7 @@ public final class ElasticQueryBuilder {
 			builder.setSize(size);
 		}
 		
-		log.debug(builder.toString());
+		log.debug("Query DSL:\n{}", builder.toString());
 		SearchResponse response = builder.get();
 		SearchHits searchHits = response.getHits();
 		return searchHits.getHits();

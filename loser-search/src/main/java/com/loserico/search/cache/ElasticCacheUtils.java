@@ -22,18 +22,19 @@ public final class ElasticCacheUtils {
 	private static FieldCache fieldCache = new FieldCache();
 	
 	/**
-	 * 如果对象是一个pojo(不是String, 不是List, 不是Map, 不是简单类型)<br/>
-	 * 那么看一下这个POJO中有没有加了@DocId注解的字段, 有的话把这个字段的值当作整片文档的id
+	 * 找给定的Class里面标注了@DocId注解的字段
 	 *
-	 * @param pojo
-	 * @return String
+	 * @param clazz
+	 * @return Field
 	 */
-	public static String findId(Object pojo) {
-		if (!ReflectionUtils.isPojo(pojo)) {
+	public static Field idField(Class clazz) {
+		if (clazz == null) {
+			return null;
+		}
+		if (!ReflectionUtils.isPojo(clazz)) {
 			return null;
 		}
 		
-		Class<?> clazz = pojo.getClass();
 		//从缓存中根据class获取@DocId字段
 		CacheItem cacheItem = fieldCache.get(clazz);
 		
@@ -45,10 +46,7 @@ public final class ElasticCacheUtils {
 			}
 			
 			//这个Class存在标注了@DocId的字段
-			Field field = cacheItem.getField();
-			Object value = ReflectionUtils.getFieldValue(field, pojo);
-			//字段值转成字符串类型
-			return Transformers.convert(value);
+			return cacheItem.getField();
 		}
 		
 		/*
@@ -64,9 +62,7 @@ public final class ElasticCacheUtils {
 			if (elasticId != null) {
 				//先把这个field对象加入缓存, 这样下次就不用通过反射再找一遍了
 				fieldCache.put(clazz, field);
-				Object value = ReflectionUtils.getFieldValue(field, pojo);
-				//只能由一个id字段, 找到了就不用再找了
-				return Transformers.convert(value);
+				return field;
 			}
 		}
 		
@@ -78,5 +74,50 @@ public final class ElasticCacheUtils {
 		fieldCache.put(clazz, null);
 		
 		return null;
+	}
+	
+	/**
+	 * 找给定的POJO里面标注了@DocId注解的字段
+	 *
+	 * @param pojo
+	 * @return Field
+	 */
+	public static Field idField(Object pojo) {
+		if (pojo == null) {
+			return null;
+		}
+		return idField(pojo.getClass());
+	}
+	
+	/**
+	 * 如果对象是一个pojo(不是String, 不是List, 不是Map, 不是简单类型)<br/>
+	 * 那么看一下这个POJO中有没有加了@DocId注解的字段, 有的话把这个字段的值当作整片文档的id
+	 *
+	 * @param pojo
+	 * @return String
+	 */
+	public static String getIdValue(Object pojo) {
+		Field id = idField(pojo);
+		if (id == null) {
+			return null;
+		}
+		Object value = ReflectionUtils.getFieldValue(id, pojo);
+		//字段值转成字符串类型
+		return Transformers.convert(value);
+	}
+	
+	/**
+	 * 给标注了@DocId的字段赋值
+	 *
+	 * @param pojo
+	 * @param value
+	 */
+	public static void setIdValue(Object pojo, String value) {
+		Field id = idField(pojo);
+		if (id == null) {
+			return;
+		}
+		
+		ReflectionUtils.setField(id, pojo, value);
 	}
 }

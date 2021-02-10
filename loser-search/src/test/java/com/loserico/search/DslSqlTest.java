@@ -1,10 +1,5 @@
 package com.loserico.search;
 
-import com.idss.common.datafactory.search.ESSearch5_2_2;
-import org.junit.Test;
-
-import java.util.List;
-
 /**
  * <p>
  * Copyright: (C), 2020-12-30 17:31
@@ -17,9 +12,9 @@ import java.util.List;
  */
 public class DslSqlTest {
 	
-	@Test
+	/*@Test
 	public void testHello() {
 		ESSearch5_2_2 search = new ESSearch5_2_2();
 		List<String> indexNames = search.getIndexNames(true);
-	}
+	}*/
 }

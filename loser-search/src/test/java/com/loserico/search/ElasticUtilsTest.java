@@ -36,6 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.boostingQuery;
 import static org.elasticsearch.index.query.QueryBuilders.disMaxQuery;
+import static org.elasticsearch.index.query.QueryBuilders.existsQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 import static org.elasticsearch.index.query.QueryBuilders.multiMatchQuery;
 import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
@@ -530,6 +531,28 @@ public class ElasticUtilsTest {
 	}
 	
 	@Test
+	public void testStructuredQuery() {
+		RangeQueryBuilder rangeQueryBuilder = rangeQuery("date").gte("now-3y");
+		List<Object> products = ElasticUtils.constantScoreQuery("products")
+				.queryBuilder(rangeQueryBuilder)
+				.type(com.loserico.search.pojo.Product.class)
+				.queryForList();
+		
+		products.forEach(p -> System.out.println(toJson(p)));
+	}
+	
+	@Test
+	public void testStructuredQuery2() {
+		List<com.loserico.search.pojo.Product> products = ElasticUtils.constantScoreQuery("products")
+				.queryBuilder(termQuery("avaliable", true))
+				.type(com.loserico.search.pojo.Product.class)
+				.queryForList();
+		products.stream()
+				.map(com.loserico.search.pojo.Product::isAvaliable)
+				.forEach(System.out::println);
+	}
+	
+	@Test
 	public void testMatchQuery() {
 		List<Movie> movies = ElasticUtils.query("movies")
 				//查询结果纪要包含matrix, 又要包含reload
@@ -538,5 +561,14 @@ public class ElasticUtilsTest {
 				.queryForList();
 		
 		movies.forEach(movie -> System.out.println(toJson(movie)));
+	}
+	
+	@Test
+	public void testExistsField() {
+		ElasticUtils.constantScoreQuery("products")
+				.queryBuilder(existsQuery("date"))
+				.type(com.loserico.search.pojo.Product.class)
+				.queryForList()
+				.forEach(System.out::println);
 	}
 }

@@ -1607,4 +1607,102 @@ public class ReflectionUtils {
 		return true;
 	}
 	
+	/**
+	 * 判断一个对象是否为POJO<p/>
+	 * 以下这些认为false:<ol>
+	 *  <li/>null
+	 *  <li/>String
+	 *  <li/>Integer
+	 *  <li/>Long
+	 *  <li/>Boolean
+	 *  <li/>Float
+	 *  <li/>Double
+	 *  <li/>Character
+	 *  <li/>Byte
+	 *  <li/>BigDecimal
+	 *  <li/>Map
+	 *  <li/>Collection
+	 * </ol>
+	 * @return
+	 */
+	public static boolean isPojo(Class clazz) {
+		if (clazz == null) {
+			return false;
+		}
+		
+		if (clazz == String.class) {
+			return false;
+		}
+		
+		if (Collection.class.isAssignableFrom(clazz)) {
+			return false;
+		}
+		
+		if (Map.class.isAssignableFrom(clazz)) {
+			return false;
+		}
+		
+		if (clazz == Integer.class) {
+			return false;
+		}
+		
+		if (clazz == Integer.TYPE) {
+			return false;
+		}
+		
+		if (clazz == Long.class) {
+			return false;
+		}
+		
+		if (clazz == Long.TYPE) {
+			return false;
+		}
+		
+		if (clazz == Boolean.class) {
+			return false;
+		}
+		
+		if (clazz == Boolean.TYPE) {
+			return false;
+		}
+		
+		if (clazz == Float.class) {
+			return false;
+		}
+		
+		if (clazz == Float.TYPE) {
+			return false;
+		}
+		
+		if (clazz == Double.class) {
+			return false;
+		}
+		
+		if (clazz == Double.TYPE) {
+			return false;
+		}
+		
+		if (clazz == Character.class) {
+			return false;
+		}
+		
+		if (clazz == Character.TYPE) {
+			return false;
+		}
+		
+		if (clazz == Byte.class) {
+			return false;
+		}
+		
+		if (clazz == Byte.TYPE) {
+			return false;
+		}
+		
+		if (clazz == BigDecimal.class) {
+			return false;
+		}
+		
+		return true;
+	}
+	
 }
