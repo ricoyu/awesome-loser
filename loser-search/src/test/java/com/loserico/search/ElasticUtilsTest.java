@@ -12,16 +12,20 @@ import com.loserico.search.support.UpdateResult;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.cluster.metadata.IndexTemplateMetaData;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.BoostingQueryBuilder;
 import org.elasticsearch.index.query.DisMaxQueryBuilder;
+import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.MultiMatchQueryBuilder;
 import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.elasticsearch.index.query.RangeQueryBuilder;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.Aggregations;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -361,6 +365,7 @@ public class ElasticUtilsTest {
 						.filter(QueryBuilders.termQuery("avaliable", true))
 						.mustNot(QueryBuilders.rangeQuery("price").lte(10))
 						.should(QueryBuilders.termQuery("productID.keyword", "JODL-X-1937-#pV7"))
+						.should(QueryBuilders.termQuery("productID.keyword", "XHDK-A-1293-#fJ3"))
 						.minimumShouldMatch(1)
 				)
 				.queryForList();
@@ -414,6 +419,16 @@ public class ElasticUtilsTest {
 				.queryBuilder(queryBuilder)
 				.queryForList();
 		news.forEach(System.out::println);
+	}
+	
+	@Test
+	public void testBoost() {
+		MatchQueryBuilder titleQueryBuilder = matchQuery("title", "apple,ipad").boost(4f);
+		MatchQueryBuilder contentQueryBuilder = matchQuery("content", "apple,ipad").boost(1f);
+		List<Object> blogs = ElasticUtils.query("blogs")
+				.queryBuilder(boolQuery().should(titleQueryBuilder).should(contentQueryBuilder))
+				.queryForList();
+		blogs.forEach(System.out::println);
 	}
 	
 	@Test
@@ -570,5 +585,14 @@ public class ElasticUtilsTest {
 				.type(com.loserico.search.pojo.Product.class)
 				.queryForList()
 				.forEach(System.out::println);
+	}
+	
+	@Test
+	public void testAgg() {
+		SearchResponse searchResponse = ElasticUtils.client.prepareSearch("cars")
+				.addAggregation(AggregationBuilders.count("popular_colors").field("color.keyword"))
+				.get();
+		Aggregations aggregations = searchResponse.getAggregations();
+		System.out.println(toJson(aggregations));
 	}
 }
