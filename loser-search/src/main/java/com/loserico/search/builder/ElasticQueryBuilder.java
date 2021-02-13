@@ -11,10 +11,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.lucene.search.TotalHits;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.common.lucene.search.function.CombineFunction;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.json.JSONObject;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -25,6 +28,7 @@ import java.util.Objects;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.*;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.elasticsearch.common.lucene.search.function.CombineFunction.MULTIPLY;
 
 /**
  * <p>
@@ -84,6 +88,24 @@ public final class ElasticQueryBuilder {
 	 * 适用于有时候我们根本不关心 TF/IDF ，只想知道一个词是否在某个字段中出现过。
 	 */
 	private boolean constantScore = false;
+	
+	/**
+	 * Elasticsearch 默认会以文档的相关度算分进行排序<br/>
+	 * 可以通过指定一个或多个字段进行排序<br/>
+	 * 使用相关度算分(Score)排序, 不能满足某些特定的条件: 无法针对相关度, 对排序实现更多的控制<br/>
+	 * <p/>
+	 * 可以在查询结束后, 对每一个匹配的文档进行一系列的重新算分, 根据新生成的分数进行排序<br/>
+	 * 提供了几种默认的计算分值的函数:
+	 * <ul>
+	 * <li/>Weight  为每一个文档设置一个简单而不被规范化的权重
+	 * <li/>Field Value Factor 使用该数值来修改_score, 例如将"热度"和"点赞数"作为算分的参考因素
+	 * <li/>Random Score 为每一个用户使用一个不同的, 随机算分结果
+	 * <li/>衰减函数 以某个字段的值为标准, 距离某个值越近, 得分越高
+	 * <li/>Script Score 自定义脚本完全控制所需逻辑
+	 */
+	private ScoreFunctionBuilder scoreFunctionBuilder;
+	
+	private CombineFunction boostMode = MULTIPLY;
 	
 	/**
 	 * 仅仅是因为不喜欢 new
@@ -163,6 +185,24 @@ public final class ElasticQueryBuilder {
 	 */
 	public ElasticQueryBuilder boost(float boost) {
 		this.boost = boost;
+		return this;
+	}
+	
+	/**
+	 * Function Score Query中用到
+	 * <ul>
+	 * <li/>Multiply(默认值)  算分与函数值的乘积
+	 * <li/>Sum  算分与函数的和
+	 * <li/>Min / Max   算分与函数取 最小/最大值
+	 * <li/>Replace   使用函数值取代算分
+	 * <ul/>
+	 *
+	 * @param boostMode
+	 * @return
+	 */
+	public ElasticQueryBuilder boostMode(CombineFunction boostMode) {
+		notNull(boostMode, "boostMode cannot be null!");
+		this.boostMode = boostMode;
 		return this;
 	}
 	
@@ -306,23 +346,34 @@ public final class ElasticQueryBuilder {
 		 */
 		if (this.constantScore) {
 			this.builder = QueryBuilders.constantScoreQuery(this.builder);
+		} else if (scoreFunctionBuilder != null) {
+			/*
+			 * Function Score Query 可以在查询结束后, 对每一个匹配的文档进行一系列的重新算分, 根据新生成的分数进行排序
+			 */
+			this.builder = QueryBuilders.functionScoreQuery(this.builder, scoreFunctionBuilder).boostMode(boostMode);
 		}
 		
-		SearchRequestBuilder builder = ElasticUtils.client.prepareSearch(indices)
+		SearchRequestBuilder searchRequestBuilder = ElasticUtils.client.prepareSearch(indices)
 				.setQuery(this.builder)
 				.setFetchSource(fetchSource);
-		sortOrders.forEach(sortOrder -> sortOrder.addTo(builder));
+		sortOrders.forEach(sortOrder -> sortOrder.addTo(searchRequestBuilder));
 		
 		if (from != null) {
-			builder.setFrom(from);
+			searchRequestBuilder.setFrom(from);
 		}
 		if (size != null) {
-			builder.setSize(size);
+			searchRequestBuilder.setSize(size);
 		}
 		
-		log.debug("Query DSL:\n{}", builder.toString());
-		SearchResponse response = builder.get();
+		log.debug("Query DSL:\n{}", new JSONObject(searchRequestBuilder.toString()).toString(2));
+		SearchResponse response = searchRequestBuilder.get();
 		SearchHits searchHits = response.getHits();
 		return searchHits.getHits();
+	}
+	
+	private static void notNull(Object obj, String msg) {
+		if (obj == null) {
+			throw new IllegalArgumentException(msg);
+		}
 	}
 }

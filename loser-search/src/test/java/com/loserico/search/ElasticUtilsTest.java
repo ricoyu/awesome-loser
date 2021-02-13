@@ -12,8 +12,12 @@ import com.loserico.search.support.UpdateResult;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.SneakyThrows;
+import org.elasticsearch.action.admin.indices.analyze.AnalyzeRequest;
+import org.elasticsearch.action.admin.indices.analyze.AnalyzeResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.cluster.metadata.IndexTemplateMetaData;
+import org.elasticsearch.common.lucene.search.function.CombineFunction;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.BoostingQueryBuilder;
@@ -24,6 +28,7 @@ import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.elasticsearch.index.query.RangeQueryBuilder;
+import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.junit.BeforeClass;
@@ -436,6 +441,7 @@ public class ElasticUtilsTest {
 		DisMaxQueryBuilder queryBuilder = disMaxQuery()
 				.add(matchQuery("title", "Brown fox"))
 				.add(matchQuery("body", "Brown fox"));
+		queryBuilder.tieBreaker(0f);
 		List<String> blogs = ElasticUtils.query("blogs")
 				.queryBuilder(queryBuilder)
 				.queryForList();
@@ -594,5 +600,118 @@ public class ElasticUtilsTest {
 				.get();
 		Aggregations aggregations = searchResponse.getAggregations();
 		System.out.println(toJson(aggregations));
+	}
+	
+	/**
+	 * apple pie
+	 * apple Mac
+	 * apple iPad
+	 */
+	@Test
+	public void testSearchAppleCompany() {
+		ElasticUtils.query("news")
+				.queryBuilder(boolQuery()
+						.must(matchQuery("content", "apple"))
+						.mustNot(matchQuery("content", "pie")))
+				.queryForList()
+				.forEach(System.out::println);
+	}
+	
+	/**
+	 * 包含pie的文档贡献负分, 所以排到后面
+	 * 演示了通过boosting控制排序
+	 */
+	@Test
+	public void testBoostingquery() {
+		MatchQueryBuilder positiveQuery = matchQuery("content", "apple");
+		MatchQueryBuilder negaitiveQuery = matchQuery("content", "pie");
+		BoostingQueryBuilder boostingQueryBuilder = boostingQuery(positiveQuery, negaitiveQuery);
+		ElasticUtils.query("news")
+				.queryBuilder(boostingQueryBuilder)
+				.queryForList().forEach(System.out::println);
+	}
+	
+	@Test
+	public void testMultiMatch() {
+		MultiMatchQueryBuilder multiMatchQueryBuilder = multiMatchQuery("Quick pets", "title", "body")
+				.tieBreaker(0.2f)
+				.minimumShouldMatch("20%");
+		ElasticUtils.query("blogs")
+				.queryBuilder(multiMatchQueryBuilder)
+				.queryForList()
+				.forEach(System.out::println);
+	}
+	
+	@Test
+	public void testMUltiMatchCrossField() {
+		ElasticUtils.deleteIndex("address");
+		ElasticUtils.index("address", "{\"street\": \"5 Poland Street\", \"city\": \"Lodon\", \"country\": \"United Kingdom\", \"postcode\": \"W1V 3DG\"}", "1");
+		ElasticUtils.index("address", "{\"street\": \"5 Poland Street\", \"city\": \"Berminhan\", \"country\": \"United Kingdom\", \"postcode\": \"W2V 3DG\"}", "2");
+		
+		MultiMatchQueryBuilder queryBuilder = multiMatchQuery("Poland Street W1V", "street", "city", "country", "postcode")
+				.type(MultiMatchQueryBuilder.Type.CROSS_FIELDS)
+				.operator(Operator.AND);
+		
+		List<Object> address = ElasticUtils.query("address")
+				.queryBuilder(queryBuilder)
+				.queryForList();
+		
+		address.forEach(System.out::println);
+	}
+	
+	@SneakyThrows
+	@Test
+	public void testHanLpAnalyzer() {
+		AnalyzeResponse response =
+				ElasticUtils.client.admin().indices().analyze(new AnalyzeRequest().text("美国会同意对台军售").analyzer(Analyzer.HANLP_NLP.toString())).get();
+		response.getTokens().forEach((token) -> {
+			System.out.println(token.getTerm());
+		});
+		System.out.println("------------------------");
+		
+		ElasticUtils.analyze(Analyzer.HANLP_STANDARD, "美国会同意对台军售").forEach(System.out::println);
+		System.out.println("------------------------");
+		ElasticUtils.analyze(Analyzer.HANLP, "美国会同意对台军售").forEach(System.out::println);
+		System.out.println("------------------------");
+		ElasticUtils.analyze(Analyzer.HANLP_N_SHORT, "美国会同意对台军售").forEach(System.out::println);
+		System.out.println("------------------------");
+	}
+	
+	@Test
+	public void testFunctionScoreQuery() {
+		ElasticUtils.deleteIndex("blogs");
+		ElasticUtils.index("blogs", "{\"title\": \"About popularity\", \"content\": \"In this post we will talk about...\", \"votes\": 0 }", "1");
+		ElasticUtils.index("blogs", "{\"title\": \"About popularity\", \"content\": \"In this post we will talk about...\", \"votes\": 100 }", "2");
+		ElasticUtils.index("blogs", "{\"title\": \"About popularity\", \"content\": \"In this post we will talk about...\", \"votes\": 1000000 }", "3");
+		
+		List<Object> objects = ElasticUtils.functionScoreQuery(ScoreFunctionBuilders.fieldValueFactorFunction("votes"), "blogs")
+				.boostMode(CombineFunction.SUM)
+				.queryBuilder(multiMatchQuery("popularity", "title", "content"))
+				.queryForList();
+		
+		objects.forEach(System.out::println);
+		System.out.println("-----------------");
+		ElasticUtils.query("blogs")
+				.queryBuilder(multiMatchQuery("popularity", "title", "content"))
+				.queryForList()
+				.forEach(System.out::println);
+	}
+	
+	@Test
+	public void testRandomScoreQuery() {
+		ElasticUtils.deleteIndex("blogs");
+		ElasticUtils.index("blogs", "{\"title\": \"About popularity\", \"content\": \"In this post we will talk about...\", \"votes\": 0 }", "1");
+		ElasticUtils.index("blogs", "{\"title\": \"About popularity\", \"content\": \"In this post we will talk about...\", \"votes\": 100 }", "2");
+		ElasticUtils.index("blogs", "{\"title\": \"About popularity\", \"content\": \"In this post we will talk about...\", \"votes\": 1000000 }", "3");
+		
+		ElasticUtils.functionScoreQuery(ScoreFunctionBuilders.randomFunction().seed(666).setField("content"), "blogs")
+				.queryBuilder(multiMatchQuery("popularity", "title", "content"))
+				.queryForList()
+				.forEach(System.out::println);
+		
+		ElasticUtils.functionScoreQuery(ScoreFunctionBuilders.randomFunction().seed(999).setField("content.keyword"), "blogs")
+				.queryBuilder(multiMatchQuery("popularity", "title", "content"))
+				.queryForList()
+				.forEach(System.out::println);
 	}
 }

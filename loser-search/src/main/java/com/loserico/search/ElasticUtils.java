@@ -1,11 +1,14 @@
 package com.loserico.search;
 
+import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.search.builder.ElasticQueryBuilder;
 import com.loserico.search.builder.IndexBuilder;
 import com.loserico.search.builder.IndexTemplateBuilder;
 import com.loserico.search.builder.MappingBuilder;
 import com.loserico.search.builder.MultiGetBuilder;
 import com.loserico.search.cache.ElasticCacheUtils;
+import com.loserico.search.enums.Analyzer;
+import com.loserico.search.exception.AnalyzeException;
 import com.loserico.search.factory.TransportClientFactory;
 import com.loserico.search.support.BulkResult;
 import com.loserico.search.support.UpdateResult;
@@ -14,6 +17,8 @@ import org.elasticsearch.action.DocWriteResponse;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesResponse;
+import org.elasticsearch.action.admin.indices.analyze.AnalyzeRequest;
+import org.elasticsearch.action.admin.indices.analyze.AnalyzeResponse;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
 import org.elasticsearch.action.admin.indices.mapping.get.GetFieldMappingsAction;
@@ -38,7 +43,9 @@ import org.elasticsearch.cluster.metadata.IndexTemplateMetaData;
 import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilder;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.index.reindex.DeleteByQueryRequestBuilder;
@@ -49,12 +56,14 @@ import org.elasticsearch.search.suggest.SuggestBuilders;
 import org.elasticsearch.search.suggest.term.TermSuggestion;
 import org.elasticsearch.search.suggest.term.TermSuggestionBuilder;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 
 import static com.loserico.json.jackson.JacksonUtils.toJson;
 import static com.loserico.json.jackson.JacksonUtils.toObject;
@@ -146,6 +155,22 @@ public final class ElasticUtils {
 	 */
 	public static boolean createIndexAlias(String index, String alias) {
 		IndicesAliasesRequestBuilder builder = client.admin().indices().prepareAliases().addAlias(index, alias);
+		AcknowledgedResponse response = builder.get();
+		return response.isAcknowledged();
+	}
+	
+	/**
+	 * 为Index创建别名
+	 * @param indices
+	 * @param alias
+	 * @param queryBuilder
+	 * @return
+	 */
+	public static boolean createIndexAlias(String[] indices, String alias, QueryBuilder queryBuilder) {
+		IndicesAliasesRequestBuilder builder = client.admin()
+				.indices()
+				.prepareAliases()
+				.addAlias(indices, alias, queryBuilder);
 		AcknowledgedResponse response = builder.get();
 		return response.isAcknowledged();
 	}
@@ -585,11 +610,11 @@ public final class ElasticUtils {
 	
 	/**
 	 * https://www.elastic.co/guide/cn/elasticsearch/guide/current/ignoring-tfidf.html
-	 * 
+	 * <p>
 	 * 即便是对Keyword 进行 Term 查询, 同样会被算分
 	 * 可以将查询转为 Filtering, 取消相关性算分的环节, 以提升性能
 	 * filter可以有效利用缓存
-	 * 
+	 *
 	 * @param indices
 	 * @return
 	 */
@@ -600,13 +625,59 @@ public final class ElasticUtils {
 	}
 	
 	/**
+	 * Elasticsearch 默认会以文档的相关度算分进行排序<br/>
+	 * 可以通过指定一个或多个字段进行排序<br/>
+	 * 使用相关度算分(Score)排序, 不能满足某些特定的条件: 无法针对相关度, 对排序实现更多的控制<br/>
+	 * <p/>
+	 * 可以在查询结束后, 对每一个匹配的文档进行一系列的重新算分, 根据新生成的分数进行排序<br/>
+	 * 提供了几种默认的计算分值的函数:
+	 * <ul>
+	 * <li/>Weight  为每一个文档设置一个简单而不被规范化的权重
+	 * <li/>Field Value Factor 使用该数值来修改_score, 例如将"热度"和"点赞数"作为算分的参考因素
+	 * <li/>Random Score 为每一个用户使用一个不同的, 随机算分结果
+	 * <li/>衰减函数 以某个字段的值为标准, 距离某个值越近, 得分越高
+	 * <li/>Script Score 自定义脚本完全控制所需逻辑
+	 * </ul>
+	 * <p/>
+	 * ScoreFunctionBuilder可以通过ScoreFunctionBuilders构造出来<p/>
+	 * 
+	 * random_score 一致性随机函数
+	 *
+	 * <ul>
+	 * <li/>使用场景  网站的广告需要提高展现率
+	 * <li/>具体需求  让每一个用户能看到不同的随机排名, 但是也希望同一个用户访问时, 结果的相对顺序保持一致(Constantly Random)
+	 * </ul>
+	 * <br/>
+	 * 实际使用random_score时, 只要同一个人使用同一个seed就可以保证这个人的多次查询顺序是一致的
+	 * 
+	 * https://www.elastic.co/guide/cn/elasticsearch/guide/current/function-score-query.html
+	 * https://www.elastic.co/guide/cn/elasticsearch/guide/current/random-scoring.html
+	 * 
+	 * @param scoreFunctionBuilder
+	 * @param indices
+	 * @return ElasticQueryBuilder
+	 */
+	public static ElasticQueryBuilder functionScoreQuery(ScoreFunctionBuilder scoreFunctionBuilder, String... indices) {
+		if (scoreFunctionBuilder == null) {
+			throw new IllegalArgumentException("scoreFunctionBuilder can not be null!");
+		}
+		if (indices == null || indices.length == 0) {
+			throw new IllegalArgumentException("indices can not be empty");
+		}
+		ElasticQueryBuilder builder = ElasticQueryBuilder.instance(indices);
+		ReflectionUtils.setField("scoreFunctionBuilder", builder, scoreFunctionBuilder);
+		return builder;
+	}
+	
+	/**
 	 * https://www.programcreek.com/java-api-examples/?api=org.elasticsearch.search.suggest.term.TermSuggestionBuilder
 	 * https://www.elastic.co/guide/en/elasticsearch/client/java-rest/master/java-rest-high-search.html#_requesting_suggestions
 	 *
 	 * @param indices
 	 */
 	public static void suggester(String... indices) {
-		TermSuggestionBuilder suggestionBuilder = SuggestBuilders.termSuggestion("title_completion").suggestMode(TermSuggestionBuilder.SuggestMode.ALWAYS).text("luce");
+		TermSuggestionBuilder suggestionBuilder =
+				SuggestBuilders.termSuggestion("title_completion").suggestMode(TermSuggestionBuilder.SuggestMode.ALWAYS).text("luce");
 		SuggestBuilder suggestBuilder = new SuggestBuilder();
 		suggestBuilder.addSuggestion("article_suggester", suggestionBuilder);
 		
@@ -615,8 +686,32 @@ public final class ElasticUtils {
 		Suggest suggest = searchResponse.getSuggest();
 		TermSuggestion termSuggestion = suggest.getSuggestion("article_suggester");
 		for (TermSuggestion.Entry entry : termSuggestion.getEntries()) {
-				String suggestText = entry.getText().string();
-				System.out.println(suggestText);
+			String suggestText = entry.getText().string();
+			System.out.println(suggestText);
 		}
+	}
+	
+	public static List<String> analyze(Analyzer analyzer, String... texts) {
+		if (texts == null || texts.length == 0) {
+			return Collections.emptyList();
+		}
+		
+		if (analyzer == null) {
+			throw new IllegalArgumentException("analyzer cannot be null");
+		}
+		
+		AnalyzeRequest analyzeRequest = new AnalyzeRequest().text(texts).analyzer(analyzer.toString());
+		AnalyzeResponse analyzeTokens = null;
+		try {
+			analyzeTokens = client.admin().indices().analyze(analyzeRequest).get();
+		} catch (InterruptedException | ExecutionException e) {
+			log.error("", e);
+			throw new AnalyzeException(e);
+		}
+		return analyzeTokens.getTokens()
+				.stream()
+				.map(AnalyzeResponse.AnalyzeToken::getTerm)
+				.distinct()
+				.collect(toList());
 	}
 }
