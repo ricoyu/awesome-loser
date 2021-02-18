@@ -206,7 +206,7 @@ public final class ElasticContextSuggestBuilder {
 	
 	/**
 	 * 执行查询, 返回suggest信息
-	 * @return
+	 * @return Set<String>
 	 */
 	public Set<String> suggest() {
 		Map<String, List<? extends ToXContent>> contexts = Collections.singletonMap(categoryName,
