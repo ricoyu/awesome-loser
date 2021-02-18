@@ -3,6 +3,7 @@ package com.loserico.search;
 import com.loserico.search.annotation.DocId;
 import com.loserico.search.builder.MappingBuilder;
 import com.loserico.search.enums.Analyzer;
+import com.loserico.search.enums.ContextType;
 import com.loserico.search.enums.Dynamic;
 import com.loserico.search.enums.FieldType;
 import com.loserico.search.pojo.Movie;
@@ -19,6 +20,7 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.cluster.metadata.IndexTemplateMetaData;
 import org.elasticsearch.common.lucene.search.function.CombineFunction;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.xcontent.ToXContent;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.BoostingQueryBuilder;
 import org.elasticsearch.index.query.DisMaxQueryBuilder;
@@ -31,26 +33,29 @@ import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.suggest.SuggestBuilders;
+import org.elasticsearch.search.suggest.completion.CompletionSuggestionBuilder;
+import org.elasticsearch.search.suggest.completion.context.CategoryQueryContext;
+import org.elasticsearch.search.suggest.phrase.PhraseSuggestionBuilder;
+import org.elasticsearch.search.suggest.term.TermSuggestionBuilder;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import static com.loserico.json.jackson.JacksonUtils.toJson;
+import static com.loserico.search.enums.FieldType.COMPLETION;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.boostingQuery;
-import static org.elasticsearch.index.query.QueryBuilders.disMaxQuery;
-import static org.elasticsearch.index.query.QueryBuilders.existsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
-import static org.elasticsearch.index.query.QueryBuilders.multiMatchQuery;
-import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
-import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termQuery;
+import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.elasticsearch.search.suggest.SortBy.FREQUENCY;
+import static org.elasticsearch.search.suggest.term.TermSuggestionBuilder.StringDistanceImpl.INTERNAL;
 import static org.junit.Assert.*;
 
 /**
@@ -518,7 +523,129 @@ public class ElasticUtilsTest {
 	
 	@Test
 	public void testSuggest() {
-		ElasticUtils.suggester("articles");
+		TermSuggestionBuilder suggestionBuilder =
+				SuggestBuilders.termSuggestion("body")
+						.suggestMode(TermSuggestionBuilder.SuggestMode.ALWAYS)
+						.text("luce")
+						.prefixLength(1)
+						.stringDistance(INTERNAL)
+						.sort(FREQUENCY);
+		
+		Set<String> suggesters = ElasticUtils.suggest("articles")
+				.name("term-suggestion")
+				.suggestionBuilder(suggestionBuilder)
+				.suggest();
+		
+		suggesters.forEach(System.out::println);
+	}
+	
+	@Test
+	public void testSuggest2() {
+		TermSuggestionBuilder suggestionBuilder =
+				SuggestBuilders.termSuggestion("body")
+						.suggestMode(TermSuggestionBuilder.SuggestMode.POPULAR)
+						.text("lucen hocks")
+						//.prefixLength(0)
+						.stringDistance(INTERNAL)
+						.sort(FREQUENCY);
+		
+		Set<String> suggesters = ElasticUtils.suggest("articles")
+				.name("term-suggestion")
+				.suggestionBuilder(suggestionBuilder)
+				.suggest();
+		
+		suggesters.forEach(System.out::println);
+		
+		ElasticUtils.termSuggest("lucen rock", "body", "articles")
+				.forEach(System.out::println);
+	}
+	
+	@Test
+	public void testPhraseSuggester() {
+		PhraseSuggestionBuilder suggestionBuilder = SuggestBuilders.phraseSuggestion("body")
+				.text("lucne and elasticsear rock")
+				.maxErrors(2f)
+				.confidence(0)
+				.highlight("<em>", "</em>");
+		Set<String> suggests = ElasticUtils.suggest("articles")
+				.suggestionBuilder(suggestionBuilder)
+				.name("phrase-suggestion")
+				.suggest();
+		
+		suggests.forEach(System.out::println);
+	}
+	
+	@Test
+	public void testCompletionSuggestion() {
+		ElasticUtils.deleteIndex("articles");
+		ElasticUtils.createIndex("articles")
+				.mapping(MappingBuilder.newInstance()
+						.field(FieldDef.builder("title_completion", COMPLETION).build()))
+				.create();
+		BulkResult bulkResult = ElasticUtils.bulkIndex("articles",
+				"{\"title_completion\": \"lucene is very cool\"}",
+				"{\"title_completion\": \"Elasticsearch builds on top of Lucene\"}",
+				"{\"title_completion\": \"Elasticsearch rocks\"}",
+				"{\"title_completion\": \"elastic is the company behind ELK stack\"}",
+				"{\"title_completion\": \"TLK stack rocks\"}");
+		CompletionSuggestionBuilder suggestionBuilder = SuggestBuilders.completionSuggestion("title_completion").prefix("e");
+		Set<String> suggests = ElasticUtils.suggest("articles")
+				.suggestionBuilder(suggestionBuilder)
+				.name("article_suggester")
+				.suggest();
+		
+		suggests.forEach(System.out::println);
+		System.out.println("-----------------");
+		
+		suggests = ElasticUtils.completionSuggest("e", "title_completion", "articles");
+		suggests.forEach(System.out::println);
+		
+	}
+	
+	@SneakyThrows
+	@Test
+	public void testContextCompletion() {
+		ElasticUtils.deleteIndex("comments");
+		
+		FieldDef fieldDef = FieldDef.builder("comment_autocomplete", COMPLETION)
+				.addContext(ContextType.CATEGORY, "comment_category")
+				.build();
+		
+		ElasticUtils.createIndex("comments")
+				.mapping(MappingBuilder.newInstance()
+						.field(fieldDef))
+				.create();
+		
+		ElasticUtils.index("comments", "{\"comment\": \"I love the star war movies\", \"comment_autocomplete\": {\"input\": [\"star wars\"], \"contexts\": {\"comment_category\": \"movies\"} } }");
+		ElasticUtils.index("comments", "{\"comment\": \"Where can Ifind a Starbucks\", \"comment_autocomplete\": {\"input\": [\"starbucks\"], \"contexts\": {\"comment_category\": \"coffee\"} } }");
+		
+		TimeUnit.SECONDS.sleep(1);
+		
+		Map<String, List<? extends ToXContent>> contexts = Collections.singletonMap("comment_category",
+				asList(CategoryQueryContext.builder()
+						.setCategory("coffee")
+						.build()));
+		CompletionSuggestionBuilder completionSuggestionBuilder = SuggestBuilders.completionSuggestion("comment_autocomplete")
+				.prefix("sta")
+				.contexts(contexts);
+		Set<String> suggests = ElasticUtils.suggest("comments")
+				.suggestionBuilder(completionSuggestionBuilder)
+				.name("contextSuggest")
+				.suggest();
+		suggests.forEach(System.out::println);
+	}
+	
+	@Test
+	public void testContextSuggestion() {
+		Set<String> suggests = ElasticUtils.contextSuggest("comments")
+				.name("contextSuggestName")
+				.category("movies")
+				.categoryName("comment_category")
+				.field("comment_autocomplete")
+				.prefix("sta")
+				.suggest();
+		
+		suggests.forEach(System.out::println);
 	}
 	
 	@Test

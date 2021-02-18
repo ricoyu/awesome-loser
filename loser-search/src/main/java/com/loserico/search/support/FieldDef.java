@@ -1,6 +1,7 @@
 package com.loserico.search.support;
 
 import com.loserico.search.enums.Analyzer;
+import com.loserico.search.enums.ContextType;
 import com.loserico.search.enums.FieldType;
 import lombok.Data;
 
@@ -75,6 +76,16 @@ public class FieldDef {
 	 */
 	private List<FieldDef> fields = new ArrayList<>();
 	
+	/**
+	 * 实现 Context Suggester 时需要加入上下文信息<br/>
+	 * 可以定义两种类型的 Context
+	 * <ul>
+	 * <li/>Category 任意的字符串
+	 * <li/>Geo      地理位置信息
+	 * <ul/>
+	 */
+	private List<Map<String, String>> contexts;
+	
 	public FieldDef(String fieldName, FieldType fieldType) {
 		this.fieldName = fieldName;
 		this.fieldType = fieldType;
@@ -135,6 +146,16 @@ public class FieldDef {
 		 * Elasticsearch多字段特性
 		 */
 		private List<FieldDef> fields = new ArrayList<>();
+		
+		/**
+		 * 实现 Context Suggester 时需要加入上下文信息<br/>
+		 * 可以定义两种类型的 Context
+		 * <ul>
+		 * <li/>Category 任意的字符串
+		 * <li/>Geo      地理位置信息
+		 * <ul/>
+		 */
+		private List<Map<String, String>> contexts;
 		
 		public FieldDefBuilder(String fieldName, FieldType fieldType) {
 			this.fieldName = fieldName;
@@ -217,6 +238,21 @@ public class FieldDef {
 			return this;
 		}
 		
+		/**
+		 * 实现 Context Suggester时, 需要设置Mapping, 加入Context信息
+		 * @param type
+		 * @param name
+		 * @return
+		 */
+		public FieldDefBuilder addContext(ContextType type, String name) {
+			if (contexts == null) {
+				contexts = new ArrayList<>();
+			}
+			
+			contexts.add(new FieldContext(type, name).toMap());
+			return this;
+		}
+		
 		public FieldDef build() {
 			FieldDef fieldDef = new FieldDef(fieldName, fieldType);
 			//默认用DATE类型的默认格式
@@ -237,6 +273,7 @@ public class FieldDef {
 			fieldDef.copyTo = copyTo;
 			fieldDef.fields = fields;
 			fieldDef.fieldData = fieldData;
+			fieldDef.contexts = contexts;
 			
 			return fieldDef;
 		}
@@ -279,6 +316,9 @@ public class FieldDef {
 				fieldsMap.put(fieldDef.fieldName, fieldDef.toDefMap());
 			}
 			defMap.put("fields", fieldsMap);
+		}
+		if (contexts != null) {
+			defMap.put("contexts", contexts);
 		}
 		
 		return defMap;

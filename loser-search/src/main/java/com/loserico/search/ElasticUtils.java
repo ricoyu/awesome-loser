@@ -1,7 +1,9 @@
 package com.loserico.search;
 
 import com.loserico.common.lang.utils.ReflectionUtils;
+import com.loserico.search.builder.ElasticContextSuggestBuilder;
 import com.loserico.search.builder.ElasticQueryBuilder;
+import com.loserico.search.builder.ElasticSuggestBuilder;
 import com.loserico.search.builder.IndexBuilder;
 import com.loserico.search.builder.IndexTemplateBuilder;
 import com.loserico.search.builder.MappingBuilder;
@@ -33,7 +35,6 @@ import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
@@ -50,10 +51,9 @@ import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.index.reindex.DeleteByQueryRequestBuilder;
 import org.elasticsearch.indices.IndexTemplateMissingException;
-import org.elasticsearch.search.suggest.Suggest;
-import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.elasticsearch.search.suggest.SuggestBuilders;
-import org.elasticsearch.search.suggest.term.TermSuggestion;
+import org.elasticsearch.search.suggest.completion.CompletionSuggestionBuilder;
+import org.elasticsearch.search.suggest.phrase.PhraseSuggestionBuilder;
 import org.elasticsearch.search.suggest.term.TermSuggestionBuilder;
 
 import java.util.Collections;
@@ -63,12 +63,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 import static com.loserico.json.jackson.JacksonUtils.toJson;
 import static com.loserico.json.jackson.JacksonUtils.toObject;
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.toList;
 
 /**
  * Elasticsearch 的工具类, 开箱即用的ES操作
@@ -161,6 +163,7 @@ public final class ElasticUtils {
 	
 	/**
 	 * 为Index创建别名
+	 *
 	 * @param indices
 	 * @param alias
 	 * @param queryBuilder
@@ -640,7 +643,7 @@ public final class ElasticUtils {
 	 * </ul>
 	 * <p/>
 	 * ScoreFunctionBuilder可以通过ScoreFunctionBuilders构造出来<p/>
-	 * 
+	 * <p>
 	 * random_score 一致性随机函数
 	 *
 	 * <ul>
@@ -649,10 +652,10 @@ public final class ElasticUtils {
 	 * </ul>
 	 * <br/>
 	 * 实际使用random_score时, 只要同一个人使用同一个seed就可以保证这个人的多次查询顺序是一致的
-	 * 
+	 * <p>
 	 * https://www.elastic.co/guide/cn/elasticsearch/guide/current/function-score-query.html
 	 * https://www.elastic.co/guide/cn/elasticsearch/guide/current/random-scoring.html
-	 * 
+	 *
 	 * @param scoreFunctionBuilder
 	 * @param indices
 	 * @return ElasticQueryBuilder
@@ -672,23 +675,90 @@ public final class ElasticUtils {
 	/**
 	 * https://www.programcreek.com/java-api-examples/?api=org.elasticsearch.search.suggest.term.TermSuggestionBuilder
 	 * https://www.elastic.co/guide/en/elasticsearch/client/java-rest/master/java-rest-high-search.html#_requesting_suggestions
+	 * https://www.elastic.co/guide/en/elasticsearch/reference/current/search-suggesters.html
+	 * https://www.elastic.co/guide/en/elasticsearch/reference/current/search-suggesters.html#context-suggester
 	 *
 	 * @param indices
 	 */
-	public static void suggester(String... indices) {
-		TermSuggestionBuilder suggestionBuilder =
-				SuggestBuilders.termSuggestion("title_completion").suggestMode(TermSuggestionBuilder.SuggestMode.ALWAYS).text("luce");
-		SuggestBuilder suggestBuilder = new SuggestBuilder();
-		suggestBuilder.addSuggestion("article_suggester", suggestionBuilder);
+	public static ElasticSuggestBuilder suggest(String... indices) {
+		return new ElasticSuggestBuilder(indices);
+	}
+	
+	/**
+	 * Term Suggest, suggest mode 是POPULAR
+	 *
+	 * @param text
+	 * @param field
+	 * @param indices
+	 * @return Set<String>
+	 */
+	public static Set<String> termSuggest(String text, String field, String... indices) {
+		ElasticSuggestBuilder elasticSuggestBuilder = new ElasticSuggestBuilder(indices);
 		
-		SearchResponse searchResponse = client.prepareSearch(indices).suggest(suggestBuilder).get();
+		TermSuggestionBuilder suggestionBuilder = SuggestBuilders.termSuggestion(field)
+				.suggestMode(TermSuggestionBuilder.SuggestMode.POPULAR)
+				.text(text);
 		
-		Suggest suggest = searchResponse.getSuggest();
-		TermSuggestion termSuggestion = suggest.getSuggestion("article_suggester");
-		for (TermSuggestion.Entry entry : termSuggestion.getEntries()) {
-			String suggestText = entry.getText().string();
-			System.out.println(suggestText);
-		}
+		String suggestName = UUID.randomUUID().toString();
+		return ElasticUtils.suggest(indices)
+				.name(suggestName)
+				.suggestionBuilder(suggestionBuilder)
+				.suggest();
+	}
+	
+	/**
+	 * Phrase Suggestion
+	 *
+	 * @param text
+	 * @param field
+	 * @param indices
+	 * @return Set<String>
+	 */
+	public static Set<String> phraseSuggest(String text, String field, String... indices) {
+		ElasticSuggestBuilder elasticSuggestBuilder = new ElasticSuggestBuilder(indices);
+		
+		PhraseSuggestionBuilder suggestionBuilder = SuggestBuilders.phraseSuggestion(field)
+				.text(text)
+				.maxErrors(2f)
+				.confidence(0)
+				.highlight("<em>", "</em>");
+		
+		String suggestName = UUID.randomUUID().toString();
+		return ElasticUtils.suggest(indices)
+				.name(suggestName)
+				.suggestionBuilder(suggestionBuilder)
+				.suggest();
+	}
+	
+	/**
+	 * Completion Suggestion 只支持前缀匹配<p/>
+	 * 对索引的Mapping有要求, 自动完成的字段, 其类型必须是completion
+	 *
+	 * @param prefix
+	 * @param field
+	 * @param indices
+	 * @return Set<String>
+	 */
+	public static Set<String> completionSuggest(String prefix, String field, String... indices) {
+		ElasticSuggestBuilder elasticSuggestBuilder = new ElasticSuggestBuilder(indices);
+		
+		CompletionSuggestionBuilder suggestionBuilder = SuggestBuilders.completionSuggestion(field)
+				.prefix(prefix);
+		
+		String suggestName = UUID.randomUUID().toString();
+		return ElasticUtils.suggest(indices)
+				.name(suggestName)
+				.suggestionBuilder(suggestionBuilder)
+				.suggest();
+	}
+	
+	/**
+	 * 基于上下文的自动完成
+	 *
+	 * @param indices
+	 */
+	public static ElasticContextSuggestBuilder contextSuggest(String... indices) {
+		return new ElasticContextSuggestBuilder(indices);
 	}
 	
 	public static List<String> analyze(Analyzer analyzer, String... texts) {

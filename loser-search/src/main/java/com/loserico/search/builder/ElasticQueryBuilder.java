@@ -31,6 +31,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.elasticsearch.common.lucene.search.function.CombineFunction.MULTIPLY;
 
 /**
+ * 查询生成器
  * <p>
  * Copyright: (C), 2021-01-11 9:23
  * <p>
@@ -365,7 +366,9 @@ public final class ElasticQueryBuilder {
 			searchRequestBuilder.setSize(size);
 		}
 		
-		log.debug("Query DSL:\n{}", new JSONObject(searchRequestBuilder.toString()).toString(2));
+		if (log.isDebugEnabled()) {
+			log.debug("Query DSL:\n{}", new JSONObject(searchRequestBuilder.toString()).toString(2));
+		}
 		SearchResponse response = searchRequestBuilder.get();
 		SearchHits searchHits = response.getHits();
 		return searchHits.getHits();
