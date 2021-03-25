@@ -19,8 +19,9 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * 基于Spring的RestTemplate实现
- * <p>
+ * 基于Spring的RestTemplate实现<p>
+ * 需要配置Bean: ApplicationContextHolder<p>
+ *     
  * Copyright: (C), 2020/5/1 11:50
  * <p>
  * <p>
@@ -97,7 +98,7 @@ public final class Requests {
 	 * @param <T>
 	 * @return T
 	 */
-	public static <T> T transmit(HttpServletRequest request, String destAddress, Class responseType, 
+	public static <T> T transmit(HttpServletRequest request, String destAddress, Class responseType,
 	                             Map<String, String> additionalHeaders, Map<String, String> additionalParameters) {
 		// 从request拿出所有的请求头, 构造HttpHeaders, 一起转发过去
 		HttpHeaders headers = new HttpHeaders();
@@ -183,6 +184,7 @@ public final class Requests {
 	/**
 	 * 如果url是带schema的, 比如HTTP, HTTPS, 那么不做说明
 	 * 否则补全schema部分
+	 *
 	 * @param url
 	 * @return
 	 */

@@ -303,6 +303,13 @@ public final class DateConstants {
 	public static final String FMT_DATETIME_FORMAT_EN_9 = "yyyy/M/d HH:mm:ss";
 	public static final DateTimeFormatter DTF_DATETIME_FORMAT_EN_9 = ofPattern(FMT_DATETIME_FORMAT_EN_9);
 	
+	/**
+	 * Http 请求头中的日期格式<p>
+	 * format for RFC 1123 date string -- "Sun, 06 Nov 1994 08:49:37 GMT"
+	 */
+	public final static String FMT_RFC1123_FORMAT = "EEE, dd MMM yyyy HH:mm:ss z";
+	public static final DateTimeFormatter DFT_DATETIME_FORMAT_RFC = ofPattern(FMT_RFC1123_FORMAT, ENGLISH);
+	
 	// ----------------------- 下面是时间类型 ---------------------------------------------------
 	
 	/**
@@ -345,6 +352,7 @@ public final class DateConstants {
 	
 	public static final TimeZone CHINA = TimeZone.getTimeZone("Asia/Shanghai");
 	public static final TimeZone GMT = TimeZone.getTimeZone("GMT");
+	public static final TimeZone UTC = TimeZone.getTimeZone("UTC");
 	public static final TimeZone PST = TimeZone.getTimeZone("America/Los_Angeles");
 	public static final TimeZone LONDON = TimeZone.getTimeZone("Europe/London");
 	public static final TimeZone INDIA = TimeZone.getTimeZone("Asia/Calcutta");
@@ -355,6 +363,7 @@ public final class DateConstants {
 	static {
 		TIME_ZONE_LOCALE_HASH_MAP.put(CHINA, Locale.CHINA);
 		TIME_ZONE_LOCALE_HASH_MAP.put(GMT, Locale.ENGLISH);
+		TIME_ZONE_LOCALE_HASH_MAP.put(UTC, Locale.ENGLISH);
 		TIME_ZONE_LOCALE_HASH_MAP.put(PST, Locale.ENGLISH);
 		TIME_ZONE_LOCALE_HASH_MAP.put(LONDON, Locale.ENGLISH);
 		TIME_ZONE_LOCALE_HASH_MAP.put(INDIA, Locale.ENGLISH);
@@ -362,4 +371,6 @@ public final class DateConstants {
 	}
 	
 	public static final ZoneId ZONE_ID_SHANG_HAI = ZoneId.of("Asia/Shanghai");
+	public static final ZoneId ZONE_ID_UTC = ZoneId.of("UTC");
+	public static final ZoneId ZONE_ID_GMT = ZoneId.of("GMT");
 }

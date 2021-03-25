@@ -1208,6 +1208,7 @@ public final class JedisUtils {
 		
 		/**
 		 * 同zremRangeByRank, 根据元素的index下标删除, index从0开始
+		 *
 		 * @param key
 		 * @param start
 		 * @param end
@@ -1338,8 +1339,26 @@ public final class JedisUtils {
 		 * @param ttl   field过期时间,秒
 		 * @return HSetStatus
 		 */
-		public static HSet hset(String key, Object field, Object value, int ttl) {
+		public static HSet hset(String key, Object field, Object value, long ttl) {
 			return hset(toBytes(key), toBytes(field), toBytes(value), ttl);
+		}
+		
+		/**
+		 * 设置Hash某个field值,同时指定其过期时间
+		 * <ul>返回
+		 * <li>UPDATED(0) 表示更新了map中的field
+		 * <li>INSERTED(1) 表示在map上新增了一个field
+		 * </ul>
+		 *
+		 * @param key
+		 * @param field
+		 * @param value
+		 * @param ttl
+		 * @param timeUnit
+		 * @return
+		 */
+		public static HSet hset(String key, Object field, Object value, long ttl, TimeUnit timeUnit) {
+			return hset(toBytes(key), toBytes(field), toBytes(value), timeUnit.toSeconds(ttl));
 		}
 		
 		/**
@@ -1355,7 +1374,7 @@ public final class JedisUtils {
 		 * @param ttl   field过期时间,秒
 		 * @return HSetStatus
 		 */
-		public static HSet hset(byte[] key, byte[] field, byte[] value, int ttl) {
+		public static HSet hset(byte[] key, byte[] field, byte[] value, long ttl) {
 			String hashSha = shaHashs.computeIfAbsent("hash.lua", x -> {
 				log.debug("Load script {}", "hash.lua");
 				if (jedisOperations instanceof JedisClusterOperations) {

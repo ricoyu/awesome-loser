@@ -1,18 +1,20 @@
 package com.loserico.search.builder;
 
 import com.loserico.json.jackson.JacksonUtils;
+import com.loserico.search.exception.DocumentGetException;
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetItemResponse;
+import org.elasticsearch.action.get.MultiGetRequest;
 import org.elasticsearch.action.get.MultiGetRequest.Item;
-import org.elasticsearch.action.get.MultiGetRequestBuilder;
 import org.elasticsearch.action.get.MultiGetResponse;
-import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
 
 import static java.util.stream.Collectors.toList;
 
@@ -27,15 +29,16 @@ import static java.util.stream.Collectors.toList;
  * @version 1.0
  */
 @Slf4j
+@Deprecated
 public final class MultiGetBuilder<T> {
 	
-	private TransportClient client;
+	private RestHighLevelClient client;
 	
 	private List<Item> items = new ArrayList<>();
 	
 	private Class<T> clazz;
 	
-	public MultiGetBuilder(TransportClient client) {
+	public MultiGetBuilder(RestHighLevelClient client) {
 		this.client = client;
 	}
 	
@@ -50,34 +53,32 @@ public final class MultiGetBuilder<T> {
 		return this;
 	}
 	
+	public MultiGetBuilder add(Map<String, String> params) {
+		for(Map.Entry<String, String> entry : params.entrySet()) {
+			items.add(new Item(entry.getKey(), entry.getValue()));
+		}
+		return this;
+	}
+	
 	public MultiGetBuilder resultType(Class<T> clazz) {
 		this.clazz = clazz;
 		return this;
 	}
 	
 	public List<T> request() {
-		MultiGetRequestBuilder multiGetRequestBuilder = client.prepareMultiGet();
-		items.forEach(item -> multiGetRequestBuilder.add(item));
-		
-		MultiGetResponse multiGetItemResponses = multiGetRequestBuilder.get();
-		MultiGetItemResponse[] itemResponses = multiGetItemResponses.getResponses();
-		List<String> resultJsons = Arrays.asList(itemResponses).stream()
-				.map((itemResponse) -> {
-					GetResponse response = itemResponse.getResponse();
-					if (response.isExists()) {
-						return response.getSourceAsString();
-					}
-					return null;
-				})
-				.filter(Objects::nonNull)
-				.collect(toList());
-		
-		if (clazz != null) {
-			return resultJsons.stream()
-					.map(json -> JacksonUtils.toObject(json, clazz))
-					.collect(toList());
+		MultiGetRequest request = new MultiGetRequest();
+		items.forEach(item -> request.add(item));
+		try {
+			MultiGetResponse response = client.mget(request, RequestOptions.DEFAULT);
+			MultiGetItemResponse[] responses = response.getResponses();
+			return Arrays.asList(responses).stream()
+					.map((multigetItemResponse) -> {
+						String source = multigetItemResponse.getResponse().getSourceAsString();
+						return JacksonUtils.toObject(source, clazz);
+					}).collect(toList());
+		} catch (IOException e) {
+			log.error("", e);
+			throw new DocumentGetException(e);
 		}
-		
-		return (List<T>) resultJsons;
 	}
 }

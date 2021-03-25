@@ -2,6 +2,9 @@ package com.loserico.regex;
 
 import org.junit.Test;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * <p>
  * Copyright: (C), 2021-02-04 14:40
@@ -38,5 +41,36 @@ public class RegexTest {
 		System.out.println("12345@xxx.ccc.yy".matches(regex_v1));
 		System.out.println("ricoyu520@gmail.com".matches(regex_v1));
 		System.out.println("yuxh@idss-cn.com".matches(regex_v1));
+	}
+	
+	@Test
+	public void testUrl() {
+		//String regex = "^((http[s]?|ftp):\\/)?\\/?([^:\\/\\s]+)((\\/\\w+)*\\/)([\\w\\-\\.]+[^#?\\s]+)(.*)?(#[\\w\\-]+)?$";
+		//String regex = "^((http[s]?|ftp):\\/\\/)?\\/?([^\\/\\.]+\\.)*?([^\\/\\.]+\\.[^:\\/\\s\\.]{2,3}(\\.[^:\\/\\s\\.]{2,3})?(:\\d+)?)($|\\/)([^#?\\s]+)?(.*?)?(#[\\w\\-]+)?$";
+		//String regex = "^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\\?([^#]*))?(#(.*))?";
+		//String regex = "^(([^:/?#]+):)?(//([^/?#:\\d]*)(:(\\d{2,}))?)?([^?#]*)(\\?([^#]*))?(#(.*))?";
+		String regex = "^(([^:/?#]+):)?(//([^/?#:]*)(:(\\d{2,}))?)?([^?#]*)(\\?([^#]*))?(#(.*))?";
+		String url = "http://192.168.100.101:9200/rico/_mapping";
+		//String url = "https://www.google.com";
+		//String url = "https://www.google.com:80/dir/1/2/search.html?arg=0-a&arg1=1-b&arg3-c#hash";
+		//String url = "https://www.google.com/dir/1/2/search.html?arg=0-a&arg1=1-b&arg3-c#hash";
+		
+		StringBuilder patternBuilder;
+		Pattern pattern = Pattern.compile(regex);
+		Matcher matcher = pattern.matcher(url);
+		if (matcher.matches()) {
+			System.out.println(matcher.group(0)); //完整url
+			System.out.println(matcher.group(1)); //https:               (([^:/?#]+):)?
+			System.out.println(matcher.group(2)); //https                ([^:/?#]+)
+			System.out.println(matcher.group(3)); ////www.google.com:80  (//([^/?#:]*)(:(\d{2,}))?)?
+			System.out.println(matcher.group(4)); //www.google.com       ([^/?#:]*):?
+			System.out.println(matcher.group(5)); //:80                  (:(\d{2,}))?
+			System.out.println(matcher.group(6)); //80                   (\d{2,})
+			System.out.println(matcher.group(7)); ///dir/1/2/search.html ([^?#]*)
+			System.out.println(matcher.group(8)); //?arg=0-a&arg1=1-b&arg3-c   (\?([^#]*))?
+			System.out.println(matcher.group(9)); //arg=0-a&arg1=1-b&arg3-c    ([^#]*)
+			System.out.println(matcher.group(10)); //#hash               (#(.*))?
+			System.out.println(matcher.group(11)); //hash                (.*)
+		}
 	}
 }

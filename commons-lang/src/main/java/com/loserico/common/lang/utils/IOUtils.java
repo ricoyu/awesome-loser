@@ -48,6 +48,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
+import static com.loserico.common.lang.utils.Assert.notNull;
 import static java.lang.Thread.currentThread;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
@@ -224,6 +225,40 @@ public class IOUtils {
 		}
 		
 		return new String(bytes, charset);
+	}
+	
+	/**
+	 * 读取文件为File对象
+	 *
+	 * @param dir
+	 * @param fileName
+	 * @return File
+	 */
+	public static File readFile(String dir, String fileName) {
+		notNull(dir, "dir 不能为null!");
+		notNull(fileName, "fileName 不能为null!");
+		return Paths.get(dir, fileName).toFile();
+	}
+	
+	/**
+	 * 读取文件为File对象
+	 *
+	 * @param dir
+	 * @param fileName
+	 * @param suffix
+	 * @return File
+	 */
+	public static File readFile(String dir, String fileName, String suffix) {
+		notNull(dir, "dir 不能为null!");
+		notNull(fileName, "fileName 不能为null!");
+		if (isNotBlank(suffix)) {
+			if (suffix.indexOf(".") != 0) {
+				suffix = "." + suffix;
+			}
+			return Paths.get(dir, fileName + suffix).toFile();
+		}
+		
+		return Paths.get(dir, fileName).toFile();
 	}
 	
 	public static String readFile(Path path) {
@@ -481,7 +516,7 @@ public class IOUtils {
 		ClassLoader classLoader = firstNonNull(currentThread().getContextClassLoader(), IOUtils.class.getClassLoader());
 		URL url = classLoader.getResource(fileName);
 		if (url == null && !fileName.startsWith(DIR_SEPARATOR_UNIX)) {
-			log.warn("Cannot find file {} under classpath", fileName);
+			log.debug("Cannot find file {} under classpath", fileName);
 			url = classLoader.getResource("/" + fileName);
 		}
 		if (url != null) {
@@ -1281,4 +1316,22 @@ public class IOUtils {
 		}
 	}
 	
+	/**
+	 * 返回文件的后缀, 包含前面的.号
+	 * @param file
+	 * @return String
+	 */
+	public static String suffic(File file) {
+		if (file == null) {
+			return null;
+		}
+		
+		String fileName = file.getName();
+		int index = fileName.lastIndexOf(".");
+		if (index != -1) {
+			return fileName.substring(index);
+		}
+		
+		return null;
+	}
 }

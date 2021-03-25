@@ -1,7 +1,7 @@
 package com.loserico.search;
 
 import com.loserico.search.ElasticUtilsTest.Product;
-import com.loserico.search.builder.MappingBuilder;
+import com.loserico.search.builder.ElasticMappingBuilder;
 import com.loserico.search.enums.FieldType;
 import com.loserico.search.enums.SortOrder;
 import com.loserico.search.support.BulkResult;
@@ -30,7 +30,7 @@ public class TermQueryTest {
 	public void testTermQuery() {
 		ElasticUtils.deleteIndex("products");
 		boolean created = ElasticUtils.createIndex("products")
-				.mapping(MappingBuilder.newInstance()
+				.mapping(ElasticMappingBuilder.newInstance()
 						.field(FieldDef.builder("desc", FieldType.KEYWORD)
 								.build()))
 				.create();

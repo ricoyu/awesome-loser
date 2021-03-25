@@ -24,6 +24,8 @@ public class Result {
 	 * 请求接口状态码
 	 */
 	private String code = "200";
+	
+	//status: success error
 
 	/**
 	 * message表示在API调用失败的情况下详细的错误信息, 这个信息可以由客户端直接呈现给用户

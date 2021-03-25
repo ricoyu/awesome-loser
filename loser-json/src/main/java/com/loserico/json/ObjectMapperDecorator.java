@@ -16,15 +16,14 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
+import com.loserico.common.lang.resource.PropertyReader;
 import com.loserico.common.lang.vo.Page;
 import com.loserico.common.lang.vo.Result;
 import com.loserico.json.jackson.deserializer.EnumDeserializer;
 import com.loserico.json.jackson.deserializer.LocalDateDeserializer;
 import com.loserico.json.jackson.deserializer.LocalDateTimeDeserializer;
 import com.loserico.json.jackson.deserializer.PageDeserializer;
-import com.loserico.json.jackson.deserializer.XssStringJsonDeserializer;
 import com.loserico.json.jackson.serializer.LocalDateTimeSerializer;
-import com.loserico.common.lang.resource.PropertyReader;
 import com.loserico.json.jackson.serializer.ResultSerializer;
 
 import java.text.SimpleDateFormat;
@@ -110,11 +109,11 @@ public class ObjectMapperDecorator {
 		 */
 		objectMapper.registerModule(new ParameterNamesModule(JsonCreator.Mode.PROPERTIES));
 		
-		//注册xss解析器
-		SimpleModule xssModule = new SimpleModule("XssStringJsonModule");
-		//xssModule.addSerializer(String.class, new XssStringJsonSerializer());
+		//注册xss解析器, 去掉注释的原因是request body如果有 < 这种, 都会被替换成&lt, 但是如果用户就是要提交<呢?
+		/*SimpleModule xssModule = new SimpleModule("XssStringJsonModule");
+		xssModule.addSerializer(String.class, new XssStringJsonSerializer());
 		xssModule.addDeserializer(String.class, new XssStringJsonDeserializer());
-		objectMapper.registerModule(xssModule);
+		objectMapper.registerModule(xssModule);*/
 		
 		return objectMapper;
 	}

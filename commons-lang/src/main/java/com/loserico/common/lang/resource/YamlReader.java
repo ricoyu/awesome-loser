@@ -1,5 +1,6 @@
 package com.loserico.common.lang.resource;
 
+import com.loserico.common.lang.transformer.Transformers;
 import com.loserico.common.lang.utils.IOUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -51,8 +52,16 @@ public class YamlReader implements YamlOps {
 	private Map<String, Object> yaml3 = null;
 	
 	/**
-	 * yml的文件名, 不带.yml后缀
-	 *
+	 * yml的文件名, 不带.yml后缀<p>
+	 * 推荐使用: YamlOps yamlOps = YamlProfileReaders.instance("application");<p>
+	 * 支持profile以及工作目录, classpath下不同优先级配置文件读取<p>
+	 * 
+	 * 优先级从高到低
+	 * <ol>
+	 * <li/>工作目录下config目录下的同名配置文件
+	 * <li/>工作目录下的同名配置文件
+	 * <li/>classpath下的同名配置文件
+	 * </ol>
 	 * @param resource
 	 */
 	public YamlReader(String resource) {
@@ -101,7 +110,13 @@ public class YamlReader implements YamlOps {
 	
 	@Override
 	public Integer getInt(String path) {
-		return (Integer) get(path);
+		try {
+			Object value = get(path);
+			return Transformers.convert(value, Integer.class);
+		} catch (Exception e) {
+			log.error("", e);
+		}
+		return null;
 	}
 	
 	@Override
@@ -116,7 +131,8 @@ public class YamlReader implements YamlOps {
 	
 	@Override
 	public String getString(String path) {
-		return (String) get(path);
+		Object value = get(path);
+		return Transformers.convert(value, String.class);
 	}
 	
 	@Override
@@ -151,7 +167,7 @@ public class YamlReader implements YamlOps {
 				for (int i = 0; i < paths.length; i++) {
 					String property = paths[i];
 					if (temp == null) {
-						log.info("属性 {} 不存在", property);
+						log.debug("属性 {} 不存在", property);
 						return null;
 					}
 					temp = ((Map) temp).get(property);

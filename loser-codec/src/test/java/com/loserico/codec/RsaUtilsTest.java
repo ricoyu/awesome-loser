@@ -2,10 +2,15 @@ package com.loserico.codec;
 
 import com.loserico.common.lang.resource.PropertyReader;
 import com.loserico.common.lang.utils.IOUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.UUID;
+
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
+import static org.hamcrest.CoreMatchers.*;
 
 /**
  * <p>
@@ -17,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
+@Slf4j
 public class RsaUtilsTest {
 	
 	@Test
@@ -90,5 +96,21 @@ public class RsaUtilsTest {
 		
 		String privateKeyStr = IOUtils.readClassPathFileAsString(privateKey);
 		System.out.println(privateKeyStr);
+	}
+	
+	@Test
+	public void testAPIEncrypting() {
+		String path = "/api/threat/detection/event/page/query";
+		String requestBody = "{\"pageNum\":1,\"pageSize\":20,\"sorts\":[\"-datetime\"],\"time\":{\"timeFlag\":2,\"startTime\":1614528000000,\"endTime\":1616637097986},\"queryString\":[],\"secondaryCondition\":[]}";
+		String token = UUID.randomUUID().toString().replaceAll("-", "");
+		long timestamp = System.currentTimeMillis();
+		
+		String plainText = path + "&" + token + "&" + timestamp + "&" + requestBody;
+		String encrypted = RsaUtils.publicEncrypt(plainText);
+		log.info("加密后的字符串\n{}", encrypted);
+		
+		String decrypted = RsaUtils.privateDecrypt(encrypted);
+		Assert.assertThat(decrypted, equalTo(plainText));
+		log.info("解密后的字符串\n{}", decrypted);
 	}
 }

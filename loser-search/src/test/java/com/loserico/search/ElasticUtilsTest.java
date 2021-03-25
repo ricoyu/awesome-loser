@@ -1,25 +1,31 @@
 package com.loserico.search;
 
+import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.search.annotation.DocId;
-import com.loserico.search.builder.MappingBuilder;
+import com.loserico.search.builder.ElasticMappingBuilder;
+import com.loserico.search.builder.Settings;
 import com.loserico.search.enums.Analyzer;
 import com.loserico.search.enums.ContextType;
+import com.loserico.search.enums.Direction;
 import com.loserico.search.enums.Dynamic;
 import com.loserico.search.enums.FieldType;
 import com.loserico.search.pojo.Movie;
 import com.loserico.search.support.BulkResult;
 import com.loserico.search.support.FieldDef;
+import com.loserico.search.support.FieldDefBuilder;
 import com.loserico.search.support.UpdateResult;
+import com.loserico.search.vo.PageResult;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.admin.indices.analyze.AnalyzeRequest;
 import org.elasticsearch.action.admin.indices.analyze.AnalyzeResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.cluster.metadata.IndexTemplateMetaData;
+import org.elasticsearch.common.io.stream.NamedWriteable;
 import org.elasticsearch.common.lucene.search.function.CombineFunction;
-import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.ToXContent;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.BoostingQueryBuilder;
@@ -31,8 +37,13 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders;
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
+import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
+import org.elasticsearch.search.aggregations.bucket.terms.StringTerms.Bucket;
+import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.elasticsearch.search.suggest.SuggestBuilders;
 import org.elasticsearch.search.suggest.completion.CompletionSuggestionBuilder;
 import org.elasticsearch.search.suggest.completion.context.CategoryQueryContext;
@@ -51,9 +62,12 @@ import java.util.concurrent.TimeUnit;
 
 import static com.loserico.json.jackson.JacksonUtils.toJson;
 import static com.loserico.search.enums.FieldType.COMPLETION;
+import static com.loserico.search.enums.FieldType.KEYWORD;
+import static com.loserico.search.enums.FieldType.TEXT;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.elasticsearch.search.aggregations.AggregationBuilders.*;
 import static org.elasticsearch.search.suggest.SortBy.FREQUENCY;
 import static org.elasticsearch.search.suggest.term.TermSuggestionBuilder.StringDistanceImpl.INTERNAL;
 import static org.junit.Assert.*;
@@ -68,6 +82,7 @@ import static org.junit.Assert.*;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
+@Slf4j
 public class ElasticUtilsTest {
 	
 	@BeforeClass
@@ -85,7 +100,7 @@ public class ElasticUtilsTest {
 	@Test
 	public void testCreateIndex() {
 		boolean created = ElasticUtils.createIndex("boduo")
-				.mapping(MappingBuilder.newInstance()
+				.mapping(ElasticMappingBuilder.newInstance()
 						.dynamic(Dynamic.TRUE)
 						.field("name", FieldType.TEXT)
 						.field("income", FieldType.LONG, false)
@@ -176,6 +191,16 @@ public class ElasticUtilsTest {
 		System.out.println(toJson(bulkResult));
 	}
 	
+	@Test
+	public void testSearchAfter() {
+		PageResult<String> pageResult = ElasticUtils.query("users")
+				.size(1)
+				.queryBuilder(matchAllQuery())
+				.addFieldSort("age", Direction.DESC)
+				.addFieldSort("_id")
+				.queryForPage();
+	}
+	
 	@Data
 	@NoArgsConstructor
 	@AllArgsConstructor
@@ -264,7 +289,7 @@ public class ElasticUtilsTest {
 	
 	@Test
 	public void testPutMapping() {
-		boolean acknowledged = ElasticUtils.putMapping("rico", MappingBuilder.newInstance()
+		boolean acknowledged = ElasticUtils.putMapping("rico", ElasticMappingBuilder.newInstance()
 				.copy("movies")
 				.dynamic(Dynamic.TRUE)
 				.field(FieldDef.builder("title", FieldType.KEYWORD)
@@ -275,7 +300,7 @@ public class ElasticUtilsTest {
 	
 	@Test
 	public void testPutMappingWithDeleteFieldDef() {
-		boolean acknowledged = ElasticUtils.putMapping("rico", MappingBuilder.newInstance()
+		boolean acknowledged = ElasticUtils.putMapping("rico", ElasticMappingBuilder.newInstance()
 				.copy("movies")
 				.dynamic(Dynamic.TRUE)
 				.field(FieldDef.builder("title", FieldType.KEYWORD)
@@ -287,7 +312,7 @@ public class ElasticUtilsTest {
 	
 	@Test
 	public void testPutMappingAddNewFields() {
-		ElasticUtils.putMapping("boduo", MappingBuilder.newInstance()
+		ElasticUtils.putMapping("boduo", ElasticMappingBuilder.newInstance()
 				.field("fans", FieldType.TEXT));
 	}
 	
@@ -304,7 +329,7 @@ public class ElasticUtilsTest {
 		
 		ElasticUtils.deleteIndex("titles");
 		boolean acknowledged = ElasticUtils.createIndex("titles")
-				.mapping(MappingBuilder.newInstance()
+				.mapping(ElasticMappingBuilder.newInstance()
 						.field(FieldDef.builder("title", FieldType.TEXT)
 								.fields(FieldDef.builder("std", FieldType.TEXT)
 										.analyzer(Analyzer.STANDARD)
@@ -320,10 +345,13 @@ public class ElasticUtilsTest {
 				.patterns("test*")
 				.version(0)
 				.settings(Settings.builder()
+						.numberOfShards(1)
+						.numberOfReplicas(1))
+				/*.settings(Settings.builder()
 						.put("number_of_shards", 1)
 						.put("number_of_replicas", 1)
-						.build())
-				.mappings(MappingBuilder.newInstance()
+						.build())*/
+				.mappings(ElasticMappingBuilder.newInstance()
 						.dynamic(Dynamic.TRUE)
 						.field("username", FieldType.KEYWORD)
 						.field("read_books", FieldType.TEXT)
@@ -468,7 +496,7 @@ public class ElasticUtilsTest {
 	@Test
 	public void testQueryStringQuery() {
 		List<Object> objects = ElasticUtils.query("users")
-				.queryBuilder(queryStringQuery("Ruan AND Yiming").field("name"))
+				.queryBuilder(queryStringQuery("Ruan Yiming").field("name"))
 				.queryForList();
 		objects.forEach(System.out::println);
 	}
@@ -482,6 +510,15 @@ public class ElasticUtilsTest {
 				.queryBuilder(queryBuilder)
 				.queryForList();
 		users.forEach(System.out::println);
+	}
+	
+	@Test
+	public void testQueryStringQueryAlertName() {
+		QueryStringQueryBuilder queryStringQueryBuilder = queryStringQuery("alert_name:cve.Apache Struts OGNL Command Execution CVE-2013-2251 redirect");
+		List<Object> results = ElasticUtils.query("event_2021_02_23")
+				.queryBuilder(queryStringQueryBuilder)
+				.queryForList();
+		results.forEach(System.out::println);
 	}
 	
 	@Test
@@ -579,7 +616,7 @@ public class ElasticUtilsTest {
 	public void testCompletionSuggestion() {
 		ElasticUtils.deleteIndex("articles");
 		ElasticUtils.createIndex("articles")
-				.mapping(MappingBuilder.newInstance()
+				.mapping(ElasticMappingBuilder.newInstance()
 						.field(FieldDef.builder("title_completion", COMPLETION).build()))
 				.create();
 		BulkResult bulkResult = ElasticUtils.bulkIndex("articles",
@@ -612,7 +649,7 @@ public class ElasticUtilsTest {
 				.build();
 		
 		ElasticUtils.createIndex("comments")
-				.mapping(MappingBuilder.newInstance()
+				.mapping(ElasticMappingBuilder.newInstance()
 						.field(fieldDef))
 				.create();
 		
@@ -840,5 +877,150 @@ public class ElasticUtilsTest {
 				.queryBuilder(multiMatchQuery("popularity", "title", "content"))
 				.queryForList()
 				.forEach(System.out::println);
+	}
+	
+	@Test
+	public void testClusterFailover() {
+		ElasticUtils.deleteIndex("tech_blogs");
+		boolean created = ElasticUtils.createIndex("tech_blogs")
+				.settings(Settings.builder()
+						.numberOfShards(3)
+						.numberOfReplicas(1)
+						.defaultPipeline("blog_pipeline"))
+				.create();
+		System.out.println(created);
+		
+		String id = ElasticUtils.index("tech_blogs", "{\n" +
+				"  \"title\": \"Introducing cloud computering\", \n" +
+				"  \"tags\": \"openstacks,k8s\",\n" +
+				"  \"content\": \"You know, for cloud\"\n" +
+				"}", "2");
+		assertThat(id).isEqualTo("2");
+		String doc = ElasticUtils.get("tech_blogs", "2");
+		assertNotNull(doc);
+		System.out.println(doc);
+	}
+	
+	/**
+	 * terms聚合结果格式
+	 * {
+	 * "key" : "CH",
+	 * "doc_count" : 691
+	 * }
+	 */
+	@Test
+	public void testTermsAgg() {
+		SearchResponse response = ElasticUtils.client.prepareSearch("employees")
+				.setSize(0)
+				.addAggregation(terms("jobs").field("job.keyword"))
+				.get();
+		Aggregations aggregations = response.getAggregations();
+		for (Aggregation aggregation : aggregations) {
+			Map<String, Object> metaData = aggregation.getMetaData();
+			String name = aggregation.getName();
+			System.out.println("Aggregation: " + name);
+			List<Bucket> buckets = ((StringTerms) aggregation).getBuckets();
+			for (Bucket bucket : buckets) {
+				String key = bucket.getKeyAsString();
+				long docCount = bucket.getDocCount();
+				System.out.println("Key: " + key + ", Doc Count: " + docCount);
+			}
+		}
+	}
+	
+	/**
+	 * 查看航班目的地的统计信息, 增加平均, 最高最低价格
+	 */
+	@Test
+	public void testFlightTermsMinMaxAvg() {
+		TermsAggregationBuilder termsAggregationBuilder = terms("flight_dest").field("DestCountry")
+				.subAggregation(avg("avg_price").field("AvgTicketPrice"))
+				.subAggregation(max("max_price").field("AvgTicketPrice"))
+				.subAggregation(min("min_price").field("AvgTicketPrice"));
+		
+		SearchResponse response = ElasticUtils.client.prepareSearch("kibana_sample_data_flights")
+				.setSize(0)
+				.addAggregation(termsAggregationBuilder)
+				.get();
+		
+		Aggregations aggregations = response.getAggregations();
+		for (Aggregation aggregation : aggregations) {
+			System.out.println("Aggregation: " + aggregation.getName());
+			List<Bucket> buckets = ((StringTerms) aggregation).getBuckets();
+			for (Bucket bucket : buckets) {
+				String key = bucket.getKeyAsString();
+				long docCount = bucket.getDocCount();
+				System.out.println("Key: " + key + ", Doc Count: " + docCount);
+				
+				Aggregations subAggs = bucket.getAggregations();
+				if (subAggs != null) {
+					for (Aggregation subAgg : subAggs) {
+						System.out.println(toJson(subAgg));
+						String name = subAgg.getName(); //max_price
+						String writeableName = ((NamedWriteable) subAgg).getWriteableName(); //max min 等聚合的类型
+						Object value = ReflectionUtils.getFieldValue(writeableName, subAgg);
+						if (writeableName.equals("avg")) {
+							value = ReflectionUtils.invokeMethod(subAgg, "getValue");
+						}
+						System.out.println(writeableName + ":" + value);
+					}
+				}
+			}
+		}
+	}
+	
+	@Test
+	public void testUpdateByQuery() {
+		ElasticUtils.updateByQuery("blogs");
+	}
+	
+	@SneakyThrows
+	@Test
+	public void testReindex() {
+		ElasticUtils.deleteIndex("blogs_fix");
+		ElasticMappingBuilder mappingBuilder = ElasticMappingBuilder.newInstance()
+				.field(FieldDefBuilder.builder("content", TEXT)
+						.fields(FieldDefBuilder.builder("english", TEXT)
+								.analyzer(Analyzer.ENGLISH)
+								.build())
+						.build())
+				.field("keyword", KEYWORD);
+		
+		
+		boolean created = ElasticUtils.createIndex("blogs_fix")
+				.mapping(mappingBuilder)
+				.create();
+		
+		BulkByScrollResponse response = ElasticUtils.reindex("blogs", "blogs_fix")
+				.filter(matchQuery("content", "Hadoop"))
+				.size(1000)
+				.slices(8)
+				.get();
+		TimeUnit.SECONDS.sleep(1);
+		List<Object> blogsFix = ElasticUtils.query("blogs_fix").queryForList();
+		blogsFix.forEach(System.out::println);
+	}
+	
+	@Test
+	public void testReindexHuge() {
+		boolean created = ElasticUtils.createIndex("event_xxx")
+				.mapping(ElasticMappingBuilder.newInstance().copy("event_2021_03_08"))
+				.create();
+		long begin = System.currentTimeMillis();
+		BulkByScrollResponse response = ElasticUtils.reindex("event_2021_03_08", "event_xxx")
+				.slices(8)
+				.size(1000)
+				.get();
+		long end = System.currentTimeMillis();
+		log.info("Took: {}", (end - begin));
+	}
+	
+	@Test
+	public void testHighLevelRestClient() {
+		/*RestHighLevelClient highLevelClient = ElasticUtils.highLevelClient;
+		ElasticsearchOperations elasticsearchOperations = new ElasticsearchOperations();
+		ReflectionUtils.setField("client", elasticsearchOperations, highLevelClient);
+		List<String> results = elasticsearchOperations.searchAll("event_2021_03_08");
+		System.out.println(results.size());*/
 	}
 }

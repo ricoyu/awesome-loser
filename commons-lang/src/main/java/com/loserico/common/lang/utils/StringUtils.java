@@ -2,6 +2,7 @@ package com.loserico.common.lang.utils;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
@@ -23,6 +24,7 @@ import java.util.function.Function;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -910,6 +912,7 @@ public abstract class StringUtils {
 	
 	/**
 	 * 移除尾部字符串
+	 *
 	 * @param str
 	 * @param trailingStr
 	 * @return String
@@ -920,6 +923,7 @@ public abstract class StringUtils {
 	
 	/**
 	 * 移除头部的字符串
+	 *
 	 * @param str
 	 * @param leadingStr
 	 * @return String
@@ -1035,6 +1039,7 @@ public abstract class StringUtils {
 	
 	/**
 	 * bytes 转 UTF8 编码字符串
+	 *
 	 * @param bytes
 	 * @return String
 	 */
@@ -1044,6 +1049,7 @@ public abstract class StringUtils {
 	
 	/**
 	 * bytes 转 指定编码字符串
+	 *
 	 * @param bytes
 	 * @return String
 	 */
@@ -1129,4 +1135,67 @@ public abstract class StringUtils {
 		
 		return StrSubstitutor.replace(template, params);
 	}
+	
+	/**
+	 * 用逗号对字符串分割, 每个子串都去除两边空格后返回
+	 *
+	 * @param s
+	 * @return String[]
+	 */
+	public static String[] split(String s) {
+		return split(s, ",");
+	}
+	
+	/**
+	 * 用逗号对字符串分割, 每个子串都去除两边空格后返回
+	 * @param s
+	 * @return List<String>
+	 */
+	public static List<String> split2List(String s) {
+		return split2List(s, ",");
+	}
+	
+	/**
+	 * 用spliter对字符串分割, 每个子串都去除两边空格后返回
+	 *
+	 * @param s
+	 * @param spliter
+	 * @return String[]
+	 */
+	public static String[] split(String s, String spliter) {
+		if (isBlank(s)) {
+			return new String[0];
+		}
+		
+		if (spliter == null) {
+			return new String[]{s};
+		}
+		
+		String[] tempResultArr = s.split(spliter);
+		String[] resultArr = new String[tempResultArr.length];
+		for (int i = 0; i < tempResultArr.length; i++) {
+			resultArr[i] = tempResultArr[i].trim();
+		}
+		
+		return resultArr;
+	}
+	
+	/**
+	 * 用separator对字符串分割, 每个子串都去除两边空格后返回
+	 *
+	 * @param s
+	 * @param separator
+	 * @return
+	 */
+	public static List<String> split2List(String s, String separator) {
+		if (isBlank(s)) {
+			return emptyList();
+		}
+		
+		return Splitter.on(separator)
+				.trimResults()
+				.omitEmptyStrings()
+				.splitToList(s);
+	}
+	
 }

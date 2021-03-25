@@ -44,6 +44,8 @@ public final class JedisOperationFactory {
 		
 		/*
 		 * 如果没有找到redis.properties, 那么先尝试从SpringBoot Redis配置里面获取配置信息
+		 * 如果redis.properties 和 SpringBoot的application.yml都没有, 就默认配置访问
+		 * localhost 6379 的Redis
 		 */
 		if (!propertyReader.resourceExists()) {
 			YamlOps yamlOps = YamlProfileReaders.instance("application");
@@ -52,23 +54,33 @@ public final class JedisOperationFactory {
 				int port = yamlOps.getInt("spring.redis.port", 6379);
 				String password = yamlOps.getString("spring.redis.password");
 				int database = yamlOps.getInt("spring.redis.database", 0);
-				int timeout = yamlOps.getInt("spring.redis.timeout", 5000);
+				
+				//spring redis里面这个配置项是connectionTimeout
+				int connectionTimeout = yamlOps.getInt("spring.redis.timeout", 50000);
+				
+				int maxTotal = yamlOps.getInt("spring.redis.jedis.pool.max-active", 50);
+				int maxIdle = yamlOps.getInt("spring.redis.jedis.pool.max-idle", 50);
+				int minIdle = yamlOps.getInt("spring.redis.jedis.pool.min-idle", 8);
 				
 				redisProperties = new RedisProperties();
 				redisProperties.setHost(host);
 				redisProperties.setPort(port);
 				redisProperties.setPassword(password);
 				redisProperties.setDatabase(database);
-				redisProperties.setTimeout(timeout);
+				
+				redisProperties.setConnectionTimeout(connectionTimeout);
+				
+				redisProperties.setMaxTotal(maxTotal);
+				redisProperties.setMaxIdle(maxIdle);
+				redisProperties.setMinIdle(minIdle);
+				
+				/*
+				 * 如果是采用spring-data-redis的配置的话, 暂时先只支持单节点模式
+				 */
+				JedisPool jedisPool = new JedisPoolFactory().createPool(redisProperties);
+				warmUp(jedisPool, minIdle);
+				return new JedisPoolOperations(jedisPool);
 			}
-		}
-		
-		/*
-		 * 如果是采用spring-data-redis的配置的话, 暂时先只支持单节点模式
-		 */
-		if (redisProperties != null) {
-			JedisPool jedisPool = new JedisPoolFactory().createPool(redisProperties);
-			return new JedisPoolOperations(jedisPool);
 		}
 		
 		/*
@@ -80,35 +92,44 @@ public final class JedisOperationFactory {
 		String sentinels = propertyReader.getString(SENTINELS);
 		
 		if (isNotEmpty(sentinels)) {
+			//TODO Sentinel里面创建Pool时, 还没有把所有可配置属性加进去
 			Pool<Jedis> pool = new JedisSentinelPoolFactory().createPool(propertyReader);
 			boolean warnmUp = propertyReader.getBoolean("redis.warmUp", true);
-			warmUp(pool);
+			if (warnmUp) {
+				warmUp(pool, propertyReader.getInt("redis.minIdle", 8));
+			}
 			return new JedisPoolOperations(pool);
 		}
 		
 		if (isNotEmpty(propertyReader.getString(CLUSTERS))) {
+			//TODO Cluster里面创建Pool时, 还没有把所有可配置属性加进去
 			JedisCluster jedisCluster = new JedisClusterPoolFactory().createCluster(propertyReader);
 			return new JedisClusterOperations(jedisCluster);
 		}
 		
+		//这是Redis单Instance
 		JedisPool jedisPool = new JedisPoolFactory().createPool(propertyReader);
 		boolean warnmUp = propertyReader.getBoolean("redis.warmUp", true);
-		warmUp(jedisPool);
+		if (warnmUp) {
+			warmUp(jedisPool, propertyReader.getInt("redis.minIdle", 8));
+		}
 		return new JedisPoolOperations(jedisPool);
 	}
 	
 	
 	/**
-	 * 预热JedisPool <p> 由于一些原因(例如超时时间设置较小原因), 有的项目在启动成功后会出现超时。 JedisPool定义最大资源数、最小空闲资源数时, 不会真的把Jedis连接放到池子里, 第一次使用时,
-	 * 池子没有资源使用, 会new Jedis, 使用后放到池子里, 可能会有一定的时间开销, 所以也可以考虑在JedisPool定义后, 为JedisPool提前进行预热, 例如以最小空闲数量为预热数量.
+	 * 预热JedisPool <p>
+	 * 由于一些原因(例如超时时间设置较小原因), 有的项目在启动成功后会出现超时。
+	 * JedisPool定义最大资源数、最小空闲资源数时, 不会真的把Jedis连接放到池子里,
+	 * 第一次使用时, 池子没有资源使用, 会new Jedis, 使用后放到池子里, 可能会有一定的时间开销,
+	 * 所以也可以考虑在JedisPool定义后, 为JedisPool提前进行预热, 例如以最小空闲数量为预热数量.
 	 */
-	public static void warmUp(Pool<Jedis> pool) {
+	public static void warmUp(Pool<Jedis> pool, int minIdle) {
 		// 不卡住, 不影响Spring的启动
 		new Thread(() -> {
-			int maxIdle = pool.getNumIdle();
-			List<Jedis> minIdleJedisList = new ArrayList<Jedis>(maxIdle);
+			List<Jedis> minIdleJedisList = new ArrayList<Jedis>(minIdle);
 			
-			for (int i = 0; i < maxIdle; i++) {
+			for (int i = 0; i < minIdle; i++) {
 				Jedis jedis = null;
 				try {
 					jedis = pool.getResource();
@@ -120,7 +141,7 @@ public final class JedisOperationFactory {
 				}
 			}
 			
-			for (int i = 0; i < maxIdle; i++) {
+			for (int i = 0; i < minIdle; i++) {
 				Jedis jedis = null;
 				try {
 					jedis = minIdleJedisList.get(i);
@@ -131,6 +152,6 @@ public final class JedisOperationFactory {
 				}
 			}
 			
-		}, "<<<< JedisPool warmup thread >>>>");
+		}, "<<<< JedisPool warmup thread >>>>").start();
 	}
 }

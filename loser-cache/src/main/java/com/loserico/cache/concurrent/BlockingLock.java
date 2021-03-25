@@ -3,12 +3,13 @@ package com.loserico.cache.concurrent;
 import com.loserico.cache.JedisUtils;
 import com.loserico.cache.exception.OperationNotSupportedException;
 import com.loserico.cache.listeners.MessageListener;
+import com.loserico.common.lang.concurrent.LoserThreadFactory;
 import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.JedisPubSub;
 
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.UUID;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
 
@@ -70,7 +71,9 @@ public class BlockingLock implements Lock {
 	/**
 	 * 负责定时刷新锁过期时间
 	 */
-	private Timer watchDog = null;
+	//private Timer watchDog = null;
+	
+	private ScheduledExecutorService watchDog = null;
 	
 	/**
 	 * 当前线程自旋获取锁失败后, 会先订阅notifyChannel, 然后进入阻塞状态;
@@ -86,7 +89,7 @@ public class BlockingLock implements Lock {
 	public BlockingLock(String key) {
 		this.key = String.format(LOCK_FORMAT, key);
 		this.notifyChannel = String.format(NOTIFY_CHANNEL_FORMAT, key);
-		this.value = UUID.randomUUID().toString();
+		this.value = Thread.currentThread().getName() + UUID.randomUUID().toString();
 	}
 	
 	/**
@@ -105,28 +108,28 @@ public class BlockingLock implements Lock {
 		 */
 		boolean locked = JedisUtils.setnx(key, value, defaultTimeout, TimeUnit.SECONDS);
 		if (locked) {
-			log.info(">>>>>> {} 获取锁成功 <<<<<<", threadName);
+			log.debug(">>>>>> {} 获取锁成功 <<<<<<", threadName);
 			this.locked = true;
 			startWatchDog();
 			return;
 		}
 		
-		log.info(">>>>>> {} 第一次没能成功获取锁, 开始自旋获取锁 <<<<<<", threadName);
+		log.debug(">>>>>> {} 第一次没能成功获取锁, 开始自旋获取锁 <<<<<<", threadName);
 		/**
 		 * 尝试maxTimedSpins次自旋获取锁, 加锁成功则启动watchDog并返回
 		 */
 		while (i++ < maxTimedSpins) {
 			locked = JedisUtils.setnx(key, value, defaultTimeout, TimeUnit.SECONDS);
 			if (locked) {
-				log.info(">>>>>> {} 自旋{}次获取锁成功 <<<<<<", threadName, i);
+				log.debug(">>>>>> {} 自旋{}次获取锁成功 <<<<<<", threadName, i);
 				this.locked = true;
 				startWatchDog();
 				return;
 			}
-			log.info(">>>>>> {} 自旋{}次获取锁失败 <<<<<<", threadName, i);
+			log.debug(">>>>>> {} 自旋{}次获取锁失败 <<<<<<", threadName, i);
 		}
 		
-		log.info(">>>>>> {} 自旋失败, 进入阻塞等待 <<<<<<", threadName);
+		log.debug(">>>>>> {} 自旋失败, 进入阻塞等待 <<<<<<", threadName);
 		/**
 		 * 循环获取锁, 获取加锁成功则启动watchDog并返回
 		 * 加锁失败挂起线程
@@ -142,13 +145,13 @@ public class BlockingLock implements Lock {
 			
 			locked = JedisUtils.setnx(key, value, defaultTimeout, TimeUnit.SECONDS);
 			if (locked) {
-				log.info(">>>>>> {} 醒来后终获成功 <<<<<<", threadName);
+				log.debug(">>>>>> {} 醒来后终获成功 <<<<<<", threadName);
 				this.locked = true;
 				stopListener();
 				startWatchDog();
 				return;
 			}
-			log.info("{} 醒来后仍然没有获取到锁, 准备再次进入阻塞状态", threadName);
+			log.debug("{} 醒来后仍然没有获取到锁, 准备再次进入阻塞状态", threadName);
 		}
 	}
 	
@@ -168,7 +171,7 @@ public class BlockingLock implements Lock {
 			stopWatchDog();
 			throw new OperationNotSupportedException("解锁失败了哟");
 		}
-		log.info(">>>>>> {} 解锁成功 <<<<<<", threadName);
+		log.debug(">>>>>> {} 解锁成功 <<<<<<", threadName);
 		
 		locked = false;
 		
@@ -176,12 +179,12 @@ public class BlockingLock implements Lock {
 		 * 通知其他线程可以重新获取锁了, 把当前线程名作为消息发出去, 方便记log
 		 */
 		JedisUtils.publish(notifyChannel, Thread.currentThread().getName());
-		log.info(">>>>>> {} 发布消息, 现在其他线程可以重新获取锁 <<<<<<", threadName);
+		log.debug(">>>>>> {} 发布消息, 现在其他线程可以重新获取锁 <<<<<<", threadName);
 		/*
 		 * 关掉看门狗
 		 */
 		stopWatchDog();
-		log.info(">>>>>> {} shutdown Watch dog <<<<<<", threadName);
+		log.debug(">>>>>> {} shutdown Watch dog <<<<<<", threadName);
 	}
 	
 	@Override
@@ -191,7 +194,7 @@ public class BlockingLock implements Lock {
 	
 	@Override
 	public void unlockAnyway() {
-		log.info("Not implemented yet!");
+		log.debug("Not implemented yet!");
 	}
 	
 	/**
@@ -225,37 +228,35 @@ public class BlockingLock implements Lock {
 		
 		@Override
 		public void onMessage(String channel, String message) {
-			log.info("收到 {} 发来的消息, 准备唤醒 {}", message, thread.getName());
+			log.debug("收到 {} 发来的消息, 准备唤醒 {}", message, thread.getName());
 			LockSupport.unpark(thread);
 		}
 	}
 	
 	/**
 	 * 定时刷新锁的过期时间
+	 * 注意通过Idea debug的时候, 断点Suspend要设为Thread级别, 不然watchDog线程不会运行, 导致锁一会就失效了
 	 */
 	private void startWatchDog() {
 		if (watchDog == null) {
-			watchDog = new Timer("Loser Cache key renewval watch dog");
+			watchDog = new ScheduledThreadPoolExecutor(1, new LoserThreadFactory("Loser Cache key renewval watch dog"));
 		}
-		watchDog.schedule(new TimerTask() {
-			@Override
-			public void run() {
-				//如果key已经过期了, 那么watchDog就不用再去刷新key过期时间了
-				boolean isSuccess = JedisUtils.expire(key, defaultTimeout, TimeUnit.SECONDS);
-				if (!isSuccess) {
-					log.info("Key {} already expired, Watch dog stop refresh", key);
-					watchDog.cancel();
-					watchDog = null;
-				} else {
-					log.info("Watch dog refresh lock {} timeout to default {} seconds", key, defaultTimeout);
-				}
+		watchDog.scheduleAtFixedRate(() -> {
+			//如果key已经过期了, 那么watchDog就不用再去刷新key过期时间了
+			boolean isSuccess = JedisUtils.expire(key, defaultTimeout, TimeUnit.SECONDS);
+			if (!isSuccess) {
+				log.debug("Key {} already expired, Watch dog stop refresh", key);
+				watchDog.shutdown();
+				watchDog = null;
+			} else {
+				log.debug("Watch dog refresh lock {} timeout to default {} seconds", key, defaultTimeout);
 			}
-		}, 0L, 200);
+		}, 0, 200, TimeUnit.MILLISECONDS);
 	}
 	
 	private void stopWatchDog() {
-		if (watchDog != null) {
-			watchDog.cancel();
+		if (watchDog != null && !watchDog.isShutdown()) {
+			watchDog.shutdown();
 			watchDog = null;
 		}
 	}

@@ -57,6 +57,7 @@ public final class JacksonUtils {
 		try {
 			return objectMapper.readValue(json, clazz);
 		} catch (IOException e) {
+			logger.error("将JSON串\n{}\n转成{}失败", json, clazz.getName());
 			logger.error(e.getMessage(), e);
 			throw new JacksonException(e);
 		}
@@ -98,6 +99,7 @@ public final class JacksonUtils {
 			return objectMapper.readValue(json, new TypeReference<Map<String, T>>() {
 			});
 		} catch (IOException e) {
+			logger.error("将JSON串\n{}\n转成Map失败", json);
 			logger.error(e.getMessage(), e);
 			throw new JacksonException(e);
 		}
@@ -130,6 +132,7 @@ public final class JacksonUtils {
 			return objectMapper.readValue(json, new TypeReference<Map<K, V>>() {
 			});
 		} catch (IOException e) {
+			logger.error("将JSON串\n{}\n转成Map失败", json);
 			logger.error(e.getMessage(), e);
 			throw new JacksonException(e);
 		}

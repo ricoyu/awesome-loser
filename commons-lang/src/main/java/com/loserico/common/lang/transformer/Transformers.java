@@ -20,7 +20,7 @@ import static java.text.MessageFormat.format;
 public final class Transformers {
 	
 	/**
-	 * 将value转成targetType类型
+	 * 将value转成targetType类型, 如果value为null则返回null, 如果无法转换的话抛IllegalArgumentException
 	 *
 	 * @param value
 	 * @param targetType

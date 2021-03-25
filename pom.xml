@@ -5,7 +5,7 @@
     <groupId>com.loserico</groupId>
     <artifactId>awesome-loser</artifactId>
     <packaging>pom</packaging>
-    <version>4.7.20</version>
+    <version>4.9.0</version>
     <name>Awesome Loser</name>
     <url>http://maven.apache.org</url>
 
@@ -27,7 +27,8 @@
         <module>loser-token-parser</module>
         <module>loser-netty</module>
         <module>loser-search</module>
-        <module>loser-messages</module>
+        <module>loser-messaging</module>
+        <module>loser-mybatis</module>
     </modules>
 
     <properties>
@@ -58,9 +59,10 @@
         <commons-pool2.version>2.5.0</commons-pool2.version>
         <commons-fileupload.version>1.3.1</commons-fileupload.version>
         <commons-io.version>2.7</commons-io.version>
+        <commons-collections.version>3.2.2</commons-collections.version>
         <commons-beanutils.version>1.9.2</commons-beanutils.version>
         <commons-codec.version>1.13</commons-codec.version>
-        <httpclient.version>4.5.10</httpclient.version>
+        <httpclient.version>4.5.13</httpclient.version>
         <httpasyncclient.version>4.1.4</httpasyncclient.version>
 
         <junit.version>4.12</junit.version>
@@ -358,6 +360,11 @@
                 <version>${commons-io.version}</version>
             </dependency>
             <dependency>
+                <groupId>commons-collections</groupId>
+                <artifactId>commons-collections</artifactId>
+                <version>${commons-collections.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>commons-beanutils</groupId>
                 <artifactId>commons-beanutils</artifactId>
                 <version>${commons-beanutils.version}</version>
@@ -494,7 +501,13 @@
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpcore</artifactId>
-                <version>4.4.12</version>
+                <version>4.4.14</version>
+                <exclusions>
+                    <exclusion>
+                        <artifactId>commons-logging</artifactId>
+                        <groupId>commons-logging</groupId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>

@@ -44,33 +44,38 @@ public interface PoolFactory {
 	 * numTestsPerEvictionRun	
 	 * 				做空闲资源检测时，每次的采样数					3				可根据自身应用连接数进行微调,如果设置为-1，就是对所有连接做空闲监测
 	 * </pre>
-	 * @formatter:off
 	 * @param propertyReader
 	 * @return
 	 */
 	public default JedisPoolConfig config(PropertyReader propertyReader) {
 		JedisPoolConfig config = new JedisPoolConfig();
-		//最大连接数, 如果赋值为-1, 则表示不限制; 如果pool已经分配了maxActive个jedis实例, 则此时pool的状态为exhausted(耗尽)
-		config.setMaxTotal(propertyReader.getInt("redis.maxTotal", 400));
-		//最大空闲数, 控制一个pool最多有多少个状态为idle(空闲的)的jedis实例, 默认值也是8
-		config.setMaxIdle(propertyReader.getInt("redis.maxIdle", 100));
-		//最小空闲数
-		config.setMinIdle(propertyReader.getInt("redis.minIdle", 10));
-		//是否在从池中取出连接前进行检验, 如果检验失败, 则从池中去除连接并尝试取出另一个
-		config.setTestOnBorrow(propertyReader.getBoolean("redis.testOnBorrow", false));
-		//在return给pool时, 是否提前进行validate操作
+		
+		/*
+		 * 最大最小资源数
+		 */
+		config.setMaxTotal(propertyReader.getInt("redis.maxTotal", 50));
+		config.setMaxIdle(propertyReader.getInt("redis.maxIdle", 50));
+		config.setMinIdle(propertyReader.getInt("redis.minIdle", 8));
+		
+		/*
+		 * 测试连接可用性
+		 */
+		config.setTestOnBorrow(propertyReader.getBoolean("redis.testOnBorrow", true));
 		config.setTestOnReturn(propertyReader.getBoolean("redis.testOnReturn", false));
-		//在空闲时检查有效性, 默认false
-		config.setTestWhileIdle(propertyReader.getBoolean("redis.testWhileIdle", false));
-		//表示一个对象至少停留在idle状态的最短时间, 然后才能被idle object evitor扫描并驱逐
-		//表示idle object evitor两次扫描之间要sleep的毫秒数
-		config.setTimeBetweenEvictionRunsMillis(propertyReader.getInt("redis.timeBetweenEvictionRunsMillis", 60000));
-		//这一项只有在timeBetweenEvictionRunsMillis大于0时才有意义
-		config.setMinEvictableIdleTimeMillis(propertyReader.getInt("redis.minEvictableIdleTimeMillis", 30000));
-		//表示idle object evitor每次扫描的最多的对象数
-		config.setNumTestsPerEvictionRun(propertyReader.getInt("redis.numTestsPerEvictionRun", 1000));
-		//等待可用连接的最大时间，单位毫秒，默认值为-1，表示永不超时。如果超过等待时间，则直接抛出JedisConnectionException；
-		config.setMaxWaitMillis(propertyReader.getInt("redis.maxWaitMillis", 3000));
+		
+		/*
+		 * 资源用尽时处理
+		 */
+		config.setBlockWhenExhausted(propertyReader.getBoolean("redis.blockWhenExhausted", true));
+		config.setMaxWaitMillis(propertyReader.getInt("redis.maxWaitMillis", 5000));
+		
+		/*
+		 * 空闲资源监测
+		 */
+		config.setTestWhileIdle(propertyReader.getBoolean("redis.testWhileIdle", true));
+		config.setTimeBetweenEvictionRunsMillis(propertyReader.getInt("redis.timeBetweenEvictionRunsMillis", 30000));
+		config.setMinEvictableIdleTimeMillis(propertyReader.getInt("redis.minEvictableIdleTimeMillis", 60000));
+		config.setNumTestsPerEvictionRun(propertyReader.getInt("redis.numTestsPerEvictionRun", -1));
 
 		return config;
 	}
@@ -82,27 +87,33 @@ public interface PoolFactory {
 	 */
 	public default JedisPoolConfig config(RedisProperties redisProperties) {
 		JedisPoolConfig config = new JedisPoolConfig();
-		//最大连接数，如果赋值为-1，则表示不限制；如果pool已经分配了maxActive个jedis实例，则此时pool的状态为exhausted(耗尽)。
+		
+		/*
+		 * 最大最小资源数
+		 */
 		config.setMaxTotal(redisProperties.getMaxTotal());
-		//最大空闲数，控制一个pool最多有多少个状态为idle(空闲的)的jedis实例，默认值也是8。
 		config.setMaxIdle(redisProperties.getMaxIdle());
-		//最小空闲数
 		config.setMinIdle(redisProperties.getMinIdle());
-		//是否在从池中取出连接前进行检验，如果检验失败，则从池中去除连接并尝试取出另一个
+		
+		/*
+		 * 测试连接可用性
+		 */
 		config.setTestOnBorrow(redisProperties.isTestOnBorrow());
-		//在return给pool时，是否提前进行validate操作
 		config.setTestOnReturn(redisProperties.isTestOnReturn());
-		//在空闲时检查有效性，默认false
-		config.setTestWhileIdle(redisProperties.isTestWhileIdle());
-		//表示一个对象至少停留在idle状态的最短时间，然后才能被idle object evitor扫描并驱逐；
-		//表示idle object evitor两次扫描之间要sleep的毫秒数
-		config.setTimeBetweenEvictionRunsMillis(redisProperties.getTimeBetweenEvictionRunsMillis());
-		//这一项只有在timeBetweenEvictionRunsMillis大于0时才有意义
-		config.setMinEvictableIdleTimeMillis(redisProperties.getMinEvictableIdleTimeMillis());
-		//表示idle object evitor每次扫描的最多的对象数
-		config.setNumTestsPerEvictionRun(redisProperties.getNumTestsPerEvictionRun());
-		//等待可用连接的最大时间，单位毫秒，默认值为-1，表示永不超时。如果超过等待时间，则直接抛出JedisConnectionException；
+		
+		/*
+		 * 资源用尽时处理
+		 */
+		config.setBlockWhenExhausted(redisProperties.isBlockWhenExhausted());
 		config.setMaxWaitMillis(redisProperties.getMaxWaitMillis());
+		
+		/*
+		 * 空闲资源监测
+		 */
+		config.setTestWhileIdle(redisProperties.isTestWhileIdle());
+		config.setTimeBetweenEvictionRunsMillis(redisProperties.getTimeBetweenEvictionRunsMillis());
+		config.setMinEvictableIdleTimeMillis(redisProperties.getMinEvictableIdleTimeMillis());
+		config.setNumTestsPerEvictionRun(redisProperties.getNumTestsPerEvictionRun());
 		
 		return config;
 	}

@@ -17,4 +17,5 @@ public abstract class Assert {
 			throw new IllegalArgumentException(message);
 		}
 	}
+	
 }

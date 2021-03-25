@@ -1,6 +1,7 @@
 package com.loserico.common.lang.transformer;
 
 import com.loserico.common.lang.utils.DateUtils;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -16,6 +17,7 @@ import java.util.Date;
  * @author Loser
  * @since May 29, 2016
  */
+@Slf4j
 public class ValueHandlerFactory {
 	
 	private ValueHandlerFactory() {
@@ -72,7 +74,11 @@ public class ValueHandlerFactory {
 			}
 			
 			if (String.class.isInstance(value)) {
-				return Integer.parseInt((String) value);
+				try {
+					return Integer.parseInt((String) value);
+				} catch (NumberFormatException e) {
+					log.warn("{} 不是一个数字", value);
+				}
 			}
 			throw unknownConversion(value, Integer.class);
 		}
@@ -105,7 +111,11 @@ public class ValueHandlerFactory {
 			}
 			
 			if (String.class.isInstance(value)) {
-				return Long.parseLong((String) value);
+				try {
+					return Long.parseLong((String) value);
+				} catch (NumberFormatException e) {
+					log.warn("{} 不是一个数字", value);
+				}
 			}
 			
 			if (Short.class.isInstance(value)) {
@@ -347,7 +357,7 @@ public class ValueHandlerFactory {
 			}
 			
 			if (value instanceof String) {
-				return DateUtils.toLocalDate((String)value);
+				return DateUtils.toLocalDate((String) value);
 			}
 			return null;
 		}

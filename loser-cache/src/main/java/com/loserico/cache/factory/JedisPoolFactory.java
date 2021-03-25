@@ -7,7 +7,8 @@ import org.apache.commons.lang3.StringUtils;
 import redis.clients.jedis.JedisPool;
 
 /**
- * JedisPool工厂类
+ * JedisPool工厂类<p>
+ * 两种方式创建JedisPool, 通过PropertyReader或者RedisProperties
  * <p>
  * Copyright: Copyright (c) 2019-10-17 14:05
  * <p>
@@ -18,7 +19,7 @@ import redis.clients.jedis.JedisPool;
  * @version 1.0
  */
 public class JedisPoolFactory implements PoolFactory {
-
+	
 	@Override
 	public JedisPool createPool(PropertyReader propertyReader) {
 		//是否启用默认配置, 默认Redis为localhost:6379
@@ -57,25 +58,59 @@ public class JedisPoolFactory implements PoolFactory {
 		if (overridePassword != null && !overridePassword.isEmpty()) {
 			password = overridePassword;
 		}
-		// 默认5秒超时
-		int timeout = propertyReader.getInt("redis.timeout", 5000);
+		
+		// 默认50秒连接超时
+		int connectionTimeout = propertyReader.getInt("redis.connectionTimeout", 50000);
+		//执行redis命令默认1秒超时
+		int socketTimeout = propertyReader.getInt("redis.socketTimeout", 1000);
 		int db = propertyReader.getInt("redis.db", 0);
-
+		
 		if (StringUtils.isNotBlank(password)) {
-			return new JedisPool(config(propertyReader), host, port, timeout, password, db);
+			return new JedisPool(
+					config(propertyReader),
+					host,
+					port,
+					connectionTimeout,
+					socketTimeout,
+					password,
+					db,
+					"loser-cache",
+					false,
+					null,
+					null,
+					null);
 		} else {
-			return new JedisPool(config(propertyReader), host, port, timeout, null, db);
+			return new JedisPool(
+					config(propertyReader),
+					host,
+					port,
+					connectionTimeout,
+					socketTimeout,
+					null,
+					db,
+					"loser-cache",
+					false,
+					null,
+					null,
+					null);
 		}
 	}
-
+	
 	@Override
 	public JedisPool createPool(RedisProperties redisProperties) {
-		return new JedisPool(config(redisProperties),
+		return new JedisPool(
+				config(redisProperties),
 				redisProperties.getHost(),
 				redisProperties.getPort(),
-				redisProperties.getTimeout(),
+				redisProperties.getConnectionTimeout(),
+				redisProperties.getSocketTimeout(),
 				redisProperties.getPassword(),
-				redisProperties.getDatabase());
+				redisProperties.getDatabase(),
+				"loser-cache",
+				false,
+				null,
+				null,
+				null);
 	}
-
+	
 }

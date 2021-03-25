@@ -112,6 +112,10 @@ public class JsonRequestBuilder extends AbstractRequestBuilder {
 		if (restTemplate == null) {
 			restTemplate = ApplicationContextHolder.getBean(RestTemplate.class);
 		}
+		if (restTemplate == null) {
+			restTemplate = new RestTemplate();
+		}
+		
 		HttpEntity<MultiValueMap<String, String>> entity = null;
 		switch (httpMethod) {
 			case GET:

@@ -14,7 +14,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 /**
@@ -146,42 +145,6 @@ public final class Concurrent {
 		} catch (InterruptedException e) {
 			log.error("", e);
 			throw new RuntimeException(e);
-		}
-	}
-
-	/**
-	 * 给线程池设置一个特定的名字, 排查问题的时候方便定位
-	 * <p>
-	 * Copyright: Copyright (c) 2019-05-27 14:56
-	 * <p>
-	 * Company: Sexy Uncle Inc.
-	 * <p>
-	 * @author Rico Yu  ricoyu520@gmail.com
-	 * @version 1.0
-	 * @on
-	 */
-	static class LoserThreadFactory implements ThreadFactory {
-		private static final AtomicInteger poolNumber = new AtomicInteger(1);
-		private final ThreadGroup group;
-		private final AtomicInteger threadNumber = new AtomicInteger(1);
-		private final String namePrefix;
-
-		LoserThreadFactory() {
-			SecurityManager s = System.getSecurityManager();
-			group = (s != null) ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
-			namePrefix = "loser-pool-" + poolNumber.getAndIncrement() + "-thread-";
-		}
-
-		@Override
-		public Thread newThread(Runnable r) {
-			Thread t = new Thread(group, r, namePrefix + threadNumber.getAndIncrement(), 0);
-			if (t.isDaemon()) {
-				t.setDaemon(false);
-			}
-			if (t.getPriority() != Thread.NORM_PRIORITY) {
-				t.setPriority(Thread.NORM_PRIORITY);
-			}
-			return t;
 		}
 	}
 

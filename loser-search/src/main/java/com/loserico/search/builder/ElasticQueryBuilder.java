@@ -5,8 +5,11 @@ import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.json.jackson.JacksonUtils;
 import com.loserico.search.ElasticUtils;
 import com.loserico.search.cache.ElasticCacheUtils;
+import com.loserico.search.enums.Direction;
 import com.loserico.search.enums.SortOrder;
+import com.loserico.search.enums.SortOrder.SortOrderBuilder;
 import com.loserico.search.exception.ElasticQueryException;
+import com.loserico.search.vo.PageResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.lucene.search.TotalHits;
 import org.elasticsearch.action.search.SearchRequestBuilder;
@@ -21,14 +24,14 @@ import org.json.JSONObject;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.elasticsearch.common.lucene.search.function.CombineFunction.MULTIPLY;
+import static org.elasticsearch.common.lucene.search.function.CombineFunction.*;
 
 /**
  * 查询生成器
@@ -109,6 +112,14 @@ public final class ElasticQueryBuilder {
 	private CombineFunction boostMode = MULTIPLY;
 	
 	/**
+	 * 避免深度分页的性能问题, 可以实时获取下一页文档信息<p>
+	 * 第一步搜索需要指定sort, 并且保证值是唯一的(可以通过加入_id保证唯一性)<p>
+	 * 然后使用上一次, 最后一个文档的sort值进行查询<p>
+	 * 这个就是查询得到的最后一个文档的sort值
+	 */
+	private Object[] searchAfter;
+	
+	/**
 	 * 仅仅是因为不喜欢 new
 	 */
 	private ElasticQueryBuilder() {
@@ -138,7 +149,7 @@ public final class ElasticQueryBuilder {
 	}*/
 	
 	/**
-	 * 设置分页属性
+	 * 设置分页属性, 深度分页建议用Search After
 	 *
 	 * @param from
 	 * @param size
@@ -146,6 +157,18 @@ public final class ElasticQueryBuilder {
 	 */
 	public ElasticQueryBuilder paging(int from, int size) {
 		this.from = from;
+		this.size = size;
+		return this;
+	}
+	
+	/**
+	 * 通过Search After分页时第一次需要设置size
+	 * 深度分页时推荐用Search After
+	 *
+	 * @param size
+	 * @return ElasticQueryBuilder
+	 */
+	public ElasticQueryBuilder size(int size) {
 		this.size = size;
 		return this;
 	}
@@ -164,6 +187,69 @@ public final class ElasticQueryBuilder {
 		}
 		
 		this.sortOrders.add(sortOrder);
+		return this;
+	}
+	
+	/**
+	 * 添加基于字段的排序, 默认升序
+	 *
+	 * @param field
+	 * @return ElasticQueryBuilder
+	 */
+	public ElasticQueryBuilder addFieldSort(String field) {
+		return addFieldSort(field, Direction.ASC);
+	}
+	
+	/**
+	 * 添加基于字段的排序, 默认升序
+	 *
+	 * @param field
+	 * @param direction
+	 * @return ElasticQueryBuilder
+	 */
+	public ElasticQueryBuilder addFieldSort(String field, Direction direction) {
+		SortOrder sortOrder = null;
+		SortOrderBuilder sortOrderBuilder = SortOrder.fieldSort(field);
+		if (direction == null || direction == Direction.ASC) {
+			sortOrder = sortOrderBuilder.asc();
+		} else {
+			sortOrder = sortOrderBuilder.desc();
+		}
+		
+		return addSort(sortOrder);
+	}
+	
+	/**
+	 * 添加基于字段的排序, 默认升序
+	 *
+	 * @param direction
+	 * @return ElasticQueryBuilder
+	 */
+	public ElasticQueryBuilder addScoreSort(Direction direction) {
+		SortOrder sortOrder = null;
+		SortOrderBuilder sortOrderBuilder = SortOrder.scoreSort();
+		if (direction == null || direction == Direction.ASC) {
+			sortOrder = sortOrderBuilder.asc();
+		} else {
+			sortOrder = sortOrderBuilder.desc();
+		}
+		
+		return addSort(sortOrder);
+	}
+	
+	/**
+	 * 避免深度分页的性能问题, 可以实时获取下一页文档信息<p>
+	 * 第一步搜索需要指定sort, 并且保证值是唯一的(可以通过加入_id保证唯一性)<p>
+	 * 然后使用上一次, 最后一个文档的sort值进行查询<p>
+	 * 这个就是查询得到的最后一个文档的sort值
+	 * <p>
+	 * 注意设置了searchAfter就不要设置from了, 只要指定size以及排序就可以了
+	 *
+	 * @param searchAfter
+	 * @return ElasticQueryBuilder
+	 */
+	public ElasticQueryBuilder searchAfter(Object[] searchAfter) {
+		this.searchAfter = searchAfter;
 		return this;
 	}
 	
@@ -241,7 +327,7 @@ public final class ElasticQueryBuilder {
 	 * @return List<T>
 	 */
 	public <T> List<T> queryForList() {
-		SearchHit[] hits = getSearchHits();
+		SearchHit[] hits = getSearchHits(null);
 		
 		if (hits.length == 0) {
 			return Collections.emptyList();
@@ -253,7 +339,7 @@ public final class ElasticQueryBuilder {
 		//@DocId标注的字段是String类型
 		boolean isStringId = hasDocId && id.getType() == String.class;
 		
-		return (List<T>) asList(hits).stream()
+		return (List<T>) Arrays.stream(hits)
 				.filter(Objects::nonNull)
 				.map((hit) -> {
 					//不需要转成POJO的情况
@@ -280,13 +366,123 @@ public final class ElasticQueryBuilder {
 	}
 	
 	/**
+	 * 
+	 * @param <T>
+	 * @return
+	 */
+	public <T> PageResult<T> queryForPage() {
+		return queryForPage(null);
+	}
+	
+	/**
+	 * 执行Search After分页查询<p>
+	 * 需要带上上一次查询拿到的最后一个文档的sort值进行查询<p>
+	 * 
+	 * 什么是上一次查询得到的sort值?<p>
+	 * 
+	 * 我们来看下面这个Query DSL, 先按年龄倒序排, 为了避免有相同年龄的user导致排序不唯一, 加入第二个排序规则_id asc
+	 * <pre>
+	 * POST users/_search
+	 * {
+	 *   "size": 10, 
+	 *   "query": {"match_all": {}}, 
+	 *   "sort": [
+	 *     {"age": "desc"}, 
+	 *     {"_id": "asc"}
+	 *   ]
+	 * }
+	 * </pre>
+	 * 
+	 * 在取返回的数据本身之外, 把最后一个文档的sort值也拿回来, 作为下一次查询的sort
+	 * 
+	 * 返回的结果片段如下
+	 * <pre>
+	 * "hits" : {
+	 *   "total" : {
+	 *     ...
+	 *   },
+	 *   "hits" : [
+	 *     {
+	 *       "_id" : "IPzNyXcBE7I_Lg26stqp",
+	 *       "_source" : {
+	 *         "name" : "user4",
+	 *         "age" : 13
+	 *       },
+	 *       "sort" : [
+	 *         13,
+	 *         "IPzNyXcBE7I_Lg26stqp"
+	 *       ]
+	 *     }
+	 *   ]
+	 * }    
+	 * </pre>
+	 * 
+	 * 所以, 这里的参数sort传的就是上一次返回的sort值, 如
+	 * <pre>
+	 * [
+	 *   13,
+	 *   "IPzNyXcBE7I_Lg26stqp"
+	 * ]
+	 * </pre>
+	 * @param <T>
+	 * @return List<T>
+	 */
+	public <T> PageResult<T> queryForPage(Object[] sort) {
+		SearchHit[] hits = getSearchHits(sort);
+		
+		if (hits.length == 0) {
+			return PageResult.emptyResult();
+		}
+		
+		//pojo是否标注了@DocId
+		Field id = ElasticCacheUtils.idField(resultType);
+		boolean hasDocId = id != null;
+		//@DocId标注的字段是String类型
+		boolean isStringId = hasDocId && id.getType() == String.class;
+		
+		SearchHit lastHit = hits[hits.length - 1];
+		//拿到本次的sort
+		Object[] sortValues = lastHit.getSortValues();
+		//本次查询得到结果集
+		List<Object> results = Arrays.stream(hits)
+				.filter(Objects::nonNull)
+				.map((hit) -> {
+					//不需要转成POJO的情况
+					if (resultType == null) {
+						return hit.getSourceAsString();
+					}
+					
+					String source = hit.getSourceAsString();
+					if (isBlank(source)) {
+						return null;
+					}
+					
+					T obj = (T) JacksonUtils.toObject(source, resultType);
+					if (hasDocId) {
+						if (isStringId) {
+							ReflectionUtils.setField(id, obj, hit.getId());
+						} else {
+							ReflectionUtils.setField(id, obj, Transformers.convert(hit.getId(), id.getType()));
+						}
+					}
+					
+					return obj;
+				}).collect(toList());
+		
+		return PageResult.<T>builder()
+				.results((List<T>)results)
+				.sort(sortValues)
+				.build();
+	}
+	
+	/**
 	 * 执行查询, 返回一条记录
 	 *
 	 * @param <T>
 	 * @return T
 	 */
 	public <T> T queryForOne() {
-		SearchHit[] hits = getSearchHits();
+		SearchHit[] hits = getSearchHits(null);
 		
 		if (hits.length == 0) {
 			return null;
@@ -337,9 +533,11 @@ public final class ElasticQueryBuilder {
 	 *
 	 * @return
 	 */
-	private SearchHit[] getSearchHits() {
+	private SearchHit[] getSearchHits(Object[] searchAfterValues) {
+		//没有提供查询条件的话默认查所有数据
 		if (this.builder == null) {
-			throw new ElasticQueryException("请先设置QueryBuilder");
+			//throw new ElasticQueryException("请先设置QueryBuilder");
+			this.builder = QueryBuilders.matchAllQuery();
 		}
 		
 		/*
@@ -357,7 +555,19 @@ public final class ElasticQueryBuilder {
 		SearchRequestBuilder searchRequestBuilder = ElasticUtils.client.prepareSearch(indices)
 				.setQuery(this.builder)
 				.setFetchSource(fetchSource);
+		
+		/*
+		 * Search After 避免深度分页
+		 */
+		if (searchAfterValues != null) {
+			searchRequestBuilder.searchAfter(searchAfterValues);
+		}
+		
 		sortOrders.forEach(sortOrder -> sortOrder.addTo(searchRequestBuilder));
+		
+		if (searchAfter != null) {
+			searchRequestBuilder.searchAfter(searchAfter);
+		}
 		
 		if (from != null) {
 			searchRequestBuilder.setFrom(from);

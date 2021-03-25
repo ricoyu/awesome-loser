@@ -9,13 +9,14 @@ import com.loserico.codec.exception.RsaPublicKeyException;
 import com.loserico.codec.exception.RsaSignException;
 import com.loserico.codec.exception.RsaSignVerifyException;
 import com.loserico.common.lang.resource.PropertyReader;
+import com.loserico.common.lang.utils.IOUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
+import org.apache.commons.codec.binary.Base64;
 
 import javax.crypto.Cipher;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -33,16 +34,41 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.text.MessageFormat;
-import java.util.Base64;
-import java.util.Objects;
 
+import static com.loserico.common.lang.utils.Assert.notNull;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.codec.binary.Base64.decodeBase64;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
+import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
  * RSA 非对称加密/加密工具
+ * 默认公私钥获取的优先级从高到低
+ * <ol>
+ *    <li/>classpath root public.key private.key
+ *    <li/>classpath root public.pem private.pem
+ *    <li/>user.home      public.key private.key
+ *    <li/>user.home      public.pem private.pem
+ * </ol>
+ * <p>
+ * 可以通过在codec.properties里面配置
+ * <ul>
+ *     <li/>key.location=/opt/idss/app/rsa_key   显式指定key的位置
+ *     <li/>key.suffix=pem|key                   显式指定是key文件还是pem文件, 不指定按key, pem的顺序读, 先找到的优先
+ *     <li/>key.public=public                    公钥名字, 不带后缀, 默认public
+ *     <li/>key.private=private                  私钥名字, 不带后缀, 默认private
+ * </ul>
+ * <p>
+ * codec.properties文件读取优先级从高到低
+ * <ol>
+ *     <li/>工作目录的config目录
+ *     <li/>工作目录
+ *     <li/>classpath root
+ * </ol>
+ * <p>
+ * 如果没有找到则自动在用户目录下生成一对公私钥
  * <p>
  * Copyright: (C), 2020/3/4 15:26
  * <p>
@@ -55,7 +81,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 @Slf4j
 public final class RsaUtils {
 	
-	private static final PropertyReader propertyReader = new PropertyReader("codec.properties");
+	private static final PropertyReader READER = new PropertyReader("codec.properties");
 	
 	public static final String CHARSET = "UTF-8";
 	
@@ -75,19 +101,21 @@ public final class RsaUtils {
 	public static final int KEY_LENGTH = 2048;
 	
 	/**
-	 * String to hold the name of the private key file.
+	 * 自动生成密钥对时, 写入到磁盘的位置
 	 */
-	public static final String PRIVATE_KEY_FILE = System.getProperty("user.home") + "/private.key";
+	public static final String AUTO_GENERATE_PRIVATE_KEY_FILE = System.getProperty("user.home") + "/private.key";
 	
 	/**
-	 * String to hold name of the public key file.
+	 * 自动生成密钥对时, 写入到磁盘的位置
 	 */
-	public static final String PUBLIC_KEY_FILE = System.getProperty("user.home") + "/public.key";
+	public static final String AUTO_GENERATE_PUBLIC_KEY_FILE = System.getProperty("user.home") + "/public.key";
+	
 	
 	/**
 	 * PEM格式的公钥以一行 -----BEGIN PUBLIC KEY----- 开头
 	 * 中间是公钥字符串
 	 * 最后是一行         -----END PUBLIC KEY-----
+	 * 加载pom文件时要把头尾两行去掉
 	 */
 	public static final String PEM_PUBLIC_KEY_BEGIN = "-----BEGIN PUBLIC KEY-----";
 	
@@ -97,13 +125,14 @@ public final class RsaUtils {
 	 * PEM格式的私钥以一行 -----BEGIN PRIVATE KEY----- 开头
 	 * 中间是私钥字符串
 	 * 最后是一行         -----END PRIVATE KEY-----
+	 * 加载pom文件时要把头尾两行去掉
 	 */
 	public static final String PEM_PRIVATE_KEY_BEGIN = "-----BEGIN PRIVATE KEY-----";
 	
 	public static final String PEM_PRIVATE_KEY_END = "-----END PRIVATE KEY-----";
 	
 	/**
-	 * 公钥
+	 * 公钥对象
 	 */
 	private static RSAPublicKey publicKey = null;
 	
@@ -113,7 +142,7 @@ public final class RsaUtils {
 	private static String publicKeyStr = null;
 	
 	/**
-	 * 私钥
+	 * 私钥对象
 	 */
 	private static RSAPrivateKey privateKey = null;
 	
@@ -121,6 +150,26 @@ public final class RsaUtils {
 	 * 私钥串
 	 */
 	private static String privateKeyStr = null;
+	
+	/**
+	 * 从classpath, 用户目录 或者codec.properties指定目录下读取到的公钥文件后缀, 这个是带点号的, 如.xxx
+	 */
+	private static String publicKeySuffix = null;
+	
+	/**
+	 * 从classpath, 用户目录 或者codec.properties指定目录下读取到的私钥文件后缀, 这个是带点号的, 如.xxx
+	 */
+	private static String privateKeySuffix = null;
+	
+	/**
+	 * 从classpath, 用户目录 或者codec.properties指定目录下读取到的公钥文件字节数组
+	 */
+	private static byte[] publicKeyBytes = null;
+	
+	/**
+	 * 从classpath, 用户目录 或者codec.properties指定目录下读取到的私钥文件后缀
+	 */
+	private static byte[] privateKeyBytes = null;
 	
 	private RsaUtils() {
 	}
@@ -133,11 +182,10 @@ public final class RsaUtils {
 	 * @return 经过Base64编码后的公私钥
 	 */
 	static {
-		/*
-		 * 磁盘上不存在密钥对则重新生成
-		 */
 		if (!keysPresent()) {
-			
+			/*
+			 * 磁盘上不存在密钥对则在用户目录下重新生成
+			 */
 			try {
 				KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(ALGORITHM_RSA);
 				
@@ -151,21 +199,30 @@ public final class RsaUtils {
 				privateKey = (RSAPrivateKey) keyPair.getPrivate();
 				
 				write2Disk(publicKey, privateKey);
-				
 			} catch (Exception e) {
 				throw new RuntimeException("生成密钥对失败", e);
 			}
 		} else {
 			/*
-			 * 从磁盘上读取密钥对
+			 * 如果找到了公私钥, 那么此时publicKeyFile, privateKeyFile已经有值
+			 * 接下来通过这两个file对象加载公私钥
 			 */
 			try {
-				ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(PUBLIC_KEY_FILE));
-				publicKey = (RSAPublicKey) objectInputStream.readObject();
+				if (".pem".equalsIgnoreCase(publicKeySuffix)) {
+					publicKey = loadPublicKeyFromPemFile(publicKeyBytes);
+				} else {
+					ObjectInputStream publicInputStream = new ObjectInputStream(new ByteArrayInputStream(publicKeyBytes));
+					publicKey = (RSAPublicKey) publicInputStream.readObject();
+					publicInputStream.close();
+				}
 				
-				objectInputStream = new ObjectInputStream(new FileInputStream(PRIVATE_KEY_FILE));
-				privateKey = (RSAPrivateKey) objectInputStream.readObject();
-				objectInputStream.close();
+				if (".pem".equals(privateKeySuffix)) {
+					privateKey = loadPrivateKeyFromPemFile(privateKeyBytes);
+				} else {
+					ObjectInputStream privateInputStream = new ObjectInputStream(new ByteArrayInputStream(privateKeyBytes));
+					privateKey = (RSAPrivateKey) privateInputStream.readObject();
+					privateInputStream.close();
+				}
 			} catch (IOException | ClassNotFoundException e) {
 				throw new RuntimeException("获取密钥对失败", e);
 			}
@@ -175,6 +232,26 @@ public final class RsaUtils {
 		publicKeyStr = base64Encode(publicKey.getEncoded());
 		//得到私钥串
 		privateKeyStr = base64Encode(privateKey.getEncoded());
+	}
+	
+	/**
+	 * 从pem文件中加载公钥
+	 *
+	 * @param publicKeyBytes
+	 * @return
+	 */
+	public static RSAPublicKey loadPublicKeyFromPemFile(byte[] publicKeyBytes) {
+		return generatePublicKey(new String(publicKeyBytes, UTF_8));
+	}
+	
+	/**
+	 * 从pem文件中加载私钥
+	 *
+	 * @param privateKeyBytes
+	 * @return
+	 */
+	public static RSAPrivateKey loadPrivateKeyFromPemFile(byte[] privateKeyBytes) {
+		return generatePrivateKey(new String(privateKeyBytes, UTF_8));
 	}
 	
 	/**
@@ -199,8 +276,8 @@ public final class RsaUtils {
 			RsaUtils.publicKeyStr = publicKeyStr;
 			RsaUtils.privateKeyStr = privateKeyStr;
 			
-			RsaUtils.publicKey = RsaUtils.publicKey(publicKeyStr);
-			RsaUtils.privateKey = RsaUtils.privateKey(privateKeyStr);
+			RsaUtils.publicKey = RsaUtils.generatePublicKey(publicKeyStr);
+			RsaUtils.privateKey = RsaUtils.generatePrivateKey(privateKeyStr);
 			
 			write2Disk(publicKey, privateKey);
 		} catch (Throwable e) {
@@ -243,6 +320,10 @@ public final class RsaUtils {
 	 * @return 公钥解密后的原始串
 	 */
 	public static String publicEncrypt(String data, String publicKeyStr) {
+		notNull(publicKeyStr, "公钥字符串不能为null!");
+		if (isBlank(data)) {
+			return data;
+		}
 		try {
 			//通过X509编码的Key指令获得公钥对象
 			X509EncodedKeySpec x509KeySpec = new X509EncodedKeySpec(base64Decode(publicKeyStr));
@@ -284,6 +365,7 @@ public final class RsaUtils {
 	 * @return RSA公钥解密后的明文字符串
 	 */
 	public static String publicDecrypt(String data, String publicKey) {
+		notNull(publicKey, "公钥字符串不能为null");
 		if (isBlank(data)) {
 			return data;
 		}
@@ -308,9 +390,13 @@ public final class RsaUtils {
 	 * @return RSA私钥加密后的经过Base64编码的密文字符串
 	 */
 	public static String privateEncrypt(String data, String privateKeyStr) {
+		notNull(privateKeyStr, "私钥字符串不能为null");
+		if (isBlank(data)) {
+			return data;
+		}
 		try {
 			//通过PKCS#8编码的Key指令获得私钥对象
-			PKCS8EncodedKeySpec pkcs8KeySpec = new PKCS8EncodedKeySpec(Base64.getDecoder().decode(privateKeyStr));
+			PKCS8EncodedKeySpec pkcs8KeySpec = new PKCS8EncodedKeySpec(base64Decode(privateKeyStr));
 			KeyFactory keyFactory = KeyFactory.getInstance(ALGORITHM_RSA);
 			PrivateKey privateKey = keyFactory.generatePrivate(pkcs8KeySpec);
 			Cipher cipher = Cipher.getInstance(keyFactory.getAlgorithm());
@@ -328,6 +414,9 @@ public final class RsaUtils {
 	 * @return String
 	 */
 	public static String privateEncrypt(String data) {
+		if (isBlank(data)) {
+			return data;
+		}
 		try {
 			Cipher cipher = Cipher.getInstance(ALGORITHM_RSA);
 			cipher.init(Cipher.ENCRYPT_MODE, privateKey);
@@ -364,6 +453,7 @@ public final class RsaUtils {
 	 * @return RSA私钥解密后的明文字符串
 	 */
 	public static String privateDecrypt(String data, String privateKeyStr) {
+		notNull(privateKeyStr, "私钥字符串不能为null");
 		if (isBlank(data)) {
 			return data;
 		}
@@ -388,7 +478,7 @@ public final class RsaUtils {
 	 * @return RSA私钥签名后的经过Base64编码的字符串
 	 */
 	public static String sign(String data) {
-		if (data == null) {
+		if (isBlank(data)) {
 			return null;
 		}
 		return sign(data.getBytes(UTF_8));
@@ -423,11 +513,11 @@ public final class RsaUtils {
 	 * @return RSA私钥签名后的经过Base64编码的字符串
 	 */
 	public static String sign(byte[] data, String privateKeyStr) {
+		notNull(privateKeyStr, "私钥字符串不能为null");
 		if (data == null || data.length == 0) {
 			log.info("data is null or data.length == 0");
 			return null;
 		}
-		Objects.requireNonNull(data, "data不能为null");
 		try {
 			//通过PKCS#8编码的Key指令获得私钥对象
 			PKCS8EncodedKeySpec pkcs8KeySpec = new PKCS8EncodedKeySpec(base64Decode(privateKeyStr));
@@ -450,7 +540,8 @@ public final class RsaUtils {
 	 * @return RSA私钥签名后的经过Base64编码的字符串
 	 */
 	public static String sign(String data, String privateKeyStr) {
-		if (data == null) {
+		notNull(privateKeyStr, "私钥字符串不能为null");
+		if (isBlank(data)) {
 			log.info("data is null!");
 			return null;
 		}
@@ -465,6 +556,8 @@ public final class RsaUtils {
 	 * @return true--验签通过,false--验签未通过
 	 */
 	public boolean verify(String data, String sign) {
+		notNull(data, "data 不能为null");
+		notNull(sign, "sign 不能为null");
 		return verify(data.getBytes(UTF_8), sign);
 	}
 	
@@ -476,7 +569,8 @@ public final class RsaUtils {
 	 * @return true--验签通过,false--验签未通过
 	 */
 	public boolean verify(byte[] data, String sign) {
-		if (data == null || data.length == 0 || sign == null) {
+		notNull(sign, "sign 不能为null");
+		if (data == null || data.length == 0) {
 			log.info("data or sign is null");
 			return false;
 		}
@@ -499,7 +593,9 @@ public final class RsaUtils {
 	 * @return true--验签通过,false--验签未通过
 	 */
 	public static boolean verify(String data, String sign, String publicKeyStr) {
-		if (data == null || sign == null) {
+		notNull(sign, "sign 不能为null");
+		notNull(publicKeyStr, "公钥字符串不能为null");
+		if (isBlank(data)) {
 			log.info("data or sign is null");
 			return false;
 		}
@@ -530,7 +626,8 @@ public final class RsaUtils {
 	 * @param publicKeyStr
 	 * @return PublicKey
 	 */
-	public static RSAPublicKey publicKey(String publicKeyStr) {
+	public static RSAPublicKey generatePublicKey(String publicKeyStr) {
+		notNull(publicKeyStr, "公钥字符串不能为null");
 		//通过X509编码的Key指令获得公钥对象
 		X509EncodedKeySpec x509KeySpec = new X509EncodedKeySpec(base64Decode(publicKeyStr));
 		try {
@@ -548,7 +645,7 @@ public final class RsaUtils {
 	 * @param privateKeyStr
 	 * @return PrivateKey
 	 */
-	public static RSAPrivateKey privateKey(String privateKeyStr) {
+	public static RSAPrivateKey generatePrivateKey(String privateKeyStr) {
 		PKCS8EncodedKeySpec pkcs8KeySpec = new PKCS8EncodedKeySpec(base64Decode(privateKeyStr));
 		try {
 			KeyFactory keyFactory = KeyFactory.getInstance(ALGORITHM_RSA);
@@ -577,6 +674,14 @@ public final class RsaUtils {
 		return publicKey.replaceAll("\\-*BEGIN PUBLIC KEY\\-*", "")
 				.replaceAll("\\-*END PUBLIC KEY\\-*", "")
 				.trim();
+	}
+	
+	public static String getPublicKeyStr() {
+		return publicKeyStr;
+	}
+	
+	public static String getPrivateKeyStr() {
+		return privateKeyStr;
 	}
 	
 	/**
@@ -612,16 +717,26 @@ public final class RsaUtils {
 			throw new RuntimeException("加解密阀值为[" + maxBlock + "]的数据时发生异常", e);
 		}
 		byte[] resultDatas = out.toByteArray();
-		IOUtils.closeQuietly(out);
+		closeQuietly(out);
 		return resultDatas;
 	}
 	
+	/**
+	 * base64编码, 记得不要用JDK自带的Base64
+	 * @param data
+	 * @return
+	 */
 	private static String base64Encode(byte[] data) {
-		return Base64.getEncoder().encodeToString(data);
+		return Base64.encodeBase64String(data);
 	}
 	
+	/**
+	 * base64解码, 记得不要用JDK自带的Base64
+	 * @param encoded
+	 * @return
+	 */
 	private static byte[] base64Decode(String encoded) {
-		return Base64.getDecoder().decode(encoded);
+		return Base64.decodeBase64(encoded);
 	}
 	
 	/**
@@ -630,15 +745,103 @@ public final class RsaUtils {
 	 * @return boolean
 	 */
 	private static boolean keysPresent() {
-		File privateKey = new File(PRIVATE_KEY_FILE);
-		File publicKey = new File(PUBLIC_KEY_FILE);
+		String location = READER.getString("key.location");
 		
-		return privateKey.exists() && publicKey.exists();
+		String keySuffix = READER.getString("key.suffix");
+		String publicKeyName = READER.getString("key.public", "public");
+		String privateKeyName = READER.getString("key.private", "private");
+		
+		/*
+		 * 意思是如果显式指定了公私钥的后缀, 那么就精确取这个后缀的公私钥
+		 * 否则先尝试去.key后缀的公私钥文件, 没有再找.pem结尾的公私钥文本文件
+		 */
+		String[] keySuffixes = null;
+		if (isNotBlank(keySuffix)) {
+			//后缀如果不以.开头, 那么加一下, 方便后面拼接完整文件名
+			keySuffixes = keySuffix.indexOf(".") == 0 ? new String[]{keySuffix} : new String[]{"." + keySuffix};
+		} else {
+			keySuffixes = new String[]{".key", ".pem"};
+		}
+		
+		/*
+		 * 没有配置key.location
+		 * 先读classpath root下
+		 * 没有再读user.home下
+		 */
+		if (isBlank(location)) {
+			// 读classpath root
+			for (int i = 0; i < keySuffixes.length; i++) {
+				String suffix = keySuffixes[i];
+				File publicKeyFile = IOUtils.readClasspathFileAsFile(publicKeyName + suffix);
+				File privateKeyFile = IOUtils.readClasspathFileAsFile(privateKeyName + suffix);
+				boolean exists = publicKeyFile != null && privateKeyFile != null && publicKeyFile.exists() && privateKeyFile.exists();
+				
+				//classpath root找到
+				if (exists) {
+					//读取公私钥文件字节
+					publicKeyBytes = IOUtils.readClassPathFileAsBytes(publicKeyName + suffix);
+					privateKeyBytes = IOUtils.readClassPathFileAsBytes(privateKeyName + suffix);
+					
+					//记录公钥文件的后缀
+					publicKeySuffix = IOUtils.suffic(publicKeyFile);
+					//记录私钥文件的后缀
+					privateKeySuffix = IOUtils.suffic(privateKeyFile);
+					
+					return true;
+				}
+			}
+			
+			//读用户目录下的公私钥
+			String homeDir = System.getProperty("user.home");
+			for (int i = 0; i < keySuffixes.length; i++) {
+				String suffix = keySuffixes[i];
+				File publicKeyFile = IOUtils.readFile(homeDir, publicKeyName + suffix);
+				File privateKeyFile = IOUtils.readFile(homeDir, privateKeyName + suffix);
+				boolean exists = publicKeyFile != null && privateKeyFile != null && publicKeyFile.exists() && privateKeyFile.exists();
+				//classpath root找到
+				if (exists) {
+					//读取公私钥文件字节
+					publicKeyBytes = IOUtils.readFileAsBytes(publicKeyFile);
+					privateKeyBytes = IOUtils.readFileAsBytes(privateKeyFile);
+					
+					//记录公钥文件的后缀
+					publicKeySuffix = IOUtils.suffic(publicKeyFile);
+					//记录私钥文件的后缀
+					privateKeySuffix = IOUtils.suffic(privateKeyFile);
+					
+					return true;
+				}
+			}
+		}
+		
+		//配置了key.location, 从指定位置读
+		for (int i = 0; i < keySuffix.length(); i++) {
+			String suffix = keySuffixes[i];
+			File publicKeyFile = IOUtils.readFile(location, publicKeyName, suffix);
+			File privateKeyFile = IOUtils.readFile(location, privateKeyName, suffix);
+			boolean exists = publicKeyFile != null && privateKeyFile != null && publicKeyFile.exists() && privateKeyFile.exists();
+			
+			//classpath root找到
+			if (exists) {
+				//读取公私钥文件字节
+				publicKeyBytes = IOUtils.readFileAsBytes(publicKeyFile);
+				privateKeyBytes = IOUtils.readFileAsBytes(privateKeyFile);
+				
+				//记录公钥文件的后缀
+				publicKeySuffix = IOUtils.suffic(publicKeyFile);
+				//记录私钥文件的后缀
+				privateKeySuffix = IOUtils.suffic(privateKeyFile);
+				
+				return true;
+			}
+		}
+		
+		return false;
 	}
 	
 	private static void write2Disk(PublicKey publicKey, PrivateKey privateKey) throws IOException {
-		File privateKeyFile = new File(PRIVATE_KEY_FILE);
-		File publicKeyFile = new File(PUBLIC_KEY_FILE);
+		File privateKeyFile = new File(AUTO_GENERATE_PRIVATE_KEY_FILE);
+		File publicKeyFile = new File(AUTO_GENERATE_PUBLIC_KEY_FILE);
 		
 		if (publicKeyFile.getParentFile() != null) {
 			publicKeyFile.getParentFile().mkdirs();
@@ -659,13 +862,6 @@ public final class RsaUtils {
 		privateKeyOS.close();
 	}
 	
-	public static String getPublicKeyStr() {
-		return publicKeyStr;
-	}
-	
-	public static String getPrivateKeyStr() {
-		return privateKeyStr;
-	}
 }
 
 

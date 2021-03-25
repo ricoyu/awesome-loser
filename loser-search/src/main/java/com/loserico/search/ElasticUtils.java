@@ -1,13 +1,15 @@
 package com.loserico.search;
 
 import com.loserico.common.lang.utils.ReflectionUtils;
+import com.loserico.search.builder.ElasticAggregationBuilder;
 import com.loserico.search.builder.ElasticContextSuggestBuilder;
+import com.loserico.search.builder.ElasticIndexBuilder;
+import com.loserico.search.builder.ElasticIndexTemplateBuilder;
+import com.loserico.search.builder.ElasticMappingBuilder;
+import com.loserico.search.builder.ElasticMultiGetBuilder;
 import com.loserico.search.builder.ElasticQueryBuilder;
+import com.loserico.search.builder.ElasticReindexBuilder;
 import com.loserico.search.builder.ElasticSuggestBuilder;
-import com.loserico.search.builder.IndexBuilder;
-import com.loserico.search.builder.IndexTemplateBuilder;
-import com.loserico.search.builder.MappingBuilder;
-import com.loserico.search.builder.MultiGetBuilder;
 import com.loserico.search.cache.ElasticCacheUtils;
 import com.loserico.search.enums.Analyzer;
 import com.loserico.search.exception.AnalyzeException;
@@ -50,6 +52,8 @@ import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilder;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.index.reindex.DeleteByQueryRequestBuilder;
+import org.elasticsearch.index.reindex.UpdateByQueryAction;
+import org.elasticsearch.index.reindex.UpdateByQueryRequestBuilder;
 import org.elasticsearch.indices.IndexTemplateMissingException;
 import org.elasticsearch.search.suggest.SuggestBuilders;
 import org.elasticsearch.search.suggest.completion.CompletionSuggestionBuilder;
@@ -99,10 +103,10 @@ public final class ElasticUtils {
 	 * @param index 索引名
 	 * @return boolean 创建成功失败标识
 	 */
-	public static IndexBuilder createIndex(String index) {
+	public static ElasticIndexBuilder createIndex(String index) {
 		IndicesAdminClient indicesAdminClient = client.admin().indices();
 		CreateIndexRequestBuilder createIndexRequestBuilder = indicesAdminClient.prepareCreate(index);
-		return new IndexBuilder(createIndexRequestBuilder);
+		return new ElasticIndexBuilder(createIndexRequestBuilder);
 	}
 	
 	/**
@@ -335,6 +339,21 @@ public final class ElasticUtils {
 	}
 	
 	/**
+	 * 根据ID获取文档
+	 *
+	 * @param index 索引名
+	 * @param id    文档id
+	 * @return T
+	 */
+	public static String get(String index, String id) {
+		Objects.requireNonNull(index, "索引名不能为null");
+		Objects.requireNonNull(id, "id 不能为null");
+		
+		GetResponse response = client.prepareGet(index, ONLY_TYPE, id).get();
+		return response.getSourceAsString();
+	}
+	
+	/**
 	 * 根据ID获取并转成指定类型对象
 	 *
 	 * @param index 索引名
@@ -358,8 +377,8 @@ public final class ElasticUtils {
 	 *
 	 * @return
 	 */
-	public static MultiGetBuilder mget() {
-		return new MultiGetBuilder(client);
+	public static ElasticMultiGetBuilder mget() {
+		return new ElasticMultiGetBuilder(client);
 	}
 	
 	/**
@@ -544,7 +563,7 @@ public final class ElasticUtils {
 	 * @param mappingBuilder
 	 * @return boolean Mapping创建成功失败标识
 	 */
-	public static boolean putMapping(String index, MappingBuilder mappingBuilder) {
+	public static boolean putMapping(String index, ElasticMappingBuilder mappingBuilder) {
 		Objects.requireNonNull(index, "index cannot be null");
 		Objects.requireNonNull(mappingBuilder, "mappingBuilder cannot be null");
 		Map<String, Object> source = mappingBuilder.build();
@@ -560,8 +579,8 @@ public final class ElasticUtils {
 	 *
 	 * @param templateName
 	 */
-	public static IndexTemplateBuilder putIndexTemplate(String templateName) {
-		return IndexTemplateBuilder.newInstance(client, templateName);
+	public static ElasticIndexTemplateBuilder putIndexTemplate(String templateName) {
+		return ElasticIndexTemplateBuilder.newInstance(client, templateName);
 	}
 	
 	/**
@@ -783,5 +802,45 @@ public final class ElasticUtils {
 				.map(AnalyzeResponse.AnalyzeToken::getTerm)
 				.distinct()
 				.collect(toList());
+	}
+	
+	/**
+	 * 聚合
+	 * https://www.elastic.co/guide/en/elasticsearch/client/java-api/7.x/java-aggs.html
+	 *
+	 * @param indices
+	 * @return ElasticAggregationBuilder
+	 */
+	public static ElasticAggregationBuilder agg(String... indices) {
+		
+		return null;
+	}
+	
+	/**
+	 * 在更新索引的mapping后, 在原索引上重建索引<p>
+	 * https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/java-docs-update-by-query.html
+	 *
+	 * @param indices
+	 * @return BulkByScrollResponse
+	 */
+	public static BulkByScrollResponse updateByQuery(String... indices) {
+		UpdateByQueryRequestBuilder updateByQuery = new UpdateByQueryRequestBuilder(client, UpdateByQueryAction.INSTANCE);
+		updateByQuery.source(indices).abortOnVersionConflict(false);
+		BulkByScrollResponse bulkByScrollResponse = updateByQuery.get();
+		log.info(bulkByScrollResponse.toString());
+		return bulkByScrollResponse;
+	}
+	
+	/**
+	 * 重建索引<p>
+	 * https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/java-docs-reindex.html
+	 * https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-reindex.html
+	 * 
+	 * @param srcIndex
+	 * @param destIndex
+	 * @return ElasticReindexBuilder
+	 */
+	public static ElasticReindexBuilder reindex(String srcIndex, String destIndex) {
+		return new ElasticReindexBuilder(srcIndex, destIndex);
 	}
 }

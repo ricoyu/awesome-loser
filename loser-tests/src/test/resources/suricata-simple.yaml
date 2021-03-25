@@ -1,0 +1,5 @@
+app-layer:
+  protocols:
+    ## Step 5: App Layer Protocol Configuration
+    krb5:
+      enabled:

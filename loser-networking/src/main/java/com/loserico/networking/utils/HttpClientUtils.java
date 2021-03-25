@@ -60,7 +60,7 @@ public final class HttpClientUtils {
 		if (connectionManager == null) {
 			connectionManager = new PoolingHttpClientConnectionManager();
 			connectionManager.setMaxTotal(50);// 整个连接池最大连接数
-			connectionManager.setDefaultMaxPerRoute(5);// 每路由最大连接数，默认值是2
+			connectionManager.setDefaultMaxPerRoute(5);// 每路由最大连接数, 默认值是2
 		}
 	}
 	

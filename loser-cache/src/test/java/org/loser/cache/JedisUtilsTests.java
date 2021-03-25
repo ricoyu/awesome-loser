@@ -1,7 +1,6 @@
 package org.loser.cache;
 
 import com.loserico.cache.JedisUtils;
-import com.loserico.cache.concurrent.Lock;
 import com.loserico.common.lang.utils.IOUtils;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +44,9 @@ public class JedisUtilsTests {
 	
 	@Test
 	public void testLPushIdsMetadata() {
-		JedisUtils.LIST.lpush("ids-metadata", IOUtils.readFileAsString("D:\\Work\\观安信息上海有限公司\\NTA资料\\测试数据\\ids-metadata.json"));
+		for (int i = 0; i < 3; i++) {
+			JedisUtils.LIST.lpush("ids-metadata", IOUtils.readFileAsString("D:\\Work\\观安信息上海有限公司\\NTA资料\\测试数据\\ids-metadata-pop3.json"));
+		}
 	}
 	
 	@Test
@@ -146,7 +147,8 @@ public class JedisUtilsTests {
 	}*/
 	
 	public static void main(String[] args) {
-		Runnable task = () -> {
+		System.out.println(new Date(1615290356000L));
+		/*Runnable task = () -> {
 			Lock lock = JedisUtils.blockingLock("lock1");
 			try {
 				lock.lock();
@@ -170,7 +172,7 @@ public class JedisUtilsTests {
 		Thread t2 = new Thread(task, "t2");
 		
 		t1.start();
-		t2.start();
+		t2.start();*/
 		
 	}
 	

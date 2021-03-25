@@ -12,22 +12,15 @@
         <groupId>com.loserico</groupId>
         <artifactId>awesome-loser</artifactId>
         <relativePath>../pom.xml</relativePath>
-        <version>4.7.20</version>
+        <version>4.9.0</version>
     </parent>
     
     <properties>
         <!--<elasticsearch.version>5.6.16</elasticsearch.version>-->
         <elasticsearch.version>7.1.1</elasticsearch.version>
-        <!--<elasticsearch.version>7.6.2</elasticsearch.version>-->
     </properties>
     
     <dependencies>
-        <!--<dependency>
-            <groupId>com.idss.common</groupId>
-            <artifactId>datafactory</artifactId>
-            <version>1.0</version>
-            <scope>test</scope>
-        </dependency>-->
         <dependency>
             <groupId>com.loserico</groupId>
             <artifactId>commons-lang</artifactId>

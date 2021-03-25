@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.Calendar;
 import java.util.Date;
@@ -42,6 +43,8 @@ import static java.time.format.DateTimeFormatter.ofPattern;
  */
 @Slf4j
 public final class DateUtils {
+	
+	private static final Pattern MILLIS_PATTERN = Pattern.compile("\\d+");
 	
 	private DateUtils() {
 	}
@@ -238,6 +241,43 @@ public final class DateUtils {
 		
 		Objects.requireNonNull(format, "format cannot be null!");
 		return localTime.format(ofPattern(format));
+	}
+	
+	/**
+	 * 将本地时间localDateTime转成HTTP请求头使用的日期格式<p>
+	 * 时区会转成GMT时区, 英语, 如: Sun, 06 Nov 1994 08:49:37 GMT
+	 *
+	 * @param localDateTime
+	 * @return String
+	 */
+	public static String formatToRfc(LocalDateTime localDateTime) {
+		if (localDateTime == null) {
+			return null;
+		}
+		
+		ZonedDateTime zonedDateTime = localDateTime.atZone(ZoneId.systemDefault());
+		ZonedDateTime utc = zonedDateTime.withZoneSameInstant(ZONE_ID_GMT);
+		return utc.format(DFT_DATETIME_FORMAT_RFC);
+	}
+	
+	/**
+	 * 将本地时间localDateTime转成HTTP请求头使用的日期格式<p>
+	 * 时区会转成GMT时区, 英语, 如: Sun, 06 Nov 1994 08:49:37 GMT
+	 *
+	 * @param date
+	 * @return String
+	 */
+	public static String formatToRfc(Date date) {
+		if (date == null) {
+			return null;
+		}
+		SimpleDateFormat simpleDateFormat = SimpleDateFormatHolder.formatFor(FMT_RFC1123_FORMAT, GMT, Locale.ENGLISH);
+		return simpleDateFormat.format(date);
+	}
+	
+	public static void main(String[] args) {
+		System.out.println(formatToRfc(LocalDateTime.now()));
+		System.out.println(formatToRfc(new Date()));
 	}
 	
 	// -----------------------------------------------------------------------------------------------------------------
@@ -860,6 +900,7 @@ public final class DateUtils {
 	
 	/**
 	 * java.sql.Date 转 java.util.Date
+	 *
 	 * @param date
 	 * @return
 	 */
@@ -1116,6 +1157,19 @@ public final class DateUtils {
 			return null;
 		}
 		return localDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+	}
+	
+	/**
+	 * 判断value是不是字符串形式的毫秒数
+	 *
+	 * @param value
+	 * @return boolean
+	 */
+	public static boolean isTimeMillis(String value) {
+		if (isBlank(value)) {
+			return false;
+		}
+		return MILLIS_PATTERN.matcher(value).matches();
 	}
 	
 	private static boolean isBlank(String s) {

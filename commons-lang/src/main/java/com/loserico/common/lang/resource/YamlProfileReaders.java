@@ -21,6 +21,18 @@ public class YamlProfileReaders implements YamlOps {
 	
 	private YamlReader profileReader;
 	
+	/**
+	 * yml的文件名, 不带.yml后缀<p>
+	 * 支持profile以及工作目录, classpath下不同优先级配置文件读取<p>
+	 *
+	 * 优先级从高到低
+	 * <ol>
+	 * <li/>工作目录下config目录下的同名配置文件
+	 * <li/>工作目录下的同名配置文件
+	 * <li/>classpath下的同名配置文件
+	 * </ol>
+	 * @param resource
+	 */
 	public static YamlProfileReaders instance(String resource) {
 		YamlReader yamlReader = new YamlReader(resource);
 		return new YamlProfileReaders(yamlReader);

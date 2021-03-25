@@ -14,6 +14,6 @@ classpath根目录下放jackson.properties, 支持的配置项如下
 
 4. loser.jackson.epochBased
 
-   日期时间类型是否默认序列化成1970-01-01依赖的毫秒数
+   日期时间类型是否默认序列化成1970-01-01以来的毫秒数
 
    

@@ -53,7 +53,18 @@ public enum FieldType {
 	 * Binary value encoded as a Base64 string
 	 * 二进制类型以base64方式存储
 	 */
-	BINARY("binary");
+	BINARY("binary"),
+	
+	/**
+	 * 嵌套对象
+	 */
+	NESTED("nested"),
+	
+	/**
+	 * 文档的父子关系
+	 * https://www.elastic.co/guide/en/elasticsearch/reference/7.x/parent-join.html
+	 */
+	JOIN("join");
 	
 	/**
 	 * 类型名称

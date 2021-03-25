@@ -6,6 +6,9 @@ import org.junit.Test;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -35,16 +38,31 @@ public class DateUtilsTest {
 		long end = System.nanoTime();
 		System.out.println("初始化DateUtils需要: " + (end - begin) / 1000000 + "毫秒");
 		log.info("初始化DateUtils需要: " + (end - begin) / 1000000 + "毫秒");
+		
+		System.out.println(new Date(1616045447386L));
+		System.out.println(new Date(1616046347386L));
 	}
 	
 	@Test
 	public void testParse() {
-		String date1 = "2020-12-23T12:51:18.456019+0800";
-		String date2 = "2020-12-24T12:51:18.456019+0800";
-		Date date = DateUtils.parse(date1);
-		System.out.println(date);
-		date = DateUtils.parse(date2);
-		System.out.println(date);
+		String startDateTime = "2021-03-18 13:30:47";
+		String endDateTime = "2021-03-19 13:45:47";
+		
+		long startTime = DateUtils.toEpochMilis(startDateTime);
+		System.out.println("startTime:" + startTime);
+		long endTime = DateUtils.toEpochMilis(endDateTime);
+		System.out.println("endTime:" + endTime);
+		
+		System.out.println(new Date(1616045447386L));
+		System.out.println(new Date(1616046347386L));
+	}
+	
+	@Test
+	public void testReverseParse() {
+		LocalDateTime startDateTime = DateUtils.toLocalDateTime(1615132800000L);
+		System.out.println(startDateTime);
+		LocalDateTime endDateTime = DateUtils.toLocalDateTime(1615737599000L);
+		System.out.println(endDateTime);
 	}
 	
 	@Test
@@ -182,5 +200,15 @@ public class DateUtilsTest {
 		System.out.println(dateStr);
 		Date date1 = DateUtils.parse(dateStr);
 		assertTrue(date1.getTime() == date.getTime());
+	}
+	
+	@Test
+	public void testLocalDateTimeToGMT() {
+		LocalDateTime now = LocalDateTime.now();
+		System.out.println(now);
+		
+		ZonedDateTime zonedDateTime = now.atZone(ZoneId.systemDefault());
+		ZonedDateTime utc = zonedDateTime.withZoneSameInstant(ZoneId.of("UTC"));
+		System.out.println(utc);
 	}
 }

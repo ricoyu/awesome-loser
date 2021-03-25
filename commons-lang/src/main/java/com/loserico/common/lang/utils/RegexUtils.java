@@ -1,5 +1,8 @@
 package com.loserico.common.lang.utils;
 
+import com.loserico.common.lang.bean.UrlParts;
+import com.loserico.common.lang.transformer.Transformers;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -23,11 +26,58 @@ public final class RegexUtils {
 	 */
 	public static final String I18N_MSG_REGEX = "\\{([^\\s]+)\\}";
 	
+	/**
+	 * 用于匹配URL的正则表达式
+	 *
+	 * 给定一个URL:<p>
+	 * https://www.google.com:80/dir/1/2/search.html?arg=0-a&arg1=1-b&arg3-c#hash
+	 * <p>
+	 * <ul>抽取URL中不同部分对应的group如下
+	 * <li/>0      完整url
+	 * <li/>1      https:                     (([^:/?#]+):)?
+	 * <li/>2      https                      ([^:/?#]+)
+	 * <li/>3      //www.google.com:80        (//([^/?#:]*)(:(\d{2,}))?)?
+	 * <li/>4      www.google.com             ([^/?#:]*):?
+	 * <li/>5      :80                        (:(\d{2,}))?
+	 * <li/>6      80                         (\d{2,})
+	 * <li/>7      /dir/1/2/search.html       ([^?#]*)
+	 * <li/>8      ?arg=0-a&arg1=1-b&arg3-c   (\?([^#]*))?
+	 * <li/>9      arg=0-a&arg1=1-b&arg3-c    ([^#]*)
+	 * <li/>10      #hash                     (#(.*))?
+	 * <li/>11      hash                      (.*)
+	 * </ul>
+	 * <p>
+	 * 我们一般比较关系的是Group 2, 4, 6, 7, 9, 分别代表 scheme, host, port, path, args
+	 */
+	public static final String URL_REGEX = "^(([^:/?#]+):)?(//([^/?#:]*)(:(\\d{2,}))?)?([^?#]*)(\\?([^#]*))?(#(.*))?";
+	
 	public static final Pattern I18N_MSG_PATTERN = Pattern.compile(I18N_MSG_REGEX);
+	
+	public static final Pattern URL_PATTERN = Pattern.compile(URL_REGEX);
 	
 	public static boolean matches(Pattern pattern, String value) {
 		Matcher matcher = pattern.matcher(value);
 		return matcher.matches();
+	}
+	
+	public static UrlParts teardown(String url) {
+		if (isBlank(url)) {
+			return null;
+		}
+		
+		Matcher matcher = URL_PATTERN.matcher(url);
+		if (!matcher.matches()) {
+			return null;
+		}
+		
+		UrlParts urlParts = new UrlParts();
+		urlParts.setScheme(matcher.group(2));
+		urlParts.setHost(matcher.group(4));
+		urlParts.setPort(Transformers.convert(matcher.group(6), Integer.class));
+		urlParts.setPath(matcher.group(7));
+		urlParts.setParams(matcher.group(9));
+		
+		return urlParts;
 	}
 	
 	/**

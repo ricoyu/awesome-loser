@@ -37,13 +37,14 @@ public class JedisClusterPoolFactory implements PoolFactory {
 		
 		JedisPoolConfig poolConfig = config(propertyReader);
 		String password = propertyReader.getString("redis.password");
-		//表示连接超时时间
-		int connectionTimeout = propertyReader.getInt("redis.cluster.connectionTimeout", 5000);
-		//表示读取数据超时时间
-		int soTimeout = propertyReader.getInt("redis.cluster.soTimeout", 2000);
+		
+		// 默认50秒连接超时
+		int connectionTimeout = propertyReader.getInt("redis.connectionTimeout", 50000);
+		//执行redis命令默认1秒超时
+		int socketTimeout = propertyReader.getInt("redis.socketTimeout", 1000);
 		//出现异常最大重试次数
 		int maxAttempts = propertyReader.getInt("redis.cluster.maxAttempts", 3);
-		return new JedisCluster(nodes, connectionTimeout, soTimeout, maxAttempts, password, poolConfig);
+		return new JedisCluster(nodes, connectionTimeout, socketTimeout, maxAttempts, password, poolConfig);
 	}
 	
 	@Override

@@ -11,7 +11,6 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 自定义线程池<p>
@@ -147,7 +146,7 @@ public class LoserThreadExecutor extends ThreadPoolExecutor {
 	 */
 	private void monitor(String title) {
 		try {
-			// 线程池监控信息记录, 这里需要注意写ES的时机,尤其是多个子线程的日志合并到主流程的记录方式
+			// 线程池监控信息记录
 			String threadPoolMonitor = MessageFormat.format(
 					"{0}{1} " +
 							"Core pool size:{2}, " +
@@ -165,10 +164,10 @@ public class LoserThreadExecutor extends ThreadPoolExecutor {
 					System.lineSeparator(), title,
 					this.getCorePoolSize(),
 					this.getPoolSize(),
-					this.getQueue().size(),
-					this.getActiveCount(),
-					this.getCompletedTaskCount(),
-					this.getTaskCount(),
+					this.getQueue().size(), //当前排队的线程数
+					this.getActiveCount(),  //当前活动线程数
+					this.getCompletedTaskCount(), //执行完成线程数
+					this.getTaskCount(),    //总线程数 = 排队线程数 + 活动线程数 +  执行完成线程数
 					this.getLargestPoolSize(),
 					this.getMaximumPoolSize(),
 					this.getKeepAliveTime(timeUnit != null ? timeUnit : TimeUnit.SECONDS),
@@ -181,37 +180,4 @@ public class LoserThreadExecutor extends ThreadPoolExecutor {
 		}
 	}
 	
-	static class LoserThreadFactory implements ThreadFactory {
-		private static final AtomicInteger poolNumber = new AtomicInteger(1);
-		private final ThreadGroup group;
-		private final AtomicInteger threadNumber = new AtomicInteger(1);
-        /**
-         * 线程池名字前缀
-         */
-		private final String poolNamePrefix;
-		
-		LoserThreadFactory() {
-			SecurityManager s = System.getSecurityManager();
-			group = (s != null) ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
-			poolNamePrefix = "loser-pool-" + poolNumber.getAndIncrement() + "-thread-";
-		}
-		
-		LoserThreadFactory(String namePrefix) {
-		    this.poolNamePrefix = namePrefix;
-			SecurityManager s = System.getSecurityManager();
-			group = (s != null) ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
-			namePrefix = namePrefix + "-" + poolNumber.getAndIncrement() + "-thread-";
-		}
-		
-		public Thread newThread(Runnable r) {
-			Thread thread = new Thread(group, r, poolNamePrefix + threadNumber.getAndIncrement(), 0);
-			if (thread.isDaemon()) {
-				thread.setDaemon(false);
-			}
-			if (thread.getPriority() != Thread.NORM_PRIORITY) {
-				thread.setPriority(Thread.NORM_PRIORITY);
-			}
-			return thread;
-		}
-	}
 }
