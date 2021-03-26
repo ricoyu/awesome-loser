@@ -2,10 +2,10 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>loser-search</artifactId>
+    <artifactId>loser-search-legacy</artifactId>
     <version>${project.parent.version}</version>
     <packaging>jar</packaging>
-    <name>Elasticsearch Search API</name>
+    <name>Elasticsearch Search API For 5.x</name>
     <url>http://maven.apache.org</url>
 
     <parent>
@@ -16,7 +16,7 @@
     </parent>
     
     <properties>
-        <elasticsearch.version>7.1.1</elasticsearch.version>
+        <elasticsearch.version>5.6.16</elasticsearch.version>
     </properties>
     
     <dependencies>
@@ -65,17 +65,6 @@
             <artifactId>log4j-to-slf4j</artifactId>
         </dependency>
 
-        <!-- 原来封装的基于High Level API的代码需要这个, 暂时先留着-->
-        <dependency>
-            <groupId>org.elasticsearch.client</groupId>
-            <artifactId>elasticsearch-rest-client</artifactId>
-            <version>${elasticsearch.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.elasticsearch.client</groupId>
-            <artifactId>elasticsearch-rest-high-level-client</artifactId>
-            <version>${elasticsearch.version}</version>
-        </dependency>
         <dependency>
             <groupId>org.elasticsearch.client</groupId>
             <artifactId>transport</artifactId>

@@ -1,6 +1,6 @@
-package com.loserico.search.builder;
+package com.loserico.searchlegacy.builder;
 
-import com.loserico.search.ElasticUtils;
+import com.loserico.searchlegacy.ElasticUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.common.xcontent.ToXContent;
 import org.elasticsearch.search.suggest.SuggestBuilders;
@@ -47,47 +47,37 @@ public final class ElasticContextSuggestBuilder {
 	 * 要实现基于上下文的自动完成, 用户需要先为Index建立Mapping
 	 * 下面这个Mapping设置了字段comment_autocomplete提供上下文的自动完成
 	 * 其type是category
-	 * <pre>
 	 * {
-	 *   "properties": {
-	 *     "comment_autocomplete": {
-	 *       "type": "completion",
-	 *       "contexts": [
-	 *         {
-	 *           "type": "category",
-	 *           "name": "comment_category"
-	 *         }
-	 *       ]
-	 *     }
-	 *   }
+	 * "properties": {
+	 * "comment_autocomplete": {
+	 * "type": "completion",
+	 * "contexts": [{
+	 * "type": "category",
+	 * "name": "comment_category"
+	 * }]
 	 * }
-	 * </pre>
+	 * }
+	 * }
 	 * <p>
 	 * 下面插入两篇文档, 一篇category设为movies, 一篇coffee
-	 * <pre>
 	 * {
-	 *   "comment": "I love the star war movies",
-	 *   "comment_autocomplete": {
-	 *     "input": [
-	 *       "star wars"
-	 *     ],
-	 *     "contexts": {
-	 *       "comment_category": "movies"
-	 *     }
-	 *   }
+	 * "comment": "I love the star war movies",
+	 * "comment_autocomplete": {
+	 * "input": ["star wars"],
+	 * "contexts": {
+	 * "comment_category": "movies"
 	 * }
-	 * </pre>
+	 * }
+	 * }
 	 * <p>
 	 * {
-	 *   "comment": "Where can I find a Starbucks",
-	 *   "comment_autocomplete": {
-	 *     "input": [
-	 *       "starbucks"
-	 *     ],
-	 *     "contexts": {
-	 *       "comment_category": "coffee"
-	 *     }
-	 *   }
+	 * "comment": "Where can I find a Starbucks",
+	 * "comment_autocomplete": {
+	 * "input": ["starbucks"],
+	 * "contexts": {
+	 * "comment_category": "coffee"
+	 * }
+	 * }
 	 * }
 	 * <p>
 	 * 这里category属性就对应movies和coffee这两个值
@@ -216,7 +206,6 @@ public final class ElasticContextSuggestBuilder {
 	
 	/**
 	 * 执行查询, 返回suggest信息
-	 *
 	 * @return Set<String>
 	 */
 	public Set<String> suggest() {

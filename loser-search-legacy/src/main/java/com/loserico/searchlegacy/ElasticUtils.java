@@ -1,21 +1,21 @@
-package com.loserico.search;
+package com.loserico.searchlegacy;
 
 import com.loserico.common.lang.utils.ReflectionUtils;
-import com.loserico.search.builder.ElasticAggregationBuilder;
-import com.loserico.search.builder.ElasticContextSuggestBuilder;
-import com.loserico.search.builder.ElasticIndexBuilder;
-import com.loserico.search.builder.ElasticIndexTemplateBuilder;
-import com.loserico.search.builder.ElasticMappingBuilder;
-import com.loserico.search.builder.ElasticMultiGetBuilder;
-import com.loserico.search.builder.ElasticQueryBuilder;
-import com.loserico.search.builder.ElasticReindexBuilder;
-import com.loserico.search.builder.ElasticSuggestBuilder;
-import com.loserico.search.cache.ElasticCacheUtils;
-import com.loserico.search.enums.Analyzer;
-import com.loserico.search.exception.AnalyzeException;
-import com.loserico.search.factory.TransportClientFactory;
-import com.loserico.search.support.BulkResult;
-import com.loserico.search.support.UpdateResult;
+import com.loserico.searchlegacy.builder.ElasticAggregationBuilder;
+import com.loserico.searchlegacy.builder.ElasticContextSuggestBuilder;
+import com.loserico.searchlegacy.builder.ElasticIndexBuilder;
+import com.loserico.searchlegacy.builder.ElasticIndexTemplateBuilder;
+import com.loserico.searchlegacy.builder.ElasticMappingBuilder;
+import com.loserico.searchlegacy.builder.ElasticMultiGetBuilder;
+import com.loserico.searchlegacy.builder.ElasticQueryBuilder;
+import com.loserico.searchlegacy.builder.ElasticReindexBuilder;
+import com.loserico.searchlegacy.builder.ElasticSuggestBuilder;
+import com.loserico.searchlegacy.cache.ElasticCacheUtils;
+import com.loserico.searchlegacy.enums.Analyzer;
+import com.loserico.searchlegacy.exception.AnalyzeException;
+import com.loserico.searchlegacy.factory.TransportClientFactory;
+import com.loserico.searchlegacy.support.BulkResult;
+import com.loserico.searchlegacy.support.UpdateResult;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.DocWriteResponse;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
@@ -74,6 +74,7 @@ import java.util.concurrent.ExecutionException;
 
 import static com.loserico.json.jackson.JacksonUtils.toJson;
 import static com.loserico.json.jackson.JacksonUtils.toObject;
+import static com.loserico.searchlegacy.constants.ElasticConstants.ONLY_TYPE;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
@@ -90,11 +91,6 @@ import static java.util.stream.Collectors.toList;
  */
 @Slf4j
 public final class ElasticUtils {
-	
-	/**
-	 * 唯一的一个type是_doc
-	 */
-	public static final String ONLY_TYPE = "_doc";
 	
 	public static final TransportClient client = TransportClientFactory.create();
 	
@@ -277,7 +273,7 @@ public final class ElasticUtils {
 	 */
 	public static BulkResult bulkIndex(String index, String... docs) {
 		//配置全局index和type
-		BulkRequestBuilder bulkRequest = client.prepareBulk(index, ONLY_TYPE);
+		BulkRequestBuilder bulkRequest = client.prepareBulk();//TODO
 		asList(docs).forEach((doc) -> {
 			bulkRequest.add(client.prepareIndex().setSource(doc, XContentType.JSON));
 		});
@@ -312,7 +308,8 @@ public final class ElasticUtils {
 	 * @return BulkResult
 	 */
 	public static BulkResult bulkIndex(String index, List<?> docs) {
-		BulkRequestBuilder bulkRequestBuilder = client.prepareBulk(index, ONLY_TYPE);
+		//BulkRequestBuilder bulkRequestBuilder = client.prepareBulk(index, ONLY_TYPE);
+		BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();//TODO
 		docs.stream()
 				.filter(Objects::nonNull)
 				.map((doc) -> {
@@ -570,7 +567,7 @@ public final class ElasticUtils {
 		Objects.requireNonNull(mappingBuilder, "mappingBuilder cannot be null");
 		Map<String, Object> source = mappingBuilder.build();
 		PutMappingRequestBuilder putMappingRequestBuilder = client.admin().indices().preparePutMapping(index);
-		AcknowledgedResponse acknowledgedResponse = putMappingRequestBuilder.setType(ElasticUtils.ONLY_TYPE)
+		AcknowledgedResponse acknowledgedResponse = putMappingRequestBuilder.setType(ONLY_TYPE)
 				.setSource(source)
 				.get();
 		return acknowledgedResponse.isAcknowledged();

@@ -1,8 +1,6 @@
-package com.loserico.search.builder;
+package com.loserico.searchlegacy.builder;
 
 import org.elasticsearch.common.settings.Settings.Builder;
-
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
  * 为索引设置Settings
@@ -26,15 +24,6 @@ public final class Settings {
 	 * number_of_replicas
 	 */
 	private int numberOfReplicas = 0;
-	
-	/**
-	 * index.default_pipeline
-	 * <p>
-	 * The default ingest node pipeline for this index.
-	 * Index requests will fail if the default pipeline is set and the pipeline does not exist.
-	 * The default may be overridden using the pipeline parameter.
-	 */
-	private String defaultPipeline;
 	
 	private Settings() {
 	}
@@ -65,24 +54,10 @@ public final class Settings {
 		return this;
 	}
 	
-	/**
-	 * 设置这个索引默认的pipeline
-	 *
-	 * @param defaultPipeline
-	 * @return SettingsBuilder
-	 */
-	public Settings defaultPipeline(String defaultPipeline) {
-		this.defaultPipeline = defaultPipeline;
-		return this;
-	}
-	
 	private org.elasticsearch.common.settings.Settings build() {
 		Builder builder = org.elasticsearch.common.settings.Settings.builder()
 				.put("number_of_shards", numberOfShards)
 				.put("number_of_replicas", numberOfReplicas);
-		if (isNotBlank(defaultPipeline)) {
-			builder.put("index.default_pipeline", defaultPipeline);
-		}
 		return builder.build();
 	}
 	

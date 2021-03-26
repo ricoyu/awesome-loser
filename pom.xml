@@ -27,6 +27,7 @@
         <module>loser-token-parser</module>
         <module>loser-netty</module>
         <module>loser-search</module>
+        <!--<module>loser-search-legacy</module>-->
         <module>loser-messaging</module>
         <module>loser-mybatis</module>
     </modules>

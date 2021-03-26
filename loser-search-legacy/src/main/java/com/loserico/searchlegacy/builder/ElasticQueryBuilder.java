@@ -1,17 +1,16 @@
-package com.loserico.search.builder;
+package com.loserico.searchlegacy.builder;
 
 import com.loserico.common.lang.transformer.Transformers;
 import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.json.jackson.JacksonUtils;
-import com.loserico.search.ElasticUtils;
-import com.loserico.search.cache.ElasticCacheUtils;
-import com.loserico.search.enums.Direction;
-import com.loserico.search.enums.SortOrder;
-import com.loserico.search.enums.SortOrder.SortOrderBuilder;
-import com.loserico.search.exception.ElasticQueryException;
-import com.loserico.search.vo.PageResult;
+import com.loserico.searchlegacy.ElasticUtils;
+import com.loserico.searchlegacy.cache.ElasticCacheUtils;
+import com.loserico.searchlegacy.enums.Direction;
+import com.loserico.searchlegacy.enums.SortOrder;
+import com.loserico.searchlegacy.enums.SortOrder.SortOrderBuilder;
+import com.loserico.searchlegacy.exception.ElasticQueryException;
+import com.loserico.searchlegacy.vo.PageResult;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.lucene.search.TotalHits;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.lucene.search.function.CombineFunction;
@@ -31,7 +30,7 @@ import java.util.Objects;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.elasticsearch.common.lucene.search.function.CombineFunction.*;
+import static org.elasticsearch.common.lucene.search.function.CombineFunction.MULTIPLY;
 
 /**
  * 查询生成器
@@ -55,7 +54,7 @@ public final class ElasticQueryBuilder {
 	/**
 	 * TermQueryBuilder, MatchQueryBuilder 等等builder的父类
 	 */
-	private QueryBuilder builder;
+	protected QueryBuilder builder;
 	
 	/**
 	 * 是否要获取_source
@@ -106,7 +105,6 @@ public final class ElasticQueryBuilder {
 	 * <li/>Random Score 为每一个用户使用一个不同的, 随机算分结果
 	 * <li/>衰减函数 以某个字段的值为标准, 距离某个值越近, 得分越高
 	 * <li/>Script Score 自定义脚本完全控制所需逻辑
-	 * </ul>
 	 */
 	private ScoreFunctionBuilder scoreFunctionBuilder;
 	
@@ -283,7 +281,7 @@ public final class ElasticQueryBuilder {
 	 * <li/>Sum  算分与函数的和
 	 * <li/>Min / Max   算分与函数取 最小/最大值
 	 * <li/>Replace   使用函数值取代算分
-	 * </ul>
+	 * <ul/>
 	 *
 	 * @param boostMode
 	 * @return
@@ -308,6 +306,15 @@ public final class ElasticQueryBuilder {
 	public ElasticQueryBuilder queryBuilder(QueryBuilder builder) {
 		this.builder = builder;
 		return this;
+	}
+	
+	/**
+	 * 设置QueryBuilder, 可以通过QueryBuilders提供的静态方法构造出来
+	 *
+	 * @return QueryBuilders
+	 */
+	public com.loserico.searchlegacy.builder.QueryBuilders queryBuilder() {
+		return new com.loserico.searchlegacy.builder.QueryBuilders(this);
 	}
 	
 	/**
@@ -521,12 +528,18 @@ public final class ElasticQueryBuilder {
 				.setFetchSource(false);
 		
 		SearchResponse response = builder.get();
-		TotalHits totalHits = response.getHits().getTotalHits();
+		/*
+		 * Elasticsearch 7.1.1 版本返回的TotalHits对象
+		 * Elasticsearch 5.6.16版本返回的Long
+		 * 为了兼容两个版本所以特殊处理了一下
+		 */
+		Object totalHits = response.getHits().getTotalHits();
 		if (totalHits == null) {
 			return 0L;
 		}
 		
-		return totalHits.value;
+		Long hits = ReflectionUtils.getFieldValue("value", totalHits);
+		return hits == null ? 0L : hits;
 	}
 	
 	/**

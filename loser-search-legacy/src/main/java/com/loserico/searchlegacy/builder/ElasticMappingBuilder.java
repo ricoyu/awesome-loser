@@ -1,13 +1,10 @@
-package com.loserico.search.builder;
+package com.loserico.searchlegacy.builder;
 
-import com.loserico.search.ElasticUtils;
-import com.loserico.search.enums.Dynamic;
-import com.loserico.search.enums.FieldType;
-import com.loserico.search.support.FieldDef;
+import com.loserico.searchlegacy.ElasticUtils;
+import com.loserico.searchlegacy.enums.Dynamic;
+import com.loserico.searchlegacy.enums.FieldType;
+import com.loserico.searchlegacy.support.FieldDef;
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
-import org.elasticsearch.action.support.master.AcknowledgedResponse;
-import org.elasticsearch.client.transport.TransportClient;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -17,6 +14,7 @@ import java.util.Set;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
+ * TODO 为字段设置子字段?
  * <p>
  * Copyright: (C), 2020-12-28 8:54
  * <p>
@@ -26,16 +24,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
-@Deprecated
 @Slf4j
-public final class PutMappingBuilder {
-	
-	private TransportClient client;
-	
-	/**
-	 * 索引名
-	 */
-	private String index;
+public final class ElasticMappingBuilder {
 	
 	/**
 	 * 指定从这个索引复制Mapping设置
@@ -48,6 +38,11 @@ public final class PutMappingBuilder {
 	private Dynamic dynamic = null;
 	
 	/**
+	 * 是否要存储_source
+	 */
+	private Boolean sourceEnabled = null;
+	
+	/**
 	 * 字段定义, 字段名-字段类型
 	 */
 	private Set<FieldDef> fields = new HashSet<>();
@@ -57,18 +52,20 @@ public final class PutMappingBuilder {
 	 */
 	private Set<String> deleteFields = new HashSet<>();
 	
-	public PutMappingBuilder(TransportClient client, String index) {
-		this.client = client;
-		this.index = index;
+	private ElasticMappingBuilder() {
+	}
+	
+	public static ElasticMappingBuilder newInstance() {
+		return new ElasticMappingBuilder();
 	}
 	
 	/**
 	 * 从一个索引中拷贝其mapping设置, 然后只需要显式设置某些字段的mapping, 减少coding量
 	 *
 	 * @param copyIndex
-	 * @return PutMappingBuilder
+	 * @return ElasticMappingBuilder
 	 */
-	public PutMappingBuilder copy(String copyIndex) {
+	public ElasticMappingBuilder copy(String copyIndex) {
 		this.copyIndex = copyIndex;
 		return this;
 	}
@@ -77,10 +74,21 @@ public final class PutMappingBuilder {
 	 * 设置索引Mapping的dynamic属性: true false strict
 	 *
 	 * @param dynamic
-	 * @return PutMappingBuilder
+	 * @return ElasticMappingBuilder
 	 */
-	public PutMappingBuilder dynamic(Dynamic dynamic) {
+	public ElasticMappingBuilder dynamic(Dynamic dynamic) {
 		this.dynamic = dynamic;
+		return this;
+	}
+	
+	/**
+	 * 是否要存储_source
+	 *
+	 * @param sourceEnabled
+	 * @return ElasticMappingBuilder
+	 */
+	public ElasticMappingBuilder sourceEnabled(Boolean sourceEnabled) {
+		this.sourceEnabled = sourceEnabled;
 		return this;
 	}
 	
@@ -89,9 +97,9 @@ public final class PutMappingBuilder {
 	 *
 	 * @param fieldName
 	 * @param fieldType
-	 * @return PutMappingBuilder
+	 * @return ElasticMappingBuilder
 	 */
-	public PutMappingBuilder field(String fieldName, FieldType fieldType) {
+	public ElasticMappingBuilder field(String fieldName, FieldType fieldType) {
 		fields.add(new FieldDef(fieldName, fieldType));
 		return this;
 	}
@@ -102,29 +110,29 @@ public final class PutMappingBuilder {
 	 * @param fieldName
 	 * @param fieldType
 	 * @param index     控制该字段是否被编入索引
-	 * @return PutMappingBuilder
+	 * @return ElasticMappingBuilder
 	 */
-	public PutMappingBuilder field(String fieldName, FieldType fieldType, boolean index) {
+	public ElasticMappingBuilder field(String fieldName, FieldType fieldType, boolean index) {
 		fields.add(new FieldDef(fieldName, fieldType, index));
 		return this;
 	}
 	
-	public PutMappingBuilder field(FieldDef fieldDef) {
+	public ElasticMappingBuilder field(FieldDef fieldDef) {
 		fields.add(fieldDef);
 		return this;
 	}
 	
-	public PutMappingBuilder delete(String... fields) {
+	public ElasticMappingBuilder delete(String... fields) {
 		for (int i = 0; i < fields.length; i++) {
 			deleteFields.add(fields[i]);
 		}
 		return this;
 	}
 	
-	public boolean execute() {
-		PutMappingRequestBuilder putMappingRequestBuilder = client.admin().indices().preparePutMapping(index);
+	public Map<String, Object> build() {
 		
 		Map<String, Object> source = new HashMap<>();
+		
 		/*
 		 * 从已有索引中拷贝mapping信息
 		 */
@@ -137,6 +145,15 @@ public final class PutMappingBuilder {
 		 */
 		if (dynamic != null) {
 			source.put("dynamic", dynamic);
+		}
+		
+		/**
+		 * 设置 "_source": {"enabled": true}
+		 */
+		if (sourceEnabled != null) {
+			source.put("_source", new HashMap(1) {{
+				put("enabled", sourceEnabled);
+			}});
 		}
 		
 		//先取出properties, 如果没有, 那么创建一个
@@ -162,10 +179,7 @@ public final class PutMappingBuilder {
 			}
 		}
 		
-		AcknowledgedResponse acknowledgedResponse = putMappingRequestBuilder.setType(ElasticUtils.ONLY_TYPE)
-				.setSource(source)
-				.get();
-		return acknowledgedResponse.isAcknowledged();
+		return source;
 	}
 	
 }
