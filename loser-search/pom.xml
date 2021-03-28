@@ -14,11 +14,11 @@
         <relativePath>../pom.xml</relativePath>
         <version>4.9.0</version>
     </parent>
-    
+
     <properties>
         <elasticsearch.version>7.1.1</elasticsearch.version>
     </properties>
-    
+
     <dependencies>
         <dependency>
             <groupId>com.loserico</groupId>
@@ -51,7 +51,7 @@
             <artifactId>logback-core</artifactId>
             <scope>provided</scope>
         </dependency>
-        
+
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
@@ -65,17 +65,6 @@
             <artifactId>log4j-to-slf4j</artifactId>
         </dependency>
 
-        <!-- 原来封装的基于High Level API的代码需要这个, 暂时先留着-->
-        <dependency>
-            <groupId>org.elasticsearch.client</groupId>
-            <artifactId>elasticsearch-rest-client</artifactId>
-            <version>${elasticsearch.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.elasticsearch.client</groupId>
-            <artifactId>elasticsearch-rest-high-level-client</artifactId>
-            <version>${elasticsearch.version}</version>
-        </dependency>
         <dependency>
             <groupId>org.elasticsearch.client</groupId>
             <artifactId>transport</artifactId>
@@ -85,6 +74,22 @@
             <groupId>org.elasticsearch</groupId>
             <artifactId>elasticsearch</artifactId>
             <version>${elasticsearch.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.elasticsearch.plugin</groupId>
+            <artifactId>x-pack-core</artifactId>
+            <version>${elasticsearch.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.elasticsearch.client</groupId>
+            <artifactId>x-pack-transport</artifactId>
+            <version>${elasticsearch.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.unboundid</groupId>
+            <artifactId>unboundid-ldapsdk</artifactId>
+            <version>5.1.4</version>
         </dependency>
 
         <dependency>

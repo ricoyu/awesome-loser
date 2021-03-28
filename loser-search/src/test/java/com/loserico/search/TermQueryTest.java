@@ -1,18 +1,16 @@
 package com.loserico.search;
 
 import com.loserico.search.ElasticUtilsTest.Product;
-import com.loserico.search.builder.ElasticMappingBuilder;
 import com.loserico.search.enums.FieldType;
 import com.loserico.search.enums.SortOrder;
 import com.loserico.search.support.BulkResult;
-import com.loserico.search.support.FieldDef;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.Test;
 
 import java.util.List;
 
 import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
 /**
  * <p>
@@ -30,10 +28,9 @@ public class TermQueryTest {
 	public void testTermQuery() {
 		ElasticUtils.deleteIndex("products");
 		boolean created = ElasticUtils.createIndex("products")
-				.mapping(ElasticMappingBuilder.newInstance()
-						.field(FieldDef.builder("desc", FieldType.KEYWORD)
-								.build()))
-				.create();
+				.mapping()
+				.field("desc", FieldType.KEYWORD)
+				.thenCreate();
 		if (!created) {
 			System.out.println("Index create failed");
 		}
@@ -73,7 +70,7 @@ public class TermQueryTest {
 	public void testMatchQuery() {
 		List<String> movies = ElasticUtils.query("movies")
 				.queryBuilder(QueryBuilders.matchQuery("title", "Matrix reloaded")
-				.minimumShouldMatch("2"))
+						.minimumShouldMatch("2"))
 				.queryForList();
 		
 		movies.forEach(System.out::println);
@@ -84,7 +81,7 @@ public class TermQueryTest {
 	public void testMatchQuery2() {
 		List<String> products = ElasticUtils.query("products")
 				.queryBuilder(QueryBuilders.rangeQuery("date")
-				.gte("now-1y"))
+						.gte("now-1y"))
 				.queryForList();
 		products.forEach(System.out::println);
 	}

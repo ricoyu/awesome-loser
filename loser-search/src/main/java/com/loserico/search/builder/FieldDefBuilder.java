@@ -1,14 +1,18 @@
-package com.loserico.search.support;
+package com.loserico.search.builder;
 
 import com.loserico.search.enums.Analyzer;
 import com.loserico.search.enums.ContextType;
 import com.loserico.search.enums.FieldType;
+import com.loserico.search.support.FieldContext;
+import com.loserico.search.support.FieldDef;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public final class FieldDefBuilder {
+	
+	private AbstractMappingBuilder elasticMappingBuilder;
 	
 	private String fieldName;
 	
@@ -53,7 +57,7 @@ public final class FieldDefBuilder {
 	 *   "mappings": {
 	 *     "properties": {
 	 *       "rating": {
-	 *         "type": "float", 
+	 *         "type": "float",
 	 *         "null_value": 0.0
 	 *       }
 	 *     }
@@ -102,8 +106,15 @@ public final class FieldDefBuilder {
 	 * <ul/>
 	 */
 	private List<Map<String, String>> contexts;
+	private AbstractMappingBuilder elasticMappingBuilder1;
 	
 	public FieldDefBuilder(String fieldName, FieldType fieldType) {
+		this.fieldName = fieldName;
+		this.fieldType = fieldType;
+	}
+	
+	public FieldDefBuilder(AbstractMappingBuilder elasticMappingBuilder, String fieldName, FieldType fieldType) {
+		this.elasticMappingBuilder = elasticMappingBuilder;
 		this.fieldName = fieldName;
 		this.fieldType = fieldType;
 	}
@@ -151,6 +162,7 @@ public final class FieldDefBuilder {
 	
 	/**
 	 * 如将enabled设置为false, 则无法进行搜索和聚合分析
+	 *
 	 * @param enabled
 	 * @return
 	 */
@@ -171,7 +183,7 @@ public final class FieldDefBuilder {
 	 *   "mappings": {
 	 *     "properties": {
 	 *       "rating": {
-	 *         "type": "float", 
+	 *         "type": "float",
 	 *         "null_value": 0.0
 	 *       }
 	 *     }
@@ -179,7 +191,7 @@ public final class FieldDefBuilder {
 	 * }
 	 * </pre>
 	 * 如此, 当rating是null时, 实际插入ES的值将是0.0
-	 * 
+	 *
 	 * @param nullValue
 	 * @return FieldDefBuilder
 	 */
@@ -226,11 +238,11 @@ public final class FieldDefBuilder {
 	/**
 	 * 为字段添加多字段特性
 	 *
-	 * @param fieldDef
+	 * @param fieldDefBuilder
 	 * @return
 	 */
-	public FieldDefBuilder fields(FieldDef fieldDef) {
-		this.fields.add(fieldDef);
+	public FieldDefBuilder fields(FieldDefBuilder fieldDefBuilder) {
+		this.fields.add(fieldDefBuilder.build());
 		return this;
 	}
 	
@@ -260,7 +272,42 @@ public final class FieldDefBuilder {
 		return this;
 	}
 	
-	public FieldDef build() {
+	public AbstractMappingBuilder and() {
+		FieldDef fieldDef = build();
+		elasticMappingBuilder.field(fieldDef);
+		return elasticMappingBuilder;
+	}
+	
+	public FieldDefBuilder field(String fieldName, FieldType fieldType) {
+		FieldDef fieldDef = build();
+		elasticMappingBuilder.field(fieldDef);
+		return this;
+	}
+	
+	/**
+	 * 发出请求, 这是一个终端方法
+	 * @return boolean
+	 */
+	public boolean thenCreate() {
+		FieldDef fieldDef = build();
+		elasticMappingBuilder.field(fieldDef);
+		
+		if (elasticMappingBuilder instanceof ElasticIndexMappingBuilder) {
+			return ((ElasticIndexMappingBuilder)elasticMappingBuilder).thenCreate();
+		}
+		
+		if (elasticMappingBuilder instanceof ElasticPutMappingBuilder) {
+			return ((ElasticPutMappingBuilder)elasticMappingBuilder).thenCreate();
+		}
+		
+		if (elasticMappingBuilder instanceof ElasticIndexTemplateMappingBuilder) {
+			return ((ElasticIndexTemplateMappingBuilder)elasticMappingBuilder).thenCreate();
+		}
+		
+		throw new RuntimeException("Not recognized MappingBuild " + elasticMappingBuilder.getClass());
+	}
+	
+	FieldDef build() {
 		FieldDef fieldDef = new FieldDef(fieldName, fieldType);
 		//默认用DATE类型的默认格式
 		if (fieldType == FieldType.DATE) {

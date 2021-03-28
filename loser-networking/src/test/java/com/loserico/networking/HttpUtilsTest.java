@@ -1,14 +1,35 @@
 package com.loserico.networking;
 
+import com.loserico.json.jackson.JacksonUtils;
 import com.loserico.networking.enums.Scheme;
 import com.loserico.networking.utils.HttpUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.BasicHttpClientConnectionManager;
+import org.apache.http.ssl.SSLContexts;
+import org.apache.http.ssl.TrustStrategy;
+import org.apache.http.util.EntityUtils;
 import org.junit.Test;
 
+import javax.net.ssl.SSLContext;
+import java.io.IOException;
 import java.nio.file.Paths;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 
 /**
@@ -96,5 +117,50 @@ public class HttpUtilsTest {
 				.basicAuth("rico", "654321")
 				.request();
 		System.out.println(response);
+	}
+	
+	@Test
+	public void testSSLAcceptAll() {
+		TrustStrategy acceptingTrustStrategy = (cert, authType) -> true;
+		try {
+			SSLContext sslContext = SSLContexts.custom()
+					.loadTrustMaterial(null, acceptingTrustStrategy)
+					.build();
+			
+			SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
+			
+			Registry<ConnectionSocketFactory> socketFactoryRegistry = RegistryBuilder.<ConnectionSocketFactory>create()
+					.register("https", sslsf)
+					.register("http", new PlainConnectionSocketFactory())
+					.build();
+			
+			BasicHttpClientConnectionManager connectionManager = new BasicHttpClientConnectionManager(socketFactoryRegistry);
+			CloseableHttpClient httpClient = HttpClients.custom()
+					.setSSLSocketFactory(sslsf)
+					.setConnectionManager(connectionManager)
+					.build();
+			
+			HttpEntity entity = httpClient.execute(new HttpGet("https://192.168.100.101:9200/_cat/nodeattrs?v")).getEntity();
+			String response = EntityUtils.toString(entity);
+			System.out.println(response);
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		} catch (KeyManagementException e) {
+			e.printStackTrace();
+		} catch (KeyStoreException e) {
+			e.printStackTrace();
+		} catch (ClientProtocolException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+	}
+	
+	
+	@Test
+	public void testNodeAttr() {
+		Object response = HttpUtils.get("https://192.168.100.101:9200/_cat/nodeattrs?v").request();
+		System.out.println(JacksonUtils.toPrettyJson(response));
 	}
 }

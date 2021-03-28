@@ -8,13 +8,12 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
+import org.elasticsearch.xpack.client.PreBuiltXPackTransportClient;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Objects;
-
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
  * <p>
@@ -30,6 +29,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 public final class TransportClientFactory {
 	
 	private static final String CLUSTER_NAME = "cluster.name";
+	private static final String USERNAME = "elastic.username";
+	private static final String PASSWORD = "elastic.password";
 	
 	private static final String COLON = ":";
 	
@@ -43,12 +44,8 @@ public final class TransportClientFactory {
 		PropertyReader propertyReader = new PropertyReader("elastic");
 		
 		String clusterName = propertyReader.getString(CLUSTER_NAME);
-		
-		Settings.Builder builder = Settings.builder();
-		if (isNotBlank(clusterName)) {
-			builder.put(CLUSTER_NAME, clusterName);
-		}
-		Settings settings = builder.build();
+		String username = propertyReader.getString(USERNAME);
+		String password = propertyReader.getString(PASSWORD);
 		
 		/*
 		 * 读取Elasticsearch地址, 可以指定ip,ip, 也可以是ip:port,ip:port形式
@@ -75,6 +72,32 @@ public final class TransportClientFactory {
 					}
 				}).toArray(length -> new TransportAddress[length]);
 		
+		/*
+		 * 配置了用户名密码就表示Elasticsearch开启了x-pack身份认证
+		 */
+		boolean secured = username != null && password != null;
+		
+		Settings.Builder builder = Settings.builder();
+		builder.put(CLUSTER_NAME, clusterName);
+		
+		Settings settings = null;
+		
+		if (secured) {
+			builder.put("xpack.security.user", username + ":" + password)
+					.put("xpack.security.transport.ssl.enabled", true)
+					//.put("xpack.security.transport.ssl.keystore.password", keystorePassword)
+					//.put("xpack.security.transport.ssl.truststore.password", truststorePassword)
+					.put("xpack.security.transport.ssl.verification_mode", "certificate")
+					.put("xpack.security.transport.ssl.keystore.path", "D:\\Dropbox\\搜索\\第八章 保护你的数据\\elastic-certificates.p12")
+					.put("xpack.security.transport.ssl.truststore.path", "D:\\Dropbox\\搜索\\第八章 保护你的数据\\elastic-certificates.p12");
+					//.put("xpack.security.http.ssl.keystore.path", certificatesPath+"/elastic-certificates.p12")
+					//.put("xpack.security.http.ssl.truststore.path", certificatesPath+"/elastic-certificates.p12")
+			settings = builder.build();
+			return new PreBuiltXPackTransportClient(settings)
+					.addTransportAddresses(transportAddresses);
+		}
+		
+		settings = builder.build();
 		return new PreBuiltTransportClient(settings)
 				.addTransportAddresses(transportAddresses);
 	}

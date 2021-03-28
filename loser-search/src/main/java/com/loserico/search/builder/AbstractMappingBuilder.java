@@ -25,7 +25,9 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  * @version 1.0
  */
 @Slf4j
-public final class ElasticMappingBuilder {
+public abstract class AbstractMappingBuilder {
+	
+	private String index;
 	
 	/**
 	 * 指定从这个索引复制Mapping设置
@@ -52,11 +54,21 @@ public final class ElasticMappingBuilder {
 	 */
 	private Set<String> deleteFields = new HashSet<>();
 	
-	private ElasticMappingBuilder() {
+	public AbstractMappingBuilder() {
 	}
 	
-	public static ElasticMappingBuilder newInstance() {
-		return new ElasticMappingBuilder();
+	public AbstractMappingBuilder(Dynamic dynamic) {
+		this.dynamic = dynamic;
+	}
+	
+	public AbstractMappingBuilder(String index, Dynamic dynamic) {
+		this.index = index;
+		this.dynamic = dynamic;
+	}
+	
+	public AbstractMappingBuilder index(String index) {
+		this.index = index;
+		return this;
 	}
 	
 	/**
@@ -65,19 +77,8 @@ public final class ElasticMappingBuilder {
 	 * @param copyIndex
 	 * @return PutMappingBuilder
 	 */
-	public ElasticMappingBuilder copy(String copyIndex) {
+	public AbstractMappingBuilder copy(String copyIndex) {
 		this.copyIndex = copyIndex;
-		return this;
-	}
-	
-	/**
-	 * 设置索引Mapping的dynamic属性: true false strict
-	 *
-	 * @param dynamic
-	 * @return PutMappingBuilder
-	 */
-	public ElasticMappingBuilder dynamic(Dynamic dynamic) {
-		this.dynamic = dynamic;
 		return this;
 	}
 	
@@ -87,7 +88,7 @@ public final class ElasticMappingBuilder {
 	 * @param sourceEnabled
 	 * @return ElasticMappingBuilder
 	 */
-	public ElasticMappingBuilder sourceEnabled(Boolean sourceEnabled) {
+	public AbstractMappingBuilder sourceEnabled(Boolean sourceEnabled) {
 		this.sourceEnabled = sourceEnabled;
 		return this;
 	}
@@ -99,10 +100,10 @@ public final class ElasticMappingBuilder {
 	 * @param fieldType
 	 * @return PutMappingBuilder
 	 */
-	public ElasticMappingBuilder field(String fieldName, FieldType fieldType) {
+	/*public ElasticMappingBuilder field(String fieldName, FieldType fieldType) {
 		fields.add(new FieldDef(fieldName, fieldType));
 		return this;
-	}
+	}*/
 	
 	/**
 	 * 挨个设置字段类型
@@ -112,24 +113,40 @@ public final class ElasticMappingBuilder {
 	 * @param index     控制该字段是否被编入索引
 	 * @return PutMappingBuilder
 	 */
-	public ElasticMappingBuilder field(String fieldName, FieldType fieldType, boolean index) {
+	/*public ElasticMappingBuilder field(String fieldName, FieldType fieldType, boolean index) {
 		fields.add(new FieldDef(fieldName, fieldType, index));
 		return this;
+	}*/
+	
+	/**
+	 * FieldDefBuilder设置字段
+	 *
+	 * @param fieldName
+	 * @param fieldType
+	 * @return
+	 */
+	public FieldDefBuilder field(String fieldName, FieldType fieldType) {
+		return new FieldDefBuilder(this, fieldName, fieldType);
 	}
 	
-	public ElasticMappingBuilder field(FieldDef fieldDef) {
+	public AbstractMappingBuilder field(FieldDef fieldDef) {
 		fields.add(fieldDef);
 		return this;
 	}
 	
-	public ElasticMappingBuilder delete(String... fields) {
+	public AbstractMappingBuilder field(FieldDefBuilder fieldDefBuilder) {
+		fields.add(fieldDefBuilder.build());
+		return this;
+	}
+	
+	public AbstractMappingBuilder delete(String... fields) {
 		for (int i = 0; i < fields.length; i++) {
 			deleteFields.add(fields[i]);
 		}
 		return this;
 	}
 	
-	public Map<String, Object> build() {
+	Map<String, Object> build() {
 		
 		Map<String, Object> source = new HashMap<>();
 		
@@ -181,5 +198,16 @@ public final class ElasticMappingBuilder {
 		
 		return source;
 	}
+	
+	/*public ElasticIndexBuilder and() {
+		return elasticIndexBuilder;
+	}*/
+	
+	/**
+	 * 执行实际操作
+	 *
+	 * @return
+	 */
+	public abstract boolean thenCreate();
 	
 }

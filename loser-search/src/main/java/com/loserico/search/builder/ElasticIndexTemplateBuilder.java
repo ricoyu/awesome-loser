@@ -2,6 +2,7 @@ package com.loserico.search.builder;
 
 import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.search.ElasticUtils;
+import com.loserico.search.enums.Dynamic;
 import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateRequestBuilder;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.transport.TransportClient;
@@ -52,7 +53,7 @@ public final class ElasticIndexTemplateBuilder {
 	/**
 	 * 添加Mappings
 	 */
-	private ElasticMappingBuilder mappingBuilder;
+	private ElasticIndexTemplateMappingBuilder mappingBuilder;
 	
 	private ElasticIndexTemplateBuilder() {
 	}
@@ -124,18 +125,18 @@ public final class ElasticIndexTemplateBuilder {
 	/**
 	 * 通过MappingBuilder逐项配置Mapping
 	 *
-	 * @param mappingBuilder
+	 * @param dynamic
 	 * @return
 	 */
-	public ElasticIndexTemplateBuilder mappings(ElasticMappingBuilder mappingBuilder) {
-		this.mappingBuilder = mappingBuilder;
-		return this;
+	public ElasticIndexTemplateMappingBuilder mappings(Dynamic dynamic) {
+		this.mappingBuilder = new ElasticIndexTemplateMappingBuilder(this, dynamic);
+		return mappingBuilder;
 	}
 	
 	/**
 	 * 执行创建或者更新Index Template
 	 */
-	public boolean execute() {
+	public boolean create() {
 		PutIndexTemplateRequestBuilder builder = client.admin().indices()
 				.preparePutTemplate(name)
 				.setPatterns(patterns)

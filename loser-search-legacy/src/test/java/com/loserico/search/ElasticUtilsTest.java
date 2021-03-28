@@ -1,6 +1,7 @@
 package com.loserico.search;
 
 import com.loserico.common.lang.utils.ReflectionUtils;
+import com.loserico.search.pojo.Movie;
 import com.loserico.searchlegacy.ElasticUtils;
 import com.loserico.searchlegacy.annotation.DocId;
 import com.loserico.searchlegacy.builder.ElasticMappingBuilder;
@@ -10,7 +11,6 @@ import com.loserico.searchlegacy.enums.ContextType;
 import com.loserico.searchlegacy.enums.Direction;
 import com.loserico.searchlegacy.enums.Dynamic;
 import com.loserico.searchlegacy.enums.FieldType;
-import com.loserico.search.pojo.Movie;
 import com.loserico.searchlegacy.support.BulkResult;
 import com.loserico.searchlegacy.support.FieldDef;
 import com.loserico.searchlegacy.support.FieldDefBuilder;
@@ -67,7 +67,7 @@ import static com.loserico.searchlegacy.enums.FieldType.COMPLETION;
 import static com.loserico.searchlegacy.enums.FieldType.KEYWORD;
 import static com.loserico.searchlegacy.enums.FieldType.TEXT;
 import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.elasticsearch.search.aggregations.AggregationBuilders.*;
 import static org.elasticsearch.search.suggest.SortBy.FREQUENCY;

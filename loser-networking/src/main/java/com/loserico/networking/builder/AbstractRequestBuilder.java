@@ -27,18 +27,30 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.methods.HttpTrace;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.ssl.SSLContexts;
+import org.apache.http.ssl.TrustStrategy;
 import org.apache.http.util.EntityUtils;
 
+import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -88,12 +100,30 @@ public abstract class AbstractRequestBuilder {
 	
 	protected static PoolingHttpClientConnectionManager connectionManager;
 	
+	protected static SSLConnectionSocketFactory sslConnectionSocketFactory;
+	
 	static {
-		if (connectionManager == null) {
-			connectionManager = new PoolingHttpClientConnectionManager();
-			connectionManager.setMaxTotal(50);// 整个连接池最大连接数
-			connectionManager.setDefaultMaxPerRoute(5);// 每路由最大连接数, 默认值是2
+		TrustStrategy acceptingTrustStrategy = (cert, authType) -> true;
+		
+		SSLContext sslContext = null;
+		try {
+			sslContext = SSLContexts.custom()
+					.loadTrustMaterial(null, acceptingTrustStrategy)
+					.build();
+		} catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException e) {
+			log.error("", e);
+			throw new RuntimeException(e);
 		}
+		sslConnectionSocketFactory = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
+		
+		Registry<ConnectionSocketFactory> socketFactoryRegistry = RegistryBuilder.<ConnectionSocketFactory>create()
+				.register("https", sslConnectionSocketFactory)
+				.register("http", new PlainConnectionSocketFactory())
+				.build();
+		
+		connectionManager = new PoolingHttpClientConnectionManager(socketFactoryRegistry);
+		connectionManager.setMaxTotal(500);// 整个连接池最大连接数
+		connectionManager.setDefaultMaxPerRoute(5);// 每路由最大连接数, 默认值是2
 	}
 	
 	
@@ -144,7 +174,27 @@ public abstract class AbstractRequestBuilder {
 	 * @return CloseableHttpClient
 	 */
 	protected CloseableHttpClient getHttpClient() {
-		return HttpClients.custom().setConnectionManager(connectionManager).build();
+		CloseableHttpClient httpClient = HttpClients.custom()
+				.setSSLSocketFactory(sslConnectionSocketFactory)
+				.setConnectionManager(connectionManager)
+				.build();
+		
+		int leased = connectionManager.getTotalStats().getLeased();
+		int available = connectionManager.getTotalStats().getAvailable();
+		int total = leased + available;
+		log.debug("HttpClient连接池\n" +
+						"最大连接数: {}\n" +
+						"已创建的连接数: {}\n" +
+						"当前正在执行任务的连接数: {}\n" +
+						"当前空闲的连接数: {}\n" +
+						"当前等待获取连接的任务数: {}",
+				connectionManager.getTotalStats().getMax(),
+				total,
+				leased,
+				available,
+				connectionManager.getTotalStats().getPending());
+		
+		return httpClient;
 	}
 	
 	/**

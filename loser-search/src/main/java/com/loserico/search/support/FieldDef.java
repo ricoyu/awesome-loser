@@ -1,5 +1,6 @@
 package com.loserico.search.support;
 
+import com.loserico.search.builder.FieldDefBuilder;
 import com.loserico.search.enums.Analyzer;
 import com.loserico.search.enums.FieldType;
 import lombok.Data;

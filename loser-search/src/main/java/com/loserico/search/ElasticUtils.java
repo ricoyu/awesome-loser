@@ -5,13 +5,14 @@ import com.loserico.search.builder.ElasticAggregationBuilder;
 import com.loserico.search.builder.ElasticContextSuggestBuilder;
 import com.loserico.search.builder.ElasticIndexBuilder;
 import com.loserico.search.builder.ElasticIndexTemplateBuilder;
-import com.loserico.search.builder.ElasticMappingBuilder;
 import com.loserico.search.builder.ElasticMultiGetBuilder;
+import com.loserico.search.builder.ElasticPutMappingBuilder;
 import com.loserico.search.builder.ElasticQueryBuilder;
 import com.loserico.search.builder.ElasticReindexBuilder;
 import com.loserico.search.builder.ElasticSuggestBuilder;
 import com.loserico.search.cache.ElasticCacheUtils;
 import com.loserico.search.enums.Analyzer;
+import com.loserico.search.enums.Dynamic;
 import com.loserico.search.exception.AnalyzeException;
 import com.loserico.search.factory.TransportClientFactory;
 import com.loserico.search.support.BulkResult;
@@ -27,7 +28,6 @@ import org.elasticsearch.action.admin.indices.mapping.get.GetFieldMappingsAction
 import org.elasticsearch.action.admin.indices.mapping.get.GetFieldMappingsRequestBuilder;
 import org.elasticsearch.action.admin.indices.mapping.get.GetFieldMappingsResponse;
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
-import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
 import org.elasticsearch.action.admin.indices.stats.IndicesStatsRequest;
 import org.elasticsearch.action.admin.indices.stats.IndicesStatsResponse;
 import org.elasticsearch.action.admin.indices.template.get.GetIndexTemplatesResponse;
@@ -562,18 +562,11 @@ public final class ElasticUtils {
 	 * https://www.elastic.co/guide/en/elasticsearch/reference/7.6/mapping-params.html
 	 *
 	 * @param index
-	 * @param mappingBuilder
+	 * @param dynamic
 	 * @return boolean Mapping创建成功失败标识
 	 */
-	public static boolean putMapping(String index, ElasticMappingBuilder mappingBuilder) {
-		Objects.requireNonNull(index, "index cannot be null");
-		Objects.requireNonNull(mappingBuilder, "mappingBuilder cannot be null");
-		Map<String, Object> source = mappingBuilder.build();
-		PutMappingRequestBuilder putMappingRequestBuilder = client.admin().indices().preparePutMapping(index);
-		AcknowledgedResponse acknowledgedResponse = putMappingRequestBuilder.setType(ElasticUtils.ONLY_TYPE)
-				.setSource(source)
-				.get();
-		return acknowledgedResponse.isAcknowledged();
+	public static ElasticPutMappingBuilder putMapping(String index, Dynamic dynamic) {
+		return new ElasticPutMappingBuilder(index,  dynamic);
 	}
 	
 	/**

@@ -224,7 +224,7 @@
                     </exclusion>
                 </exclusions>-->
             </dependency>
-            
+
             <dependency>
                 <groupId>javax.validation</groupId>
                 <artifactId>validation-api</artifactId>
@@ -251,7 +251,7 @@
                 <artifactId>commons-codec</artifactId>
                 <version>${commons-codec.version}</version>
             </dependency>
-            
+
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
@@ -664,17 +664,17 @@
         </dependencies>
     </dependencyManagement>
 
-    
-    <distributionManagement>
+
+    <!--<distributionManagement>
         <repository>
             <id>phantom-maven2</id>
             <name>phantom-maven2</name>
             <url>http://172.16.0.69:8081/repository/phantom-maven2/</url>
         </repository>
-    </distributionManagement>
+    </distributionManagement>-->
 
     <repositories>
-        <repository>
+        <!--<repository>
             <id>public</id>
             <name>Public Repositories</name>
             <url>http://172.16.0.69:8081/repository/maven-public/</url>
@@ -684,9 +684,20 @@
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
+        </repository>-->
+        <!-- add the elasticsearch repo -->
+        <repository>
+            <id>elasticsearch-releases</id>
+            <url>https://artifacts.elastic.co/maven</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
         </repository>
     </repositories>
-    <pluginRepositories>
+   <!-- <pluginRepositories>
         <pluginRepository>
             <id>public</id>
             <name>Public Repositories</name>
@@ -698,7 +709,7 @@
                 <enabled>true</enabled>
             </snapshots>
         </pluginRepository>
-    </pluginRepositories>
+    </pluginRepositories>-->
 
     <build>
         <resources>
@@ -750,78 +761,8 @@
                     <compilerVersion>${jdk.version}</compilerVersion>
                 </configuration>
             </plugin>
-<!--
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>3.0.0</version>
-                <executions>
-                    <execution>
-                        <id>validate</id>
-                        <phase>validate</phase>
-                        <configuration>
-                            <configLocation>checkstyle.xml</configLocation>
-                            <encoding>UTF-8</encoding>
-                            <consoleOutput>true</consoleOutput>
-                            <failsOnError>true</failsOnError>
-                            <includeTestSourceDirectory>true</includeTestSourceDirectory>
-                        </configuration>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>-->
         </plugins>
 
     </build>
 
-    <profiles>
-        <profile>
-            <id>dev</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <properties>
-                <db.driver>com.mysql.jdbc.Driver</db.driver>
-                <db.ip>192.168.2.101</db.ip>
-                <db.username>rico</db.username>
-                <db.passwd>123456</db.passwd>
-                <db.initialSize>10</db.initialSize>
-                <db.maxActive>100</db.maxActive>
-                <db.maxIdle>10</db.maxIdle>
-                <db.minIdle>10</db.minIdle>
-                <db.maxWait>10000</db.maxWait>
-                <db.maxAge>600000</db.maxAge>
-                <db.removeAbandoned>true</db.removeAbandoned>
-                <db.removeAbandonedTimeout>60</db.removeAbandonedTimeout>
-                <db.validationQuery>SELECT 1</db.validationQuery>
-                <db.testOnBorrow>true</db.testOnBorrow>
-                <db.testWhileIdle>false</db.testWhileIdle>
-                <db.testOnReturn>false</db.testOnReturn>
-                <db.timeBetweenEvictionRunsMillis>30000</db.timeBetweenEvictionRunsMillis>
-                <db.logAbandoned>true</db.logAbandoned>
-                <db.abandonWhenPercentageFull>50</db.abandonWhenPercentageFull>
-                <db.jmxEnabled>true</db.jmxEnabled>
-                <db.jdbcInterceptors>
-                    ConnectionState;StatementFinalizer;StatementCache(max=200);SlowQueryReportJmx(threshold=10000)
-                </db.jdbcInterceptors>
-
-                <hibernate.dialect>org.hibernate.dialect.MySQL5Dialect</hibernate.dialect>
-                <hibernate.show_sql>false</hibernate.show_sql>
-                <hibernate.format_sql>false</hibernate.format_sql>
-                <hibernate.hbm2ddl.auto>update</hibernate.hbm2ddl.auto>
-                <hibernate.query.mode>dev</hibernate.query.mode>
-                <hibernate.jdbc.batch_size>20</hibernate.jdbc.batch_size>
-                <hibernate.query.startup_check>false</hibernate.query.startup_check>
-                <hibernate.cache.use_query_cache>false</hibernate.cache.use_query_cache>
-                <hibernate.cache.use_second_level_cache>true</hibernate.cache.use_second_level_cache>
-                <hibernate.cache.region.factory_class>org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory
-                </hibernate.cache.region.factory_class>
-
-                <hashAlgorithm>SHA-512</hashAlgorithm>
-                <hashIterations>2</hashIterations>
-            </properties>
-        </profile>
-    </profiles>
 </project>
