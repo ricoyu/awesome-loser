@@ -1,7 +1,7 @@
 package com.loserico.web.exception;
 
 import com.loserico.common.lang.utils.CollectionUtils;
-import com.loserico.common.lang.vo.ErrorType;
+import com.loserico.common.lang.errors.ErrorType;
 import com.loserico.web.utils.MessageHelper;
 
 import java.util.ArrayList;
@@ -33,9 +33,9 @@ public class LocalizedException extends RuntimeException {
 	private String defaultMessage;
 	
 	public LocalizedException(ErrorType errorType) {
-		this.statusCode = errorType.getCode();
-		this.messageTemplate = errorType.getMsgTemplate();
-		this.defaultMessage = errorType.getMsg();
+		this.statusCode = errorType.code();
+		this.messageTemplate = errorType.msgTemplate();
+		this.defaultMessage = errorType.message();
 	}
 	
 	public LocalizedException(String statusCode, String messageTemplate) {

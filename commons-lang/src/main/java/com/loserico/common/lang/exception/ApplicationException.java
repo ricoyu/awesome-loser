@@ -1,6 +1,6 @@
 package com.loserico.common.lang.exception;
 
-import com.loserico.common.lang.vo.ErrorType;
+import com.loserico.common.lang.errors.ErrorType;
 
 /**
  * <p>
@@ -23,9 +23,9 @@ public class ApplicationException extends RuntimeException {
 	}
 	
 	public ApplicationException(ErrorType errorType) {
-		super(errorType.getMsg());
-		this.code = errorType.getCode();
-		this.message = errorType.getMsg();
+		super(errorType.message());
+		this.code = errorType.code();
+		this.message = errorType.message();
 	}
 	
 	public ApplicationException(String code, String message) {

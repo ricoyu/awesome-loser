@@ -122,8 +122,15 @@ public abstract class AbstractRequestBuilder {
 				.build();
 		
 		connectionManager = new PoolingHttpClientConnectionManager(socketFactoryRegistry);
-		connectionManager.setMaxTotal(500);// 整个连接池最大连接数
-		connectionManager.setDefaultMaxPerRoute(5);// 每路由最大连接数, 默认值是2
+		connectionManager.setMaxTotal(100);// 整个连接池最大连接数
+		/*
+		 * 设置每一个路由的最大连接数, 这里的路由是指 IP+PORT. 
+		 * 例如连接池大小(MaxTotal)设置为300, 路由连接数设置为200(DefaultMaxPerRoute), 
+		 * 对于www.a.com 与 www.b.com 两个路由来说, 
+		 * 发起服务的主机连接到每个路由的最大连接数(并发数)不能超过200, 
+		 * 两个路由的总连接数不能超过300。
+		 */
+		connectionManager.setDefaultMaxPerRoute(20);
 	}
 	
 	
@@ -365,7 +372,7 @@ public abstract class AbstractRequestBuilder {
 	 *
 	 * @return UrlParts
 	 */
-	protected UrlParts urlParts() {
+	protected UrlParts buildUrlParts() {
 		if (isNotBlank(url)) {
 			return RegexUtils.teardown(url);
 		}
@@ -429,7 +436,7 @@ public abstract class AbstractRequestBuilder {
 	 * @return T
 	 */
 	public <T> T request() {
-		UrlParts urlParts = urlParts();
+		UrlParts urlParts = buildUrlParts();
 		
 		URIBuilder builder = new URIBuilder();
 		builder.setScheme(urlParts.getScheme());

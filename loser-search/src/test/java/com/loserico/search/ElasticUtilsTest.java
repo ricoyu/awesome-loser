@@ -177,8 +177,9 @@ public class ElasticUtilsTest {
 	
 	@Test
 	public void testCreateDoc() {
-		String id = ElasticUtils.index("rico", "{\"name\": \"三少爷\"}");
-		System.out.println(id);
+		//String id = ElasticUtils.index("rico", "{\"name\": \"三少爷\"}");
+		//System.out.println(id);
+		ElasticUtils.index("logs-2021-03-30", "{\"key\": \"三少爷\"}", "1");
 	}
 	
 	@Test
@@ -338,6 +339,28 @@ public class ElasticUtilsTest {
 		System.out.println(toJson(result));
 	}
 	
+	
+	@Test
+	public void testSettingHotWarn() {
+		boolean created = ElasticUtils.createIndex("logs-2021-03-29")
+				.settings(1)
+				.numberOfReplicas(1)
+				.indexRoutingAllocation("node_type", "hot")
+				.thenCreate();
+		assertTrue(created);
+	}
+	
+	@Test
+	public void testSettingHotWarn2() {
+		boolean created = ElasticUtils.createIndex("logs-2021-03-30")
+				.settings(1)
+				.numberOfReplicas(1)
+				.indexRoutingAllocation("node_type", "hot")
+				.and()
+				.create();
+		assertTrue(created);
+	}
+	
 	@Test
 	public void testPutIndexTemplate() {
 		boolean created = ElasticUtils.putIndexTemplate("demo-index-template")
@@ -351,6 +374,24 @@ public class ElasticUtilsTest {
 						.put("number_of_shards", 1)
 						.put("number_of_replicas", 1)
 						.build())*/
+				.mappings(Dynamic.TRUE)
+				.field("username", FieldType.KEYWORD)
+				.field("read_books", FieldType.TEXT)
+				.field("hobbys", FieldType.TEXT).index(true)
+				.thenCreate();
+		System.out.println(created);
+	}
+	
+	@Test
+	public void testPutIndexTemplate2() {
+		boolean created = ElasticUtils.putIndexTemplate("demo-index-template")
+				.order(0)
+				.patterns("test*")
+				.version(0)
+				.settings(1)
+				.numberOfReplicas(1)
+				.indexRoutingAllocation("my_route", "hot")
+				.and()
 				.mappings(Dynamic.TRUE)
 				.field("username", FieldType.KEYWORD)
 				.field("read_books", FieldType.TEXT)

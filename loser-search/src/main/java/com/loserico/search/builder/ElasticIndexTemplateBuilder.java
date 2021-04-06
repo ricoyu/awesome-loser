@@ -117,10 +117,16 @@ public final class ElasticIndexTemplateBuilder {
 		return this;
 	}
 	
-	/*public ElasticIndexTemplateBuilder settings(Settings settings) {
-		this.settings = settings;
-		return this;
-	}*/
+	/**
+	 * 为索引模板设置Settings
+	 * @param numOfShards
+	 * @return ElasticIndexTemplateSettingsBuilder
+	 */
+	public ElasticIndexTemplateSettingsBuilder settings(int numOfShards) {
+		ElasticIndexTemplateSettingsBuilder elasticIndexTemplateSettingsBuilder = new ElasticIndexTemplateSettingsBuilder(this);
+		elasticIndexTemplateSettingsBuilder.numberOfShards(numOfShards);
+		return elasticIndexTemplateSettingsBuilder;
+	}
 	
 	/**
 	 * 通过MappingBuilder逐项配置Mapping

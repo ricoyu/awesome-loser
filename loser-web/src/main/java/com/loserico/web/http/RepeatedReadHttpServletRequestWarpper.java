@@ -11,7 +11,9 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import static com.loserico.networking.constants.MediaType.MULTIPART_FORM_DATA;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
  * <p>
@@ -35,7 +37,18 @@ public class RepeatedReadHttpServletRequestWarpper extends HttpServletRequestWra
 	 */
 	public RepeatedReadHttpServletRequestWarpper(HttpServletRequest request) {
 		super(request);
-		body = WebUtils.bodyString(request).getBytes(UTF_8);
+		byte[] data = null;
+		/*
+		 * 表单上传完整的Content-Type类似这样
+		 * multipart/form-data; boundary=Z5Y7E2JUVdczoE_2jdS2xlSxPQcWP3
+		 */
+		String contentType = request.getHeader("Content-Type");
+		//contentType是multipart/form-data时, 不允许重复读request body, 这个是文件上传, 重复读不了
+		if (isNotBlank(contentType) && contentType.indexOf(MULTIPART_FORM_DATA) != 0) {
+			data = WebUtils.bodyString(request).getBytes(UTF_8);
+		}
+		
+		body = data;
 	}
 	
 	@Override
@@ -45,6 +58,9 @@ public class RepeatedReadHttpServletRequestWarpper extends HttpServletRequestWra
 	
 	@Override
 	public ServletInputStream getInputStream() throws IOException {
+		if (body == null) {
+			return super.getInputStream();
+		}
 		
 		final ByteArrayInputStream bias = new ByteArrayInputStream(body);
 		

@@ -752,7 +752,6 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${maven-compiler-plugin.version}</version>
                 <configuration>
-                    <verbose>true</verbose>
                     <fork>true</fork>
                     <encoding>${encoding}</encoding>
                     <source>${jdk.version}</source>

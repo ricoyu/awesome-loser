@@ -676,12 +676,20 @@ public final class RsaUtils {
 				.trim();
 	}
 	
-	public static String getPublicKeyStr() {
+	public static String publicKeyStr() {
 		return publicKeyStr;
 	}
 	
-	public static String getPrivateKeyStr() {
+	public static String privateKeyStr() {
 		return privateKeyStr;
+	}
+	
+	public static RSAPublicKey publicKey() {
+		return publicKey;
+	}
+	
+	public static RSAPrivateKey privateKey() {
+		return privateKey;
 	}
 	
 	/**
@@ -812,27 +820,27 @@ public final class RsaUtils {
 					return true;
 				}
 			}
-		}
-		
-		//配置了key.location, 从指定位置读
-		for (int i = 0; i < keySuffix.length(); i++) {
-			String suffix = keySuffixes[i];
-			File publicKeyFile = IOUtils.readFile(location, publicKeyName, suffix);
-			File privateKeyFile = IOUtils.readFile(location, privateKeyName, suffix);
-			boolean exists = publicKeyFile != null && privateKeyFile != null && publicKeyFile.exists() && privateKeyFile.exists();
-			
-			//classpath root找到
-			if (exists) {
-				//读取公私钥文件字节
-				publicKeyBytes = IOUtils.readFileAsBytes(publicKeyFile);
-				privateKeyBytes = IOUtils.readFileAsBytes(privateKeyFile);
+		} else {
+			//配置了key.location, 从指定位置读
+			for (int i = 0; i < keySuffixes.length; i++) {
+				String suffix = keySuffixes[i];
+				File publicKeyFile = IOUtils.readFile(location, publicKeyName, suffix);
+				File privateKeyFile = IOUtils.readFile(location, privateKeyName, suffix);
+				boolean exists = publicKeyFile != null && privateKeyFile != null && publicKeyFile.exists() && privateKeyFile.exists();
 				
-				//记录公钥文件的后缀
-				publicKeySuffix = IOUtils.suffic(publicKeyFile);
-				//记录私钥文件的后缀
-				privateKeySuffix = IOUtils.suffic(privateKeyFile);
-				
-				return true;
+				//classpath root找到
+				if (exists) {
+					//读取公私钥文件字节
+					publicKeyBytes = IOUtils.readFileAsBytes(publicKeyFile);
+					privateKeyBytes = IOUtils.readFileAsBytes(privateKeyFile);
+					
+					//记录公钥文件的后缀
+					publicKeySuffix = IOUtils.suffic(publicKeyFile);
+					//记录私钥文件的后缀
+					privateKeySuffix = IOUtils.suffic(privateKeyFile);
+					
+					return true;
+				}
 			}
 		}
 		

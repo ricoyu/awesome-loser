@@ -3,7 +3,7 @@ package com.loserico.common.lang.i18n;
 import com.loserico.common.lang.exception.BusinessException;
 import com.loserico.common.lang.utils.Arrays;
 import com.loserico.common.lang.utils.CollectionUtils;
-import com.loserico.common.lang.vo.ErrorType;
+import com.loserico.common.lang.errors.ErrorType;
 import org.springframework.context.MessageSource;
 
 import java.util.List;
@@ -31,14 +31,14 @@ public final class I18N {
 	 * @return
 	 */
 	public static String i18nMessage(ErrorType errorType) {
-		if (isNotBlank(errorType.getMsgTemplate())) {
+		if (isNotBlank(errorType.msgTemplate())) {
 			MessageSource messageSource = LocaleContextHolder.getMessageSource();
 			if (messageSource != null) {
-				return messageSource.getMessage(errorType.getMsgTemplate(), null, errorType.getMsg(), LocaleContextHolder.getLocale());
+				return messageSource.getMessage(errorType.msgTemplate(), null, errorType.message(), LocaleContextHolder.getLocale());
 			}
 		}
 		
-		return errorType.getMsg();
+		return errorType.message();
 	}
 	
 	public static String i18nMessage(BusinessException businessException) {

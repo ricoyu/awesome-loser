@@ -1,5 +1,8 @@
 package com.loserico.common.lang.vo;
 
+import com.loserico.common.lang.errors.ErrorTypes;
+import com.loserico.common.lang.errors.ErrorType;
+
 import static com.loserico.common.lang.i18n.I18N.i18nMessage;
 
 /**
@@ -67,6 +70,10 @@ public class Results {
 			return this;
 		}
 		
+		public Builder status(ErrorType errorType) {
+			return status(errorType.code(), i18nMessage(errorType));
+		}
+		
 		/**
 		 * 设置返回数据
 		 *
@@ -104,7 +111,9 @@ public class Results {
 	 * @return Builder
 	 */
 	public static Builder success() {
-		return new Builder();
+		Builder builder = new Builder();
+		builder.status(ErrorTypes.SUCCESS);
+		return builder;
 	}
 	
 	/**
@@ -124,7 +133,7 @@ public class Results {
 	
 	public static Builder status(ErrorType errorType) {
 		Builder builder = new Builder();
-		return builder.status(errorType.getCode(), i18nMessage(errorType));
+		return builder.status(errorType.code(), i18nMessage(errorType));
 	}
 	
 }

@@ -13,7 +13,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import java.io.IOException;
 
-import static com.loserico.common.lang.vo.CommonErrorType.INTERNAL_SERVER_ERROR;
+import static com.loserico.common.lang.errors.ErrorTypes.INTERNAL_SERVER_ERROR;
 
 /**
  * 在过滤器链上发生未处理的异常时, RestExceptionAdvice是处理不到的, 所以通过这个Filter来统一处理

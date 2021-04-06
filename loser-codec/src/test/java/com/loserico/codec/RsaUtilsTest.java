@@ -27,7 +27,7 @@ public class RsaUtilsTest {
 	
 	@Test
 	public void testPublicKey() {
-		System.out.println(RsaUtils.getPublicKeyStr());
+		System.out.println(RsaUtils.publicKeyStr());
 	}
 	
 	@Test

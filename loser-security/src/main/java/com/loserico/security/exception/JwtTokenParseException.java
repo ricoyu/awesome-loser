@@ -1,7 +1,7 @@
 package com.loserico.security.exception;
 
 /**
- * 根据String token解析Jwt失败时抛出该异常
+ * 根据String token解析Jwt失败时抛出该异常, 该异常属于一种认证异常
  * <p>
  * Copyright: (C), 2020/5/23 16:23
  * <p>
@@ -13,23 +13,15 @@ package com.loserico.security.exception;
  */
 public class JwtTokenParseException extends RuntimeException {
 	
-	public JwtTokenParseException() {
-		super();
+	public JwtTokenParseException(String msg, Throwable t) {
+		super(msg, t);
 	}
 	
-	public JwtTokenParseException(String message) {
-		super(message);
+	public JwtTokenParseException(String msg) {
+		super(msg);
 	}
 	
-	public JwtTokenParseException(String message, Throwable cause) {
-		super(message, cause);
-	}
-	
-	public JwtTokenParseException(Throwable cause) {
-		super(cause);
-	}
-	
-	protected JwtTokenParseException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-		super(message, cause, enableSuppression, writableStackTrace);
+	public JwtTokenParseException(Throwable e) {
+		super("", e);
 	}
 }

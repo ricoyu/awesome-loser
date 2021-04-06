@@ -72,6 +72,18 @@ public final class ElasticIndexBuilder {
 	}
 	
 	/**
+	 * 设置Index的主分片数
+	 *
+	 * @param numberOfShards
+	 * @return IndexBuilder
+	 */
+	public ElasticIndexSettingsBuilder settings(int numberOfShards) {
+		ElasticIndexSettingsBuilder elasticSettingsBuilder = new ElasticIndexSettingsBuilder(this);
+		elasticSettingsBuilder.numberOfShards(1);
+		return elasticSettingsBuilder;
+	}
+	
+	/**
 	 * 创建index
 	 *
 	 * @return

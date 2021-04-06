@@ -51,7 +51,7 @@ public final class Jwts {
 				if (errorConsumer != null) {
 					errorConsumer.accept(e);
 				} else {
-					throw new JwtTokenParseException(e);
+					throw new JwtTokenParseException("", e);
 				}
 			}
 			

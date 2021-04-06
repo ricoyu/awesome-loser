@@ -101,7 +101,7 @@ public class HttpUtilsTest {
 	
 	@Test
 	public void testFormSubmit() {
-		Object response = HttpUtils.form("http://localhost:8080/upload")
+		Object response = HttpUtils.form("http://localhost:8081/upload")
 				.file("file", Paths.get("D:\\Downloads\\redis-5.0.8.tar.gz").toFile())
 				.formData("name", "俞雪华")
 				.request();
@@ -162,5 +162,19 @@ public class HttpUtilsTest {
 	public void testNodeAttr() {
 		Object response = HttpUtils.get("https://192.168.100.101:9200/_cat/nodeattrs?v").request();
 		System.out.println(JacksonUtils.toPrettyJson(response));
+	}
+	
+	
+	@Test
+	public void testPostBody() {
+		String response = HttpUtils.post("http://localhost:8081/body?name=三少爷")
+				.addParam("name", "俞雪华")
+				.addParam("age", "25")
+				.addHeader("origin", "https://www.baeldung.com")
+				.addHeader("date", LocalDateTime.now())
+				.body("This is a message from 三少爷: 叼~")
+				.basicAuth("ricoyu", "123456")
+				.request();
+		System.out.println(response);
 	}
 }
