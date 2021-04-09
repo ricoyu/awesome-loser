@@ -47,8 +47,18 @@ public @interface AllowedValues {
 	
 	//control if this field is mandatory
 	boolean mandatory() default true;
-
+	
+	/**
+	 * 没有满足在给定的值列表内的默认消息
+	 * @return
+	 */
 	String message() default "Provided value is not valid.";
+	
+	/**
+	 * 没有满足必填时的默认消息
+	 * @return
+	 */
+	String mandatoryMsg () default "Required.";
 
 	Class<?>[] groups() default {};
 

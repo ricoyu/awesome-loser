@@ -2,9 +2,15 @@ package com.loserico.mybatis.core;
 
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.loserico.common.lang.utils.ReflectionUtils;
+import com.loserico.common.lang.vo.OrderBean.ORDER_BY;
+import com.loserico.mybatis.page.PageProxy;
+import net.sf.cglib.proxy.Enhancer;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * <p>
@@ -20,12 +26,42 @@ public final class Pages<T> {
 	
 	/**
 	 * 构建Mybatis-Plus Page对象入口
+	 *
 	 * @param current
 	 * @param size
 	 * @return Pages
 	 */
-	public static final <T> PageBuilder<T> builder(long current, long size) {
+	public static <T> PageBuilder<T> builder(long current, long size) {
 		return new PageBuilder(current, size);
+	}
+	
+	/**
+	 * 将Page对象转成Mybatis-Plus的Page对象
+	 *
+	 * @param obj
+	 * @param <T>
+	 * @return
+	 */
+	public static <T> Page<T> convert(Object obj) {
+		com.loserico.common.lang.vo.Page page = null;
+		if (obj instanceof com.loserico.common.lang.vo.Page) {
+			page = (com.loserico.common.lang.vo.Page) obj;
+		} else {
+			page = (com.loserico.common.lang.vo.Page) ReflectionUtils.getFieldValue("page", obj);
+		}
+		PageBuilder builder = new PageBuilder(page.getCurrentPage(), page.getPageSize());
+		List<OrderItem> orderItems = page.getOrders().stream()
+				.map((order) -> new OrderItem(order.getOrderBy(), order.getDirection() == ORDER_BY.ASC ? true : false))
+				.collect(toList());
+		builder.orders = orderItems;
+		
+		Page targetPage = builder.build();
+		PageProxy pageProxy = new PageProxy(page);
+		
+		Enhancer enhancer = new Enhancer();
+		enhancer.setSuperclass(Page.class);
+		enhancer.setCallback(pageProxy);
+		return (Page) enhancer.create();
 	}
 	
 	public static class PageBuilder<T> {
@@ -63,6 +99,7 @@ public final class Pages<T> {
 		
 		/**
 		 * 自动优化 COUNT SQL
+		 *
 		 * @param optimizeCountSql
 		 * @return Pages
 		 */
@@ -73,6 +110,7 @@ public final class Pages<T> {
 		
 		/**
 		 * 是否进行 count 查询
+		 *
 		 * @param isSearchCount
 		 * @return Pages
 		 */
@@ -88,6 +126,7 @@ public final class Pages<T> {
 		
 		/**
 		 * 添加排序规则, 升序字段
+		 *
 		 * @param columns
 		 * @return Pages
 		 */
@@ -98,6 +137,7 @@ public final class Pages<T> {
 		
 		/**
 		 * 添加排序规则, 降序字段
+		 *
 		 * @param columns
 		 * @return Pages
 		 */

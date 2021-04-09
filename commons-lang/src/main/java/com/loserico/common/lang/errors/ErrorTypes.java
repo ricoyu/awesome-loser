@@ -19,9 +19,14 @@ public enum ErrorTypes implements ErrorType {
     SUCCESS("0","template.process.success", "Success"),
     
     /*
-     * 提交数据有误
+     * 提交数据有误, 比如应该是布尔值的, 但是传了个"on", Jackson在转换成Boolean报错
      */
     BAD_REQUEST("4000000","template.bad.request", "请求不合法"),
+    
+    /**
+     * 数据校验失败的时候msg取的是具体的校验失败的msg, 这里的"数据校验失败"其实是没有用的, 但是这里定义了error code
+     */
+    VALIDATION_FAIL("4000001","template.bad.request", "数据校验失败"),
     
     /*
      * 安全相关
@@ -42,6 +47,10 @@ public enum ErrorTypes implements ErrorType {
     
     INVALID_ACCESS("4030001", "template.invalid.uti.access", "访问的URI不合法"),
     ACCESS_DENIED("4030002", "template.access.denied", "你无权访问该资源"),
+    
+    NOT_FOUND("4040000", "template.not.found", "Not Found"),
+    
+    METHOD_NOT_ALLOWED("4050000", "template.method.not_allowed", "Method not Allowed"),
     
     /**
      * 服务器内部错误

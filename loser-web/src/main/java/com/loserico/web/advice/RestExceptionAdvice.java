@@ -4,14 +4,13 @@ import com.loserico.common.lang.errors.ErrorTypes;
 import com.loserico.common.lang.exception.ApplicationException;
 import com.loserico.common.lang.exception.BusinessException;
 import com.loserico.common.lang.exception.EntityNotFoundException;
-import com.loserico.common.lang.exception.ValidationException;
 import com.loserico.common.lang.i18n.I18N;
-import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.common.lang.vo.Result;
 import com.loserico.common.lang.vo.Results;
 import com.loserico.validation.bean.ErrorMessage;
 import com.loserico.validation.exception.GeneralValidationException;
 import com.loserico.validation.exception.UniqueConstraintViolationException;
+import com.loserico.validation.exception.ValidationException;
 import com.loserico.validation.utils.ValidationUtils;
 import com.loserico.web.exception.LocalizedException;
 import com.loserico.web.utils.MessageHelper;
@@ -32,13 +31,15 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.loserico.common.lang.exception.ValidationException.ROW_NUM;
+import static com.loserico.common.lang.errors.ErrorTypes.BAD_REQUEST;
+import static com.loserico.common.lang.errors.ErrorTypes.INTERNAL_SERVER_ERROR;
+import static com.loserico.common.lang.errors.ErrorTypes.METHOD_NOT_ALLOWED;
+import static com.loserico.common.lang.errors.ErrorTypes.NOT_FOUND;
+import static com.loserico.common.lang.errors.ErrorTypes.VALIDATION_FAIL;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -77,7 +78,7 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 		headers.add("Content-Type", "application/json");
 		ErrorMessage errorMessage = ValidationUtils.getErrorMessage(ex.getBindingResult());
 		
-		Result result = Results.status("400", errorMessage.getErrors()).build();
+		Result result = Results.status(BAD_REQUEST.code(), errorMessage.getErrors()).build();
 		return new ResponseEntity(result, headers, HttpStatus.OK);
 	}
 	
@@ -99,21 +100,11 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 			ErrorMessage errorMessage = ValidationUtils.getErrorMessage(bindingResult);
 			List<String[]> msgs = errorMessage.getErrors();
 			
-			Result result = null;
-			boolean rowNumExists = ReflectionUtils.existsField(bindingResult, ROW_NUM);
-			if (rowNumExists) {
-				int rowNum = ReflectionUtils.getFieldValue(ROW_NUM, bindingResult);
-				Map<String, Object> message = new HashMap<>();
-				message.put(ROW_NUM, rowNum);
-				message.put("message", msgs);
-				result = Results.status("400", message).build();
-			} else {
-				result = Results.status("400", msgs).build();
-			}
-			
+			Result result = Results.status(VALIDATION_FAIL.code(), msgs).build();
 			return new ResponseEntity(result, HttpStatus.OK);
 		}
-		return null;
+		Result result = Results.status(VALIDATION_FAIL.code(), e.getMessage()).build();
+		return new ResponseEntity(result, HttpStatus.OK);
 	}
 	
 	@Override
@@ -121,9 +112,7 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	                                                              HttpHeaders headers, HttpStatus status, WebRequest request) {
 		logger.error("Rest API ERROR happen", ex);
 		headers.add("Content-Type", "application/json");
-		Result result = Results.status("400", "Bad Request")
-				//.debugMessage(ex.getLocalizedMessage())
-				.build();
+		Result result = Results.status(BAD_REQUEST).build();
 		return new ResponseEntity(result, headers, HttpStatus.OK);
 	}
 	
@@ -142,7 +131,7 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 					return errArray;
 				})
 				.collect(toList());
-		Result result = Results.status("400", msgs).build();
+		Result result = Results.status(VALIDATION_FAIL.code(), msgs).build();
 		return new ResponseEntity(result, headers, HttpStatus.OK);
 	}
 	
@@ -168,7 +157,7 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 					return errArray;
 				})
 				.collect(toList());
-		Result result = Results.status("400", msgs).build();
+		Result result = Results.status(VALIDATION_FAIL.code(), msgs).build();
 		return new ResponseEntity(result, HttpStatus.OK);
 	}
 	
@@ -176,8 +165,7 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> handleUniqueConstraintViolationException(UniqueConstraintViolationException e) {
 		logger.error("", e);
-		Result result = Results.status("400", "Bad Request")
-				.build();
+		Result result = Results.status(INTERNAL_SERVER_ERROR).build();
 		return new ResponseEntity(result, HttpStatus.OK);
 	}
 	
@@ -185,8 +173,7 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> handleEntityNotFoundException(EntityNotFoundException e) {
 		logger.error("", e);
-		Result result = Results.status("404", e.getMessage())
-				.build();
+		Result result = Results.status(NOT_FOUND.code(), e.getMessage()).build();
 		return new ResponseEntity(result, HttpStatus.OK);
 	}
 	
@@ -194,7 +181,7 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	protected ResponseEntity<Object> handleHttpRequestMethodNotSupported(HttpRequestMethodNotSupportedException ex, HttpHeaders headers, HttpStatus status,
 	                                                                     WebRequest request) {
 		headers.add("Content-Type", "application/json");
-		Result result = Results.status("405", "Method not allowed").build();
+		Result result = Results.status(METHOD_NOT_ALLOWED).build();
 		return new ResponseEntity(result, headers, HttpStatus.METHOD_NOT_ALLOWED);
 	}
 	

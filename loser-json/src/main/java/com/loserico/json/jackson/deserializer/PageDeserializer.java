@@ -53,12 +53,29 @@ public class PageDeserializer extends StdDeserializer<Page> {
 			page.setPagingIgnore(pagingIgnoreNode.booleanValue());
 		}
 		
+		/*
+		 * 排序字段可以通过 -create_time 的形式指定倒序排列
+		 * 如果同时显式提供了direction参数, 那么direction参数优先
+		 */
 		JsonNode orderNode = pageNode.get("order");
 		if (orderNode != null) {
 			String orderBy = orderNode.get("orderBy").textValue();
-			String direction = orderNode.get("direction").textValue();
+			String direction = null;
+			if (orderBy != null && orderBy.startsWith("-")) {
+				orderBy = orderBy.substring(1);
+				direction = "DESC";
+			} else {
+				direction = "ASC";
+			}
+			
+			JsonNode directionNode = orderNode.get("direction");
+			if (directionNode != null) {
+				direction = directionNode.textValue();
+			}
+			
 			OrderBean order = new OrderBean(orderBy, (ORDER_BY) EnumUtils.lookupEnum(ORDER_BY.class, direction));
 			page.setOrder(order);
+			page.getOrders().add(order);
 		}
 		return page;
 	}

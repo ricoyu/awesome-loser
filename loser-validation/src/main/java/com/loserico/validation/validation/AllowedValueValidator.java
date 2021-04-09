@@ -1,6 +1,7 @@
 package com.loserico.validation.validation;
 
 import com.loserico.validation.validation.annotation.AllowedValues;
+import org.hibernate.validator.internal.engine.constraintvalidation.ConstraintValidatorContextImpl;
 
 import javax.validation.ConstraintDeclarationException;
 import javax.validation.ConstraintValidator;
@@ -48,7 +49,8 @@ public class AllowedValueValidator implements ConstraintValidator<AllowedValues,
 		if (null == value) {
 			if (mandatory) {
 				context.disableDefaultConstraintViolation();
-				context.buildConstraintViolationWithTemplate("Is required.").addConstraintViolation();
+				String mandatoryMsg = (String) ((ConstraintValidatorContextImpl) context).getConstraintDescriptor().getAttributes().get("mandatoryMsg");
+				context.buildConstraintViolationWithTemplate(mandatoryMsg).addConstraintViolation();
 				return false;
 			}
 			return true;
@@ -58,8 +60,8 @@ public class AllowedValueValidator implements ConstraintValidator<AllowedValues,
 			boolean matchExceptValue = caseSensitive ? value.equals(exceptValues[i])
 					: value.equalsIgnoreCase(exceptValues[i]);
 			if (matchExceptValue) {
-				context.disableDefaultConstraintViolation();
-				context.buildConstraintViolationWithTemplate("Is required.").addConstraintViolation();
+				//context.disableDefaultConstraintViolation();
+				//context.buildConstraintViolationWithTemplate("Is required.").addConstraintViolation();
 				return false;
 			}
 		}
