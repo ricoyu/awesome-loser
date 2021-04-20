@@ -54,7 +54,7 @@ public final class ElasticQueryBuilder {
 	/**
 	 * TermQueryBuilder, MatchQueryBuilder 等等builder的父类
 	 */
-	protected QueryBuilder builder;
+	private QueryBuilder builder;
 	
 	/**
 	 * 是否要获取_source
@@ -105,6 +105,7 @@ public final class ElasticQueryBuilder {
 	 * <li/>Random Score 为每一个用户使用一个不同的, 随机算分结果
 	 * <li/>衰减函数 以某个字段的值为标准, 距离某个值越近, 得分越高
 	 * <li/>Script Score 自定义脚本完全控制所需逻辑
+	 * </ul>
 	 */
 	private ScoreFunctionBuilder scoreFunctionBuilder;
 	
@@ -281,7 +282,7 @@ public final class ElasticQueryBuilder {
 	 * <li/>Sum  算分与函数的和
 	 * <li/>Min / Max   算分与函数取 最小/最大值
 	 * <li/>Replace   使用函数值取代算分
-	 * <ul/>
+	 * </ul>
 	 *
 	 * @param boostMode
 	 * @return
@@ -306,15 +307,6 @@ public final class ElasticQueryBuilder {
 	public ElasticQueryBuilder queryBuilder(QueryBuilder builder) {
 		this.builder = builder;
 		return this;
-	}
-	
-	/**
-	 * 设置QueryBuilder, 可以通过QueryBuilders提供的静态方法构造出来
-	 *
-	 * @return QueryBuilders
-	 */
-	public com.loserico.searchlegacy.builder.QueryBuilders queryBuilder() {
-		return new com.loserico.searchlegacy.builder.QueryBuilders(this);
 	}
 	
 	/**
@@ -528,18 +520,7 @@ public final class ElasticQueryBuilder {
 				.setFetchSource(false);
 		
 		SearchResponse response = builder.get();
-		/*
-		 * Elasticsearch 7.1.1 版本返回的TotalHits对象
-		 * Elasticsearch 5.6.16版本返回的Long
-		 * 为了兼容两个版本所以特殊处理了一下
-		 */
-		Object totalHits = response.getHits().getTotalHits();
-		if (totalHits == null) {
-			return 0L;
-		}
-		
-		Long hits = ReflectionUtils.getFieldValue("value", totalHits);
-		return hits == null ? 0L : hits;
+		return response.getHits().getTotalHits();
 	}
 	
 	/**

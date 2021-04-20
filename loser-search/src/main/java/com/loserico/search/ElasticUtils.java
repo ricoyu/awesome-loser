@@ -1,6 +1,7 @@
 package com.loserico.search;
 
 import com.loserico.common.lang.utils.ReflectionUtils;
+import com.loserico.search.builder.ClusterSettingBuilder;
 import com.loserico.search.builder.ElasticAggregationBuilder;
 import com.loserico.search.builder.ElasticContextSuggestBuilder;
 import com.loserico.search.builder.ElasticIndexBuilder;
@@ -10,6 +11,7 @@ import com.loserico.search.builder.ElasticPutMappingBuilder;
 import com.loserico.search.builder.ElasticQueryBuilder;
 import com.loserico.search.builder.ElasticReindexBuilder;
 import com.loserico.search.builder.ElasticSuggestBuilder;
+import com.loserico.search.builder.ElasticUpdateSettingBuilder;
 import com.loserico.search.cache.ElasticCacheUtils;
 import com.loserico.search.enums.Analyzer;
 import com.loserico.search.enums.Dynamic;
@@ -19,6 +21,7 @@ import com.loserico.search.support.BulkResult;
 import com.loserico.search.support.UpdateResult;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.DocWriteResponse;
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
 import org.elasticsearch.action.admin.indices.analyze.AnalyzeRequest;
 import org.elasticsearch.action.admin.indices.analyze.AnalyzeResponse;
@@ -42,6 +45,7 @@ import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.IndicesAdminClient;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.cluster.metadata.IndexTemplateMetaData;
 import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
@@ -268,8 +272,9 @@ public final class ElasticUtils {
 	}
 	
 	/**
-	 * 批量创建文档
-	 * 返回创建结果, 包括成功数量, 失败数量, 失败消息, 成功创建的文档id列表
+	 * 批量创建文档<p>
+	 * 返回创建结果, 包括成功数量, 失败数量, 失败消息, 成功创建的文档id列表<p>
+	 * 单个bulk请求体的数据量不要太大, 官方建议大于5~15mb
 	 *
 	 * @param index
 	 * @param docs
@@ -303,9 +308,9 @@ public final class ElasticUtils {
 	}
 	
 	/**
-	 * 批量创建文档
-	 * 返回创建结果, 包括成功数量, 失败数量, 失败消息, 成功创建的文档id列表
-	 * 注意docs里面的pojo就算加了@DocId也不起作用, 批量只支持自动创建ID
+	 * 批量创建文档<p>
+	 * 返回创建结果, 包括成功数量, 失败数量, 失败消息, 成功创建的文档id列表<p>
+	 * 注意docs里面的pojo就算加了@DocId也不起作用, 批量只支持自动创建ID<p>
 	 *
 	 * @param index
 	 * @param docs
@@ -566,7 +571,7 @@ public final class ElasticUtils {
 	 * @return boolean Mapping创建成功失败标识
 	 */
 	public static ElasticPutMappingBuilder putMapping(String index, Dynamic dynamic) {
-		return new ElasticPutMappingBuilder(index,  dynamic);
+		return new ElasticPutMappingBuilder(index, dynamic);
 	}
 	
 	/**
@@ -830,12 +835,55 @@ public final class ElasticUtils {
 	 * 重建索引<p>
 	 * https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/java-docs-reindex.html
 	 * https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-reindex.html
-	 * 
+	 *
 	 * @param srcIndex
 	 * @param destIndex
 	 * @return ElasticReindexBuilder
 	 */
 	public static ElasticReindexBuilder reindex(String srcIndex, String destIndex) {
 		return new ElasticReindexBuilder(srcIndex, destIndex);
+	}
+	
+	/**
+	 * Elasticsearch Settings 相关 API
+	 */
+	public static class Settings {
+		
+		/**
+		 * 更新索引的Settings
+		 * @param indices
+		 * @return ElasticUpdateSettingBuilder
+		 */
+		public static ElasticUpdateSettingBuilder update(String... indices) {
+			return new ElasticUpdateSettingBuilder(indices);
+		}
+	}
+	
+	/**
+	 * Elasticsearch 集群相关 API
+	 */
+	public static class Cluster {
+		
+		/**
+		 * 获取集群的健康状态, Green Yellow Red
+		 * @param index
+		 * @return String
+		 */
+		public static String health(String index) {
+			ClusterHealthResponse response = client.admin().cluster().prepareHealth().get();
+			ClusterHealthStatus status = response.getStatus();
+			return status.toString();
+		}
+		
+		public static ClusterSettingBuilder settings() {
+			return new ClusterSettingBuilder();
+		}
+	}
+	
+	/**
+	 * Elasticsearch admin 相关 API
+	 */
+	public static final class ADMIN {
+		
 	}
 }

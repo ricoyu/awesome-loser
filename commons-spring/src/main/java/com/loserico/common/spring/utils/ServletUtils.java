@@ -5,14 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.ServletRequest;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.URLDecoder;
@@ -32,7 +29,6 @@ import static com.loserico.networking.constants.NetworkConstant.HTTP_HEADER_PROX
 import static com.loserico.networking.constants.NetworkConstant.HTTP_HEADER_WL_PROXY_CLIENT_IP;
 import static com.loserico.networking.constants.NetworkConstant.HTTP_HEADER_X_FORWARDED_FOR;
 import static com.loserico.networking.constants.NetworkConstant.HTTP_HEADER_X_REAL_IP;
-import static com.loserico.networking.constants.NetworkConstant.HTTP_HEADER_X_REQUESTED_WITH;
 import static com.loserico.networking.constants.NetworkConstant.UNKNOWN;
 
 /**
@@ -58,31 +54,12 @@ public final class ServletUtils {
 	public static final String DEFAULT_CHARSET = "UTF-8";
 	
 	/**
-	 * 获取HttpServletRequest
-	 *
-	 * @return HttpServletRequest
-	 */
-	public static HttpServletRequest request() {
-		return getRequest();
-	}
-	
-	/**
-	 * 获取HttpServletResponse
-	 *
-	 * @return HttpServletResponse
-	 */
-	public static HttpServletResponse response() {
-		return getResponse();
-	}
-	
-	/**
 	 * 获取请求头
 	 *
 	 * @param header
 	 * @return String
 	 */
-	public static String getHeader(String header) {
-		HttpServletRequest request = getRequest();
+	public static String getHeader(HttpServletRequest request, String header) {
 		return request.getHeader(header);
 	}
 	
@@ -111,8 +88,8 @@ public final class ServletUtils {
 	 *
 	 * @return String
 	 */
-	public static String contentType() {
-		return getHeader("Content-Type");
+	public static String contentType(HttpServletRequest request) {
+		return getHeader(request, "Content-Type");
 	}
 	
 	/**
@@ -121,8 +98,7 @@ public final class ServletUtils {
 	 * @param header
 	 * @param value
 	 */
-	public static void setHeader(String header, String value) {
-		HttpServletResponse response = getResponse();
+	public static void setHeader(HttpServletResponse response, String header, String value) {
 		response.setHeader(header, value);
 	}
 	
@@ -132,8 +108,7 @@ public final class ServletUtils {
 	 * @param header
 	 * @param date
 	 */
-	public static void setDateHeader(String header, long date) {
-		HttpServletResponse response = getResponse();
+	public static void setDateHeader(HttpServletResponse response, String header, long date) {
 		response.setDateHeader(header, date);
 	}
 	
@@ -143,8 +118,7 @@ public final class ServletUtils {
 	 * @param header
 	 * @param value
 	 */
-	public static void setIntHeader(String header, int value) {
-		HttpServletResponse response = getResponse();
+	public static void setIntHeader(HttpServletResponse response, String header, int value) {
 		response.setIntHeader(header, value);
 	}
 	
@@ -153,20 +127,9 @@ public final class ServletUtils {
 	 *
 	 * @param contentType
 	 */
-	public static void contentType(String contentType) {
+	public static void contentType(HttpServletResponse response, String contentType) {
 		Assert.notNull(contentType, "contentType 不能为null");
-		setHeader("Content-Type", contentType);
-	}
-	
-	/**
-	 * 获取Cookie
-	 *
-	 * @param name
-	 * @return String
-	 */
-	public static String getCookie(String name) {
-		HttpServletRequest request = getRequest();
-		return getCookie(request, name);
+		setHeader(response, "Content-Type", contentType);
 	}
 	
 	/**
@@ -239,94 +202,26 @@ public final class ServletUtils {
 	}
 	
 	/**
-	 * 获取请求参数
-	 *
-	 * @param parameter
-	 * @return String
-	 */
-	public static String getParameter(String parameter) {
-		HttpServletRequest request = getRequest();
-		return request.getParameter(parameter);
-	}
-	
-	/**
-	 * 添加Session attribute, 没有过期时间
-	 *
-	 * @param attributeName
-	 * @param value
-	 */
-	public static void setSessionAttribute(String attributeName, Object value) {
-		Assert.notNull(attributeName, "attributeName cannot be null");
-		getSession().setAttribute(attributeName, value);
-	}
-	
-	/**
-	 * 添加Session attribute, 同时设置session过期时间
-	 *
-	 * @param attributeName
-	 * @param value
-	 * @param expireInSeconds
-	 */
-	public static void setSessionAttribute(String attributeName, Object value, int expireInSeconds) {
-		Assert.notNull(attributeName, "attributeName cannot be null");
-		HttpSession session = getSession();
-		session.setAttribute(attributeName, value);
-		session.setMaxInactiveInterval(expireInSeconds);
-	}
-	
-	/**
-	 * 从session获取attribute
-	 *
-	 * @param attributeName
-	 * @param <T>
-	 * @return T
-	 */
-	public static <T> T getSessionAttribute(String attributeName) {
-		Assert.notNull(attributeName, "attributeName cannot be null");
-		return (T) getSession().getAttribute(attributeName);
-	}
-	
-	/**
-	 * 清除session
-	 */
-	public static void invalidateSession() {
-		getSession().invalidate();
-	}
-	
-	/**
 	 * 获取请求的URL
 	 * http://localhost:8080/pic_code
 	 *
 	 * @return String
 	 */
-	public static String requestUrl() {
-		return request().getRequestURL().toString();
-	}
-	
-	/**
-	 * 判断是否是ajax请求
-	 *
-	 * @return boolean
-	 */
-	public static boolean isAjax() {
-		String contentType = contentType();
-		return "XMLHttpRequest".equals(getHeader("X-Requested-With"))
-				|| APPLICATION_JSON.equalsIgnoreCase(contentType)
-				|| APPLICATION_JSON_UTF8.equalsIgnoreCase(contentType);
+	public static String requestUrl(HttpServletRequest request) {
+		return request.getRequestURL().toString();
 	}
 	
 	/**
 	 * 取X-Requested-With请求头, 判断值是否为XMLHttpRequest, 是的话认为是AJAX请求
+	 * 或者返回类型是application/json也认为是AJAX请求
 	 *
-	 * @param request
 	 * @return boolean
 	 */
 	public static boolean isAjax(HttpServletRequest request) {
-		String xRequestedWithHeader = request.getHeader(HTTP_HEADER_X_REQUESTED_WITH);
-		if (isBlank(xRequestedWithHeader)) {
-			return false;
-		}
-		return xRequestedWithHeader.equals("XMLHttpRequest");
+		String contentType = contentType(request);
+		return "XMLHttpRequest".equals(getHeader(request, "X-Requested-With"))
+				|| APPLICATION_JSON.equalsIgnoreCase(contentType)
+				|| APPLICATION_JSON_UTF8.equalsIgnoreCase(contentType);
 	}
 	
 	/**
@@ -335,8 +230,7 @@ public final class ServletUtils {
 	 * @param data
 	 * @throws IOException
 	 */
-	public static void writeResponse(String data) {
-		HttpServletResponse response = getResponse();
+	public static void writeResponse(HttpServletResponse response, String data) {
 		try {
 			response.getWriter().write(data);
 		} catch (IOException e) {
@@ -350,9 +244,9 @@ public final class ServletUtils {
 	 *
 	 * @param redirectUrl
 	 */
-	public static void redirect(String redirectUrl) {
+	public static void redirect(HttpServletResponse response, String redirectUrl) {
 		try {
-			getResponse().sendRedirect(redirectUrl);
+			response.sendRedirect(redirectUrl);
 		} catch (IOException e) {
 			log.error("", e);
 			throw new RuntimeException("重定向失败", e);
@@ -362,12 +256,12 @@ public final class ServletUtils {
 	/**
 	 * 读取HttpServletRequest Body
 	 */
-	public static String readRequestBody() {
+	public static String readRequestBody(HttpServletRequest request) {
 		BufferedReader br = null;
 		StringBuilder sb = new StringBuilder();
 		
 		try {
-			br = request().getReader();
+			br = request.getReader();
 			String str = null;
 			while ((str = br.readLine()) != null) {
 				sb.append(str);
@@ -469,16 +363,6 @@ public final class ServletUtils {
 		}
 		log.debug("获取请求真实IP，IP来源: {}", ipDesc);
 		return ip;
-	}
-	
-	/**
-	 * 获取请求的URI
-	 *
-	 * @return String
-	 */
-	public static String requestPath() {
-		HttpServletRequest request = getRequest();
-		return requestPath(request);
 	}
 	
 	/**
@@ -757,8 +641,7 @@ public final class ServletUtils {
 		 *
 		 * @return Cookie
 		 */
-		public Cookie build() {
-			HttpServletResponse response = getResponse();
+		public Cookie build(HttpServletResponse response) {
 			String encoded = this.value == null ? null : urlEncode(this.value);
 			Cookie cookie = new Cookie(name, encoded);
 			if (MAX_AGE_NOT_SET != maxAge) {
@@ -773,17 +656,17 @@ public final class ServletUtils {
 		}
 	}
 	
-	private static HttpServletRequest getRequest() {
+	/*private static HttpServletRequest getRequest() {
 		return ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
 	}
 	
 	private static HttpServletResponse getResponse() {
 		return ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getResponse();
-	}
+	}*/
 	
-	private static HttpSession getSession() {
+	/*private static HttpSession getSession() {
 		return getRequest().getSession();
-	}
+	}*/
 	
 	private static Map<String, Object> handleServletParameter(HttpServletRequest request) {
 		Map<String, String[]> requestParameter = request.getParameterMap();

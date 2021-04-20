@@ -1,19 +1,21 @@
 package com.loserico.search;
 
 import com.loserico.common.lang.utils.ReflectionUtils;
-import com.loserico.search.pojo.Movie;
 import com.loserico.searchlegacy.ElasticUtils;
+import com.loserico.networking.utils.HttpUtils;
 import com.loserico.searchlegacy.annotation.DocId;
-import com.loserico.searchlegacy.builder.ElasticMappingBuilder;
-import com.loserico.searchlegacy.builder.Settings;
+import com.loserico.searchlegacy.builder.AbstractMappingBuilder;
+import com.loserico.searchlegacy.builder.ElasticIndexMappingBuilder;
+import com.loserico.searchlegacy.builder.FieldDefBuilder;
+import com.loserico.searchlegacy.builder.SettingsBuilder;
 import com.loserico.searchlegacy.enums.Analyzer;
 import com.loserico.searchlegacy.enums.ContextType;
 import com.loserico.searchlegacy.enums.Direction;
 import com.loserico.searchlegacy.enums.Dynamic;
 import com.loserico.searchlegacy.enums.FieldType;
+import com.loserico.search.pojo.Movie;
 import com.loserico.searchlegacy.support.BulkResult;
 import com.loserico.searchlegacy.support.FieldDef;
-import com.loserico.searchlegacy.support.FieldDefBuilder;
 import com.loserico.searchlegacy.support.UpdateResult;
 import com.loserico.searchlegacy.vo.PageResult;
 import lombok.AllArgsConstructor;
@@ -62,12 +64,11 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static com.loserico.json.jackson.JacksonUtils.toJson;
-import static com.loserico.json.jackson.JacksonUtils.toPrettyJson;
 import static com.loserico.searchlegacy.enums.FieldType.COMPLETION;
 import static com.loserico.searchlegacy.enums.FieldType.KEYWORD;
 import static com.loserico.searchlegacy.enums.FieldType.TEXT;
 import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.elasticsearch.search.aggregations.AggregationBuilders.*;
 import static org.elasticsearch.search.suggest.SortBy.FREQUENCY;
@@ -102,22 +103,23 @@ public class ElasticUtilsTest {
 	@Test
 	public void testCreateIndex() {
 		boolean created = ElasticUtils.createIndex("boduo")
-				.mapping(ElasticMappingBuilder.newInstance()
-						.dynamic(Dynamic.TRUE)
-						.field("name", FieldType.TEXT)
-						.field("income", FieldType.LONG, false)
-						.field(FieldDef.builder("carrer", FieldType.TEXT)
-								.index(true)
-								.analyzer(Analyzer.IK_MAX_WORD)
-								.searchAnalyzer(Analyzer.IK_SMART)
-								.build()))
-				.create();
+				.mapping(Dynamic.FALSE)
+					.field("name", FieldType.TEXT)
+					.field("income", FieldType.LONG)
+						.index(false)
+					.field("carrer", FieldType.TEXT)
+						.index(true)
+						.analyzer(Analyzer.ENGLISH)
+						.searchAnalyzer(Analyzer.ENGLISH)
+				.thenCreate();
+		
 		System.out.println(created);
 	}
 	
 	@Test
 	public void testExistsIndex() {
-		assertTrue(ElasticUtils.existsIndex("boduo"));
+		boolean exists = ElasticUtils.existsIndex("dynamic_mapping_test");
+		System.out.println(exists);
 	}
 	
 	@Test
@@ -127,9 +129,59 @@ public class ElasticUtilsTest {
 	}
 	
 	@Test
+	public void testPutMapping() {
+		boolean acknowledged = ElasticUtils.putMapping("rico", Dynamic.FALSE)
+				.copy("movies")
+				.field("title", FieldType.KEYWORD).index(true)
+				.analyzer(Analyzer.ENGLISH)
+				.searchAnalyzer(Analyzer.ENGLISH)
+				.thenCreate();
+		System.out.println(acknowledged);
+	}
+	
+	@Test
+	public void testPutMappingWithDeleteFieldDef() {
+		boolean acknowledged = ElasticUtils.putMapping("rico", Dynamic.TRUE)
+				.copy("movies")
+				.field("title", FieldType.KEYWORD)
+				.index(true)
+				.and()
+				.delete("user", "genre")
+				.thenCreate();
+		System.out.println(acknowledged);
+	}
+	
+	@Test
+	public void testPutMappingAddNewFields() {
+		ElasticUtils.putMapping("boduo", Dynamic.TRUE)
+				.field("fans", FieldType.TEXT)
+				.thenCreate();
+	}
+	
+	@Test
+	public void testPutMappingWithChildField() {
+		/*boolean created = ElasticUtils.createIndex("titles").create();
+		boolean acknowledged = ElasticUtils.putMapping("titles", MappingBuilder.newInstance()
+				.field(FieldDef.builder("title", FieldType.TEXT)
+						.fields(FieldDef.builder("std", FieldType.TEXT)
+								.analyzer(Analyzer.STANDARD)
+								.build())
+						.build()));
+		System.out.println(acknowledged);*/
+		
+		ElasticUtils.deleteIndex("titles");
+		boolean acknowledged = ElasticUtils.createIndex("titles")
+				.mapping()
+				.field("title", FieldType.TEXT)
+				.fields(FieldDef.builder("std", FieldType.TEXT).analyzer(Analyzer.STANDARD))
+				.thenCreate();
+	}
+	
+	@Test
 	public void testCreateDoc() {
-		String id = ElasticUtils.index("rico", "{\"name\": \"三少爷\"}");
-		System.out.println(id);
+		//String id = ElasticUtils.index("rico", "{\"name\": \"三少爷\"}");
+		//System.out.println(id);
+		ElasticUtils.index("logs-2021-03-30", "{\"key\": \"三少爷\"}", "1");
 	}
 	
 	@Test
@@ -195,11 +247,11 @@ public class ElasticUtilsTest {
 	
 	@Test
 	public void testSearchAfter() {
-		PageResult<String> pageResult = ElasticUtils.query("users")
+		PageResult<String> pageResult = ElasticUtils.query("rico")
 				.size(1)
 				.queryBuilder(matchAllQuery())
-				.addFieldSort("age", Direction.DESC)
-				.addFieldSort("_id")
+				.addFieldSort("name.keyword", Direction.DESC)
+				//.addFieldSort("_id")
 				.queryForPage();
 	}
 	
@@ -280,64 +332,37 @@ public class ElasticUtilsTest {
 	@Test
 	public void testGetMapping() {
 		Object mapping = ElasticUtils.getMapping("boduo");
-		System.out.println(toPrettyJson(mapping));
+		System.out.println(toJson(mapping));
 	}
 	
 	@Test
 	public void testGetFieldMapping() {
 		Map<String, Map<String, Object>> result = ElasticUtils.getMapping("boduo", "carrer", "fans", "income");
-		System.out.println(toPrettyJson(result));
+		System.out.println(toJson(result));
+	}
+	
+	
+	@Test
+	public void testSettingHotWarn() {
+		boolean created = ElasticUtils.createIndex("logs-2021-03-29")
+				.settings()
+				.numberOfShards(1)
+				.numberOfReplicas(1)
+				.indexRoutingAllocation("node_type", "hot")
+				.thenCreate();
+		assertTrue(created);
 	}
 	
 	@Test
-	public void testPutMapping() {
-		boolean acknowledged = ElasticUtils.putMapping("rico", ElasticMappingBuilder.newInstance()
-				.copy("movies")
-				.dynamic(Dynamic.TRUE)
-				.field(FieldDef.builder("title", FieldType.KEYWORD)
-						.index(true)
-						.build()));
-		System.out.println(acknowledged);
-	}
-	
-	@Test
-	public void testPutMappingWithDeleteFieldDef() {
-		boolean acknowledged = ElasticUtils.putMapping("rico", ElasticMappingBuilder.newInstance()
-				.copy("movies")
-				.dynamic(Dynamic.TRUE)
-				.field(FieldDef.builder("title", FieldType.KEYWORD)
-						.index(true)
-						.build())
-				.delete("user", "genre"));
-		System.out.println(acknowledged);
-	}
-	
-	@Test
-	public void testPutMappingAddNewFields() {
-		ElasticUtils.putMapping("boduo", ElasticMappingBuilder.newInstance()
-				.field("fans", FieldType.TEXT));
-	}
-	
-	@Test
-	public void testPutMappingWithChildField() {
-		/*boolean created = ElasticUtils.createIndex("titles").create();
-		boolean acknowledged = ElasticUtils.putMapping("titles", MappingBuilder.newInstance()
-				.field(FieldDef.builder("title", FieldType.TEXT)
-						.fields(FieldDef.builder("std", FieldType.TEXT)
-								.analyzer(Analyzer.STANDARD)
-								.build())
-						.build()));
-		System.out.println(acknowledged);*/
-		
-		ElasticUtils.deleteIndex("titles");
-		boolean acknowledged = ElasticUtils.createIndex("titles")
-				.mapping(ElasticMappingBuilder.newInstance()
-						.field(FieldDef.builder("title", FieldType.TEXT)
-								.fields(FieldDef.builder("std", FieldType.TEXT)
-										.analyzer(Analyzer.STANDARD)
-										.build())
-								.build()))
+	public void testSettingHotWarn2() {
+		boolean created = ElasticUtils.createIndex("logs-2021-03-30")
+				.settings()
+				.numberOfShards(1)
+				.numberOfReplicas(1)
+				.indexRoutingAllocation("node_type", "hot")
+				.and()
 				.create();
+		assertTrue(created);
 	}
 	
 	@Test
@@ -346,26 +371,43 @@ public class ElasticUtilsTest {
 				.order(0)
 				.patterns("test*")
 				.version(0)
-				.settings(Settings.builder()
+				.settings(SettingsBuilder.builder()
 						.numberOfShards(1)
 						.numberOfReplicas(1))
 				/*.settings(Settings.builder()
 						.put("number_of_shards", 1)
 						.put("number_of_replicas", 1)
 						.build())*/
-				.mappings(ElasticMappingBuilder.newInstance()
-						.dynamic(Dynamic.TRUE)
-						.field("username", FieldType.KEYWORD)
-						.field("read_books", FieldType.TEXT)
-						.field(FieldDef.builder("hobbys", FieldType.TEXT).index(true).build()))
-				.execute();
+				.mappings(Dynamic.TRUE)
+				.field("username", FieldType.KEYWORD)
+				.field("read_books", FieldType.TEXT)
+				.field("hobbys", FieldType.TEXT).index(true)
+				.thenCreate();
+		System.out.println(created);
+	}
+	
+	@Test
+	public void testPutIndexTemplate2() {
+		boolean created = ElasticUtils.putIndexTemplate("demo-index-template")
+				.order(0)
+				.patterns("test*")
+				.version(0)
+				.settings(1)
+				.numberOfReplicas(1)
+				.indexRoutingAllocation("my_route", "hot")
+				.and()
+				.mappings(Dynamic.TRUE)
+				.field("username", FieldType.KEYWORD)
+				.field("read_books", FieldType.TEXT)
+				.field("hobbys", FieldType.TEXT).index(true)
+				.thenCreate();
 		System.out.println(created);
 	}
 	
 	@Test
 	public void testGetIndexTemplate() {
 		IndexTemplateMetaData indexTemplateMetaData = ElasticUtils.getIndexTemplate("demo-index-template");
-		System.out.println(toPrettyJson(indexTemplateMetaData));
+		System.out.println(toJson(indexTemplateMetaData));
 	}
 	
 	@Test
@@ -617,10 +659,12 @@ public class ElasticUtilsTest {
 	@Test
 	public void testCompletionSuggestion() {
 		ElasticUtils.deleteIndex("articles");
-		ElasticUtils.createIndex("articles")
-				.mapping(ElasticMappingBuilder.newInstance()
-						.field(FieldDef.builder("title_completion", COMPLETION).build()))
-				.create();
+		boolean created = ElasticUtils.createIndex("articles")
+				.mapping()
+				.field("title_completion", COMPLETION)
+				.thenCreate();
+		assertTrue(created);
+		
 		BulkResult bulkResult = ElasticUtils.bulkIndex("articles",
 				"{\"title_completion\": \"lucene is very cool\"}",
 				"{\"title_completion\": \"Elasticsearch builds on top of Lucene\"}",
@@ -646,14 +690,13 @@ public class ElasticUtilsTest {
 	public void testContextCompletion() {
 		ElasticUtils.deleteIndex("comments");
 		
-		FieldDef fieldDef = FieldDef.builder("comment_autocomplete", COMPLETION)
-				.addContext(ContextType.CATEGORY, "comment_category")
-				.build();
+		FieldDefBuilder fieldDefBuilder = FieldDef.builder("comment_autocomplete", COMPLETION)
+				.addContext(ContextType.CATEGORY, "comment_category");
 		
 		ElasticUtils.createIndex("comments")
-				.mapping(ElasticMappingBuilder.newInstance()
-						.field(fieldDef))
-				.create();
+				.mapping()
+				.field(fieldDefBuilder)
+				.thenCreate();
 		
 		ElasticUtils.index("comments", "{\"comment\": \"I love the star war movies\", \"comment_autocomplete\": {\"input\": [\"star wars\"], \"contexts\": {\"comment_category\": \"movies\"} } }");
 		ElasticUtils.index("comments", "{\"comment\": \"Where can Ifind a Starbucks\", \"comment_autocomplete\": {\"input\": [\"starbucks\"], \"contexts\": {\"comment_category\": \"coffee\"} } }");
@@ -863,31 +906,15 @@ public class ElasticUtilsTest {
 				.forEach(System.out::println);
 	}
 	
-	@Test
-	public void testRandomScoreQuery() {
-		ElasticUtils.deleteIndex("blogs");
-		ElasticUtils.index("blogs", "{\"title\": \"About popularity\", \"content\": \"In this post we will talk about...\", \"votes\": 0 }", "1");
-		ElasticUtils.index("blogs", "{\"title\": \"About popularity\", \"content\": \"In this post we will talk about...\", \"votes\": 100 }", "2");
-		ElasticUtils.index("blogs", "{\"title\": \"About popularity\", \"content\": \"In this post we will talk about...\", \"votes\": 1000000 }", "3");
-		
-		/*ElasticUtils.functionScoreQuery(ScoreFunctionBuilders.randomFunction().seed(666).setField("content"), "blogs")
-				.queryBuilder(multiMatchQuery("popularity", "title", "content"))
-				.queryForList()
-				.forEach(System.out::println);
-		
-		ElasticUtils.functionScoreQuery(ScoreFunctionBuilders.randomFunction().seed(999).setField("content.keyword"), "blogs")
-				.queryBuilder(multiMatchQuery("popularity", "title", "content"))
-				.queryForList()
-				.forEach(System.out::println);*/
-	}
 	
 	@Test
 	public void testClusterFailover() {
 		ElasticUtils.deleteIndex("tech_blogs");
 		boolean created = ElasticUtils.createIndex("tech_blogs")
-				.settings(Settings.builder()
+				.settings(SettingsBuilder.builder()
 						.numberOfShards(3)
-						.numberOfReplicas(1))
+						.numberOfReplicas(1)
+						.defaultPipeline("blog_pipeline"))
 				.create();
 		System.out.println(created);
 		
@@ -979,18 +1006,15 @@ public class ElasticUtilsTest {
 	@Test
 	public void testReindex() {
 		ElasticUtils.deleteIndex("blogs_fix");
-		ElasticMappingBuilder mappingBuilder = ElasticMappingBuilder.newInstance()
-				.field(FieldDefBuilder.builder("content", TEXT)
-						.fields(FieldDefBuilder.builder("english", TEXT)
-								.analyzer(Analyzer.ENGLISH)
-								.build())
-						.build())
-				.field("keyword", KEYWORD);
-		
+		AbstractMappingBuilder mappingBuilder = ElasticIndexMappingBuilder.newInstance()
+				.field("content", TEXT)
+				.fields(FieldDefBuilder.builder("english", TEXT).analyzer(Analyzer.ENGLISH))
+				.field("keyword", KEYWORD)
+				.and();
 		
 		boolean created = ElasticUtils.createIndex("blogs_fix")
 				.mapping(mappingBuilder)
-				.create();
+				.thenCreate();
 		
 		BulkByScrollResponse response = ElasticUtils.reindex("blogs", "blogs_fix")
 				.filter(matchQuery("content", "Hadoop"))
@@ -1005,8 +1029,9 @@ public class ElasticUtilsTest {
 	@Test
 	public void testReindexHuge() {
 		boolean created = ElasticUtils.createIndex("event_xxx")
-				.mapping(ElasticMappingBuilder.newInstance().copy("event_2021_03_08"))
-				.create();
+				.mapping()
+				.copy("event_2021_03_08")
+				.thenCreate();
 		long begin = System.currentTimeMillis();
 		BulkByScrollResponse response = ElasticUtils.reindex("event_2021_03_08", "event_xxx")
 				.slices(8)
@@ -1024,4 +1049,13 @@ public class ElasticUtilsTest {
 		List<String> results = elasticsearchOperations.searchAll("event_2021_03_08");
 		System.out.println(results.size());*/
 	}
+	
+	@Test
+	public void testNodeAttr() {
+		Object response = HttpUtils.get("https://192.168.100.101:9200/_cat/nodeattrs?v")
+				.basicAuth("elastic", "123456")
+				.request();
+		System.out.println(response);
+	}
+	
 }

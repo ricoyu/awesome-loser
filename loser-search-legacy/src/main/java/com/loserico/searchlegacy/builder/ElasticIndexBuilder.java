@@ -1,6 +1,7 @@
 package com.loserico.searchlegacy.builder;
 
 import com.loserico.common.lang.utils.ReflectionUtils;
+import com.loserico.searchlegacy.enums.Dynamic;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 
@@ -20,12 +21,33 @@ public final class ElasticIndexBuilder {
 	
 	private CreateIndexRequestBuilder createIndexRequestBuilder;
 	
-	private ElasticMappingBuilder mappingBuilder;
+	private ElasticIndexMappingBuilder mappingBuilder;
 	
-	private Settings settings;
+	private SettingsBuilder settings;
 	
 	public ElasticIndexBuilder(CreateIndexRequestBuilder createIndexRequestBuilder) {
 		this.createIndexRequestBuilder = createIndexRequestBuilder;
+	}
+	
+	/**
+	 * 通过MappingBuilder设置Index的Mapping, 默认dynamic为true
+	 *
+	 * @return IndexBuilder
+	 */
+	public ElasticIndexMappingBuilder mapping() {
+		this.mappingBuilder = new ElasticIndexMappingBuilder(this, Dynamic.TRUE);
+		return this.mappingBuilder;
+	}
+	
+	/**
+	 * 通过MappingBuilder设置Index的Mapping
+	 *
+	 * @param dynamic
+	 * @return IndexBuilder
+	 */
+	public ElasticIndexMappingBuilder mapping(Dynamic dynamic) {
+		this.mappingBuilder = new ElasticIndexMappingBuilder(this, dynamic);
+		return this.mappingBuilder;
 	}
 	
 	/**
@@ -34,9 +56,9 @@ public final class ElasticIndexBuilder {
 	 * @param mappingBuilder
 	 * @return IndexBuilder
 	 */
-	public ElasticIndexBuilder mapping(ElasticMappingBuilder mappingBuilder) {
-		this.mappingBuilder = mappingBuilder;
-		return this;
+	public ElasticIndexMappingBuilder mapping(AbstractMappingBuilder mappingBuilder) {
+		this.mappingBuilder = (ElasticIndexMappingBuilder)mappingBuilder;
+		return this.mappingBuilder;
 	}
 	
 	/**
@@ -45,9 +67,20 @@ public final class ElasticIndexBuilder {
 	 * @param settings
 	 * @return IndexBuilder
 	 */
-	public ElasticIndexBuilder settings(Settings settings) {
+	public ElasticIndexBuilder settings(SettingsBuilder settings) {
 		this.settings = settings;
 		return this;
+	}
+	
+	/**
+	 * 设置Index的主分片数
+	 *
+	 * @return IndexBuilder
+	 */
+	public ElasticIndexSettingsBuilder settings() {
+		ElasticIndexSettingsBuilder elasticSettingsBuilder = new ElasticIndexSettingsBuilder(this);
+		elasticSettingsBuilder.numberOfShards(1);
+		return elasticSettingsBuilder;
 	}
 	
 	/**

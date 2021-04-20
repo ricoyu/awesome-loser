@@ -22,7 +22,7 @@ public final class ElasticIndexBuilder {
 	
 	private ElasticIndexMappingBuilder mappingBuilder;
 	
-	private Settings settings;
+	private SettingsBuilder settings;
 	
 	public ElasticIndexBuilder(CreateIndexRequestBuilder createIndexRequestBuilder) {
 		this.createIndexRequestBuilder = createIndexRequestBuilder;
@@ -66,7 +66,7 @@ public final class ElasticIndexBuilder {
 	 * @param settings
 	 * @return IndexBuilder
 	 */
-	public ElasticIndexBuilder settings(Settings settings) {
+	public ElasticIndexBuilder settings(SettingsBuilder settings) {
 		this.settings = settings;
 		return this;
 	}
@@ -74,10 +74,9 @@ public final class ElasticIndexBuilder {
 	/**
 	 * 设置Index的主分片数
 	 *
-	 * @param numberOfShards
 	 * @return IndexBuilder
 	 */
-	public ElasticIndexSettingsBuilder settings(int numberOfShards) {
+	public ElasticIndexSettingsBuilder settings() {
 		ElasticIndexSettingsBuilder elasticSettingsBuilder = new ElasticIndexSettingsBuilder(this);
 		elasticSettingsBuilder.numberOfShards(1);
 		return elasticSettingsBuilder;

@@ -28,4 +28,11 @@ public class HexaConvertTest {
 		System.out.println("身高:" + Integer.toHexString(175).toUpperCase());
 		System.out.println(Integer.toHexString(384).toLowerCase());
 	}
+	
+	@Test
+	public void test() {
+		System.out.println(Integer.toHexString(8736));
+		System.out.println(Integer.toHexString(8737));
+		System.out.println(Integer.toHexString(15993));
+	}
 }

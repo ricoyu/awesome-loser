@@ -11,7 +11,7 @@ package com.loserico.search.builder;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
-public final class ElasticIndexSettingsBuilder extends Settings{
+public final class ElasticIndexSettingsBuilder extends SettingsBuilder {
 	
 	private ElasticIndexBuilder elasticIndexBuilder;
 	

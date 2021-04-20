@@ -2,9 +2,11 @@ package com.loserico.mybatis.core;
 
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.loserico.common.lang.utils.BeanUtils;
 import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.common.lang.vo.OrderBean.ORDER_BY;
 import com.loserico.mybatis.page.PageProxy;
+import lombok.extern.slf4j.Slf4j;
 import net.sf.cglib.proxy.Enhancer;
 
 import java.util.ArrayList;
@@ -22,6 +24,7 @@ import static java.util.stream.Collectors.toList;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
+@Slf4j
 public final class Pages<T> {
 	
 	/**
@@ -49,6 +52,12 @@ public final class Pages<T> {
 		} else {
 			page = (com.loserico.common.lang.vo.Page) ReflectionUtils.getFieldValue("page", obj);
 		}
+		
+		if (page == null) {
+			log.warn("没有找到page对象!");
+			return null;
+		}
+		
 		PageBuilder builder = new PageBuilder(page.getCurrentPage(), page.getPageSize());
 		List<OrderItem> orderItems = page.getOrders().stream()
 				.map((order) -> new OrderItem(order.getOrderBy(), order.getDirection() == ORDER_BY.ASC ? true : false))
@@ -61,7 +70,9 @@ public final class Pages<T> {
 		Enhancer enhancer = new Enhancer();
 		enhancer.setSuperclass(Page.class);
 		enhancer.setCallback(pageProxy);
-		return (Page) enhancer.create();
+		Page pageResult = (Page) enhancer.create();
+		BeanUtils.copyProperties(targetPage, pageResult);
+		return pageResult;
 	}
 	
 	public static class PageBuilder<T> {

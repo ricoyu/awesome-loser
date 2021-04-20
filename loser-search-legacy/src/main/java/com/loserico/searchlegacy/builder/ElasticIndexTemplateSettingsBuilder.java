@@ -1,4 +1,4 @@
-package com.loserico.search.builder;
+package com.loserico.searchlegacy.builder;
 
 /**
  * 为IndexTemplate设置Settings

@@ -2,16 +2,18 @@ package com.loserico.search;
 
 import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.networking.utils.HttpUtils;
+import com.loserico.search.ElasticUtils.Cluster;
 import com.loserico.search.annotation.DocId;
 import com.loserico.search.builder.AbstractMappingBuilder;
 import com.loserico.search.builder.ElasticIndexMappingBuilder;
 import com.loserico.search.builder.FieldDefBuilder;
-import com.loserico.search.builder.Settings;
+import com.loserico.search.builder.SettingsBuilder;
 import com.loserico.search.enums.Analyzer;
 import com.loserico.search.enums.ContextType;
 import com.loserico.search.enums.Direction;
 import com.loserico.search.enums.Dynamic;
 import com.loserico.search.enums.FieldType;
+import com.loserico.search.enums.cluster.AllocationEnable;
 import com.loserico.search.pojo.Movie;
 import com.loserico.search.support.BulkResult;
 import com.loserico.search.support.FieldDef;
@@ -95,21 +97,19 @@ public class ElasticUtilsTest {
 	
 	@Test
 	public void testDeleteIndex() {
-		boolean created = ElasticUtils.deleteIndex("boduo");
-		System.out.println(created);
+		boolean deleted = ElasticUtils.deleteIndex("boduo");
+		System.out.println(deleted);
 	}
 	
 	@Test
 	public void testCreateIndex() {
 		boolean created = ElasticUtils.createIndex("boduo")
 				.mapping(Dynamic.FALSE)
-					.field("name", FieldType.TEXT)
-					.field("income", FieldType.LONG)
-						.index(false)
-					.field("carrer", FieldType.TEXT)
-						.index(true)
-						.analyzer(Analyzer.IK_MAX_WORD)
-						.searchAnalyzer(Analyzer.IK_SMART)
+				.field("name", FieldType.TEXT)
+				.field("income", FieldType.LONG).index(false)
+				.field("carrer", FieldType.TEXT).index(true)
+					.analyzer(Analyzer.IK_MAX_WORD)
+					.searchAnalyzer(Analyzer.IK_SMART)
 				.thenCreate();
 		
 		System.out.println(created);
@@ -343,7 +343,8 @@ public class ElasticUtilsTest {
 	@Test
 	public void testSettingHotWarn() {
 		boolean created = ElasticUtils.createIndex("logs-2021-03-29")
-				.settings(1)
+				.settings()
+				.numberOfShards(1)
 				.numberOfReplicas(1)
 				.indexRoutingAllocation("node_type", "hot")
 				.thenCreate();
@@ -353,7 +354,8 @@ public class ElasticUtilsTest {
 	@Test
 	public void testSettingHotWarn2() {
 		boolean created = ElasticUtils.createIndex("logs-2021-03-30")
-				.settings(1)
+				.settings()
+				.numberOfShards(1)
 				.numberOfReplicas(1)
 				.indexRoutingAllocation("node_type", "hot")
 				.and()
@@ -367,7 +369,7 @@ public class ElasticUtilsTest {
 				.order(0)
 				.patterns("test*")
 				.version(0)
-				.settings(Settings.builder()
+				.settings(SettingsBuilder.builder()
 						.numberOfShards(1)
 						.numberOfReplicas(1))
 				/*.settings(Settings.builder()
@@ -924,7 +926,7 @@ public class ElasticUtilsTest {
 	public void testClusterFailover() {
 		ElasticUtils.deleteIndex("tech_blogs");
 		boolean created = ElasticUtils.createIndex("tech_blogs")
-				.settings(Settings.builder()
+				.settings(SettingsBuilder.builder()
 						.numberOfShards(3)
 						.numberOfReplicas(1)
 						.defaultPipeline("blog_pipeline"))
@@ -1069,6 +1071,16 @@ public class ElasticUtilsTest {
 				.basicAuth("elastic", "123456")
 				.request();
 		System.out.println(response);
+	}
+	
+	@Test
+	public void testClusterPersistentSettings() {
+		boolean acknowledge = Cluster.settings()
+				.persistent()
+				.routingAllocationEnable(AllocationEnable.ALL)
+				.and()
+				.update();
+		assertTrue(acknowledge);
 	}
 	
 }

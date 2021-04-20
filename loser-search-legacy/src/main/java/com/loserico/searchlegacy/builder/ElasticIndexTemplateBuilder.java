@@ -1,6 +1,7 @@
 package com.loserico.searchlegacy.builder;
 
 import com.loserico.common.lang.utils.ReflectionUtils;
+import com.loserico.searchlegacy.enums.Dynamic;
 import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateRequestBuilder;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.transport.TransportClient;
@@ -44,12 +45,12 @@ public final class ElasticIndexTemplateBuilder {
 	 * <li/>number_of_replicas
 	 * </ol>
 	 */
-	private Settings settings;
+	private SettingsBuilder settings;
 	
 	/**
 	 * 添加Mappings
 	 */
-	private ElasticMappingBuilder mappingBuilder;
+	private ElasticIndexTemplateMappingBuilder mappingBuilder;
 	
 	private ElasticIndexTemplateBuilder() {
 	}
@@ -74,7 +75,7 @@ public final class ElasticIndexTemplateBuilder {
 	 * @return
 	 */
 	public ElasticIndexTemplateBuilder patterns(String pattern) {
-		Objects.requireNonNull(pattern, "pattern can not be null");
+		Objects.requireNonNull(pattern, "patterns can not be null");
 		this.pattern = pattern;
 		return this;
 	}
@@ -108,31 +109,37 @@ public final class ElasticIndexTemplateBuilder {
 	 * @param settings
 	 * @return
 	 */
-	public ElasticIndexTemplateBuilder settings(Settings settings) {
+	public ElasticIndexTemplateBuilder settings(SettingsBuilder settings) {
 		this.settings = settings;
 		return this;
 	}
 	
-	/*public ElasticIndexTemplateBuilder settings(Settings settings) {
-		this.settings = settings;
-		return this;
-	}*/
+	/**
+	 * 为索引模板设置Settings
+	 * @param numOfShards
+	 * @return ElasticIndexTemplateSettingsBuilder
+	 */
+	public ElasticIndexTemplateSettingsBuilder settings(int numOfShards) {
+		ElasticIndexTemplateSettingsBuilder elasticIndexTemplateSettingsBuilder = new ElasticIndexTemplateSettingsBuilder(this);
+		elasticIndexTemplateSettingsBuilder.numberOfShards(numOfShards);
+		return elasticIndexTemplateSettingsBuilder;
+	}
 	
 	/**
 	 * 通过MappingBuilder逐项配置Mapping
 	 *
-	 * @param mappingBuilder
+	 * @param dynamic
 	 * @return
 	 */
-	public ElasticIndexTemplateBuilder mappings(ElasticMappingBuilder mappingBuilder) {
-		this.mappingBuilder = mappingBuilder;
-		return this;
+	public ElasticIndexTemplateMappingBuilder mappings(Dynamic dynamic) {
+		this.mappingBuilder = new ElasticIndexTemplateMappingBuilder(this, dynamic);
+		return mappingBuilder;
 	}
 	
 	/**
 	 * 执行创建或者更新Index Template
 	 */
-	public boolean execute() {
+	public boolean create() {
 		PutIndexTemplateRequestBuilder builder = client.admin().indices()
 				.preparePutTemplate(name)
 				.setTemplate(pattern)

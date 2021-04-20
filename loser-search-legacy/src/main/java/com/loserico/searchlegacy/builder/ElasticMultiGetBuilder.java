@@ -41,7 +41,7 @@ public final class ElasticMultiGetBuilder<T> {
 	}
 	
 	public ElasticMultiGetBuilder add(String index, String id) {
-		items.add(new Item(index, "", id));
+		items.add(new Item(index, ONLY_TYPE, id));
 		return this;
 	}
 	

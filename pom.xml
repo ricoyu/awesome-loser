@@ -12,6 +12,7 @@
     <modules>
         <module>commons-lang</module>
         <module>commons-spring</module>
+        <module>commons-search</module>
         <module>loser-codec</module>
         <module>loser-cache</module>
         <module>loser-json</module>
@@ -27,7 +28,7 @@
         <module>loser-token-parser</module>
         <module>loser-netty</module>
         <module>loser-search</module>
-        <!--<module>loser-search-legacy</module>-->
+        <module>loser-search-legacy</module>
         <module>loser-messaging</module>
         <module>loser-mybatis</module>
     </modules>
@@ -51,6 +52,8 @@
         <json.version>20170516</json.version>
         <jsonpath.version>2.4.0</jsonpath.version>
         <jedis.version>2.9.3</jedis.version>
+        <!-- 这个是Redis 6的客户端-->
+        <!--<jedis.version>3.5.2</jedis.version>-->
 
         <elasticsearch.version>7.6.2</elasticsearch.version>
         <redisson.version>3.11.5</redisson.version>
@@ -665,26 +668,26 @@
     </dependencyManagement>
 
 
-    <!--<distributionManagement>
+    <distributionManagement>
         <repository>
             <id>phantom-maven2</id>
             <name>phantom-maven2</name>
-            <url>http://172.16.0.69:8081/repository/phantom-maven2/</url>
+            <url>http://172.16.0.66:8081/repository/phantom-maven2/</url>
         </repository>
-    </distributionManagement>-->
+    </distributionManagement>
 
     <repositories>
-        <!--<repository>
+        <repository>
             <id>public</id>
             <name>Public Repositories</name>
-            <url>http://172.16.0.69:8081/repository/maven-public/</url>
+            <url>http://172.16.0.66:8081/repository/maven-public/</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
-        </repository>-->
+        </repository>
         <!-- add the elasticsearch repo -->
         <repository>
             <id>elasticsearch-releases</id>

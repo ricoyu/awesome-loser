@@ -1,7 +1,7 @@
-package com.loserico.search.builder;
+package com.loserico.searchlegacy.builder;
 
 /**
- * 为IndexTemplate设置Settings
+ * 为索引设置Settings
  * <p>
  * Copyright: (C), 2021-03-16 9:44
  * <p>
@@ -11,12 +11,12 @@ package com.loserico.search.builder;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
-public final class ElasticIndexTemplateSettingsBuilder extends SettingsBuilder {
+public final class ElasticIndexSettingsBuilder extends SettingsBuilder {
 	
-	private ElasticIndexTemplateBuilder elasticIndexTemplateBuilder;
+	private ElasticIndexBuilder elasticIndexBuilder;
 	
-	public ElasticIndexTemplateSettingsBuilder(ElasticIndexTemplateBuilder elasticIndexTemplateBuilder) {
-		this.elasticIndexTemplateBuilder = elasticIndexTemplateBuilder;
+	public ElasticIndexSettingsBuilder(ElasticIndexBuilder elasticIndexBuilder) {
+		this.elasticIndexBuilder = elasticIndexBuilder;
 	}
 	
 	/**
@@ -25,7 +25,7 @@ public final class ElasticIndexTemplateSettingsBuilder extends SettingsBuilder {
 	 * @param numberOfShards
 	 * @return SettingsBuilder
 	 */
-	public ElasticIndexTemplateSettingsBuilder numberOfShards(int numberOfShards) {
+	public ElasticIndexSettingsBuilder numberOfShards(int numberOfShards) {
 		super.numberOfShards(numberOfShards);
 		return this;
 	}
@@ -36,7 +36,7 @@ public final class ElasticIndexTemplateSettingsBuilder extends SettingsBuilder {
 	 * @param numberOfReplicas
 	 * @return SettingsBuilder
 	 */
-	public ElasticIndexTemplateSettingsBuilder numberOfReplicas(int numberOfReplicas) {
+	public ElasticIndexSettingsBuilder numberOfReplicas(int numberOfReplicas) {
 		super.numberOfReplicas(numberOfReplicas);
 		return this;
 	}
@@ -47,7 +47,7 @@ public final class ElasticIndexTemplateSettingsBuilder extends SettingsBuilder {
 	 * @param defaultPipeline
 	 * @return SettingsBuilder
 	 */
-	public ElasticIndexTemplateSettingsBuilder defaultPipeline(String defaultPipeline) {
+	public ElasticIndexSettingsBuilder defaultPipeline(String defaultPipeline) {
 		super.defaultPipeline(defaultPipeline);
 		return this;
 	}
@@ -67,18 +67,18 @@ public final class ElasticIndexTemplateSettingsBuilder extends SettingsBuilder {
 	 * }
 	 * </pre>
 	 */
-	public ElasticIndexTemplateSettingsBuilder indexRoutingAllocation(String key, String value) {
+	public ElasticIndexSettingsBuilder indexRoutingAllocation(String key, String value) {
 		super.indexRoutingAllocation(key, value);
 		return this;
 	}
 	
-	public ElasticIndexTemplateBuilder and() {
-		elasticIndexTemplateBuilder.settings(this);
-		return elasticIndexTemplateBuilder;
+	public ElasticIndexBuilder and() {
+		elasticIndexBuilder.settings(this);
+		return elasticIndexBuilder;
 	}
 	
 	public boolean thenCreate() {
-		elasticIndexTemplateBuilder.settings(this);
-		return elasticIndexTemplateBuilder.create();
+		elasticIndexBuilder.settings(this);
+		return elasticIndexBuilder.create();
 	}
 }

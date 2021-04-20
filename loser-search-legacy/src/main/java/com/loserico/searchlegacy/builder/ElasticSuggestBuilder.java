@@ -1,9 +1,9 @@
 package com.loserico.searchlegacy.builder;
 
-import com.loserico.searchlegacy.ElasticUtils;
 import com.loserico.searchlegacy.enums.SuggestMode;
 import com.loserico.searchlegacy.enums.SuggestSort;
 import com.loserico.searchlegacy.exception.SuggestException;
+import com.loserico.searchlegacy.ElasticUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.suggest.Suggest;

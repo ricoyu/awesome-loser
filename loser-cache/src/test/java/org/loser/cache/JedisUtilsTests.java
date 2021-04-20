@@ -38,6 +38,11 @@ public class JedisUtilsTests {
 	}
 	
 	@Test
+	public void testLPushBRpop() {
+		JedisUtils.LIST.lpush("list:aa", "a");
+	}
+	
+	@Test
 	public void testLPush() {
 		JedisUtils.LIST.lpush("ids-alert", IOUtils.readFileAsString("D:\\Work\\观安信息上海有限公司\\NTA资料\\测试数据\\ids-alert-http-post.json"));
 	}
@@ -231,5 +236,28 @@ public class JedisUtilsTests {
 		JedisUtils.del("hash-delget");
 		JedisUtils.HASH.hset("hash-delget", "f1", "v1");
 		assertEquals("v1", JedisUtils.HASH.hdelGet("hash-delget", "f1"));
+	}
+	
+	@Test
+	public void testLPushLimit() {
+		/*JedisUtils.del("jobs");
+		long size = LIST.lpushLimit("jobs", 6, "a", "b");
+		assertEquals(2, size);
+		
+		size = JedisUtils.LIST.lpushLimit("jobs", 6, "c", "d", "e", "f", "g");
+		assertEquals(6, size);
+		
+		JedisUtils.del("jobs");
+		size = LIST.lpushLimit("jobs", 6, "a", "b", "v", "aasd", "g", "e", "t");
+		assertEquals(6, size);*/
+		
+		JedisUtils.LIST.lpushLimit("gen_rule_file_tasks", 1, "");
+	}
+	
+	@Test
+	public void testQueueListener() {
+		JedisUtils.LIST.brpop("jobs_list", (key, message) -> {
+			System.out.println(message);
+		});
 	}
 }

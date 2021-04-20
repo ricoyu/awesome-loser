@@ -15,6 +15,7 @@ import com.loserico.cache.status.HSet;
 import com.loserico.cache.status.TTL;
 import com.loserico.cache.utils.KeyUtils;
 import com.loserico.cache.utils.UnMarshaller;
+import com.loserico.common.lang.concurrent.LoserThreadExecutor;
 import com.loserico.common.lang.utils.IOUtils;
 import com.loserico.common.lang.utils.PrimitiveUtils;
 import com.loserico.json.jackson.JacksonUtils;
@@ -54,8 +55,9 @@ import static com.loserico.cache.utils.UnMarshaller.toObject;
 import static com.loserico.cache.utils.UnMarshaller.toSeconds;
 import static com.loserico.json.jackson.JacksonUtils.toJson;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.concurrent.TimeUnit.MINUTES;
-import static java.util.stream.Collectors.*;
+import static java.util.concurrent.TimeUnit.*;
+import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
@@ -83,6 +85,10 @@ public final class JedisUtils {
 	private static final ConcurrentHashMap<String, String> shaHashs = new ConcurrentHashMap<>();
 	
 	private static JedisOperations jedisOperations = JedisOperationFactory.create();
+	
+	private static final LoserThreadExecutor EXECUTOR = new LoserThreadExecutor(Runtime.getRuntime().availableProcessors() + 1,
+			500,
+			10, MINUTES);
 	
 	/**
 	 * key/value 都是字符串的版本
@@ -589,6 +595,36 @@ public final class JedisUtils {
 		}
 		
 		/**
+		 * 往list里面lpush元素, 现在list最多limit个元素, 超过的话就不插入
+		 *
+		 * @param key
+		 * @param limit
+		 * @param values
+		 * @return long list当前的长度
+		 */
+		public static long lpushLimit(String key, int limit, Object... values) {
+			String hashSha = shaHashs.computeIfAbsent("hash.lua", x -> {
+				log.debug("Load script {}", "hash.lua");
+				if (jedisOperations instanceof JedisClusterOperations) {
+					return jedisOperations.scriptLoad(IOUtils.readClassPathFileAsString("/lua-scripts/lpush.lua"), key);
+				} else {
+					return jedisOperations.scriptLoad(IOUtils.readClassPathFileAsString("/lua-scripts/lpush.lua"));
+				}
+			});
+			
+			byte[][] objects = new byte[values.length + 2][];
+			objects[0] = toBytes(key);
+			objects[1] = toBytes(limit);
+			for (int i = 0; i < values.length; i++) {
+				objects[i + 2] = toBytes(values[i]);
+			}
+			return (Long) jedisOperations.evalsha(
+					toBytes(hashSha),
+					1,
+					objects);
+		}
+		
+		/**
 		 * rpush 向指定的列表右侧插入元素, 返回插入后列表的长度
 		 *
 		 * @param key
@@ -745,7 +781,7 @@ public final class JedisUtils {
 		 * <pre>
 		 * BLPOP list1 list2 list3
 		 * 假设 list1不存在,  list2有一个元素 a
-		 * 那么返回的List包含两个元素,  第一个表示从哪个key返回的, 这里shi list2
+		 * 那么返回的List包含两个元素,  第一个表示从哪个key返回的, 这里是 list2
 		 * 第二个元素表示返回的元素本身 a
 		 *
 		 * 有元素出队后queueListener会被调用
@@ -893,15 +929,13 @@ public final class JedisUtils {
 		 * 假设 list1不存在,  list2有一个元素 a
 		 * 那么返回的List包含两个元素,  第一个表示从哪个key返回的, 这里是 list2; 第二个元素表示返回的元素本身 a
 		 * </pre>
-		 *
-		 * @on
 		 */
 		public static <T> T brpop(String key, Class<T> clazz) {
 			return brpop(0, key, clazz);
 		}
 		
 		/**
-		 * 从左侧(头部)弹出一个元素,阻塞版本
+		 * 从右侧(尾部部)弹出一个元素,阻塞版本
 		 * <pre>
 		 * BLPOP list1 list2 list3
 		 * 假设 list1不存在,  list2有一个元素 a
@@ -914,13 +948,42 @@ public final class JedisUtils {
 		 * @param key
 		 * @param listener
 		 * @return
-		 * @on
 		 */
 		public static void brpop(String key, QueueListener listener) {
 			List<String> results = jedisOperations.brpop(0, key);
 			if (isNotEmpty(results)) {
 				listener.onDeque(results.get(0), results.get(1));
 			}
+		}
+		
+		/**
+		 * 持续从从右侧(尾部)弹出一个元素,阻塞版本, listener如果抛异常不会往上抛, 只是记录一次啊异常信息
+		 * <pre>
+		 * BLPOP list1 list2 list3
+		 * 假设 list1不存在,  list2有一个元素 a
+		 * 那么返回的List包含两个元素,  第一个表示从哪个key返回的, 这里shi list2
+		 * 第二个元素表示返回的元素本身 a
+		 *
+		 * 有元素出队后queueListener会被调用
+		 * </pre>
+		 *
+		 * @param key
+		 * @param listener
+		 * @return
+		 */
+		public static void keepBrpop(String key, QueueListener listener) {
+			EXECUTOR.execute(() -> {
+				try {
+					while (true) {
+						List<String> results = jedisOperations.brpop(0, key);
+						if (isNotEmpty(results)) {
+							listener.onDeque(results.get(0), results.get(1));
+						}
+					}
+				} catch (Throwable e) {
+					log.error("", e);
+				}
+			});
 		}
 		
 		public static String rpop(String key) {

@@ -1,5 +1,6 @@
-package com.loserico.search.builder;
+package com.loserico.searchlegacy.builder;
 
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.settings.Settings.Builder;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -15,17 +16,17 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
-public class Settings {
+public class SettingsBuilder {
 	
 	/**
 	 * number_of_shards
 	 */
-	private int numberOfShards = 1;
+	private Integer numberOfShards;
 	
 	/**
 	 * number_of_replicas
 	 */
-	private int numberOfReplicas = 0;
+	private Integer numberOfReplicas;
 	
 	/**
 	 * index.default_pipeline
@@ -50,7 +51,7 @@ public class Settings {
 	 *   }
 	 * }
 	 * </pre>
-	 * 
+	 * <p>
 	 * 这个indexRoutingAllocationKey对应my_node_type
 	 */
 	private String indexRoutingAllocationKey;
@@ -60,8 +61,8 @@ public class Settings {
 	 */
 	private String indexRoutingAllocationValue;
 	
-	public static Settings builder() {
-		return new Settings();
+	public static SettingsBuilder builder() {
+		return new SettingsBuilder();
 	}
 	
 	/**
@@ -70,7 +71,7 @@ public class Settings {
 	 * @param numberOfShards
 	 * @return SettingsBuilder
 	 */
-	public Settings numberOfShards(int numberOfShards) {
+	public SettingsBuilder numberOfShards(int numberOfShards) {
 		this.numberOfShards = numberOfShards;
 		return this;
 	}
@@ -81,7 +82,7 @@ public class Settings {
 	 * @param numberOfReplicas
 	 * @return SettingsBuilder
 	 */
-	public Settings numberOfReplicas(int numberOfReplicas) {
+	public SettingsBuilder numberOfReplicas(int numberOfReplicas) {
 		this.numberOfReplicas = numberOfReplicas;
 		return this;
 	}
@@ -92,7 +93,7 @@ public class Settings {
 	 * @param defaultPipeline
 	 * @return SettingsBuilder
 	 */
-	public Settings defaultPipeline(String defaultPipeline) {
+	public SettingsBuilder defaultPipeline(String defaultPipeline) {
 		this.defaultPipeline = defaultPipeline;
 		return this;
 	}
@@ -112,16 +113,20 @@ public class Settings {
 	 * }
 	 * </pre>
 	 */
-	public Settings indexRoutingAllocation(String key, String value) {
+	public SettingsBuilder indexRoutingAllocation(String key, String value) {
 		this.indexRoutingAllocationKey = key;
 		this.indexRoutingAllocationValue = value;
 		return this;
 	}
 	
-	private org.elasticsearch.common.settings.Settings build() {
-		Builder builder = org.elasticsearch.common.settings.Settings.builder()
-				.put("number_of_shards", numberOfShards)
-				.put("number_of_replicas", numberOfReplicas);
+	private Settings build() {
+		Builder builder = Settings.builder();
+		if (numberOfShards != null) {
+			builder.put("number_of_shards", numberOfShards);
+		}
+		if (numberOfReplicas != null) {
+			builder.put("number_of_replicas", numberOfReplicas);
+		}
 		if (isNotBlank(defaultPipeline)) {
 			builder.put("index.default_pipeline", defaultPipeline);
 		}

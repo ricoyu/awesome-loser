@@ -102,7 +102,13 @@ public enum Analyzer {
 	/**
 	 * 急速词典分词
 	 */
-	HANLP_SPEED("hanlp_speed");
+	HANLP_SPEED("hanlp_speed"),
+	
+	/**
+	 * 在standard分词器功能之外提供识别url和email的功能 <p>
+	 * 推荐url和email字段采用text类型, 分词器采用uax_url_email
+	 */
+	URL_EMAIL("uax_url_email");
 	
 	/**
 	 * 分词器名称

@@ -16,5 +16,4 @@ public class ElasticConstants {
 	 * 唯一的一个type是_doc
 	 */
 	public static final String ONLY_TYPE = "loser";
-	//public static final String ONLY_TYPE = "_doc";
 }

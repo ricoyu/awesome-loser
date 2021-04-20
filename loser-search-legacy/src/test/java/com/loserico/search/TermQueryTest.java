@@ -1,12 +1,10 @@
 package com.loserico.search;
 
-import com.loserico.search.ElasticUtilsTest.Product;
 import com.loserico.searchlegacy.ElasticUtils;
-import com.loserico.searchlegacy.builder.ElasticMappingBuilder;
+import com.loserico.search.ElasticUtilsTest.Product;
 import com.loserico.searchlegacy.enums.FieldType;
 import com.loserico.searchlegacy.enums.SortOrder;
 import com.loserico.searchlegacy.support.BulkResult;
-import com.loserico.searchlegacy.support.FieldDef;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.Test;
 
@@ -31,10 +29,9 @@ public class TermQueryTest {
 	public void testTermQuery() {
 		ElasticUtils.deleteIndex("products");
 		boolean created = ElasticUtils.createIndex("products")
-				.mapping(ElasticMappingBuilder.newInstance()
-						.field(FieldDef.builder("desc", FieldType.KEYWORD)
-								.build()))
-				.create();
+				.mapping()
+				.field("desc", FieldType.KEYWORD)
+				.thenCreate();
 		if (!created) {
 			System.out.println("Index create failed");
 		}
@@ -74,7 +71,7 @@ public class TermQueryTest {
 	public void testMatchQuery() {
 		List<String> movies = ElasticUtils.query("movies")
 				.queryBuilder(QueryBuilders.matchQuery("title", "Matrix reloaded")
-				.minimumShouldMatch("2"))
+						.minimumShouldMatch("2"))
 				.queryForList();
 		
 		movies.forEach(System.out::println);
@@ -85,7 +82,7 @@ public class TermQueryTest {
 	public void testMatchQuery2() {
 		List<String> products = ElasticUtils.query("products")
 				.queryBuilder(QueryBuilders.rangeQuery("date")
-				.gte("now-1y"))
+						.gte("now-1y"))
 				.queryForList();
 		products.forEach(System.out::println);
 	}

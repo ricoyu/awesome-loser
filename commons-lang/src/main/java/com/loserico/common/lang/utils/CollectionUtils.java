@@ -1,6 +1,9 @@
 package com.loserico.common.lang.utils;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * 集合操作工具类
@@ -31,5 +34,39 @@ public final class CollectionUtils {
 	
 	public static boolean isEmpty(Collection collection) {
 		return collection == null || collection.isEmpty();
+	}
+	
+	/**
+	 * 判断对象是否为集合类型, 如 Map, List, Set, 数组
+	 * @param obj
+	 * @return boolean
+	 */
+	public static boolean isCollection(Object obj) {
+		if (obj == null) {
+			return false;
+		}
+		
+		Class<?> clazz = obj.getClass();
+		if (clazz.isArray()) {
+			return true;
+		}
+		
+		if (obj instanceof Map) {
+			return true;
+		}
+		
+		if (obj instanceof List) {
+			return true;
+		}
+		
+		if (obj instanceof Set) {
+			return true;
+		}
+		
+		if (obj instanceof Collection) {
+			return true;
+		}
+		
+		return false;
 	}
 }

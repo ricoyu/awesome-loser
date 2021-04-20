@@ -12,6 +12,11 @@
     <logger name="com.loserico.searchlegacy.builder.ElasticQueryBuilder" level="debug"/>
     <logger name="com.loserico.searchlegacy.builder.ElasticSuggestBuilder" level="debug"/>
     <logger name="com.loserico.searchlegacy.builder.ElasticContextSuggestBuilder" level="debug"/>
+    
+    <logger name="com.loserico.networking.utils.HttpUtils" level="debug"/>
+    <logger name="com.loserico.networking.builder.AbstractRequestBuilder" level="debug"/>
+    <logger name="com.loserico.networking.builder.JsonRequestBuilder" level="debug"/>
+    <logger name="com.loserico.networking.builder.FormRequestBuilder" level="debug"/>
 
     <root level="INFO">
         <appender-ref ref="STDOUT" />

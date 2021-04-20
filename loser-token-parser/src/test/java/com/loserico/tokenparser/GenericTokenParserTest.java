@@ -1,7 +1,12 @@
 package com.loserico.tokenparser;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.loserico.tokenparser.parsing.GenericTokenParser;
+import com.loserico.tokenparser.parsing.OgnlTokenHandler;
+import com.loserico.tokenparser.parsing.TokenHandler;
 import lombok.SneakyThrows;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <p>
@@ -17,23 +22,23 @@ public class GenericTokenParserTest {
 	
 	@SneakyThrows
 	public static void main(String[] args) {
-		/*String name = "三少爷";
+		String name = "三少爷";
 		Map<String, Object> params = new HashMap<>();
-		params.put("name", name);*/
-		/*OgnlCacheTest.User params = new OgnlCacheTest.User();
-		params.setName("三少爷");
+		params.put("name", name);
+		params.put("age", 18);
+		params.put("married", null);
 		TokenHandler tokenHandler = new OgnlTokenHandler(params);
 		GenericTokenParser tokenParser = new GenericTokenParser("#{", "}", tokenHandler);
 		
-		String content = "{'name': '#{name}'}";
+		String content = "{'name': '#{name}', 'audit': '#{age>=18?'成年人':'未成年人'}', '婚姻':'#{married?'已婚':'未婚'}'}";
 		String parse = tokenParser.parse(content);
 		System.out.println(parse);
 		
-		content = "{$and: [{\"salary\": {$in: #{salarys}}}, {\"job\": \"${job}\"}]}";*/
+		/*content = "{$and: [{\"salary\": {$in: #{salarys}}}, {\"job\": \"${job}\"}]}";
 		
 		int[] salarys = new int[]{1000, 2000, 3000};
 		System.out.println(salarys.toString());
 		ObjectMapper objectMapper = new ObjectMapper();
-		System.out.println(objectMapper.writeValueAsString(salarys));
+		System.out.println(objectMapper.writeValueAsString(salarys));*/
 	}
 }

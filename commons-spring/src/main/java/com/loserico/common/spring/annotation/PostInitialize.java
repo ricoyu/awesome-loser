@@ -13,6 +13,8 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 /**
  * Annotation that marks a method to be executed after initialize complete.<br/>
  * Initialize complete means all properties of this bean is set and transaction is ready.
+ * 
+ * 注意@PostInitialize标注的方法执行的时候不要有阻塞行为, 不然如果有多个@PostInitialize方法, 后面的可能就一直得不到执行
  * @author xuehuyu
  * @since Mar 19, 2015
  * @version 1.0

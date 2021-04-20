@@ -1,6 +1,7 @@
 package com.loserico.common.lang.vo;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -23,6 +24,7 @@ public class Page implements Serializable {
 	/**
 	 * 当前第几页, 从1开始
 	 */
+	@JsonProperty("pageNum")
 	private int currentPage = 1;
 
 	/**
@@ -38,6 +40,7 @@ public class Page implements Serializable {
 	/**
 	 * 总共有多少条记录，通过查询结果返回给你显示用"
 	 */
+	@JsonProperty("total")
 	private int totalCount = 0;
 	
 	private boolean autoCount = true;

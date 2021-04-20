@@ -1,8 +1,8 @@
 package com.loserico.cache.factory;
 
 import com.loserico.cache.config.RedisProperties;
-import lombok.extern.slf4j.Slf4j;
 import com.loserico.common.lang.resource.PropertyReader;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisSentinelPool;

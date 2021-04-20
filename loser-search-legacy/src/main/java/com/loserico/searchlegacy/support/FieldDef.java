@@ -1,7 +1,8 @@
 package com.loserico.searchlegacy.support;
 
-import com.loserico.searchlegacy.enums.Analyzer;
 import com.loserico.searchlegacy.enums.FieldType;
+import com.loserico.searchlegacy.builder.FieldDefBuilder;
+import com.loserico.searchlegacy.enums.Analyzer;
 import lombok.Data;
 
 import java.util.ArrayList;

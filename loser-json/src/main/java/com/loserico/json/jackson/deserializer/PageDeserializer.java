@@ -5,11 +5,13 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.loserico.common.lang.utils.EnumUtils;
+import com.loserico.common.lang.utils.StringUtils;
 import com.loserico.common.lang.vo.OrderBean;
 import com.loserico.common.lang.vo.OrderBean.ORDER_BY;
 import com.loserico.common.lang.vo.Page;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 /**
  * <p>
@@ -37,8 +39,13 @@ public class PageDeserializer extends StdDeserializer<Page> {
 		
 		/*
 		 * 这两个属性是必须要的, 如果为提供的话, 直接返回null
+		 * 
+		 * currentPage 等价于 pageNum
 		 */
 		JsonNode currentPageNode = pageNode.get("currentPage");
+		if (currentPageNode == null) {
+			currentPageNode = pageNode.get("pageNum");
+		}
 		JsonNode pageSizeNode = pageNode.get("pageSize");
 		if (currentPageNode == null || pageSizeNode == null) {
 			return null;
@@ -54,20 +61,25 @@ public class PageDeserializer extends StdDeserializer<Page> {
 		}
 		
 		/*
-		 * 排序字段可以通过 -create_time 的形式指定倒序排列
-		 * 如果同时显式提供了direction参数, 那么direction参数优先
+		 * {
+		 *   "search":"HTTP规则",
+		 *   "page": {
+		 *     "currentPage": 1,
+		 *     "pageSize": 10,
+		 *     "order": {
+		 *       "orderBy": "-create_time",
+		 *       "direction": "ASC"
+		 *     },
+		 *     "sorts": ["-datatime"]
+		 *   }
+		 * }
+		 * 
+		 * 处理order方式排序
 		 */
 		JsonNode orderNode = pageNode.get("order");
 		if (orderNode != null) {
 			String orderBy = orderNode.get("orderBy").textValue();
-			String direction = null;
-			if (orderBy != null && orderBy.startsWith("-")) {
-				orderBy = orderBy.substring(1);
-				direction = "DESC";
-			} else {
-				direction = "ASC";
-			}
-			
+			String direction = "ASC";
 			JsonNode directionNode = orderNode.get("direction");
 			if (directionNode != null) {
 				direction = directionNode.textValue();
@@ -76,7 +88,45 @@ public class PageDeserializer extends StdDeserializer<Page> {
 			OrderBean order = new OrderBean(orderBy, (ORDER_BY) EnumUtils.lookupEnum(ORDER_BY.class, direction));
 			page.setOrder(order);
 			page.getOrders().add(order);
+			
+			return page;
 		}
+		
+		/*
+		 * 处理page对象里面的 sorts: ["-create_time"] 这种形式的排序
+		 */
+		JsonNode sortsNode = pageNode.get("sorts");
+		if (sortsNode == null) {
+			return page;
+		}
+		
+		if (sortsNode.isArray()) {
+			Iterator<JsonNode> it = sortsNode.iterator();
+			while (it.hasNext()) {
+				JsonNode next = it.next();
+				String orderBy = next.textValue().trim();
+				addOrder(page, orderBy);
+			}
+			return page;
+		}
+		
+		String orderBy = sortsNode.textValue();
+		addOrder(page, orderBy);
 		return page;
+	}
+	
+	private void addOrder(Page page, String orderBy) {
+		orderBy = StringUtils.trimQuote(orderBy);
+		String direction = null;
+		if (orderBy != null && orderBy.startsWith("-")) {
+			orderBy = orderBy.substring(1);
+			direction = "DESC";
+		} else {
+			direction = "ASC";
+		}
+		
+		OrderBean order = new OrderBean(orderBy, (ORDER_BY) EnumUtils.lookupEnum(ORDER_BY.class, direction));
+		page.setOrder(order);
+		page.getOrders().add(order);
 	}
 }

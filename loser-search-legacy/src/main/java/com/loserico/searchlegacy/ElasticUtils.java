@@ -5,19 +5,22 @@ import com.loserico.searchlegacy.builder.ElasticAggregationBuilder;
 import com.loserico.searchlegacy.builder.ElasticContextSuggestBuilder;
 import com.loserico.searchlegacy.builder.ElasticIndexBuilder;
 import com.loserico.searchlegacy.builder.ElasticIndexTemplateBuilder;
-import com.loserico.searchlegacy.builder.ElasticMappingBuilder;
 import com.loserico.searchlegacy.builder.ElasticMultiGetBuilder;
+import com.loserico.searchlegacy.builder.ElasticPutMappingBuilder;
 import com.loserico.searchlegacy.builder.ElasticQueryBuilder;
 import com.loserico.searchlegacy.builder.ElasticReindexBuilder;
 import com.loserico.searchlegacy.builder.ElasticSuggestBuilder;
+import com.loserico.searchlegacy.builder.ElasticUpdateSettingBuilder;
 import com.loserico.searchlegacy.cache.ElasticCacheUtils;
 import com.loserico.searchlegacy.enums.Analyzer;
+import com.loserico.searchlegacy.enums.Dynamic;
 import com.loserico.searchlegacy.exception.AnalyzeException;
 import com.loserico.searchlegacy.factory.TransportClientFactory;
 import com.loserico.searchlegacy.support.BulkResult;
 import com.loserico.searchlegacy.support.UpdateResult;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.DocWriteResponse;
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
 import org.elasticsearch.action.admin.indices.analyze.AnalyzeRequest;
 import org.elasticsearch.action.admin.indices.analyze.AnalyzeResponse;
@@ -27,7 +30,6 @@ import org.elasticsearch.action.admin.indices.mapping.get.GetFieldMappingsAction
 import org.elasticsearch.action.admin.indices.mapping.get.GetFieldMappingsRequestBuilder;
 import org.elasticsearch.action.admin.indices.mapping.get.GetFieldMappingsResponse;
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
-import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
 import org.elasticsearch.action.admin.indices.stats.IndicesStatsRequest;
 import org.elasticsearch.action.admin.indices.stats.IndicesStatsResponse;
 import org.elasticsearch.action.admin.indices.template.get.GetIndexTemplatesResponse;
@@ -42,6 +44,7 @@ import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.IndicesAdminClient;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.cluster.metadata.IndexTemplateMetaData;
 import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
@@ -264,8 +267,9 @@ public final class ElasticUtils {
 	}
 	
 	/**
-	 * 批量创建文档
-	 * 返回创建结果, 包括成功数量, 失败数量, 失败消息, 成功创建的文档id列表
+	 * 批量创建文档<p>
+	 * 返回创建结果, 包括成功数量, 失败数量, 失败消息, 成功创建的文档id列表<p>
+	 * 单个bulk请求体的数据量不要太大, 官方建议大于5~15mb
 	 *
 	 * @param index
 	 * @param docs
@@ -273,9 +277,9 @@ public final class ElasticUtils {
 	 */
 	public static BulkResult bulkIndex(String index, String... docs) {
 		//配置全局index和type
-		BulkRequestBuilder bulkRequest = client.prepareBulk();//TODO
+		BulkRequestBuilder bulkRequest = client.prepareBulk(); //TODO
 		asList(docs).forEach((doc) -> {
-			bulkRequest.add(client.prepareIndex().setSource(doc, XContentType.JSON));
+			bulkRequest.add(client.prepareIndex(index, ONLY_TYPE).setSource(doc, XContentType.JSON));
 		});
 		
 		BulkResponse responses = bulkRequest.get();
@@ -299,22 +303,21 @@ public final class ElasticUtils {
 	}
 	
 	/**
-	 * 批量创建文档
-	 * 返回创建结果, 包括成功数量, 失败数量, 失败消息, 成功创建的文档id列表
-	 * 注意docs里面的pojo就算加了@DocId也不起作用, 批量只支持自动创建ID
+	 * 批量创建文档<p>
+	 * 返回创建结果, 包括成功数量, 失败数量, 失败消息, 成功创建的文档id列表<p>
+	 * 注意docs里面的pojo就算加了@DocId也不起作用, 批量只支持自动创建ID<p>
 	 *
 	 * @param index
 	 * @param docs
 	 * @return BulkResult
 	 */
 	public static BulkResult bulkIndex(String index, List<?> docs) {
-		//BulkRequestBuilder bulkRequestBuilder = client.prepareBulk(index, ONLY_TYPE);
-		BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();//TODO
+		BulkRequestBuilder bulkRequestBuilder = client.prepareBulk(); //TODO
 		docs.stream()
 				.filter(Objects::nonNull)
 				.map((doc) -> {
 					String id = ElasticCacheUtils.getIdValue(doc);
-					return client.prepareIndex()
+					return client.prepareIndex(index, ONLY_TYPE)
 							.setSource(toJson(doc), XContentType.JSON)
 							.setId(id);
 				}).forEach(builder -> bulkRequestBuilder.add(builder));
@@ -559,18 +562,11 @@ public final class ElasticUtils {
 	 * https://www.elastic.co/guide/en/elasticsearch/reference/7.6/mapping-params.html
 	 *
 	 * @param index
-	 * @param mappingBuilder
+	 * @param dynamic
 	 * @return boolean Mapping创建成功失败标识
 	 */
-	public static boolean putMapping(String index, ElasticMappingBuilder mappingBuilder) {
-		Objects.requireNonNull(index, "index cannot be null");
-		Objects.requireNonNull(mappingBuilder, "mappingBuilder cannot be null");
-		Map<String, Object> source = mappingBuilder.build();
-		PutMappingRequestBuilder putMappingRequestBuilder = client.admin().indices().preparePutMapping(index);
-		AcknowledgedResponse acknowledgedResponse = putMappingRequestBuilder.setType(ONLY_TYPE)
-				.setSource(source)
-				.get();
-		return acknowledgedResponse.isAcknowledged();
+	public static ElasticPutMappingBuilder putMapping(String index, Dynamic dynamic) {
+		return new ElasticPutMappingBuilder(index, dynamic);
 	}
 	
 	/**
@@ -834,12 +830,51 @@ public final class ElasticUtils {
 	 * 重建索引<p>
 	 * https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/java-docs-reindex.html
 	 * https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-reindex.html
-	 * 
+	 *
 	 * @param srcIndex
 	 * @param destIndex
 	 * @return ElasticReindexBuilder
 	 */
 	public static ElasticReindexBuilder reindex(String srcIndex, String destIndex) {
 		return new ElasticReindexBuilder(srcIndex, destIndex);
+	}
+	
+	/**
+	 * Elasticsearch Settings 相关 API
+	 */
+	public static class Settings {
+		
+		/**
+		 * 更新索引的Settings
+		 * @param indices
+		 * @return ElasticUpdateSettingBuilder
+		 */
+		public static ElasticUpdateSettingBuilder update(String... indices) {
+			return new ElasticUpdateSettingBuilder(indices);
+		}
+	}
+	
+	/**
+	 * Elasticsearch 集群相关 API
+	 */
+	public static class Cluster {
+		
+		/**
+		 * 获取集群的健康状态, Green Yellow Red
+		 * @param index
+		 * @return String
+		 */
+		public static String health(String index) {
+			ClusterHealthResponse response = client.admin().cluster().prepareHealth().get();
+			ClusterHealthStatus status = response.getStatus();
+			return status.toString();
+		}
+	}
+	
+	/**
+	 * Elasticsearch admin 相关 API
+	 */
+	public static final class ADMIN {
+		
 	}
 }

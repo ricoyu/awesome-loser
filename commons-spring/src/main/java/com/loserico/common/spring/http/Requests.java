@@ -132,7 +132,7 @@ public final class Requests {
 		 * x-www-form-urlencoded 没有 request body
 		 * application/json 一般有request body
 		 */
-		String body = ServletUtils.readRequestBody();
+		String body = ServletUtils.readRequestBody(request);
 		HttpEntity<Object> requestEntity = null;
 		if (body != null && !body.isEmpty()) {
 			requestEntity = new HttpEntity<>(body, headers);

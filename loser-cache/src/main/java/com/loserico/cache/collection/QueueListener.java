@@ -17,7 +17,6 @@ public interface QueueListener {
 	 * 
 	 * @param key
 	 * @param message
-	 * @param <T>
 	 */
-	public <T> void onDeque(String key, T message);
+	public void onDeque(String key, Object message);
 }
