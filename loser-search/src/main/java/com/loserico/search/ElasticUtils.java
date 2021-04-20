@@ -15,7 +15,6 @@ import com.loserico.search.builder.ElasticUpdateSettingBuilder;
 import com.loserico.search.cache.ElasticCacheUtils;
 import com.loserico.search.enums.Analyzer;
 import com.loserico.search.enums.Dynamic;
-import com.loserico.search.exception.AnalyzeException;
 import com.loserico.search.factory.TransportClientFactory;
 import com.loserico.search.support.BulkResult;
 import com.loserico.search.support.UpdateResult;
@@ -23,8 +22,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.DocWriteResponse;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
-import org.elasticsearch.action.admin.indices.analyze.AnalyzeRequest;
-import org.elasticsearch.action.admin.indices.analyze.AnalyzeResponse;
+import org.elasticsearch.action.admin.indices.analyze.AnalyzeAction;
+import org.elasticsearch.action.admin.indices.analyze.AnalyzeAction.AnalyzeToken;
+import org.elasticsearch.action.admin.indices.analyze.AnalyzeAction.Response;
+import org.elasticsearch.action.admin.indices.analyze.AnalyzeRequestBuilder;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
 import org.elasticsearch.action.admin.indices.mapping.get.GetFieldMappingsAction;
@@ -74,7 +75,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
 
 import static com.loserico.json.jackson.JacksonUtils.toJson;
 import static com.loserico.json.jackson.JacksonUtils.toObject;
@@ -789,17 +789,14 @@ public final class ElasticUtils {
 			throw new IllegalArgumentException("analyzer cannot be null");
 		}
 		
-		AnalyzeRequest analyzeRequest = new AnalyzeRequest().text(texts).analyzer(analyzer.toString());
-		AnalyzeResponse analyzeTokens = null;
-		try {
-			analyzeTokens = client.admin().indices().analyze(analyzeRequest).get();
-		} catch (InterruptedException | ExecutionException e) {
-			log.error("", e);
-			throw new AnalyzeException(e);
-		}
-		return analyzeTokens.getTokens()
+		AnalyzeRequestBuilder analyzeRequestBuilder = new AnalyzeRequestBuilder(client, AnalyzeAction.INSTANCE)
+				.setText(texts)
+				.setAnalyzer(analyzer.toString());
+		Response response = analyzeRequestBuilder.get();
+		
+		return response.getTokens()
 				.stream()
-				.map(AnalyzeResponse.AnalyzeToken::getTerm)
+				.map(AnalyzeToken::getTerm)
 				.distinct()
 				.collect(toList());
 	}

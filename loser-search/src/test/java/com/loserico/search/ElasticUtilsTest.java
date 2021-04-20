@@ -24,8 +24,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.action.admin.indices.analyze.AnalyzeRequest;
-import org.elasticsearch.action.admin.indices.analyze.AnalyzeResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.cluster.metadata.IndexTemplateMetaData;
 import org.elasticsearch.common.io.stream.NamedWriteable;
@@ -869,11 +867,12 @@ public class ElasticUtilsTest {
 	@SneakyThrows
 	@Test
 	public void testHanLpAnalyzer() {
-		AnalyzeResponse response =
+		ElasticUtils.analyze(Analyzer.HANLP_NLP, "美国会同意对台军售").forEach(System.out::println);
+		/*AnalyzeResponse response =
 				ElasticUtils.client.admin().indices().analyze(new AnalyzeRequest().text("美国会同意对台军售").analyzer(Analyzer.HANLP_NLP.toString())).get();
 		response.getTokens().forEach((token) -> {
 			System.out.println(token.getTerm());
-		});
+		});*/
 		System.out.println("------------------------");
 		
 		ElasticUtils.analyze(Analyzer.HANLP_STANDARD, "美国会同意对台军售").forEach(System.out::println);
