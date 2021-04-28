@@ -260,4 +260,15 @@ public class JedisUtilsTests {
 			System.out.println(message);
 		});
 	}
+	
+	@SneakyThrows
+	@Test
+	public void testHsetTtl() {
+		//JedisUtils.HASH.hset("testMap", "testField", "123", 5);
+		//String value = JedisUtils.HASH.hget("testMap", "testField");
+		//assertEquals("123", value);
+		//TimeUnit.SECONDS.sleep(3333);
+		String value = JedisUtils.HASH.hget("testMap", "testField");
+		assertNull(value);
+	}
 }

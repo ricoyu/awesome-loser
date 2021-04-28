@@ -72,10 +72,7 @@ public class JacksonUtilsTest {
 	public void testJson2Map() {
 		String jsonString = "{\"name\":\"Mahesh\", \"age\":21}";
 		Map<String, Object> params = JacksonUtils.toMap(jsonString);
-		System.out.println(params.toString());
-		
 		Map<Object, Object> genericMap = JacksonUtils.toGenericMap(jsonString);
-		System.out.println(genericMap.toString());
 	}
 	
 	@Test

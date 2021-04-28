@@ -1,5 +1,7 @@
 package com.loserico.aio;
 
+import org.junit.Test;
+
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -13,10 +15,14 @@ import java.nio.file.attribute.FileAttributeView;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFileAttributeView;
 import java.time.Instant;
-
-import org.junit.Test;
+import java.time.LocalDateTime;
 
 public class AttributeViewTest {
+	
+	public static void main(String[] args) {
+		LocalDateTime localDateTime = null;
+		localDateTime.getMonth();
+	}
 
 	/**
 	 * Before working with any of these views, make sure that it’s supported.

@@ -3,10 +3,13 @@ package com.loserico.tokenparser;
 import com.loserico.tokenparser.parsing.GenericTokenParser;
 import com.loserico.tokenparser.parsing.OgnlTokenHandler;
 import com.loserico.tokenparser.parsing.TokenHandler;
-import lombok.SneakyThrows;
+import com.loserico.tokenparser.utils.ParserUtils;
+import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import static org.junit.Assert.*;
 
 /**
  * <p>
@@ -20,8 +23,8 @@ import java.util.Map;
  */
 public class GenericTokenParserTest {
 	
-	@SneakyThrows
-	public static void main(String[] args) {
+	@Test
+	public void test() {
 		String name = "三少爷";
 		Map<String, Object> params = new HashMap<>();
 		params.put("name", name);
@@ -31,8 +34,14 @@ public class GenericTokenParserTest {
 		GenericTokenParser tokenParser = new GenericTokenParser("#{", "}", tokenHandler);
 		
 		String content = "{'name': '#{name}', 'audit': '#{age>=18?'成年人':'未成年人'}', '婚姻':'#{married?'已婚':'未婚'}'}";
-		String parse = tokenParser.parse(content);
-		System.out.println(parse);
+		String result1 = tokenParser.parse(content);
+		
+		String result2 = ParserUtils.parse(content, params);
+		
+		assertEquals(result1, result2);
+		
+		System.out.println(result1);
+		System.out.println(result2);
 		
 		/*content = "{$and: [{\"salary\": {$in: #{salarys}}}, {\"job\": \"${job}\"}]}";
 		

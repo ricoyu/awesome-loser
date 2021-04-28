@@ -12,7 +12,6 @@
     <modules>
         <module>commons-lang</module>
         <module>commons-spring</module>
-        <module>commons-search</module>
         <module>loser-codec</module>
         <module>loser-cache</module>
         <module>loser-json</module>
@@ -28,7 +27,6 @@
         <module>loser-token-parser</module>
         <module>loser-netty</module>
         <module>loser-search</module>
-        <module>loser-search-legacy</module>
         <module>loser-messaging</module>
         <module>loser-mybatis</module>
     </modules>
@@ -667,7 +665,6 @@
         </dependencies>
     </dependencyManagement>
 
-
     <distributionManagement>
         <repository>
             <id>phantom-maven2</id>
@@ -688,7 +685,6 @@
                 <enabled>true</enabled>
             </snapshots>
         </repository>
-        <!-- add the elasticsearch repo -->
         <repository>
             <id>elasticsearch-releases</id>
             <url>https://artifacts.elastic.co/maven</url>
@@ -700,11 +696,12 @@
             </snapshots>
         </repository>
     </repositories>
-   <!-- <pluginRepositories>
+
+    <pluginRepositories>
         <pluginRepository>
             <id>public</id>
             <name>Public Repositories</name>
-            <url>http://172.16.0.69:8081/repository/maven-public</url>
+            <url>http://172.16.0.66:8081/repository/maven-public</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
@@ -712,7 +709,7 @@
                 <enabled>true</enabled>
             </snapshots>
         </pluginRepository>
-    </pluginRepositories>-->
+    </pluginRepositories> 
 
     <build>
         <resources>

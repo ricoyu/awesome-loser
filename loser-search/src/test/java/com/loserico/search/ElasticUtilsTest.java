@@ -94,6 +94,18 @@ public class ElasticUtilsTest {
 	}
 	
 	@Test
+	public void test11() {
+		boolean created = ElasticUtils.createIndex("rico")
+				.mapping(Dynamic.FALSE)
+				.field("name", FieldType.TEXT)
+				.field("income", FieldType.LONG).index(false)
+				.field("carrer", FieldType.TEXT).index(true)
+				.analyzer(Analyzer.IK_MAX_WORD)
+				.searchAnalyzer(Analyzer.IK_SMART)
+				.thenCreate();
+	}
+	
+	@Test
 	public void testDeleteIndex() {
 		boolean deleted = ElasticUtils.deleteIndex("boduo");
 		System.out.println(deleted);

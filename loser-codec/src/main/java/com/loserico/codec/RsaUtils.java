@@ -313,7 +313,7 @@ public final class RsaUtils {
 	}
 	
 	/**
-	 * RSA算法公钥加密数据
+	 * RSA算法公钥加密数据, 使用指定的公钥字符串
 	 *
 	 * @param data         公钥加密后的加密串
 	 * @param publicKeyStr Base64编码的RSA公钥字符串
@@ -358,7 +358,7 @@ public final class RsaUtils {
 	}
 	
 	/**
-	 * RSA算法公钥解密数据
+	 * RSA算法公钥解密数据, 使用指定的公钥字符串
 	 *
 	 * @param data      待解密的经过Base64编码的密文字符串
 	 * @param publicKey RSA公钥字符串
@@ -383,7 +383,7 @@ public final class RsaUtils {
 	}
 	
 	/**
-	 * RSA算法私钥加密数据
+	 * RSA算法私钥加密数据, 使用指定的私钥字符串
 	 *
 	 * @param data          待加密的明文字符串
 	 * @param privateKeyStr RSA私钥字符串
@@ -408,7 +408,7 @@ public final class RsaUtils {
 	}
 	
 	/**
-	 * RSA算法私钥解密数据
+	 * RSA算法私钥加密数据
 	 *
 	 * @param data
 	 * @return String

@@ -31,7 +31,7 @@ import java.util.Objects;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.elasticsearch.common.lucene.search.function.CombineFunction.*;
+import static org.elasticsearch.common.lucene.search.function.CombineFunction.MULTIPLY;
 
 /**
  * 查询生成器

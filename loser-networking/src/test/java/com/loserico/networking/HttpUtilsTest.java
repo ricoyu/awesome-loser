@@ -101,7 +101,7 @@ public class HttpUtilsTest {
 	
 	@Test
 	public void testFormSubmit() {
-		Object response = HttpUtils.form("http://localhost:8081/upload")
+		Object response = HttpUtils.form("http://localhost:8080/upload")
 				.file("file", Paths.get("D:\\Downloads\\redis-5.0.8.tar.gz").toFile())
 				.formData("name", "俞雪华")
 				.request();
