@@ -20,8 +20,8 @@ public class ElasticHotWarmTest {
 	
 	@Test
 	public void testAllocationOnHotNode() {
-		boolean deleted = ElasticUtils.deleteIndex("mytest");
-		boolean created = ElasticUtils.createIndex("mytest")
+		boolean deleted = ElasticUtils.Admin.deleteIndex("mytest");
+		boolean created = ElasticUtils.Admin.createIndex("mytest")
 				.settings()
 				.numberOfShards(3)
 				.numberOfReplicas(1)

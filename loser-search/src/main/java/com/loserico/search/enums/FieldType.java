@@ -41,6 +41,8 @@ public enum FieldType {
 	
 	INTEGER("integer"),
 	
+	FLOAT("float"),
+	
 	DOUBLE("double"),
 	
 	OBJECT("object"), 

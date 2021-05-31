@@ -1089,6 +1089,33 @@ public class ReflectionUtils {
 	}
 	
 	/**
+	 * 在targetClass中找所有标注了指定注解的字段, 包括自己声明的和父类中的字段, 但不包括Object类中的
+	 *
+	 * @param targetClass
+	 * @param annotationClasses
+	 * @return Set<Method>
+	 */
+	public static Set<Field> filterFieldByAnnotation(Class targetClass, Class<? extends Annotation>... annotationClasses) {
+		if (targetClass == null || annotationClasses == null || annotationClasses.length == 0) {
+			return Collections.emptySet();
+		}
+		
+		Set<Field> fieldSet = new HashSet<>();
+		Field[] fields = getFields(targetClass);
+		
+		for (Field field : fields) {
+			for (Class annorationClass : annotationClasses) {
+				Annotation annotation = field.getAnnotation(annorationClass);
+				if (annotation != null) {
+					fieldSet.add(field);
+				}
+			}
+		}
+		
+		return fieldSet;
+	}
+	
+	/**
 	 * Make the given field accessible, explicitly setting it accessible if
 	 * necessary. The {@code setAccessible(true)} method is only called when
 	 * actually necessary, to avoid unnecessary conflicts with a JVM SecurityManager
@@ -1540,19 +1567,20 @@ public class ReflectionUtils {
 	/**
 	 * 判断一个对象是否为POJO<p/>
 	 * 以下这些认为false:<ol>
-	 *  <li/>null
-	 *  <li/>String
-	 *  <li/>Integer
-	 *  <li/>Long
-	 *  <li/>Boolean
-	 *  <li/>Float
-	 *  <li/>Double
-	 *  <li/>Character
-	 *  <li/>Byte
-	 *  <li/>BigDecimal
-	 *  <li/>Map
-	 *  <li/>Collection
+	 * <li/>null
+	 * <li/>String
+	 * <li/>Integer
+	 * <li/>Long
+	 * <li/>Boolean
+	 * <li/>Float
+	 * <li/>Double
+	 * <li/>Character
+	 * <li/>Byte
+	 * <li/>BigDecimal
+	 * <li/>Map
+	 * <li/>Collection
 	 * </ol>
+	 *
 	 * @return
 	 */
 	public static boolean isPojo(Object value) {
@@ -1610,19 +1638,20 @@ public class ReflectionUtils {
 	/**
 	 * 判断一个对象是否为POJO<p/>
 	 * 以下这些认为false:<ol>
-	 *  <li/>null
-	 *  <li/>String
-	 *  <li/>Integer
-	 *  <li/>Long
-	 *  <li/>Boolean
-	 *  <li/>Float
-	 *  <li/>Double
-	 *  <li/>Character
-	 *  <li/>Byte
-	 *  <li/>BigDecimal
-	 *  <li/>Map
-	 *  <li/>Collection
+	 * <li/>null
+	 * <li/>String
+	 * <li/>Integer
+	 * <li/>Long
+	 * <li/>Boolean
+	 * <li/>Float
+	 * <li/>Double
+	 * <li/>Character
+	 * <li/>Byte
+	 * <li/>BigDecimal
+	 * <li/>Map
+	 * <li/>Collection
 	 * </ol>
+	 *
 	 * @return
 	 */
 	public static boolean isPojo(Class clazz) {

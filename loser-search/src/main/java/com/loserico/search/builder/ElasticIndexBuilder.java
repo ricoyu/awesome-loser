@@ -20,9 +20,9 @@ public final class ElasticIndexBuilder {
 	
 	private CreateIndexRequestBuilder createIndexRequestBuilder;
 	
-	private ElasticIndexMappingBuilder mappingBuilder;
+	private AbstractMappingBuilder mappingBuilder;
 	
-	private SettingsBuilder settings;
+	private ElasticSettingsBuilder settings;
 	
 	public ElasticIndexBuilder(CreateIndexRequestBuilder createIndexRequestBuilder) {
 		this.createIndexRequestBuilder = createIndexRequestBuilder;
@@ -34,8 +34,9 @@ public final class ElasticIndexBuilder {
 	 * @return IndexBuilder
 	 */
 	public ElasticIndexMappingBuilder mapping() {
-		this.mappingBuilder = new ElasticIndexMappingBuilder(this, Dynamic.TRUE);
-		return this.mappingBuilder;
+		ElasticIndexMappingBuilder builder = new ElasticIndexMappingBuilder(this, Dynamic.TRUE);
+		this.mappingBuilder = builder;
+		return builder;
 	}
 	
 	/**
@@ -45,8 +46,9 @@ public final class ElasticIndexBuilder {
 	 * @return IndexBuilder
 	 */
 	public ElasticIndexMappingBuilder mapping(Dynamic dynamic) {
-		this.mappingBuilder = new ElasticIndexMappingBuilder(this, dynamic);
-		return this.mappingBuilder;
+		ElasticIndexMappingBuilder builder = new ElasticIndexMappingBuilder(this, dynamic);
+		this.mappingBuilder = builder;
+		return builder;
 	}
 	
 	/**
@@ -55,9 +57,9 @@ public final class ElasticIndexBuilder {
 	 * @param mappingBuilder
 	 * @return IndexBuilder
 	 */
-	public ElasticIndexMappingBuilder mapping(AbstractMappingBuilder mappingBuilder) {
-		this.mappingBuilder = (ElasticIndexMappingBuilder)mappingBuilder;
-		return this.mappingBuilder;
+	public ElasticIndexBuilder mapping(AbstractMappingBuilder mappingBuilder) {
+		this.mappingBuilder = mappingBuilder;
+		return this;
 	}
 	
 	/**
@@ -66,7 +68,7 @@ public final class ElasticIndexBuilder {
 	 * @param settings
 	 * @return IndexBuilder
 	 */
-	public ElasticIndexBuilder settings(SettingsBuilder settings) {
+	public ElasticIndexBuilder settings(ElasticSettingsBuilder settings) {
 		this.settings = settings;
 		return this;
 	}

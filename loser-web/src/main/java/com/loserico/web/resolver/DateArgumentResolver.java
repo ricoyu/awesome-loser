@@ -1,6 +1,5 @@
 package com.loserico.web.resolver;
 
-import com.loserico.common.lang.constants.DateConstants;
 import com.loserico.common.lang.utils.DateUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.MethodParameter;
@@ -11,7 +10,6 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -42,18 +40,7 @@ public class DateArgumentResolver implements HandlerMethodArgumentResolver {
 			return null;
 		}
 
-		Date result = null;
-		if (matches(ISO_DATETIME_PATTERN, value)) {
-			result = DateUtils.parse(value, DateConstants.FMT_ISO_DATETIME);
-		} else if (matches(ISO_DATE_PATTERN, value)) {
-			result = DateUtils.parse(value, DateConstants.FMT_ISO_DATE);
-		}
-
-		return result;
+		return DateUtils.parse(value);
 	}
 	
-	private boolean matches(Pattern pattern, String text) {
-		Matcher matcher = pattern.matcher(text);
-		return matcher.matches();
-	}
 }

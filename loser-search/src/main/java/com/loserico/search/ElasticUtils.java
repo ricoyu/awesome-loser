@@ -2,7 +2,6 @@ package com.loserico.search;
 
 import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.search.builder.ClusterSettingBuilder;
-import com.loserico.search.builder.ElasticAggregationBuilder;
 import com.loserico.search.builder.ElasticContextSuggestBuilder;
 import com.loserico.search.builder.ElasticIndexBuilder;
 import com.loserico.search.builder.ElasticIndexTemplateBuilder;
@@ -10,13 +9,23 @@ import com.loserico.search.builder.ElasticMultiGetBuilder;
 import com.loserico.search.builder.ElasticPutMappingBuilder;
 import com.loserico.search.builder.ElasticQueryBuilder;
 import com.loserico.search.builder.ElasticReindexBuilder;
+import com.loserico.search.builder.ElasticSettingsBuilder;
 import com.loserico.search.builder.ElasticSuggestBuilder;
 import com.loserico.search.builder.ElasticUpdateSettingBuilder;
+import com.loserico.search.builder.agg.ElasticTermsAggregationBuilder;
+import com.loserico.search.builder.query.ElasticMatchPhraseQueryBuilder;
+import com.loserico.search.builder.query.ElasticMatchQueryBuilder;
+import com.loserico.search.builder.query.ElasticTermQueryBuilder;
+import com.loserico.search.builder.query.QueryStringBuilder;
+import com.loserico.search.builder.query.UriQueryBuilder;
 import com.loserico.search.cache.ElasticCacheUtils;
 import com.loserico.search.enums.Analyzer;
 import com.loserico.search.enums.Dynamic;
 import com.loserico.search.factory.TransportClientFactory;
 import com.loserico.search.support.BulkResult;
+import com.loserico.search.support.IndexSupport;
+import com.loserico.search.support.MappingSupport;
+import com.loserico.search.support.SettingsSupport;
 import com.loserico.search.support.UpdateResult;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.DocWriteResponse;
@@ -76,10 +85,12 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import static com.loserico.common.lang.utils.Assert.notNull;
 import static com.loserico.json.jackson.JacksonUtils.toJson;
 import static com.loserico.json.jackson.JacksonUtils.toObject;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
  * Elasticsearch 的工具类, 开箱即用的ES操作
@@ -101,108 +112,6 @@ public final class ElasticUtils {
 	public static final String ONLY_TYPE = "_doc";
 	
 	public static final TransportClient client = TransportClientFactory.create();
-	
-	/**
-	 * 创建索引, 默认1个分片, 0个副本
-	 *
-	 * @param index 索引名
-	 * @return boolean 创建成功失败标识
-	 */
-	public static ElasticIndexBuilder createIndex(String index) {
-		IndicesAdminClient indicesAdminClient = client.admin().indices();
-		CreateIndexRequestBuilder createIndexRequestBuilder = indicesAdminClient.prepareCreate(index);
-		return new ElasticIndexBuilder(createIndexRequestBuilder);
-	}
-	
-	/**
-	 * 判断索引存在与否
-	 *
-	 * @param indices
-	 * @return boolean
-	 */
-	public static boolean existsIndex(String... indices) {
-		IndicesExistsResponse response = client.admin().indices().prepareExists(indices).get();
-		return response.isExists();
-	}
-	
-	/**
-	 * 删除索引
-	 *
-	 * @param indices
-	 * @return boolean 删除成功与否
-	 */
-	public static boolean deleteIndex(String... indices) {
-		if (!existsIndex(indices)) {
-			log.info("索引{}不存在", indices);
-			return false;
-		}
-		AcknowledgedResponse response = client.admin()
-				.indices()
-				.prepareDelete(indices)
-				.get();
-		return response.isAcknowledged();
-	}
-	
-	/**
-	 * 列出所有索引
-	 *
-	 * @return List<String>
-	 */
-	public static List<String> listIndices() {
-		IndicesStatsResponse response = client.admin()
-				.indices()
-				.stats(new IndicesStatsRequest().all())
-				.actionGet();
-		
-		Set<String> indices = response.getIndices().keySet();
-		return new ArrayList<>(indices);
-	}
-	
-	/**
-	 * 为Index创建别名
-	 *
-	 * @param index
-	 * @param alias
-	 * @return 创建成功与否
-	 */
-	public static boolean createIndexAlias(String index, String alias) {
-		IndicesAliasesRequestBuilder builder = client.admin().indices().prepareAliases().addAlias(index, alias);
-		AcknowledgedResponse response = builder.get();
-		return response.isAcknowledged();
-	}
-	
-	/**
-	 * 为Index创建别名
-	 *
-	 * @param indices
-	 * @param alias
-	 * @param queryBuilder
-	 * @return
-	 */
-	public static boolean createIndexAlias(String[] indices, String alias, QueryBuilder queryBuilder) {
-		IndicesAliasesRequestBuilder builder = client.admin()
-				.indices()
-				.prepareAliases()
-				.addAlias(indices, alias, queryBuilder);
-		AcknowledgedResponse response = builder.get();
-		return response.isAcknowledged();
-	}
-	
-	/**
-	 * 删除Index的别名
-	 *
-	 * @param index
-	 * @param alias
-	 * @return 删除成功与否
-	 */
-	public static boolean deleteIndexAlias(String index, String alias) {
-		AcknowledgedResponse response = client.admin()
-				.indices()
-				.prepareAliases()
-				.removeAlias(index, alias)
-				.get();
-		return response.isAcknowledged();
-	}
 	
 	/**
 	 * 创建一个新的文档, 返回新创建文档的ID
@@ -250,6 +159,30 @@ public final class ElasticUtils {
 				.setSource(doc, XContentType.JSON)
 				.get();
 		return response.getId();
+	}
+	
+	/**
+	 * 创建一个新的文档, 返回新创建文档的ID
+	 * 对应REST API POST 方式
+	 *
+	 * @param index
+	 * @param doc
+	 * @return String 文档ID
+	 */
+	public static String index(String index, String doc, int id) {
+		return index(index, doc, String.valueOf(id));
+	}
+	
+	/**
+	 * 创建一个新的文档, 返回新创建文档的ID
+	 * 对应REST API POST 方式
+	 *
+	 * @param index
+	 * @param doc
+	 * @return String 文档ID
+	 */
+	public static String index(String index, Object doc, int id) {
+		return index(index, doc, String.valueOf(id));
 	}
 	
 	/**
@@ -478,159 +411,6 @@ public final class ElasticUtils {
 	}
 	
 	/**
-	 * 获取所有的Mapping信息
-	 * 返回的Map是Map套Map, 输出成JSON大概是这样子
-	 * <pre>
-	 * {
-	 *   "properties": {
-	 *     "title": {
-	 *       "type": "text",
-	 *       "fields": {
-	 *         "keyword": {
-	 *           "type": "keyword",
-	 *           "ignore_above": 256
-	 *         }
-	 *       }
-	 *     },
-	 *     "year": {
-	 *       "type": "long"
-	 *     }
-	 *   }
-	 * }
-	 * </pre>
-	 *
-	 * @param index
-	 * @return
-	 */
-	public static Map<String, Object> getMapping(String index) {
-		GetMappingsResponse response = client.admin()
-				.indices()
-				.prepareGetMappings(index)
-				.get();
-		
-		ImmutableOpenMap<String, ImmutableOpenMap<String, MappingMetaData>> mappings = response.mappings();
-		if (mappings.isEmpty()) {
-			return null;
-		}
-		//获取真正的mapping部分, 其他的都不需要
-		MappingMetaData mappingMetaData = mappings.get(index).get(ONLY_TYPE);
-		if (mappingMetaData != null) {
-			return mappingMetaData.sourceAsMap();
-		}
-		
-		return new HashMap<>(12);
-	}
-	
-	/**
-	 * 获取索引中某个字段的mapping定义, 返回的Map格式类似这样:
-	 * <pre>
-	 * {
-	 *   "income": {
-	 *     "type": "long",
-	 *     "index": false
-	 *   },
-	 *   "carrer": {
-	 *     "type": "text",
-	 *     "analyzer": "ik_max_word",
-	 *     "search_analyzer": "ik_smart"
-	 *   },
-	 *   "fans": {
-	 *     "type": "text"
-	 *   }
-	 * }
-	 * </pre>
-	 *
-	 * @param index
-	 * @param fields
-	 * @return Map<String, Object>
-	 */
-	public static Map<String, Map<String, Object>> getMapping(String index, String... fields) {
-		GetFieldMappingsRequestBuilder builder = new GetFieldMappingsRequestBuilder(client, GetFieldMappingsAction.INSTANCE, index);
-		GetFieldMappingsResponse response = builder.setFields(fields).get();
-		
-		Map<String, GetFieldMappingsResponse.FieldMappingMetaData> map = response.mappings().get(index).get(ONLY_TYPE);
-		List<Map> mapList = map.values().stream().map(GetFieldMappingsResponse.FieldMappingMetaData::sourceAsMap).collect(toList());
-		Map fieldMappingMap = new HashMap<>(mapList.size());
-		for (Map<String, ?> fieldMap : mapList) {
-			for (String key : fieldMap.keySet()) {
-				fieldMappingMap.put(key, fieldMap.get(key));
-			}
-		}
-		
-		return fieldMappingMap;
-	}
-	
-	/**
-	 * 设置索引的Mapping, index必须先创建, 可以为index增加字段定义, 但是不能删除已有的字段定义<p/>
-	 * https://www.elastic.co/guide/en/elasticsearch/reference/7.6/mapping.html<br/>
-	 * https://www.elastic.co/guide/en/elasticsearch/reference/7.6/dynamic-mapping.html<br/>
-	 * https://www.elastic.co/guide/en/elasticsearch/reference/7.6/mapping-params.html
-	 *
-	 * @param index
-	 * @param dynamic
-	 * @return boolean Mapping创建成功失败标识
-	 */
-	public static ElasticPutMappingBuilder putMapping(String index, Dynamic dynamic) {
-		return new ElasticPutMappingBuilder(index, dynamic);
-	}
-	
-	/**
-	 * https://www.elastic.co/guide/en/elasticsearch/reference/7.6/indices-templates.html
-	 *
-	 * @param templateName
-	 */
-	public static ElasticIndexTemplateBuilder putIndexTemplate(String templateName) {
-		return ElasticIndexTemplateBuilder.newInstance(client, templateName);
-	}
-	
-	/**
-	 * 获取指定的Index Template
-	 *
-	 * @param templateName
-	 * @return IndexTemplateMetaData
-	 */
-	public static IndexTemplateMetaData getIndexTemplate(String templateName) {
-		GetIndexTemplatesResponse response = client.admin().indices().prepareGetTemplates(templateName).get();
-		List<IndexTemplateMetaData> indexTemplates = response.getIndexTemplates();
-		Optional<IndexTemplateMetaData> first = indexTemplates.stream()
-				.filter(indexTemplate -> templateName.equals(indexTemplate.getName()))
-				.findFirst();
-		if (first.isPresent()) {
-			IndexTemplateMetaData indexTemplateMetaData = first.get();
-			return indexTemplateMetaData;
-		}
-		return null;
-	}
-	
-	/**
-	 * 删除Index Template
-	 *
-	 * @param templateName
-	 * @return boolean
-	 */
-	public static boolean deleteIndexTemplate(String templateName) {
-		try {
-			AcknowledgedResponse response = client.admin().indices().prepareDeleteTemplate(templateName).get();
-			return response.isAcknowledged();
-		} catch (IndexTemplateMissingException e) {
-			log.info("Index Template [{}] 不存在", templateName);
-			return false;
-		}
-	}
-	
-	/**
-	 * 通用查询接口, 既可以基于值查询, 如: Term Query, Match Query, Query string, Simple query string
-	 * 可以基于字段存在性查询, 比如 Exists Query
-	 * 给ElasticQueryBuilder传入不同的 QueryBuilder即可
-	 *
-	 * @param indices
-	 * @return ElasticQueryBuilder
-	 */
-	public static ElasticQueryBuilder query(String... indices) {
-		return ElasticQueryBuilder.instance(indices);
-	}
-	
-	/**
 	 * https://www.elastic.co/guide/cn/elasticsearch/guide/current/ignoring-tfidf.html
 	 * <p>
 	 * 即便是对Keyword 进行 Term 查询, 同样会被算分
@@ -802,18 +582,6 @@ public final class ElasticUtils {
 	}
 	
 	/**
-	 * 聚合
-	 * https://www.elastic.co/guide/en/elasticsearch/client/java-api/7.x/java-aggs.html
-	 *
-	 * @param indices
-	 * @return ElasticAggregationBuilder
-	 */
-	public static ElasticAggregationBuilder agg(String... indices) {
-		
-		return null;
-	}
-	
-	/**
 	 * 在更新索引的mapping后, 在原索引上重建索引<p>
 	 * https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/java-docs-update-by-query.html
 	 *
@@ -828,17 +596,313 @@ public final class ElasticUtils {
 		return bulkByScrollResponse;
 	}
 	
+	
 	/**
-	 * 重建索引<p>
-	 * https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/java-docs-reindex.html
-	 * https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-reindex.html
-	 *
-	 * @param srcIndex
-	 * @param destIndex
-	 * @return ElasticReindexBuilder
+	 * Elasticsearch 索引管理相关API
 	 */
-	public static ElasticReindexBuilder reindex(String srcIndex, String destIndex) {
-		return new ElasticReindexBuilder(srcIndex, destIndex);
+	public static class Admin {
+		
+		/**
+		 * 基于Entity上的注解信息创建索引
+		 *
+		 * @param entityClass 标注了@Index注解的POJO
+		 * @return boolean 索引是否创建成功
+		 */
+		public static boolean createIndex(Class entityClass) {
+			return createIndex(entityClass, null);
+		}
+		
+		/**
+		 * 基于Entity上的注解信息创建索引
+		 *
+		 * @param entityClass 标注了@Index注解的POJO
+		 * @param index       显式指定的索引名
+		 * @return boolean 索引是否创建成功
+		 */
+		public static boolean createIndex(Class entityClass, String index) {
+			notNull(entityClass, "entityClass cannot be null!");
+			//抽取索引的Mapping信息
+			ElasticPutMappingBuilder putMappingBuilder = MappingSupport.extractIndexMapping(entityClass);
+			//抽取索引的Setting信息
+			ElasticSettingsBuilder settingsBuilder = SettingsSupport.extractIndexSettings(entityClass);
+			//抽取索引名
+			if (isBlank(index)) {
+				index = IndexSupport.indexName(entityClass);
+			}
+			
+			IndicesAdminClient indicesAdminClient = client.admin().indices();
+			CreateIndexRequestBuilder createIndexRequestBuilder = indicesAdminClient.prepareCreate(index);
+			ElasticIndexBuilder indexBuilder = new ElasticIndexBuilder(createIndexRequestBuilder);
+			boolean created = indexBuilder.settings(settingsBuilder)
+					.mapping(putMappingBuilder)
+					.create();
+			log.info("Index {} {}", index, (created ? "created" : "not created"));
+			return created;
+		}
+		
+		/**
+		 * 创建索引, 默认1个分片, 0个副本
+		 *
+		 * @param index 索引名
+		 * @return boolean 创建成功失败标识
+		 */
+		public static ElasticIndexBuilder createIndex(String index) {
+			IndicesAdminClient indicesAdminClient = client.admin().indices();
+			CreateIndexRequestBuilder createIndexRequestBuilder = indicesAdminClient.prepareCreate(index);
+			return new ElasticIndexBuilder(createIndexRequestBuilder);
+		}
+		
+		/**
+		 * 判断索引存在与否
+		 *
+		 * @param indices
+		 * @return boolean
+		 */
+		public static boolean existsIndex(String... indices) {
+			IndicesExistsResponse response = client.admin().indices().prepareExists(indices).get();
+			return response.isExists();
+		}
+		
+		/**
+		 * 删除索引
+		 *
+		 * @param indices
+		 * @return boolean 删除成功与否
+		 */
+		public static boolean deleteIndex(String... indices) {
+			if (!existsIndex(indices)) {
+				log.info("索引{}不存在", indices);
+				return false;
+			}
+			AcknowledgedResponse response = client.admin()
+					.indices()
+					.prepareDelete(indices)
+					.get();
+			return response.isAcknowledged();
+		}
+		
+		/**
+		 * 列出所有索引
+		 *
+		 * @return List<String>
+		 */
+		public static List<String> listIndices() {
+			IndicesStatsResponse response = client.admin()
+					.indices()
+					.stats(new IndicesStatsRequest().all())
+					.actionGet();
+			
+			Set<String> indices = response.getIndices().keySet();
+			return new ArrayList<>(indices);
+		}
+		
+		/**
+		 * 为Index创建别名
+		 *
+		 * @param index
+		 * @param alias
+		 * @return 创建成功与否
+		 */
+		public static boolean createIndexAlias(String index, String alias) {
+			IndicesAliasesRequestBuilder builder = client.admin().indices().prepareAliases().addAlias(index, alias);
+			AcknowledgedResponse response = builder.get();
+			return response.isAcknowledged();
+		}
+		
+		/**
+		 * 为Index创建别名
+		 *
+		 * @param indices
+		 * @param alias
+		 * @param queryBuilder
+		 * @return
+		 */
+		public static boolean createIndexAlias(String[] indices, String alias, QueryBuilder queryBuilder) {
+			IndicesAliasesRequestBuilder builder = client.admin()
+					.indices()
+					.prepareAliases()
+					.addAlias(indices, alias, queryBuilder);
+			AcknowledgedResponse response = builder.get();
+			return response.isAcknowledged();
+		}
+		
+		/**
+		 * 删除Index的别名
+		 *
+		 * @param index
+		 * @param alias
+		 * @return 删除成功与否
+		 */
+		public static boolean deleteIndexAlias(String index, String alias) {
+			AcknowledgedResponse response = client.admin()
+					.indices()
+					.prepareAliases()
+					.removeAlias(index, alias)
+					.get();
+			return response.isAcknowledged();
+		}
+		
+		
+		/**
+		 * https://www.elastic.co/guide/en/elasticsearch/reference/7.6/indices-templates.html
+		 *
+		 * @param templateName
+		 */
+		public static ElasticIndexTemplateBuilder putIndexTemplate(String templateName) {
+			return ElasticIndexTemplateBuilder.newInstance(client, templateName);
+		}
+		
+		/**
+		 * 获取指定的Index Template
+		 *
+		 * @param templateName
+		 * @return IndexTemplateMetaData
+		 */
+		public static IndexTemplateMetaData getIndexTemplate(String templateName) {
+			GetIndexTemplatesResponse response = client.admin().indices().prepareGetTemplates(templateName).get();
+			List<IndexTemplateMetaData> indexTemplates = response.getIndexTemplates();
+			Optional<IndexTemplateMetaData> first = indexTemplates.stream()
+					.filter(indexTemplate -> templateName.equals(indexTemplate.getName()))
+					.findFirst();
+			if (first.isPresent()) {
+				IndexTemplateMetaData indexTemplateMetaData = first.get();
+				return indexTemplateMetaData;
+			}
+			return null;
+		}
+		
+		/**
+		 * 删除Index Template
+		 *
+		 * @param templateName
+		 * @return boolean
+		 */
+		public static boolean deleteIndexTemplate(String templateName) {
+			try {
+				AcknowledgedResponse response = client.admin().indices().prepareDeleteTemplate(templateName).get();
+				return response.isAcknowledged();
+			} catch (IndexTemplateMissingException e) {
+				log.info("Index Template [{}] 不存在", templateName);
+				return false;
+			}
+		}
+		
+		/**
+		 * 重建索引<p>
+		 * https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/java-docs-reindex.html
+		 * https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-reindex.html
+		 *
+		 * @param srcIndex
+		 * @param destIndex
+		 * @return ElasticReindexBuilder
+		 */
+		public static ElasticReindexBuilder reindex(String srcIndex, String destIndex) {
+			return new ElasticReindexBuilder(srcIndex, destIndex);
+		}
+		
+	}
+	
+	/**
+	 * Elasticsearch Mapping 相关API
+	 */
+	public static class Mappings {
+		
+		/**
+		 * 获取所有的Mapping信息
+		 * 返回的Map是Map套Map, 输出成JSON大概是这样子
+		 * <pre>
+		 * {
+		 *   "properties": {
+		 *     "title": {
+		 *       "type": "text",
+		 *       "fields": {
+		 *         "keyword": {
+		 *           "type": "keyword",
+		 *           "ignore_above": 256
+		 *         }
+		 *       }
+		 *     },
+		 *     "year": {
+		 *       "type": "long"
+		 *     }
+		 *   }
+		 * }
+		 * </pre>
+		 *
+		 * @param index
+		 * @return
+		 */
+		public static Map<String, Object> getMapping(String index) {
+			GetMappingsResponse response = client.admin()
+					.indices()
+					.prepareGetMappings(index)
+					.get();
+			
+			ImmutableOpenMap<String, ImmutableOpenMap<String, MappingMetaData>> mappings = response.mappings();
+			if (mappings.isEmpty()) {
+				return null;
+			}
+			//获取真正的mapping部分, 其他的都不需要
+			MappingMetaData mappingMetaData = mappings.get(index).get(ONLY_TYPE);
+			if (mappingMetaData != null) {
+				return mappingMetaData.sourceAsMap();
+			}
+			
+			return new HashMap<>(12);
+		}
+		
+		/**
+		 * 获取索引中某个字段的mapping定义, 返回的Map格式类似这样:
+		 * <pre>
+		 * {
+		 *   "income": {
+		 *     "type": "long",
+		 *     "index": false
+		 *   },
+		 *   "carrer": {
+		 *     "type": "text",
+		 *     "analyzer": "ik_max_word",
+		 *     "search_analyzer": "ik_smart"
+		 *   },
+		 *   "fans": {
+		 *     "type": "text"
+		 *   }
+		 * }
+		 * </pre>
+		 *
+		 * @param index
+		 * @param fields
+		 * @return Map<String, Object>
+		 */
+		public static Map<String, Map<String, Object>> getMapping(String index, String... fields) {
+			GetFieldMappingsRequestBuilder builder = new GetFieldMappingsRequestBuilder(client, GetFieldMappingsAction.INSTANCE, index);
+			GetFieldMappingsResponse response = builder.setFields(fields).get();
+			
+			Map<String, GetFieldMappingsResponse.FieldMappingMetaData> map = response.mappings().get(index).get(ONLY_TYPE);
+			List<Map> mapList = map.values().stream().map(GetFieldMappingsResponse.FieldMappingMetaData::sourceAsMap).collect(toList());
+			Map fieldMappingMap = new HashMap<>(mapList.size());
+			for (Map<String, ?> fieldMap : mapList) {
+				for (String key : fieldMap.keySet()) {
+					fieldMappingMap.put(key, fieldMap.get(key));
+				}
+			}
+			
+			return fieldMappingMap;
+		}
+		
+		/**
+		 * 设置索引的Mapping, index必须先创建, 可以为index增加字段定义, 但是不能删除已有的字段定义<p/>
+		 * https://www.elastic.co/guide/en/elasticsearch/reference/7.6/mapping.html<br/>
+		 * https://www.elastic.co/guide/en/elasticsearch/reference/7.6/dynamic-mapping.html<br/>
+		 * https://www.elastic.co/guide/en/elasticsearch/reference/7.6/mapping-params.html
+		 *
+		 * @param index
+		 * @param dynamic
+		 * @return boolean Mapping创建成功失败标识
+		 */
+		public static ElasticPutMappingBuilder putMapping(String index, Dynamic dynamic) {
+			return new ElasticPutMappingBuilder(index, dynamic);
+		}
 	}
 	
 	/**
@@ -848,6 +912,7 @@ public final class ElasticUtils {
 		
 		/**
 		 * 更新索引的Settings
+		 *
 		 * @param indices
 		 * @return ElasticUpdateSettingBuilder
 		 */
@@ -863,6 +928,7 @@ public final class ElasticUtils {
 		
 		/**
 		 * 获取集群的健康状态, Green Yellow Red
+		 *
 		 * @param index
 		 * @return String
 		 */
@@ -878,9 +944,136 @@ public final class ElasticUtils {
 	}
 	
 	/**
-	 * Elasticsearch admin 相关 API
+	 * <p>
+	 * Copyright: Copyright (c) 2021-04-28 18:21
+	 * <p>
+	 * Company: Sexy Uncle Inc.
+	 * <p>
+	 *
+	 * @author Rico Yu  ricoyu520@gmail.com
+	 * @version 1.0
 	 */
-	public static final class ADMIN {
+	public static final class Query {
 		
+		/**
+		 * 根据ID获取文档
+		 * @param index
+		 * @param id
+		 * @return String
+		 */
+		public static String byId(String index, int id) {
+			return byId(index, id + "");
+		}
+		
+		/**
+		 * 根据ID获取文档
+		 * @param index
+		 * @param id
+		 * @return String
+		 */
+		public static String byId(String index, String id) {
+			GetResponse response = client.prepareGet(index, ONLY_TYPE, id).get();
+			return response.getSourceAsString();
+		}
+		
+		/**
+		 * 指定查询语句, 使用Query String Syntax<p>
+		 * 有多种查询语法
+		 * <ul>
+		 * <li/>df查询                     GET movies/_search?q=2012&df=title
+		 * <li/>指定字段查询                GET movies/_search?q=title:2012
+		 * <li/>泛查询                     GET movies/_search?q=2012              会对文档中所有字段进行查询
+		 * <li/>Term Query                GET movies/_search?q=title:Beautiful Mind     与下面的等价
+		 * <li/>                          GET movies/_search?q=title:Beautiful OR Mind
+		 * <li/>Pahrase Query(引号引起来的)  GET movies/_search?q=title:"Beautiful Mind"  表示Beautiful Mind要同时出现并且按照规定的顺序, 与下面的等价
+		 * <li/>                            GET movies/_search?q=title:Beautiful AND Mind
+		 * <li/>分组                        GET movies/_search?q=title:(Beautiful Mind)
+		 * <li/>包含Beautiful 不包含 Mind    GET movies/_search?q=title:(Beautiful NOT Mind)
+		 * <li/>必须包含Mind, %2B是 + 号的转义字符     GET movies/_search?q=title:(Beautiful %2BMind)
+		 * <li/>范围查询                             GET movies/_search?q=year:>1980
+		 * </ul>
+		 * 你可以就写查询条件: 2012<p>
+		 * 也可以写完成的查询: q=2012 或者 q=2012&df=title 等<p>
+		 *
+		 * @param index
+		 * @return QueryStringQueryBuilder
+		 */
+		public static UriQueryBuilder uriQuery(String index) {
+			return new UriQueryBuilder(index);
+		}
+		
+		/**
+		 * @param index
+		 * @return QueryStringBuilder
+		 */
+		public static QueryStringBuilder queryString(String index) {
+			return new QueryStringBuilder(index);
+		}
+		
+		/**
+		 * Match Query是会对搜索的内容做分词后再去ES中查询的
+		 *
+		 * @param indices
+		 * @return ElasticMatchQueryBuilder
+		 */
+		public static ElasticMatchQueryBuilder matchQuery(String... indices) {
+			return new ElasticMatchQueryBuilder(indices);
+		}
+		
+		/**
+		 * 在ES中, Term查询, 对输入**不做分词**. 会将输入作为一个整体, 在倒排索引中查找准确的词项, 并且使用相关度计算公式为每个包含该此项的文档进行相关度算分<p>
+		 * <ol>
+		 * <li/> Term Query 不会对查询条件做分词
+		 * <li/> 如果被查询字段在文档里面是被分词的, 但是又想用Term Query对其做精确匹配, 那么可以使用Elasticsearch提供的多字段特性, 查询其keyword字段, 如productID.keyword
+		 * <li/> Term Query 会算分
+		 * <li/> 可以通过 Constant Score 将查询转换成一个 Filtering, **避免算分, 并利用缓存**, 提高性能
+		 * <li/> Avoid using the term query for text fields.
+		 * </ol>
+		 *
+		 * @param indices
+		 * @return ElasticTermQueryBuilder
+		 */
+		public static ElasticTermQueryBuilder termQuery(String... indices) {
+			return new ElasticTermQueryBuilder(indices);
+		}
+		
+		/**
+		 * Match Phrase Query查的是一个短语, 比如查title="one love", 那么title是"the one love"可以搜到, "one I love"搜不到
+		 *
+		 * @param indices
+		 * @return
+		 */
+		public static ElasticMatchPhraseQueryBuilder matchPhraseQuery(String... indices) {
+			return new ElasticMatchPhraseQueryBuilder(indices);
+		}
+		
+		/**
+		 * 通用查询接口, 既可以基于值查询, 如: Term Query, Match Query, Query string, Simple query string
+		 * 可以基于字段存在性查询, 比如 Exists Query
+		 * 给ElasticQueryBuilder传入不同的 QueryBuilder即可
+		 *
+		 * @param indices
+		 * @return ElasticQueryBuilder
+		 */
+		public static ElasticQueryBuilder query(String... indices) {
+			return ElasticQueryBuilder.instance(indices);
+		}
+	}
+	
+	/**
+	 * 聚合查询相关API
+	 */
+	public static class Aggs {
+		
+		/**
+		 * terms聚合
+		 * https://www.elastic.co/guide/en/elasticsearch/client/java-api/7.x/java-aggs.html
+		 *
+		 * @param indices
+		 * @return ElasticTermsAggregationBuilder
+		 */
+		public static ElasticTermsAggregationBuilder terms(String... indices) {
+			return ElasticTermsAggregationBuilder.instance(indices);
+		}
 	}
 }

@@ -15,6 +15,7 @@ import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -261,6 +262,17 @@ public class IOUtils {
 		return Paths.get(dir, fileName).toFile();
 	}
 	
+	/**
+	 * 读取文件为File对象
+	 * 
+	 * @param fullFilename
+	 * @return File
+	 */
+	public static File readFile(String fullFilename) {
+		notNull(fullFilename, "fullFilename 不能为null!");
+		return Paths.get(fullFilename).toFile();
+	}
+	
 	public static String readFile(Path path) {
 		Objects.requireNonNull(path, "path cannot be null!");
 		byte[] bytes = new byte[0];
@@ -377,6 +389,19 @@ public class IOUtils {
 	 * @return
 	 */
 	public static InputStream readClasspathFileAsInputStream(String fileName) {
+		/*
+		 * 先读classpath根目录
+		 */
+		List<File> files = Resources.getResources(fileName);
+		if (!files.isEmpty()) {
+			try {
+				return new FileInputStream(files.get(0));
+			} catch (FileNotFoundException e) {
+				log.error("", e);
+				return null;
+			}
+		}
+		
 		ClassLoader classLoader = firstNonNull(currentThread().getContextClassLoader(), IOUtils.class.getClassLoader());
 		URL url = classLoader.getResource(fileName);
 		if (url == null && !fileName.startsWith(DIR_SEPARATOR_UNIX)) {
@@ -513,6 +538,14 @@ public class IOUtils {
 	 * @return File
 	 */
 	public static File readClasspathFileAsFile(String fileName) {
+		/*
+		 * 先读classpath根目录
+		 */
+		List<File> files = Resources.getResources(fileName);
+		if (!files.isEmpty()) {
+			return files.get(0);
+		}
+		
 		ClassLoader classLoader = firstNonNull(currentThread().getContextClassLoader(), IOUtils.class.getClassLoader());
 		URL url = classLoader.getResource(fileName);
 		if (url == null && !fileName.startsWith(DIR_SEPARATOR_UNIX)) {
@@ -523,13 +556,6 @@ public class IOUtils {
 			return new File(url.getFile());
 		}
 		
-		/*
-		 * Java Application中不带目录的时候可以查到
-		 */
-		List<File> files = Resources.getResources(fileName);
-		if (!files.isEmpty()) {
-			return files.get(0);
-		}
 		
 		ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
 		Resource resource = resolver.getResource(fileName);

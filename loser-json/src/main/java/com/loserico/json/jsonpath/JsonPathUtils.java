@@ -9,6 +9,7 @@ import com.jayway.jsonpath.spi.json.JsonProvider;
 import com.jayway.jsonpath.spi.mapper.MappingProvider;
 import com.loserico.json.collections.ExpiringHashMap;
 import com.loserico.json.generic.ParameterizedTypeImpl;
+import com.loserico.json.jackson.JacksonUtils;
 import com.loserico.json.jsonpath.context.DocumentContext;
 import com.loserico.json.jsonpath.context.JsonContext;
 import com.loserico.json.jsonpath.mapper.JacksonMappingProvider;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
@@ -29,8 +31,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
  * $			The root element to query. This starts all path expressions.
  * json串的根元素,不管json是数组还是对象形式
  *
- * @author Rico Yu  ricoyu520@gmail.com
- * @version 1.0
  * @			The current node being processed by a filter predicate.
  * 代表当前正在处理的item
  * *			Wildcard. Available anywhere a name or numeric are required.
@@ -63,7 +63,7 @@ public final class JsonPathUtils {
 			
 			//需要com.fasterxml.jackson.core:jackson-databind:2.4.5
 			private final JsonProvider jsonProvider = new JacksonJsonProvider();
-			private final MappingProvider mappingProvider = new JacksonMappingProvider();
+			private final MappingProvider mappingProvider = new JacksonMappingProvider(JacksonUtils.objectMapper());
 			
 			@Override
 			public Set<Option> options() {
@@ -153,53 +153,59 @@ public final class JsonPathUtils {
 	
 	/**
 	 * 示例1：给定json数组
+	 * <pre>{@code
 	 * [
-	 * {
-	 * "username": "hawk",
-	 * "error": {
-	 * "code": 899001,
-	 * "message": "user exist"
-	 * }
-	 * },
-	 * {
-	 * "username": "ricoyucsd",
-	 * "error": {
-	 * "code": 899001,
-	 * "message": "user exist"
-	 * }
-	 * },
-	 * {
-	 * "username": "ricoyussss",
-	 * "nickname": "三少爷",
-	 * "birthday": "1982-11-09",
-	 * "gender": 1,
-	 * "avatar": "qiniu/image/j/8D57A18AD6926D6D879DFA36B4ED9CC4.jpg"
-	 * }
+	 *   {
+	 *     "username": "hawk",
+	 *     "error": {
+	 *       "code": 899001,
+	 *       "message": "user exist"
+	 *     }
+	 *   },
+	 *   {
+	 *     "username": "ricoyucsd",
+	 *     "error": {
+	 *       "code": 899001,
+	 *       "message": "user exist"
+	 *     }
+	 *   },
+	 *   {
+	 *     "username": "ricoyussss",
+	 *     "nickname": "三少爷",
+	 *     "birthday": "1982-11-09",
+	 *     "gender": 1,
+	 *     "avatar": "qiniu/image/j/8D57A18AD6926D6D879DFA36B4ED9CC4.jpg"
+	 *   }
 	 * ]
-	 * 分别读取包含/不包含 error属性的元素
+	 * }</pre>
+	 * 分别读取包含/不包含 error属性的元素<p>
+	 * <pre>{@code
 	 * JsonPathUtils.readListNode(result, "[?(@.error)].username", String.class)
 	 * JsonPathUtils.readListNode(result, "[?(!@.error)].username", String.class)
+	 * }</pre>
 	 * <p>
 	 * 示例2：给定json对象
+	 * <pre>{@code
 	 * {
-	 * "count": 2,
-	 * "total": 714,
-	 * "start": 0,
-	 * "users": [
-	 * {
-	 * "mtime": "2018-03-16 18:12:41",
-	 * "gender": 0,
-	 * "username": "96289794xcuqzz",
-	 * "ctime": "2018-03-16 18:12:41"
-	 * },
-	 * {
-	 * "mtime": "2018-03-16 18:12:41",
-	 * "gender": 0,
-	 * "username": "96269528oydxvk",
-	 * "ctime": "2018-03-16 18:12:41"
+	 *   "count": 2,
+	 *   "total": 714,
+	 *   "start": 0,
+	 *   "users": [
+	 *     {
+	 *       "mtime": "2018-03-16 18:12:41",
+	 *       "gender": 0,
+	 *       "username": "96289794xcuqzz",
+	 *       "ctime": "2018-03-16 18:12:41"
+	 *     },
+	 *     {
+	 *       "mtime": "2018-03-16 18:12:41",
+	 *       "gender": 0,
+	 *       "username": "96269528oydxvk",
+	 *       "ctime": "2018-03-16 18:12:41"
+	 *     }
+	 *   ]
 	 * }
-	 * ]
-	 * }
+	 * }</pre>
 	 * 取所有的username：$.users[*].username
 	 *
 	 * @param json
@@ -213,6 +219,15 @@ public final class JsonPathUtils {
 		}
 		Type type = new ParameterizedTypeImpl(List.class, new Class[]{clazz});
 		return getDocumentContext(json).read(path, type);
+	}
+	
+	@SuppressWarnings({"unchecked"})
+	public static List<String> readListNode(String json, String path) {
+		if (isBlank(json)) {
+			return null;
+		}
+		List results = getDocumentContext(json).read(path);
+		return (List<String>) results.stream().map(result -> JacksonUtils.toJson(result)).collect(toList());
 	}
 	
 	/**

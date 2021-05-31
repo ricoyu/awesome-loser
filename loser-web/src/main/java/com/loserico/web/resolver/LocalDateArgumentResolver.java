@@ -1,5 +1,6 @@
 package com.loserico.web.resolver;
 
+import com.loserico.common.lang.utils.DateUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
@@ -9,9 +10,6 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
-import java.util.regex.Pattern;
-
-import static java.time.format.DateTimeFormatter.ofPattern;
 
 /**
  * 支持Controller方法参数各种日期格式绑定, 需要调用WebMvcConfigurer#addArgumentResolvers来添加
@@ -38,11 +36,6 @@ public class LocalDateArgumentResolver implements HandlerMethodArgumentResolver 
 			return null;
 		}
 
-		LocalDate result = null;
-		if (Pattern.matches("\\d{4}-\\d{2}-\\d{2}", value)) {
-			result = LocalDate.parse(value, ofPattern("yyyy-MM-dd"));
-		}
-
-		return result;
+		return DateUtils.toLocalDate(value);
 	}
 }

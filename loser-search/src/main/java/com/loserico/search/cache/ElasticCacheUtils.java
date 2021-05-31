@@ -103,7 +103,7 @@ public final class ElasticCacheUtils {
 		}
 		Object value = ReflectionUtils.getFieldValue(id, pojo);
 		//字段值转成字符串类型
-		return Transformers.convert(value);
+		return Transformers.toString(value);
 	}
 	
 	/**

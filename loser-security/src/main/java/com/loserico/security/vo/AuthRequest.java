@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 /**
  * 与安全相关的一个请求对象封装
  * <p>
@@ -61,7 +63,10 @@ public class AuthRequest {
 	 * @return
 	 */
 	public boolean requestPathMatchs(String contextPath) {
-		String withoutContextPath = actualUri.replaceFirst(contextPath, "");
+		String withoutContextPath = actualUri;
+		if (isNotBlank(contextPath)) {
+			withoutContextPath = actualUri.replaceFirst(contextPath, "");
+		}
 		return uri.endsWith(withoutContextPath);
 	}
 	
@@ -72,7 +77,7 @@ public class AuthRequest {
 	 * @return boolean
 	 */
 	public boolean matches(long currentTimestamp) {
-		return timestamp != currentTimestamp;
+		return timestamp == currentTimestamp;
 	}
 	
 }

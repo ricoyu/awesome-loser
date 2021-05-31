@@ -19,6 +19,7 @@ import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import com.loserico.common.lang.resource.PropertyReader;
 import com.loserico.common.lang.vo.Page;
 import com.loserico.common.lang.vo.Result;
+import com.loserico.json.jackson.deserializer.DateStr2LongDeserializer;
 import com.loserico.json.jackson.deserializer.EnumDeserializer;
 import com.loserico.json.jackson.deserializer.LocalDateDeserializer;
 import com.loserico.json.jackson.deserializer.LocalDateTimeDeserializer;
@@ -97,6 +98,7 @@ public class ObjectMapperDecorator {
 		});
 		//Page对象在序列化的时候不希望把order输出到json, 但是反序列化的时候要可以接收order
 		customModule.addDeserializer(Page.class, new PageDeserializer(Page.class));
+		customModule.addDeserializer(Long.class, new DateStr2LongDeserializer());
 		objectMapper.registerModule(customModule);
 		
 		objectMapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, ignorePropertiesCase);

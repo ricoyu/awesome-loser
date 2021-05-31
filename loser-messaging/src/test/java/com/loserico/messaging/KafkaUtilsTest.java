@@ -15,12 +15,12 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static com.loserico.json.jackson.JacksonUtils.toJson;
-import static java.util.Arrays.asList;
 
 /**
  * <p>
@@ -42,7 +42,7 @@ public class KafkaUtilsTest {
 		//Producer<String, String> producer = KafkaUtils.newProducer("10.10.26.13:29092")
 		//Producer<String, String> producer = KafkaUtils.newProducer("172.16.0.63:29092")
 				.acks(Acks.LEADER)
-				.batchSize(16, SizeUnit.KB)
+				.batchSize(1001, SizeUnit.KB)
 				.clientId("sexyuncle")
 				.bufferMemory(32, SizeUnit.MB)
 				.retries(99)
@@ -60,9 +60,11 @@ public class KafkaUtilsTest {
 		
 		/*User user = new User("俞雪华", 28);
 		producer.send("sexy-uncle", user);*/
-		
-		List<User> messages = asList(new User("俞雪华", 28), new User("三少爷", 40));
-		List<Future<RecordMetadata>> futures = producer.send("test", messages);
+		List<User> messages = new ArrayList<>();
+		for (int i = 0; i < 10001; i++) {
+			messages.add(new User("俞雪华", i+1));
+		}
+		List<Future<RecordMetadata>> futures = producer.send("custom-event", messages);
 		
 		for (Future<RecordMetadata> future : futures) {
 			RecordMetadata recordMetadata = future.get();

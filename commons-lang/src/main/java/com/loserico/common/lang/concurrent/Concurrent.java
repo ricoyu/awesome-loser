@@ -98,10 +98,15 @@ public final class Concurrent {
 		return new FutureResult<>(completableFuture);
 	}
 
-	public static <V, T> FutureResult<T> submit(Supplier<T> supplier, ThreadLocal<V> threadLocal) {
-		CompletableFuture<T> completableFuture = CompletableFuture.supplyAsync(supplier, IO_POOL);
+	/**
+	 * 提交一个异步任务并执行
+	 * 
+	 * @param task
+	 * @return FutureResult<T>
+	 */
+	public static void execute(Runnable task) {
+		CompletableFuture completableFuture = CompletableFuture.runAsync(task, IO_POOL);
 		addCompleteFuture(completableFuture);
-		return new FutureResult<>(completableFuture);
 	}
 
 	/**

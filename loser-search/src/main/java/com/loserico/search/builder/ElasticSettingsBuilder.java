@@ -16,7 +16,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
-public class SettingsBuilder {
+public class ElasticSettingsBuilder {
 	
 	/**
 	 * number_of_shards
@@ -47,7 +47,7 @@ public class SettingsBuilder {
 	 *   "settings": {
 	 *     "num_of_shards": 3,
 	 *     "num_of_replicas": 1
-	 *     "index.routing,allocation.require.my_node_type": "hot"
+	 *     "index.routing.allocation.require.my_node_type": "hot"
 	 *   }
 	 * }
 	 * </pre>
@@ -66,8 +66,8 @@ public class SettingsBuilder {
 	 */
 	private Boolean blocksWrite;
 	
-	public static SettingsBuilder builder() {
-		return new SettingsBuilder();
+	public static ElasticSettingsBuilder builder() {
+		return new ElasticSettingsBuilder();
 	}
 	
 	/**
@@ -76,7 +76,7 @@ public class SettingsBuilder {
 	 * @param numberOfShards
 	 * @return SettingsBuilder
 	 */
-	public SettingsBuilder numberOfShards(int numberOfShards) {
+	public ElasticSettingsBuilder numberOfShards(int numberOfShards) {
 		this.numberOfShards = numberOfShards;
 		return this;
 	}
@@ -87,7 +87,7 @@ public class SettingsBuilder {
 	 * @param numberOfReplicas
 	 * @return SettingsBuilder
 	 */
-	public SettingsBuilder numberOfReplicas(int numberOfReplicas) {
+	public ElasticSettingsBuilder numberOfReplicas(int numberOfReplicas) {
 		this.numberOfReplicas = numberOfReplicas;
 		return this;
 	}
@@ -97,7 +97,7 @@ public class SettingsBuilder {
 	 * @param blocksWrite
 	 * @return SettingsBuilder
 	 */
-	public SettingsBuilder blocksWrite(Boolean blocksWrite) {
+	public ElasticSettingsBuilder blocksWrite(Boolean blocksWrite) {
 		this.blocksWrite = blocksWrite;
 		return this;
 	}
@@ -108,7 +108,7 @@ public class SettingsBuilder {
 	 * @param defaultPipeline
 	 * @return SettingsBuilder
 	 */
-	public SettingsBuilder defaultPipeline(String defaultPipeline) {
+	public ElasticSettingsBuilder defaultPipeline(String defaultPipeline) {
 		this.defaultPipeline = defaultPipeline;
 		return this;
 	}
@@ -128,7 +128,7 @@ public class SettingsBuilder {
 	 * }
 	 * </pre>
 	 */
-	public SettingsBuilder indexRoutingAllocation(String key, String value) {
+	public ElasticSettingsBuilder indexRoutingAllocation(String key, String value) {
 		this.indexRoutingAllocationKey = key;
 		this.indexRoutingAllocationValue = value;
 		return this;

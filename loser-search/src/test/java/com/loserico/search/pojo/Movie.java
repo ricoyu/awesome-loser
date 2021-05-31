@@ -1,6 +1,10 @@
 package com.loserico.search.pojo;
 
 import com.loserico.search.annotation.DocId;
+import com.loserico.search.annotation.Field;
+import com.loserico.search.annotation.Index;
+import com.loserico.search.enums.Analyzer;
+import com.loserico.search.enums.FieldType;
 import lombok.Data;
 
 /**
@@ -14,14 +18,18 @@ import lombok.Data;
  * @version 1.0
  */
 @Data
+@Index(value = "movie", numberOfShards = 1, numberOfReplicas = 0)
 public class Movie {
 	
 	@DocId
 	private Long id;
 	
+	@Field
 	private Integer year;
 	
+	@Field(value = "title", type = FieldType.TEXT, analyzer = Analyzer.IK_MAX_WORD, searchAnalyzer = Analyzer.IK_SMART)
 	private String title;
 	
+	@Field
 	private String[] genre;
 }

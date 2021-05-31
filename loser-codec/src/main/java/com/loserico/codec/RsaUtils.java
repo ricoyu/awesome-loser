@@ -34,6 +34,8 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.text.MessageFormat;
+import java.util.Objects;
+import java.util.function.Consumer;
 
 import static com.loserico.common.lang.utils.Assert.notNull;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -81,7 +83,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 @Slf4j
 public final class RsaUtils {
 	
-	private static final PropertyReader READER = new PropertyReader("codec.properties");
+	private static final PropertyReader READER = new PropertyReader("codec");
 	
 	public static final String CHARSET = "UTF-8";
 	
@@ -433,6 +435,19 @@ public final class RsaUtils {
 	 * @return RSA私钥解密后的明文字符串
 	 */
 	public static String privateDecrypt(String data) {
+		return privateDecrypt(data, (Consumer) null);
+	}
+	
+	/**
+	 * RSA算法私钥解密数据, 如果解密失败, 调用consumer, 把data参数传给consumer<p>
+	 * 方法返回null, 不会再抛出PrivateDecryptException
+	 *
+	 * @param data
+	 * @param consumer
+	 * @return String
+	 */
+	public static String privateDecrypt(String data, Consumer consumer) {
+		Objects.requireNonNull(consumer, "consumer cannot be null!");
 		if (isBlank(data)) {
 			return data;
 		}
@@ -441,8 +456,9 @@ public final class RsaUtils {
 			cipher.init(Cipher.DECRYPT_MODE, privateKey);
 			return new String(rsaSplitCodec(cipher, Cipher.DECRYPT_MODE, base64Decode(data)), CHARSET);
 		} catch (Exception e) {
-			throw new PrivateDecryptException("解密字符串[" + data + "]时遇到异常", e);
+			consumer.accept(data);
 		}
+		return null;
 	}
 	
 	/**
@@ -466,6 +482,34 @@ public final class RsaUtils {
 			cipher.init(Cipher.DECRYPT_MODE, privateKey);
 			return new String(rsaSplitCodec(cipher, Cipher.DECRYPT_MODE, base64Decode(data)), CHARSET);
 		} catch (Exception e) {
+			throw new PrivateDecryptException("解密字符串[" + data + "]时遇到异常", e);
+		}
+	}
+	
+	/**
+	 * RSA算法私钥解密数据
+	 *
+	 * @param data          待解密的经过Base64编码的密文字符串
+	 * @param privateKeyStr RSA私钥字符串
+	 * @return RSA私钥解密后的明文字符串
+	 */
+	public static String privateDecrypt(String data, String privateKeyStr, Consumer consumer) {
+		notNull(privateKeyStr, "私钥字符串不能为null");
+		if (isBlank(data)) {
+			return data;
+		}
+		try {
+			//通过PKCS#8编码的Key指令获得私钥对象
+			PKCS8EncodedKeySpec pkcs8KeySpec = new PKCS8EncodedKeySpec(base64Decode(privateKeyStr));
+			KeyFactory keyFactory = KeyFactory.getInstance(ALGORITHM_RSA);
+			PrivateKey privateKey = keyFactory.generatePrivate(pkcs8KeySpec);
+			Cipher cipher = Cipher.getInstance(keyFactory.getAlgorithm());
+			cipher.init(Cipher.DECRYPT_MODE, privateKey);
+			return new String(rsaSplitCodec(cipher, Cipher.DECRYPT_MODE, base64Decode(data)), CHARSET);
+		} catch (Exception e) {
+			if (consumer != null) {
+				consumer.accept(data);
+			}
 			throw new PrivateDecryptException("解密字符串[" + data + "]时遇到异常", e);
 		}
 	}
@@ -731,6 +775,7 @@ public final class RsaUtils {
 	
 	/**
 	 * base64编码, 记得不要用JDK自带的Base64
+	 *
 	 * @param data
 	 * @return
 	 */
@@ -740,6 +785,7 @@ public final class RsaUtils {
 	
 	/**
 	 * base64解码, 记得不要用JDK自带的Base64
+	 *
 	 * @param encoded
 	 * @return
 	 */
@@ -782,7 +828,9 @@ public final class RsaUtils {
 				String suffix = keySuffixes[i];
 				File publicKeyFile = IOUtils.readClasspathFileAsFile(publicKeyName + suffix);
 				File privateKeyFile = IOUtils.readClasspathFileAsFile(privateKeyName + suffix);
-				boolean exists = publicKeyFile != null && privateKeyFile != null && publicKeyFile.exists() && privateKeyFile.exists();
+				//boolean exists = publicKeyFile != null && privateKeyFile != null && publicKeyFile.exists() && privateKeyFile.exists();
+				//读取jar文件中的public/private key, 能读到, 但是调用exists()时false, 所以这里不做exists()判断
+				boolean exists = publicKeyFile != null && privateKeyFile != null;
 				
 				//classpath root找到
 				if (exists) {

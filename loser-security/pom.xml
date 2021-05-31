@@ -12,7 +12,7 @@
         <groupId>com.loserico</groupId>
         <artifactId>awesome-loser</artifactId>
         <relativePath>../pom.xml</relativePath>
-        <version>4.9.0</version>
+        <version>4.9.1</version>
     </parent>
 
     <dependencies>
@@ -21,6 +21,27 @@
             <artifactId>commons-lang</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.loserico</groupId>
+            <artifactId>commons-spring</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.loserico</groupId>
+            <artifactId>loser-json</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.loserico</groupId>
+            <artifactId>loser-codec</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.loserico</groupId>
+            <artifactId>loser-web</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -36,6 +57,12 @@
             <artifactId>spring-security-core</artifactId>
             <version>5.3.3.RELEASE</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-web</artifactId>
+            <version>5.3.3.RELEASE</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>

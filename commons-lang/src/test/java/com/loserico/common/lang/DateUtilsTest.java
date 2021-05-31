@@ -4,13 +4,17 @@ import com.loserico.common.lang.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -66,20 +70,6 @@ public class DateUtilsTest {
 	}
 	
 	@Test
-	public void testParse2() throws ParseException {
-		String date1 = "2020-12-23T12:51:18.456019+0200";
-		String date2 = "2020-12-24T12:51:18.456019+0800";
-		SimpleDateFormat simpleDateFormat1 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
-		SimpleDateFormat simpleDateFormat2 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSSZ");
-		//SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		Date d1 = simpleDateFormat1.parse(date1);
-		Date d2 = simpleDateFormat2.parse(date1);
-		System.out.println(d1);
-		System.out.println(d2);
-		System.out.println(d1.getTime() == d2.getTime());
-	}
-	
-	@Test
 	public void testDynamicParse() throws ParseException {
 		String dateStr1 = "2020-12-23T12:51:18.456019+0200";
 		String dateStr2 = "2020-12-23T12:51:18.456+0200";
@@ -114,17 +104,17 @@ public class DateUtilsTest {
 				String year = matcher.group(1);
 				String month = matcher.group(2);
 				String day = matcher.group(3);
-				String t =  matcher.group(4);
-				String hour =  matcher.group(5);
-				String minute =  matcher.group(6);
-				String second =  matcher.group(7);
-				String milli =  matcher.group(8);
-				String zone =  matcher.group(9);
+				String t = matcher.group(4);
+				String hour = matcher.group(5);
+				String minute = matcher.group(6);
+				String second = matcher.group(7);
+				String milli = matcher.group(8);
+				String zone = matcher.group(9);
 				
 				StringBuilder format = new StringBuilder();
 				//yyyy
 				if (isNotBlank(year)) {
-					for(int i=0; i< year.length(); i++) {
+					for (int i = 0; i < year.length(); i++) {
 						format.append("y");
 					}
 				}
@@ -132,7 +122,7 @@ public class DateUtilsTest {
 				
 				//MM
 				if (isNotBlank(month)) {
-					for(int i=0; i< month.length(); i++) {
+					for (int i = 0; i < month.length(); i++) {
 						format.append("M");
 					}
 				}
@@ -140,7 +130,7 @@ public class DateUtilsTest {
 				
 				//dd
 				if (isNotBlank(day)) {
-					for(int i=0; i< day.length(); i++) {
+					for (int i = 0; i < day.length(); i++) {
 						format.append("d");
 					}
 				}
@@ -154,7 +144,7 @@ public class DateUtilsTest {
 				
 				//HH
 				if (isNotBlank(hour)) {
-					for(int i=0; i< hour.length(); i++) {
+					for (int i = 0; i < hour.length(); i++) {
 						format.append("H");
 					}
 				}
@@ -162,7 +152,7 @@ public class DateUtilsTest {
 				//:mm
 				if (isNotBlank(minute)) {
 					format.append(":");
-					for(int i=0; i< minute.length(); i++) {
+					for (int i = 0; i < minute.length(); i++) {
 						format.append("m");
 					}
 				}
@@ -170,14 +160,14 @@ public class DateUtilsTest {
 				//:ss
 				if (isNotBlank(second)) {
 					format.append(":");
-					for(int i=0; i< second.length(); i++) {
+					for (int i = 0; i < second.length(); i++) {
 						format.append("s");
 					}
 				}
 				//.SSSSSS
 				if (isNotBlank(milli)) {
 					format.append(".");
-					for(int i=0; i< milli.length(); i++) {
+					for (int i = 0; i < milli.length(); i++) {
 						format.append("S");
 					}
 				}
@@ -210,5 +200,49 @@ public class DateUtilsTest {
 		ZonedDateTime zonedDateTime = now.atZone(ZoneId.systemDefault());
 		ZonedDateTime utc = zonedDateTime.withZoneSameInstant(ZoneId.of("UTC"));
 		System.out.println(utc);
+	}
+	
+	@Test
+	public void testDateDiff() {
+		LocalDate begin = LocalDate.of(2021, 05, 25);
+		LocalDate end = LocalDate.of(2021, 05, 18);
+		assertEquals(7, DateUtils.dateDiff(begin, end));
+		assertEquals(-7, DateUtils.dateDiff(end, begin));
+		assertEquals(0, DateUtils.dateDiff(begin, LocalDate.of(2021, 05, 25)));
+		System.out.println(DateUtils.dateDiff(begin, LocalDate.of(2021, 06, 14)));
+	}
+	
+	@Test
+	public void testUTCParse() {
+		//String dateStr = "2021-05-22T02:01:43.003Z";
+		String dateStr = "08/03/2019T16:20:17:717 UTC+05:30";
+		//Pattern utcPattern = Pattern.compile("^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\\.[0-9]+)?(Z)?$");
+		//boolean matches = utcPattern.matcher(dateStr).matches();
+		//System.out.println(matches);
+		Date date = DateUtils.parse(dateStr);
+		
+		System.out.println(date);
+	}
+	
+	@Test
+	public void testFMTGMTparse() throws ParseException {
+		String dateStr = "Sun, 06 Nov 1994 08:49:37 GMT";
+		Date date = DateUtils.parse(dateStr);
+		System.out.println(date);
+		
+		DateFormat df = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss z");
+		df.setTimeZone(TimeZone.getTimeZone("GMT"));
+		date = df.parse("Mon, 16 Apr 2018 00:00:00 GMT+08:00");
+		System.out.println(date);
+	}
+	
+	@Test
+	public void testGMT() throws ParseException {
+		SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH);
+		format.setTimeZone(TimeZone.getTimeZone("GMT"));
+		System.out.println(format.parse("Mon, 03 Jun 2013 07:01:29 GMT"));
+		System.out.println(format.parse("Mon, 16 Apr 2018 00:00:00 GMT+08:00"));
+		System.out.println(DateUtils.parse("Mon, 03 Jun 2013 07:01:29 GMT"));
+		System.out.println(DateUtils.parse("Mon, 16 Apr 2018 00:00:00 GMT+08:00"));
 	}
 }

@@ -1,5 +1,6 @@
 package com.loserico.common.lang.constants;
 
+import java.text.SimpleDateFormat;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -307,8 +308,25 @@ public final class DateConstants {
 	 * Http 请求头中的日期格式<p>
 	 * format for RFC 1123 date string -- "Sun, 06 Nov 1994 08:49:37 GMT"
 	 */
+	//TODO GMT pattern  https://howtodoinjava.com/java/date-time/parse-string-to-date-time-utc-gmt/
+	// https://stackoverflow.com/questions/685377/how-to-check-an-utc-formatted-date-with-a-regular-expression
 	public final static String FMT_RFC1123_FORMAT = "EEE, dd MMM yyyy HH:mm:ss z";
 	public static final DateTimeFormatter DFT_DATETIME_FORMAT_RFC = ofPattern(FMT_RFC1123_FORMAT, ENGLISH);
+	public static final SimpleDateFormat SDT_GMT = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH);
+	static {
+		SDT_GMT.setTimeZone(TimeZone.getTimeZone("GMT"));
+	}
+	
+	/**
+	 * UTC 时间格式<p> 
+	 * 'Z' in date string represents the UTC timezone<p>
+	 * 2021-05-22T02:01:43.003Z
+	 * 2019-03-08T16:20:17:717 UTC+05:30  yyyy-MM-dd’T’HH:mm:ss:SSS z
+	 */
+	public static final Pattern PT_UTC_DATETIME = Pattern.compile("^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\\.[0-9]+)?(Z)?$");
+	public static final String FMT_UTC_DATETIME = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+	public static final String FMT_UTC_DATETIME2 = "yyyy-MM-dd'T'HH:mm:ss.SSS";
+	public static final DateTimeFormatter DFT_UTC_DATETIME = DateTimeFormatter.ofPattern("MM/dd/yyyy'T'HH:mm:ss:SSS z");
 	
 	// ----------------------- 下面是时间类型 ---------------------------------------------------
 	
@@ -344,11 +362,6 @@ public final class DateConstants {
 	 * 2020-12-23T12:51:18.456019+0200
 	 */
 	public static final Pattern PT_ALL = Pattern.compile("(\\d{2,4})-(\\d{1,2})-(\\d{1,2})(T?)\\s*(\\d{1,2}):(\\d{1,2}):(\\d{1,2})\\.?(\\d*)(\\+\\d+)?");
-	
-	
-	public static final String UTC_DATETIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
-	public static final String UTC_DATETIME_FORMAT2 = "yyyy-MM-dd'T'HH:mm:ss.SSS";
-	
 	
 	public static final TimeZone CHINA = TimeZone.getTimeZone("Asia/Shanghai");
 	public static final TimeZone GMT = TimeZone.getTimeZone("GMT");

@@ -8,10 +8,7 @@
         </layout>
     </appender>
     
-    <logger name="com.loserico.search.ElasticUtils" level="debug"/>
-    <logger name="com.loserico.search.builder.ElasticQueryBuilder" level="debug"/>
-    <logger name="com.loserico.search.builder.ElasticSuggestBuilder" level="debug"/>
-    <logger name="com.loserico.search.builder.ElasticContextSuggestBuilder" level="debug"/>
+    <logger name="com.loserico.search" level="debug"/>
     
     <logger name="com.loserico.networking.utils.HttpUtils" level="debug"/>
     <logger name="com.loserico.networking.builder.AbstractRequestBuilder" level="debug"/>

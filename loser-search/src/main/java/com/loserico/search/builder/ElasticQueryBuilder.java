@@ -1,14 +1,13 @@
 package com.loserico.search.builder;
 
-import com.loserico.common.lang.transformer.Transformers;
 import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.json.jackson.JacksonUtils;
 import com.loserico.search.ElasticUtils;
-import com.loserico.search.cache.ElasticCacheUtils;
 import com.loserico.search.enums.Direction;
 import com.loserico.search.enums.SortOrder;
 import com.loserico.search.enums.SortOrder.SortOrderBuilder;
 import com.loserico.search.exception.ElasticQueryException;
+import com.loserico.search.support.SearchHitsSupport;
 import com.loserico.search.vo.PageResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.lucene.search.TotalHits;
@@ -22,15 +21,10 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.json.JSONObject;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.elasticsearch.common.lucene.search.function.CombineFunction.MULTIPLY;
 
 /**
@@ -61,6 +55,16 @@ public final class ElasticQueryBuilder {
 	 * 是否要获取_source
 	 */
 	private boolean fetchSource = true;
+	
+	/**
+	 * 指定查询要返回哪些字段, 可以使用通配符
+	 */
+	private String[] includeSource;
+	
+	/**
+	 * 指定查询要排除哪些字段, 可以使用通配符
+	 */
+	private String[] excludeSource;
 	
 	/**
 	 * 分页相关, 起始位置
@@ -137,17 +141,6 @@ public final class ElasticQueryBuilder {
 		builder.indices = indices;
 		return builder;
 	}
-	
-	/**
-	 * 参数 builder 可以用 org.elasticsearch.index.query.QueryBuilders类提供的各种便利方法来创建
-	 *
-	 * @param builder
-	 * @return QueryBuilder
-	 */
-	/*public QueryBuilder builder(AbstractQueryBuilder builder) {
-		this.builder = builder;
-		return this;
-	}*/
 	
 	/**
 	 * 设置分页属性, 深度分页建议用Search After
@@ -266,6 +259,26 @@ public final class ElasticQueryBuilder {
 	}
 	
 	/**
+	 * 控制返回自己想要的字段, 而不是整个_source, 可以使用通配符
+	 * @param fields
+	 * @return QueryStringBuilder
+	 */
+	public ElasticQueryBuilder inclideSources(String... fields) {
+		this.includeSource = fields;
+		return this;
+	}
+	
+	/**
+	 * 控制要排除哪些返回的字段, 而不是整个_source, 可以使用通配符
+	 * @param fields
+	 * @return QueryStringBuilder
+	 */
+	public ElasticQueryBuilder exclideSources(String... fields) {
+		this.excludeSource = fields;
+		return this;
+	}
+	
+	/**
 	 * 提升或者降低查询的权重
 	 *
 	 * @param boost
@@ -334,36 +347,7 @@ public final class ElasticQueryBuilder {
 			return Collections.emptyList();
 		}
 		
-		//pojo是否标注了@DocId
-		Field id = ElasticCacheUtils.idField(resultType);
-		boolean hasDocId = id != null;
-		//@DocId标注的字段是String类型
-		boolean isStringId = hasDocId && id.getType() == String.class;
-		
-		return (List<T>) Arrays.stream(hits)
-				.filter(Objects::nonNull)
-				.map((hit) -> {
-					//不需要转成POJO的情况
-					if (resultType == null) {
-						return hit.getSourceAsString();
-					}
-					
-					String source = hit.getSourceAsString();
-					if (isBlank(source)) {
-						return null;
-					}
-					
-					T obj = (T) JacksonUtils.toObject(source, resultType);
-					if (hasDocId) {
-						if (isStringId) {
-							ReflectionUtils.setField(id, obj, hit.getId());
-						} else {
-							ReflectionUtils.setField(id, obj, Transformers.convert(hit.getId(), id.getType()));
-						}
-					}
-					
-					return obj;
-				}).collect(toList());
+		return SearchHitsSupport.toList(hits, resultType);
 	}
 	
 	/**
@@ -435,43 +419,13 @@ public final class ElasticQueryBuilder {
 			return PageResult.emptyResult();
 		}
 		
-		//pojo是否标注了@DocId
-		Field id = ElasticCacheUtils.idField(resultType);
-		boolean hasDocId = id != null;
-		//@DocId标注的字段是String类型
-		boolean isStringId = hasDocId && id.getType() == String.class;
-		
-		SearchHit lastHit = hits[hits.length - 1];
 		//拿到本次的sort
-		Object[] sortValues = lastHit.getSortValues();
+		Object[] sortValues = SearchHitsSupport.sortValues(hits);
 		//本次查询得到结果集
-		List<Object> results = Arrays.stream(hits)
-				.filter(Objects::nonNull)
-				.map((hit) -> {
-					//不需要转成POJO的情况
-					if (resultType == null) {
-						return hit.getSourceAsString();
-					}
-					
-					String source = hit.getSourceAsString();
-					if (isBlank(source)) {
-						return null;
-					}
-					
-					T obj = (T) JacksonUtils.toObject(source, resultType);
-					if (hasDocId) {
-						if (isStringId) {
-							ReflectionUtils.setField(id, obj, hit.getId());
-						} else {
-							ReflectionUtils.setField(id, obj, Transformers.convert(hit.getId(), id.getType()));
-						}
-					}
-					
-					return obj;
-				}).collect(toList());
+		List<T> results = SearchHitsSupport.toList(hits, resultType);
 		
 		return PageResult.<T>builder()
-				.results((List<T>)results)
+				.results(results)
 				.sort(sortValues)
 				.build();
 	}
@@ -554,8 +508,9 @@ public final class ElasticQueryBuilder {
 		}
 		
 		SearchRequestBuilder searchRequestBuilder = ElasticUtils.client.prepareSearch(indices)
-				.setQuery(this.builder)
-				.setFetchSource(fetchSource);
+				.setQuery(this.builder);
+		
+		setFetchSource(searchRequestBuilder);
 		
 		/*
 		 * Search After 避免深度分页
@@ -588,6 +543,14 @@ public final class ElasticQueryBuilder {
 	private static void notNull(Object obj, String msg) {
 		if (obj == null) {
 			throw new IllegalArgumentException(msg);
+		}
+	}
+	
+	private void setFetchSource(SearchRequestBuilder searchRequestBuilder) {
+		if (includeSource != null && includeSource.length > 0 || excludeSource != null && excludeSource.length >0) {
+			searchRequestBuilder.setFetchSource(includeSource, excludeSource);
+		} else {
+			searchRequestBuilder.setFetchSource(fetchSource);
 		}
 	}
 }

@@ -1,0 +1,53 @@
+{
+  "took": 3,
+  "timed_out": false,
+  "_shards": {
+    "total": 1,
+    "successful": 1,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 2,
+      "relation": "eq"
+    },
+    "max_score": 11.303033,
+    "hits": [
+      {
+        "_index": "movies",
+        "_type": "_doc",
+        "_id": "72378",
+        "_score": 11.303033,
+        "_source": {
+          "title": "2012",
+          "genre": [
+            "Action",
+            "Drama",
+            "Sci-Fi",
+            "Thriller"
+          ],
+          "@version": "1",
+          "year": 2009,
+          "id": "72378"
+        }
+      },
+      {
+        "_index": "movies",
+        "_type": "_doc",
+        "_id": "105254",
+        "_score": 5.2496996,
+        "_source": {
+          "title": "Crystal Fairy & the Magical Cactus and 2012",
+          "genre": [
+            "Adventure",
+            "Comedy"
+          ],
+          "@version": "1",
+          "year": 2013,
+          "id": "105254"
+        }
+      }
+    ]
+  }
+}

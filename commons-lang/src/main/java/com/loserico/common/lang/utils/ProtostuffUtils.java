@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 限制: 反序列化需要提供Class对象
+ * 限制: 反序列化需要提供Class对象<p>
  * 优势: 对象不需要有默认构造函数也不需要实现Serializble接口
  * <p>
  * Copyright: (C), 2020-10-10 17:31

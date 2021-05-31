@@ -48,7 +48,8 @@ public class FieldDef {
 	private Boolean index;
 	
 	/**
-	 * 如将enabled设置为false, 则无法进行搜索和聚合分析
+	 * 如将enabled设置为false, 则无法进行搜索和聚合分析<p>
+	 * enabled 只能用在 object 类型字段上
 	 */
 	private Boolean enabled;
 	
@@ -182,7 +183,7 @@ public class FieldDef {
 			defMap.put("index", index);
 		}
 		
-		if (enabled != null) {
+		if (enabled != null && fieldType == FieldType.OBJECT) {
 			defMap.put("enabled", enabled);
 		}
 		
@@ -199,14 +200,14 @@ public class FieldDef {
 		}
 		
 		if (analyzer != null) {
-			defMap.put("analyzer", analyzer);
+			defMap.put("analyzer", analyzer.toString());
 		}
 		
 		if (searchAnalyzer != null) {
-			defMap.put("search_analyzer", searchAnalyzer);
+			defMap.put("search_analyzer", searchAnalyzer.toString());
 		}
 		
-		if (copyTo != null) {
+		if (isNotBlank(copyTo)) {
 			defMap.put("copy_to", copyTo);
 		}
 		

@@ -1,13 +1,13 @@
 package com.loserico.search;
 
-import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.networking.utils.HttpUtils;
+import com.loserico.search.ElasticUtils.Admin;
 import com.loserico.search.ElasticUtils.Cluster;
 import com.loserico.search.annotation.DocId;
 import com.loserico.search.builder.AbstractMappingBuilder;
 import com.loserico.search.builder.ElasticIndexMappingBuilder;
+import com.loserico.search.builder.ElasticSettingsBuilder;
 import com.loserico.search.builder.FieldDefBuilder;
-import com.loserico.search.builder.SettingsBuilder;
 import com.loserico.search.enums.Analyzer;
 import com.loserico.search.enums.ContextType;
 import com.loserico.search.enums.Direction;
@@ -24,9 +24,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.cluster.metadata.IndexTemplateMetaData;
-import org.elasticsearch.common.io.stream.NamedWriteable;
 import org.elasticsearch.common.lucene.search.function.CombineFunction;
 import org.elasticsearch.common.xcontent.ToXContent;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -40,12 +38,6 @@ import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
-import org.elasticsearch.search.aggregations.Aggregation;
-import org.elasticsearch.search.aggregations.AggregationBuilders;
-import org.elasticsearch.search.aggregations.Aggregations;
-import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
-import org.elasticsearch.search.aggregations.bucket.terms.StringTerms.Bucket;
-import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.elasticsearch.search.suggest.SuggestBuilders;
 import org.elasticsearch.search.suggest.completion.CompletionSuggestionBuilder;
 import org.elasticsearch.search.suggest.completion.context.CategoryQueryContext;
@@ -69,7 +61,6 @@ import static com.loserico.search.enums.FieldType.TEXT;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.elasticsearch.search.aggregations.AggregationBuilders.*;
 import static org.elasticsearch.search.suggest.SortBy.FREQUENCY;
 import static org.elasticsearch.search.suggest.term.TermSuggestionBuilder.StringDistanceImpl.INTERNAL;
 import static org.junit.Assert.*;
@@ -95,7 +86,7 @@ public class ElasticUtilsTest {
 	
 	@Test
 	public void test11() {
-		boolean created = ElasticUtils.createIndex("rico")
+		boolean created = Admin.createIndex("rico")
 				.mapping(Dynamic.FALSE)
 				.field("name", FieldType.TEXT)
 				.field("income", FieldType.LONG).index(false)
@@ -107,82 +98,8 @@ public class ElasticUtilsTest {
 	
 	@Test
 	public void testDeleteIndex() {
-		boolean deleted = ElasticUtils.deleteIndex("boduo");
+		boolean deleted = Admin.deleteIndex("boduo");
 		System.out.println(deleted);
-	}
-	
-	@Test
-	public void testCreateIndex() {
-		boolean created = ElasticUtils.createIndex("boduo")
-				.mapping(Dynamic.FALSE)
-				.field("name", FieldType.TEXT)
-				.field("income", FieldType.LONG).index(false)
-				.field("carrer", FieldType.TEXT).index(true)
-					.analyzer(Analyzer.IK_MAX_WORD)
-					.searchAnalyzer(Analyzer.IK_SMART)
-				.thenCreate();
-		
-		System.out.println(created);
-	}
-	
-	@Test
-	public void testExistsIndex() {
-		assertTrue(ElasticUtils.existsIndex("dynamic_mapping_test"));
-	}
-	
-	@Test
-	public void testListAllIndices() {
-		List<String> indices = ElasticUtils.listIndices();
-		indices.forEach(System.out::println);
-	}
-	
-	@Test
-	public void testPutMapping() {
-		boolean acknowledged = ElasticUtils.putMapping("rico", Dynamic.FALSE)
-				.copy("movies")
-				.field("title", FieldType.KEYWORD).index(true)
-				.analyzer(Analyzer.ENGLISH)
-				.searchAnalyzer(Analyzer.ENGLISH)
-				.thenCreate();
-		System.out.println(acknowledged);
-	}
-	
-	@Test
-	public void testPutMappingWithDeleteFieldDef() {
-		boolean acknowledged = ElasticUtils.putMapping("rico", Dynamic.TRUE)
-				.copy("movies")
-				.field("title", FieldType.KEYWORD)
-				.index(true)
-				.and()
-				.delete("user", "genre")
-				.thenCreate();
-		System.out.println(acknowledged);
-	}
-	
-	@Test
-	public void testPutMappingAddNewFields() {
-		ElasticUtils.putMapping("boduo", Dynamic.TRUE)
-				.field("fans", FieldType.TEXT)
-				.thenCreate();
-	}
-	
-	@Test
-	public void testPutMappingWithChildField() {
-		/*boolean created = ElasticUtils.createIndex("titles").create();
-		boolean acknowledged = ElasticUtils.putMapping("titles", MappingBuilder.newInstance()
-				.field(FieldDef.builder("title", FieldType.TEXT)
-						.fields(FieldDef.builder("std", FieldType.TEXT)
-								.analyzer(Analyzer.STANDARD)
-								.build())
-						.build()));
-		System.out.println(acknowledged);*/
-		
-		ElasticUtils.deleteIndex("titles");
-		boolean acknowledged = ElasticUtils.createIndex("titles")
-				.mapping()
-				.field("title", FieldType.TEXT)
-				.fields(FieldDef.builder("std", FieldType.TEXT).analyzer(Analyzer.STANDARD))
-				.thenCreate();
 	}
 	
 	@Test
@@ -255,7 +172,7 @@ public class ElasticUtilsTest {
 	
 	@Test
 	public void testSearchAfter() {
-		PageResult<String> pageResult = ElasticUtils.query("users")
+		PageResult<String> pageResult = ElasticUtils.Query.query("users")
 				.size(1)
 				.queryBuilder(matchAllQuery())
 				.addFieldSort("age", Direction.DESC)
@@ -339,20 +256,20 @@ public class ElasticUtilsTest {
 	
 	@Test
 	public void testGetMapping() {
-		Object mapping = ElasticUtils.getMapping("boduo");
+		Object mapping = ElasticUtils.Mappings.getMapping("movies");
 		System.out.println(toJson(mapping));
 	}
 	
 	@Test
 	public void testGetFieldMapping() {
-		Map<String, Map<String, Object>> result = ElasticUtils.getMapping("boduo", "carrer", "fans", "income");
+		Map<String, Map<String, Object>> result = ElasticUtils.Mappings.getMapping("boduo", "carrer", "fans", "income");
 		System.out.println(toJson(result));
 	}
 	
 	
 	@Test
 	public void testSettingHotWarn() {
-		boolean created = ElasticUtils.createIndex("logs-2021-03-29")
+		boolean created = Admin.createIndex("logs-2021-03-29")
 				.settings()
 				.numberOfShards(1)
 				.numberOfReplicas(1)
@@ -363,7 +280,7 @@ public class ElasticUtilsTest {
 	
 	@Test
 	public void testSettingHotWarn2() {
-		boolean created = ElasticUtils.createIndex("logs-2021-03-30")
+		boolean created = Admin.createIndex("logs-2021-03-30")
 				.settings()
 				.numberOfShards(1)
 				.numberOfReplicas(1)
@@ -375,11 +292,11 @@ public class ElasticUtilsTest {
 	
 	@Test
 	public void testPutIndexTemplate() {
-		boolean created = ElasticUtils.putIndexTemplate("demo-index-template")
+		boolean created = ElasticUtils.Admin.putIndexTemplate("demo-index-template")
 				.order(0)
 				.patterns("test*")
 				.version(0)
-				.settings(SettingsBuilder.builder()
+				.settings(ElasticSettingsBuilder.builder()
 						.numberOfShards(1)
 						.numberOfReplicas(1))
 				/*.settings(Settings.builder()
@@ -396,7 +313,7 @@ public class ElasticUtilsTest {
 	
 	@Test
 	public void testPutIndexTemplate2() {
-		boolean created = ElasticUtils.putIndexTemplate("demo-index-template")
+		boolean created = ElasticUtils.Admin.putIndexTemplate("demo-index-template")
 				.order(0)
 				.patterns("test*")
 				.version(0)
@@ -414,18 +331,18 @@ public class ElasticUtilsTest {
 	
 	@Test
 	public void testGetIndexTemplate() {
-		IndexTemplateMetaData indexTemplateMetaData = ElasticUtils.getIndexTemplate("demo-index-template");
+		IndexTemplateMetaData indexTemplateMetaData = ElasticUtils.Admin.getIndexTemplate("demo-index-template");
 		System.out.println(toJson(indexTemplateMetaData));
 	}
 	
 	@Test
 	public void testCreateIndexWithIndexTemplate() {
-		boolean created = ElasticUtils.createIndex("testINdex").create();
+		boolean created = Admin.createIndex("testINdex").create();
 	}
 	
 	@Test
 	public void testDeleteIndexTemplate() {
-		boolean deleted = ElasticUtils.deleteIndexTemplate("demo-index-template");
+		boolean deleted = ElasticUtils.Admin.deleteIndexTemplate("demo-index-template");
 		System.out.println(deleted);
 	}
 	
@@ -449,7 +366,7 @@ public class ElasticUtilsTest {
 	
 	@Test
 	public void testBoolQuery() {
-		List<String> products = ElasticUtils.query("products")
+		List<String> products = ElasticUtils.Query.query("products")
 				.queryBuilder(boolQuery()
 						.must(QueryBuilders.termQuery("price", 30))
 						.filter(QueryBuilders.termQuery("avaliable", true))
@@ -461,7 +378,7 @@ public class ElasticUtilsTest {
 				.queryForList();
 		
 		products.forEach(System.out::println);
-		List<String> blogs = ElasticUtils.query("blogs")
+		List<String> blogs = ElasticUtils.Query.query("blogs")
 				.queryBuilder(boolQuery()
 						.should(matchQuery("title", "apple,ipad").boost(1.1f))
 						.should(matchQuery("Content", "apple,ipad").boost(2f)))
@@ -494,7 +411,7 @@ public class ElasticUtilsTest {
 		BoolQueryBuilder boolQueryBuilder = boolQuery()
 				.must(matchQuery("content", "apple"))
 				.mustNot(matchQuery("content", "pie"));
-		List<String> news = ElasticUtils.query("news")
+		List<String> news = ElasticUtils.Query.query("news")
 				.queryBuilder(boolQueryBuilder)
 				.queryForList();
 		news.forEach(System.out::println);
@@ -505,7 +422,7 @@ public class ElasticUtilsTest {
 	public void testBoolBoostingQuery() {
 		BoostingQueryBuilder queryBuilder = boostingQuery(matchQuery("content", "apple"), matchQuery("content", "pie"));
 		queryBuilder.negativeBoost(0.5f);
-		List<String> news = ElasticUtils.query("news")
+		List<String> news = ElasticUtils.Query.query("news")
 				.queryBuilder(queryBuilder)
 				.queryForList();
 		news.forEach(System.out::println);
@@ -515,7 +432,7 @@ public class ElasticUtilsTest {
 	public void testBoost() {
 		MatchQueryBuilder titleQueryBuilder = matchQuery("title", "apple,ipad").boost(4f);
 		MatchQueryBuilder contentQueryBuilder = matchQuery("content", "apple,ipad").boost(1f);
-		List<Object> blogs = ElasticUtils.query("blogs")
+		List<Object> blogs = ElasticUtils.Query.query("blogs")
 				.queryBuilder(boolQuery().should(titleQueryBuilder).should(contentQueryBuilder))
 				.queryForList();
 		blogs.forEach(System.out::println);
@@ -527,7 +444,7 @@ public class ElasticUtilsTest {
 				.add(matchQuery("title", "Brown fox"))
 				.add(matchQuery("body", "Brown fox"));
 		queryBuilder.tieBreaker(0f);
-		List<String> blogs = ElasticUtils.query("blogs")
+		List<String> blogs = ElasticUtils.Query.query("blogs")
 				.queryBuilder(queryBuilder)
 				.queryForList();
 		blogs.forEach(System.out::println);
@@ -539,7 +456,7 @@ public class ElasticUtilsTest {
 				.tieBreaker(0.2f)
 				.type(MultiMatchQueryBuilder.Type.BEST_FIELDS)
 				.minimumShouldMatch("20%");
-		List<Object> blogs = ElasticUtils.query("blogs")
+		List<Object> blogs = ElasticUtils.Query.query("blogs")
 				.queryBuilder(multiMatchQueryBuilder)
 				.queryForList();
 		blogs.forEach(System.out::println);
@@ -547,7 +464,7 @@ public class ElasticUtilsTest {
 	
 	@Test
 	public void testQueryStringQuery() {
-		List<Object> objects = ElasticUtils.query("users")
+		List<Object> objects = ElasticUtils.Query.query("users")
 				.queryBuilder(queryStringQuery("Ruan Yiming").field("name"))
 				.queryForList();
 		objects.forEach(System.out::println);
@@ -558,7 +475,7 @@ public class ElasticUtilsTest {
 		//QueryStringQueryBuilder queryBuilder = queryStringQuery("name:Ruan AND Yiming");
 		QueryStringQueryBuilder queryBuilder = queryStringQuery("-Ruan +Yiming").field("name");
 		//QueryStringQueryBuilder queryBuilder = queryStringQuery("NOT Ruan Yiming").field("name");
-		List<Object> users = ElasticUtils.query("users")
+		List<Object> users = ElasticUtils.Query.query("users")
 				.queryBuilder(queryBuilder)
 				.queryForList();
 		users.forEach(System.out::println);
@@ -567,7 +484,7 @@ public class ElasticUtilsTest {
 	@Test
 	public void testQueryStringQueryAlertName() {
 		QueryStringQueryBuilder queryStringQueryBuilder = queryStringQuery("alert_name:cve.Apache Struts OGNL Command Execution CVE-2013-2251 redirect");
-		List<Object> results = ElasticUtils.query("event_2021_02_23")
+		List<Object> results = ElasticUtils.Query.query("event_2021_02_23")
 				.queryBuilder(queryStringQueryBuilder)
 				.queryForList();
 		results.forEach(System.out::println);
@@ -575,15 +492,15 @@ public class ElasticUtilsTest {
 	
 	@Test
 	public void testCreateDelteAlias() {
-		boolean indexDeleted = ElasticUtils.deleteIndex("test-2021-01-28");
+		boolean indexDeleted = Admin.deleteIndex("test-2021-01-28");
 		System.out.println("Index deleted: " + indexDeleted);
-		boolean indexCreated = ElasticUtils.createIndex("test-2021-01-28").create();
+		boolean indexCreated = Admin.createIndex("test-2021-01-28").create();
 		System.out.println("Index created: " + indexCreated);
 		assertTrue(indexCreated);
-		boolean created = ElasticUtils.createIndexAlias("test-2021-01-28", "test");
+		boolean created = Admin.createIndexAlias("test-2021-01-28", "test");
 		assertTrue(created);
 		System.out.println("Alias created: " + created);
-		boolean deleted = ElasticUtils.deleteIndexAlias("test-2021-01-28", "test");
+		boolean deleted = Admin.deleteIndexAlias("test-2021-01-28", "test");
 		System.out.println("Alias deleted: " + deleted);
 		assertTrue(deleted);
 	}
@@ -603,7 +520,7 @@ public class ElasticUtilsTest {
 		RangeQueryBuilder builder = rangeQuery("datetime")
 				.gte(begin)
 				.lte(end);
-		Long totalCount = ElasticUtils.query(indices)
+		Long totalCount = ElasticUtils.Query.query(indices)
 				.queryBuilder(builder)
 				.fetchSource(false)
 				.getCount();
@@ -666,8 +583,8 @@ public class ElasticUtilsTest {
 	
 	@Test
 	public void testCompletionSuggestion() {
-		ElasticUtils.deleteIndex("articles");
-		boolean created = ElasticUtils.createIndex("articles")
+		Admin.deleteIndex("articles");
+		boolean created = Admin.createIndex("articles")
 				.mapping()
 				.field("title_completion", COMPLETION)
 				.thenCreate();
@@ -696,12 +613,12 @@ public class ElasticUtilsTest {
 	@SneakyThrows
 	@Test
 	public void testContextCompletion() {
-		ElasticUtils.deleteIndex("comments");
+		Admin.deleteIndex("comments");
 		
 		FieldDefBuilder fieldDefBuilder = FieldDef.builder("comment_autocomplete", COMPLETION)
 				.addContext(ContextType.CATEGORY, "comment_category");
 		
-		ElasticUtils.createIndex("comments")
+		Admin.createIndex("comments")
 				.mapping()
 				.field(fieldDefBuilder)
 				.thenCreate();
@@ -745,7 +662,7 @@ public class ElasticUtilsTest {
 		 * 但是文档在被加入索引的时候, desc字段又是被分词了的, 大写字母转成了小写
 		 * 所以这里term query查desc字段的话必须用小写的iphone
 		 */
-		List<Object> objects = ElasticUtils.query("products")
+		List<Object> objects = ElasticUtils.Query.query("products")
 				.queryBuilder(termQuery("desc", "iphone"))
 				.queryForList();
 		objects.forEach(System.out::println);
@@ -754,7 +671,7 @@ public class ElasticUtilsTest {
 		 * 如果非要精确匹配大小写, 那么可以term query查desc.keyword
 		 * 这是ES的一个多字段特定, 默认会为text类型的字段创建一个keyword类型的子字段
 		 */
-		objects = ElasticUtils.query("products")
+		objects = ElasticUtils.Query.query("products")
 				.queryBuilder(termQuery("desc.keyword", "iPhone"))
 				.queryForList();
 		objects.forEach(System.out::println);
@@ -792,7 +709,7 @@ public class ElasticUtilsTest {
 	
 	@Test
 	public void testMatchQuery() {
-		List<Movie> movies = ElasticUtils.query("movies")
+		List<Movie> movies = ElasticUtils.Query.query("movies")
 				//查询结果纪要包含matrix, 又要包含reload
 				.queryBuilder(matchQuery("title", "Matrix reloaded").operator(Operator.AND))
 				.type(Movie.class)
@@ -810,15 +727,6 @@ public class ElasticUtilsTest {
 				.forEach(System.out::println);
 	}
 	
-	@Test
-	public void testAgg() {
-		SearchResponse searchResponse = ElasticUtils.client.prepareSearch("cars")
-				.addAggregation(AggregationBuilders.count("popular_colors").field("color.keyword"))
-				.get();
-		Aggregations aggregations = searchResponse.getAggregations();
-		System.out.println(toJson(aggregations));
-	}
-	
 	/**
 	 * apple pie
 	 * apple Mac
@@ -826,7 +734,7 @@ public class ElasticUtilsTest {
 	 */
 	@Test
 	public void testSearchAppleCompany() {
-		ElasticUtils.query("news")
+		ElasticUtils.Query.query("news")
 				.queryBuilder(boolQuery()
 						.must(matchQuery("content", "apple"))
 						.mustNot(matchQuery("content", "pie")))
@@ -839,11 +747,11 @@ public class ElasticUtilsTest {
 	 * 演示了通过boosting控制排序
 	 */
 	@Test
-	public void testBoostingquery() {
+	public void testBoostingQuery() {
 		MatchQueryBuilder positiveQuery = matchQuery("content", "apple");
 		MatchQueryBuilder negaitiveQuery = matchQuery("content", "pie");
 		BoostingQueryBuilder boostingQueryBuilder = boostingQuery(positiveQuery, negaitiveQuery);
-		ElasticUtils.query("news")
+		ElasticUtils.Query.query("news")
 				.queryBuilder(boostingQueryBuilder)
 				.queryForList().forEach(System.out::println);
 	}
@@ -853,7 +761,7 @@ public class ElasticUtilsTest {
 		MultiMatchQueryBuilder multiMatchQueryBuilder = multiMatchQuery("Quick pets", "title", "body")
 				.tieBreaker(0.2f)
 				.minimumShouldMatch("20%");
-		ElasticUtils.query("blogs")
+		ElasticUtils.Query.query("blogs")
 				.queryBuilder(multiMatchQueryBuilder)
 				.queryForList()
 				.forEach(System.out::println);
@@ -861,7 +769,7 @@ public class ElasticUtilsTest {
 	
 	@Test
 	public void testMUltiMatchCrossField() {
-		ElasticUtils.deleteIndex("address");
+		Admin.deleteIndex("address");
 		ElasticUtils.index("address", "{\"street\": \"5 Poland Street\", \"city\": \"Lodon\", \"country\": \"United Kingdom\", \"postcode\": \"W1V 3DG\"}", "1");
 		ElasticUtils.index("address", "{\"street\": \"5 Poland Street\", \"city\": \"Berminhan\", \"country\": \"United Kingdom\", \"postcode\": \"W2V 3DG\"}", "2");
 		
@@ -869,7 +777,7 @@ public class ElasticUtilsTest {
 				.type(MultiMatchQueryBuilder.Type.CROSS_FIELDS)
 				.operator(Operator.AND);
 		
-		List<Object> address = ElasticUtils.query("address")
+		List<Object> address = ElasticUtils.Query.query("address")
 				.queryBuilder(queryBuilder)
 				.queryForList();
 		
@@ -897,7 +805,7 @@ public class ElasticUtilsTest {
 	
 	@Test
 	public void testFunctionScoreQuery() {
-		ElasticUtils.deleteIndex("blogs");
+		Admin.deleteIndex("blogs");
 		ElasticUtils.index("blogs", "{\"title\": \"About popularity\", \"content\": \"In this post we will talk about...\", \"votes\": 0 }", "1");
 		ElasticUtils.index("blogs", "{\"title\": \"About popularity\", \"content\": \"In this post we will talk about...\", \"votes\": 100 }", "2");
 		ElasticUtils.index("blogs", "{\"title\": \"About popularity\", \"content\": \"In this post we will talk about...\", \"votes\": 1000000 }", "3");
@@ -909,7 +817,7 @@ public class ElasticUtilsTest {
 		
 		objects.forEach(System.out::println);
 		System.out.println("-----------------");
-		ElasticUtils.query("blogs")
+		ElasticUtils.Query.query("blogs")
 				.queryBuilder(multiMatchQuery("popularity", "title", "content"))
 				.queryForList()
 				.forEach(System.out::println);
@@ -917,7 +825,7 @@ public class ElasticUtilsTest {
 	
 	@Test
 	public void testRandomScoreQuery() {
-		ElasticUtils.deleteIndex("blogs");
+		Admin.deleteIndex("blogs");
 		ElasticUtils.index("blogs", "{\"title\": \"About popularity\", \"content\": \"In this post we will talk about...\", \"votes\": 0 }", "1");
 		ElasticUtils.index("blogs", "{\"title\": \"About popularity\", \"content\": \"In this post we will talk about...\", \"votes\": 100 }", "2");
 		ElasticUtils.index("blogs", "{\"title\": \"About popularity\", \"content\": \"In this post we will talk about...\", \"votes\": 1000000 }", "3");
@@ -935,9 +843,9 @@ public class ElasticUtilsTest {
 	
 	@Test
 	public void testClusterFailover() {
-		ElasticUtils.deleteIndex("tech_blogs");
-		boolean created = ElasticUtils.createIndex("tech_blogs")
-				.settings(SettingsBuilder.builder()
+		Admin.deleteIndex("tech_blogs");
+		boolean created = Admin.createIndex("tech_blogs")
+				.settings(ElasticSettingsBuilder.builder()
 						.numberOfShards(3)
 						.numberOfReplicas(1)
 						.defaultPipeline("blog_pipeline"))
@@ -955,74 +863,6 @@ public class ElasticUtilsTest {
 		System.out.println(doc);
 	}
 	
-	/**
-	 * terms聚合结果格式
-	 * {
-	 * "key" : "CH",
-	 * "doc_count" : 691
-	 * }
-	 */
-	@Test
-	public void testTermsAgg() {
-		SearchResponse response = ElasticUtils.client.prepareSearch("employees")
-				.setSize(0)
-				.addAggregation(terms("jobs").field("job.keyword"))
-				.get();
-		Aggregations aggregations = response.getAggregations();
-		for (Aggregation aggregation : aggregations) {
-			Map<String, Object> metaData = aggregation.getMetaData();
-			String name = aggregation.getName();
-			System.out.println("Aggregation: " + name);
-			List<Bucket> buckets = ((StringTerms) aggregation).getBuckets();
-			for (Bucket bucket : buckets) {
-				String key = bucket.getKeyAsString();
-				long docCount = bucket.getDocCount();
-				System.out.println("Key: " + key + ", Doc Count: " + docCount);
-			}
-		}
-	}
-	
-	/**
-	 * 查看航班目的地的统计信息, 增加平均, 最高最低价格
-	 */
-	@Test
-	public void testFlightTermsMinMaxAvg() {
-		TermsAggregationBuilder termsAggregationBuilder = terms("flight_dest").field("DestCountry")
-				.subAggregation(avg("avg_price").field("AvgTicketPrice"))
-				.subAggregation(max("max_price").field("AvgTicketPrice"))
-				.subAggregation(min("min_price").field("AvgTicketPrice"));
-		
-		SearchResponse response = ElasticUtils.client.prepareSearch("kibana_sample_data_flights")
-				.setSize(0)
-				.addAggregation(termsAggregationBuilder)
-				.get();
-		
-		Aggregations aggregations = response.getAggregations();
-		for (Aggregation aggregation : aggregations) {
-			System.out.println("Aggregation: " + aggregation.getName());
-			List<Bucket> buckets = ((StringTerms) aggregation).getBuckets();
-			for (Bucket bucket : buckets) {
-				String key = bucket.getKeyAsString();
-				long docCount = bucket.getDocCount();
-				System.out.println("Key: " + key + ", Doc Count: " + docCount);
-				
-				Aggregations subAggs = bucket.getAggregations();
-				if (subAggs != null) {
-					for (Aggregation subAgg : subAggs) {
-						System.out.println(toJson(subAgg));
-						String name = subAgg.getName(); //max_price
-						String writeableName = ((NamedWriteable) subAgg).getWriteableName(); //max min 等聚合的类型
-						Object value = ReflectionUtils.getFieldValue(writeableName, subAgg);
-						if (writeableName.equals("avg")) {
-							value = ReflectionUtils.invokeMethod(subAgg, "getValue");
-						}
-						System.out.println(writeableName + ":" + value);
-					}
-				}
-			}
-		}
-	}
-	
 	@Test
 	public void testUpdateByQuery() {
 		ElasticUtils.updateByQuery("blogs");
@@ -1031,35 +871,35 @@ public class ElasticUtilsTest {
 	@SneakyThrows
 	@Test
 	public void testReindex() {
-		ElasticUtils.deleteIndex("blogs_fix");
+		Admin.deleteIndex("blogs_fix");
 		AbstractMappingBuilder mappingBuilder = ElasticIndexMappingBuilder.newInstance()
 				.field("content", TEXT)
 				.fields(FieldDefBuilder.builder("english", TEXT).analyzer(Analyzer.ENGLISH))
 				.field("keyword", KEYWORD)
 				.and();
 		
-		boolean created = ElasticUtils.createIndex("blogs_fix")
+		boolean created = Admin.createIndex("blogs_fix")
 				.mapping(mappingBuilder)
-				.thenCreate();
+				.create();
 		
-		BulkByScrollResponse response = ElasticUtils.reindex("blogs", "blogs_fix")
+		BulkByScrollResponse response = ElasticUtils.Admin.reindex("blogs", "blogs_fix")
 				.filter(matchQuery("content", "Hadoop"))
 				.size(1000)
 				.slices(8)
 				.get();
 		TimeUnit.SECONDS.sleep(1);
-		List<Object> blogsFix = ElasticUtils.query("blogs_fix").queryForList();
+		List<Object> blogsFix = ElasticUtils.Query.query("blogs_fix").queryForList();
 		blogsFix.forEach(System.out::println);
 	}
 	
 	@Test
 	public void testReindexHuge() {
-		boolean created = ElasticUtils.createIndex("event_xxx")
+		boolean created = Admin.createIndex("event_xxx")
 				.mapping()
 				.copy("event_2021_03_08")
 				.thenCreate();
 		long begin = System.currentTimeMillis();
-		BulkByScrollResponse response = ElasticUtils.reindex("event_2021_03_08", "event_xxx")
+		BulkByScrollResponse response = ElasticUtils.Admin.reindex("event_2021_03_08", "event_xxx")
 				.slices(8)
 				.size(1000)
 				.get();

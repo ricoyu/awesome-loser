@@ -52,12 +52,12 @@ public final class AuthUtils {
 	public static final String AUTH_USERNAME_TOKEN_HASH = "auth:username:token";
 	
 	/**
-	 * 根据token获取用户名
+	 * 根据token获取用户名的 Redis Key
 	 */
 	public static final String AUTH_TOKEN_USERNAME_HASH = "auth:token:username";
 	
 	/**
-	 * 根据token获取userdetails, Spring Security的UserDetails对象
+	 * 根据token获取userdetails Redis Key, Spring Security的UserDetails对象
 	 */
 	public static final String AUTH_TOKEN_USERDETAILS_HASH = "auth:token:userdetails";
 	
@@ -67,7 +67,7 @@ public final class AuthUtils {
 	public static final String AUTH_TOKEN_AUTHORITIES_HASH = "auth:token:authorities";
 	
 	/**
-	 * 根据token获取loginInfo, 这是调用login时传入的额外信息, 如设备ID, IP地址等等
+	 * 根据token获取loginInfo Redis Key, 这是调用login时传入的额外信息, 如设备ID, IP地址等等
 	 */
 	public static final String AUTH_TOKEN_LOGIN_INFO_HASH = "auth:token:login:info";
 	
@@ -82,6 +82,11 @@ public final class AuthUtils {
 	 * 格式: {token:loginInfo, token:loginInfo, ...}
 	 */
 	public static final String AUTH_TOKEN_EXPIRE_CHANNEL = "auth:token:expired";
+	
+	/**
+	 * 用户主动退出登录或者Token过期, 这个channel都会发通知
+	 */
+	public static final String AUTH_LOGOUT_CHANNEL = "auth:logout:channel";
 	
 	/**
 	 * 是否自动刷新token
@@ -121,6 +126,7 @@ public final class AuthUtils {
 				toJson(userdetails),
 				toJson(authorities),
 				additionalInfo);
+		
 		String resultJson = StringUtils.toString(result);
 		T lastLoginInfo = JsonPathUtils.readNode(resultJson, "$.lastLoginInfo");
 		boolean success = JsonPathUtils.readNode(resultJson, "$.success");
@@ -150,7 +156,6 @@ public final class AuthUtils {
 	 * token过期, 返回map的key是token, value是LoginInfo
 	 *
 	 * @return
-	 * @on
 	 */
 	public static <T> Map<String, T> clearExpired() {
 		log.info("Start cleaning token...");
@@ -168,7 +173,6 @@ public final class AuthUtils {
 	 * </pre>
 	 *
 	 * @param token
-	 * @on
 	 */
 	public static String auth(String token) {
 		Objects.requireNonNull(token, "token cannot be null");
@@ -183,7 +187,7 @@ public final class AuthUtils {
 	
 	/**
 	 * 返回0表示这个username没有登录
-	 * 返回-1表示usernameTtl检查的时候发现这个用户登录已经过期, 同时会清理其登录信息
+	 * 返回-1表示username Ttl检查的时候发现这个用户登录已经过期, 同时会清理其登录信息
 	 * 返回这个username对应的token剩余多少秒过期
 	 *
 	 * @param username

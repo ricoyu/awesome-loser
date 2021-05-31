@@ -1,5 +1,6 @@
 package com.loserico.search.enums;
 
+import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 
@@ -13,6 +14,7 @@ import org.elasticsearch.search.sort.SortBuilders;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
+@Slf4j
 public class SortOrder {
 	
 	private SortType sortType;
@@ -25,7 +27,8 @@ public class SortOrder {
 	private Direction direction = Direction.ASC;
 	
 	
-	private SortOrder() {}
+	private SortOrder() {
+	}
 	
 	private SortOrder(SortType sortType) {
 		this.sortType = sortType;
@@ -33,6 +36,7 @@ public class SortOrder {
 	
 	/**
 	 * 为 SearchRequestBuilder 添加排序规则
+	 *
 	 * @param builder
 	 */
 	public void addTo(SearchRequestBuilder builder) {
@@ -88,6 +92,7 @@ public class SortOrder {
 		
 		/**
 		 * 升序排列
+		 *
 		 * @return
 		 */
 		public SortOrder asc() {
@@ -99,12 +104,33 @@ public class SortOrder {
 		
 		/**
 		 * 降序排列
+		 *
 		 * @return
 		 */
 		public SortOrder desc() {
 			SortOrder sortOrder = new SortOrder(sortType);
 			sortOrder.direction = Direction.ASC;
 			sortOrder.field = field;
+			return sortOrder;
+		}
+		
+		/**
+		 * 指定字符串排序规则
+		 * @param direction
+		 * @return SortOrder
+		 */
+		public SortOrder direction(String direction) {
+			SortOrder sortOrder = new SortOrder(sortType);
+			sortOrder.field = field;
+			if (Direction.ASC.name().equalsIgnoreCase(direction)) {
+				sortOrder.direction = Direction.ASC;
+			} else if (Direction.DESC.name().equalsIgnoreCase(direction)) {
+				sortOrder.direction = Direction.DESC;
+			} else {
+				log.error("Sort direction can only be asc, desc, your's {}", direction);
+				throw new IllegalArgumentException("Sort direction can only be asc, desc, your's " + direction);
+			}
+			
 			return sortOrder;
 		}
 	}

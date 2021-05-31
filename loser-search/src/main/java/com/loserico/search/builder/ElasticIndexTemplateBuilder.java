@@ -48,7 +48,7 @@ public final class ElasticIndexTemplateBuilder {
 	 * <li/>number_of_replicas
 	 * </ol>
 	 */
-	private SettingsBuilder settings;
+	private ElasticSettingsBuilder settings;
 	
 	/**
 	 * 添加Mappings
@@ -112,7 +112,7 @@ public final class ElasticIndexTemplateBuilder {
 	 * @param settings
 	 * @return
 	 */
-	public ElasticIndexTemplateBuilder settings(SettingsBuilder settings) {
+	public ElasticIndexTemplateBuilder settings(ElasticSettingsBuilder settings) {
 		this.settings = settings;
 		return this;
 	}

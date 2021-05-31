@@ -11,7 +11,7 @@
         <groupId>com.loserico</groupId>
         <artifactId>awesome-loser</artifactId>
         <relativePath>../pom.xml</relativePath>
-        <version>4.9.0</version>
+        <version>4.9.1</version>
     </parent>
 
     <dependencies>
@@ -43,6 +43,11 @@
         <dependency>
             <groupId>com.loserico</groupId>
             <artifactId>loser-orm</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.loserico</groupId>
+            <artifactId>loser-networking</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

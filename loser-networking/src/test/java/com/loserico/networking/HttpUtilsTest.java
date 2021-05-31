@@ -1,6 +1,8 @@
 package com.loserico.networking;
 
+import com.loserico.common.lang.utils.IOUtils;
 import com.loserico.json.jackson.JacksonUtils;
+import com.loserico.json.jsonpath.JsonPathUtils;
 import com.loserico.networking.enums.Scheme;
 import com.loserico.networking.utils.HttpUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -101,11 +103,44 @@ public class HttpUtilsTest {
 	
 	@Test
 	public void testFormSubmit() {
-		Object response = HttpUtils.form("http://localhost:8080/upload")
-				.file("file", Paths.get("D:\\Downloads\\redis-5.0.8.tar.gz").toFile())
-				.formData("name", "俞雪华")
+		Object response = HttpUtils.form("http://localhost:8080/form-submit")
+				.formData("switcher", true)
 				.request();
 		System.out.println(response);
+	}
+	
+	@Test
+	public void testFileUpload() {
+		Object response = HttpUtils.form("http://localhost:8080/upload")
+				.file("file", Paths.get("D:\\Software\\redis-5.0.8.tar.gz").toFile())
+				.formData("name", "俞雪华")
+				.formData("switcher", true)
+				.request();
+		System.out.println(response);
+	}
+	
+	@Test
+	public void testFormSubmit2() {
+		String json = HttpUtils.get("http://10.10.26.22:8090/token/get").request();
+		String token = JsonPathUtils.readNode(json, "token");
+		Object result = HttpUtils.form("http://10.10.26.22:8090/tasks/create/file")
+				.bearerAuth(token)
+				.file("file", IOUtils.readFile("D://ThreatEventViewServiceImpl.class"))
+				//.param("priority", 3)
+				.formData("priority", 3)
+				.request();
+		System.out.println(result);
+	}
+	
+	@Test
+	public void testSwitch() {
+		String json = HttpUtils.get("http://10.10.26.22:8090/token/get").request();
+		String token = JsonPathUtils.readNode(json, "token");
+		Object result = HttpUtils.form("http://10.10.26.22:8090/av/set/switch")
+				.bearerAuth(token)
+				.formData("switch", true)
+				.request();
+		System.out.println(result);
 	}
 	
 	@Test
@@ -177,4 +212,12 @@ public class HttpUtilsTest {
 				.request();
 		System.out.println(response);
 	}
+	
+	@Test
+	public void testAuth() {
+		String responseJson = HttpUtils.get("http://localhost:8083/pic-code").request();
+		String codeId = JsonPathUtils.readNode(responseJson, "$.data.codeId");
+		
+	}
+	
 }

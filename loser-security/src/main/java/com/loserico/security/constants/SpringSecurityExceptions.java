@@ -2,17 +2,19 @@ package com.loserico.security.constants;
 
 import com.loserico.common.lang.errors.ErrorType;
 import com.loserico.common.lang.errors.ErrorTypes;
+import org.springframework.security.authentication.AccountExpiredException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
 
-import javax.security.auth.login.AccountExpiredException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import static com.loserico.common.lang.errors.ErrorTypes.ACCOUNT_DISABLED;
 import static com.loserico.common.lang.errors.ErrorTypes.ACCOUNT_EXPIRED;
-import static com.loserico.common.lang.errors.ErrorTypes.ACCOUNT_LOCKED_CODE;
+import static com.loserico.common.lang.errors.ErrorTypes.ACCOUNT_LOCKED;
+import static com.loserico.common.lang.errors.ErrorTypes.PASSWORD_EXPIRED;
 
 /**
  * Spring Security常见异常与ErrorType之间的映射关系
@@ -31,17 +33,18 @@ public final class SpringSecurityExceptions {
 	
 	static {
 		ERRYR_TYPES.put(BadCredentialsException.class, ErrorTypes.USERNAME_PASSWORD_MISMATCH);
-		ERRYR_TYPES.put(LockedException.class, ACCOUNT_LOCKED_CODE);
+		ERRYR_TYPES.put(LockedException.class, ACCOUNT_LOCKED);
+		ERRYR_TYPES.put(CredentialsExpiredException.class, PASSWORD_EXPIRED);
 		ERRYR_TYPES.put(DisabledException.class, ACCOUNT_DISABLED);
 		ERRYR_TYPES.put(AccountExpiredException.class, ACCOUNT_EXPIRED);
 	}
 	
 	/**
 	 * 返回这个异常类对应的错误码对象
-	 * @param exceptionName
+	 * @param exceptionClass
 	 * @return ErrorType
 	 */
-	public static ErrorType errorType(String exceptionName) {
-		return ERRYR_TYPES.get(exceptionName);
+	public static ErrorType errorType(Class exceptionClass) {
+		return ERRYR_TYPES.get(exceptionClass);
 	}
 }

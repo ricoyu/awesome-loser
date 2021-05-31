@@ -1,6 +1,6 @@
 package com.loserico.validation.validation;
 
-import com.loserico.networking.utils.NetUtils;
+import com.loserico.networking.utils.IPUtils;
 import com.loserico.validation.enums.IPCategory;
 import com.loserico.validation.validation.annotation.IP;
 
@@ -52,12 +52,12 @@ public class IPValidator implements ConstraintValidator<IP, String> {
 		boolean isValid = false;
 		
 		if (category == IPCategory.IP_V4) {
-			isValid = NetUtils.isValidIpV4(ip);
+			isValid = IPUtils.isValidIpV4(ip);
 		}
 		if (category == IPCategory.IP_V6) {
-			isValid = NetUtils.isValidIpV6(ip);
+			isValid = IPUtils.isValidIpV6(ip);
 		} else {
-			isValid = NetUtils.isValidIpV4(ip) || NetUtils.isValidIpV6(ip);
+			isValid = IPUtils.isValidIpV4(ip) || IPUtils.isValidIpV6(ip);
 		}
 		
 		if (!isValid) {

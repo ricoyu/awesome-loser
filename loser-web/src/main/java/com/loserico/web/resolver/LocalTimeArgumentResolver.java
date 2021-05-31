@@ -1,6 +1,6 @@
 package com.loserico.web.resolver;
 
-import com.loserico.common.lang.utils.RegexUtils;
+import com.loserico.common.lang.utils.DateUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
@@ -10,8 +10,6 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.util.regex.Pattern;
 
 /**
  * 支持Spring Controller LocalTime类型参数绑定 
@@ -27,8 +25,6 @@ import java.util.regex.Pattern;
  */
 public class LocalTimeArgumentResolver implements HandlerMethodArgumentResolver {
 	
-	private static final Pattern ISO_LOCAL_TIME_PATTERN = Pattern.compile("\\d{4}-\\d{2}-\\d{2}");
-
 	@Override
 	public boolean supportsParameter(MethodParameter parameter) {
 		return LocalTime.class.isAssignableFrom(parameter.getParameterType());
@@ -45,11 +41,6 @@ public class LocalTimeArgumentResolver implements HandlerMethodArgumentResolver 
 			return null;
 		}
 
-		LocalTime result = null;
-		if (RegexUtils.matches(ISO_LOCAL_TIME_PATTERN, value)) {
-			result = LocalTime.parse(value, DateTimeFormatter.ISO_TIME);
-		}
-
-		return result;
+		return DateUtils.toLocalTime(value);
 	}
 }

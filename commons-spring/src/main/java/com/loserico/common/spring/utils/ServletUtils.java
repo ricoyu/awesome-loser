@@ -30,6 +30,7 @@ import static com.loserico.networking.constants.NetworkConstant.HTTP_HEADER_WL_P
 import static com.loserico.networking.constants.NetworkConstant.HTTP_HEADER_X_FORWARDED_FOR;
 import static com.loserico.networking.constants.NetworkConstant.HTTP_HEADER_X_REAL_IP;
 import static com.loserico.networking.constants.NetworkConstant.UNKNOWN;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 /**
  * Spring 环境下读写Http Servlet相关接口
@@ -283,20 +284,6 @@ public final class ServletUtils {
 	}
 	
 	/**
-	 * 获取客户端的IP
-	 *
-	 * @param request
-	 * @return String
-	 */
-	public static String getRemortIP(HttpServletRequest request) {
-		String xForwardedFor = request.getHeader(HTTP_HEADER_X_FORWARDED_FOR);
-		if (xForwardedFor == null) {
-			return request.getRemoteAddr();
-		}
-		return xForwardedFor;
-	}
-	
-	/**
 	 * 获取用户真实IP地址
 	 * <p>
 	 * 不使用request.getRemoteAddr()的原因是有可能用户使用了代理软件方式避免真实IP地址.<p>
@@ -469,7 +456,7 @@ public final class ServletUtils {
 		
 		if (params.size() > 0) {
 			for (Map.Entry<String, Object> entry : params.entrySet()) {
-				if (org.apache.commons.lang3.StringUtils.isNotEmpty(sb2.toString())) {
+				if (isNotEmpty(sb2.toString())) {
 					sb2.append("&");
 				}
 				sb2.append(entry.getKey() + "=" + entry.getValue());
@@ -522,9 +509,9 @@ public final class ServletUtils {
 			String k = (String) sign.getKey();
 			String v = (String) sign.getValue();
 			
-			if (org.apache.commons.lang3.StringUtils.isNotEmpty(k) && org.apache.commons.lang3.StringUtils.isNotEmpty(v)) {
+			if (isNotEmpty(k) && isNotEmpty(v)) {
 				
-				if (org.apache.commons.lang3.StringUtils.isNotEmpty(sb.toString())) {
+				if (isNotEmpty(sb.toString())) {
 					sb.append("&");
 				}
 				
@@ -534,36 +521,6 @@ public final class ServletUtils {
 			}
 		}
 		return sb.toString();
-	}
-	
-	
-	/**
-	 * 读取HttpServletRequest Body
-	 */
-	public static String bodyString(HttpServletRequest request) {
-		BufferedReader br = null;
-		StringBuilder sb = new StringBuilder();
-		
-		try {
-			br = request.getReader();
-			String str = null;
-			while ((str = br.readLine()) != null) {
-				sb.append(str);
-			}
-			br.close();
-		} catch (IOException e) {
-			log.error("获取body参数失败", e);
-		} finally {
-			if (null != br) {
-				try {
-					br.close();
-				} catch (IOException e) {
-					log.error("获取body参数失败", e);
-				}
-			}
-		}
-		
-		return sb.toString().replaceAll("\r|\n|\t", "");
 	}
 	
 	public static class CookieBuilder {
@@ -655,18 +612,6 @@ public final class ServletUtils {
 			return cookie;
 		}
 	}
-	
-	/*private static HttpServletRequest getRequest() {
-		return ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-	}
-	
-	private static HttpServletResponse getResponse() {
-		return ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getResponse();
-	}*/
-	
-	/*private static HttpSession getSession() {
-		return getRequest().getSession();
-	}*/
 	
 	private static Map<String, Object> handleServletParameter(HttpServletRequest request) {
 		Map<String, String[]> requestParameter = request.getParameterMap();

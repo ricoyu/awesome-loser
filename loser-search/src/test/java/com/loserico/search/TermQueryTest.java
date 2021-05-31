@@ -26,8 +26,8 @@ public class TermQueryTest {
 	
 	@Test
 	public void testTermQuery() {
-		ElasticUtils.deleteIndex("products");
-		boolean created = ElasticUtils.createIndex("products")
+		ElasticUtils.Admin.deleteIndex("products");
+		boolean created = ElasticUtils.Admin.createIndex("products")
 				.mapping()
 				.field("desc", FieldType.KEYWORD)
 				.thenCreate();
@@ -45,7 +45,7 @@ public class TermQueryTest {
 	
 	@Test
 	public void testQuery() {
-		List<String> sources = ElasticUtils.query("products")
+		List<String> sources = ElasticUtils.Query.query("products")
 				.queryBuilder(QueryBuilders.termQuery("desc", "iphone"))
 				.fetchSource(true)
 				.boost(1.2f)
@@ -54,11 +54,17 @@ public class TermQueryTest {
 				.addSort(SortOrder.fieldSort("desc.keyword").desc())
 				.queryForList();
 		sources.forEach(System.out::println);
+		
+		List<Object> products = ElasticUtils.Query.termQuery("products")
+				.query("desc", "iphone")
+				.fetchSource(true)
+				.sort("desc.keyword:desc")
+				.queryForList();
 	}
 	
 	@Test
 	public void testQuery2() {
-		Product product = ElasticUtils.query("products")
+		Product product = ElasticUtils.Query.query("products")
 				.queryBuilder(QueryBuilders.termQuery("productID", "jodl"))
 				.type(Product.class)
 				.fetchSource(true)
@@ -68,7 +74,7 @@ public class TermQueryTest {
 	
 	@Test
 	public void testMatchQuery() {
-		List<String> movies = ElasticUtils.query("movies")
+		List<String> movies = ElasticUtils.Query.query("movies")
 				.queryBuilder(QueryBuilders.matchQuery("title", "Matrix reloaded")
 						.minimumShouldMatch("2"))
 				.queryForList();
@@ -79,7 +85,7 @@ public class TermQueryTest {
 	
 	@Test
 	public void testMatchQuery2() {
-		List<String> products = ElasticUtils.query("products")
+		List<String> products = ElasticUtils.Query.query("products")
 				.queryBuilder(QueryBuilders.rangeQuery("date")
 						.gte("now-1y"))
 				.queryForList();
@@ -88,7 +94,7 @@ public class TermQueryTest {
 	
 	@Test
 	public void testExists() {
-		List<String> products = ElasticUtils.query("products")
+		List<String> products = ElasticUtils.Query.query("products")
 				.queryBuilder(QueryBuilders.existsQuery("productID")) //查询productID值非空
 				.queryForList();
 		products.forEach(System.out::println);

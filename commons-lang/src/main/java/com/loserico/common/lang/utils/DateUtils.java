@@ -18,15 +18,99 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.loserico.common.lang.constants.DateConstants.*;
+import static com.loserico.common.lang.constants.DateConstants.DFT_DATETIME_FORMAT_RFC;
+import static com.loserico.common.lang.constants.DateConstants.DFT_UTC_DATETIME;
+import static com.loserico.common.lang.constants.DateConstants.DTF_DATETIME_FORMAT_EN;
+import static com.loserico.common.lang.constants.DateConstants.DTF_DATETIME_FORMAT_EN_1;
+import static com.loserico.common.lang.constants.DateConstants.DTF_DATETIME_FORMAT_EN_2;
+import static com.loserico.common.lang.constants.DateConstants.DTF_DATETIME_FORMAT_EN_3;
+import static com.loserico.common.lang.constants.DateConstants.DTF_DATETIME_FORMAT_EN_4;
+import static com.loserico.common.lang.constants.DateConstants.DTF_DATETIME_FORMAT_EN_5;
+import static com.loserico.common.lang.constants.DateConstants.DTF_DATETIME_FORMAT_EN_6;
+import static com.loserico.common.lang.constants.DateConstants.DTF_DATETIME_FORMAT_EN_7;
+import static com.loserico.common.lang.constants.DateConstants.DTF_DATETIME_FORMAT_EN_8;
+import static com.loserico.common.lang.constants.DateConstants.DTF_DATETIME_FORMAT_EN_9;
+import static com.loserico.common.lang.constants.DateConstants.DTF_DATE_CONCISE;
+import static com.loserico.common.lang.constants.DateConstants.DTF_DATE_FORMAT_EN;
+import static com.loserico.common.lang.constants.DateConstants.DTF_DATE_FORMAT_EN_1;
+import static com.loserico.common.lang.constants.DateConstants.DTF_DATE_FORMAT_EN_2;
+import static com.loserico.common.lang.constants.DateConstants.DTF_DATE_FORMAT_EN_3;
+import static com.loserico.common.lang.constants.DateConstants.DTF_DATE_FORMAT_EN_4;
+import static com.loserico.common.lang.constants.DateConstants.DTF_DATE_FORMAT_EN_5;
+import static com.loserico.common.lang.constants.DateConstants.DTF_DATE_FORMAT_EN_6;
+import static com.loserico.common.lang.constants.DateConstants.DTF_DATE_FORMAT_EN_7;
+import static com.loserico.common.lang.constants.DateConstants.DTF_DATE_FORMAT_EN_LOCALE_4;
+import static com.loserico.common.lang.constants.DateConstants.DTF_ISO_DATE;
+import static com.loserico.common.lang.constants.DateConstants.DTF_ISO_DATETIME;
+import static com.loserico.common.lang.constants.DateConstants.DTF_ISO_DATETIME_1;
+import static com.loserico.common.lang.constants.DateConstants.DTF_ISO_DATETIME_2;
+import static com.loserico.common.lang.constants.DateConstants.DTF_ISO_DATETIME_3;
+import static com.loserico.common.lang.constants.DateConstants.DTF_ISO_DATETIME_4;
+import static com.loserico.common.lang.constants.DateConstants.DTF_ISO_DATETIME_5;
+import static com.loserico.common.lang.constants.DateConstants.DTF_ISO_DATETIME_SHORT;
+import static com.loserico.common.lang.constants.DateConstants.DTF_ISO_DATETIME_SHORT_1;
+import static com.loserico.common.lang.constants.DateConstants.DTF_ISO_DATETIME_SHORT_2;
+import static com.loserico.common.lang.constants.DateConstants.DTF_ISO_DATETIME_SHORT_3;
+import static com.loserico.common.lang.constants.DateConstants.DTF_ISO_DATETIME_SHORT_4;
+import static com.loserico.common.lang.constants.DateConstants.DTF_ISO_DATETIME_SHORT_5;
+import static com.loserico.common.lang.constants.DateConstants.DTF_ISO_DATETIME_SHORT_6;
+import static com.loserico.common.lang.constants.DateConstants.DTF_ISO_DATETIME_SHORT_7;
+import static com.loserico.common.lang.constants.DateConstants.DTF_ISO_DATE_1;
+import static com.loserico.common.lang.constants.DateConstants.DTF_ISO_DATE_2;
+import static com.loserico.common.lang.constants.DateConstants.DTF_ISO_DATE_3;
+import static com.loserico.common.lang.constants.DateConstants.DTF_TIME_FORMAT;
+import static com.loserico.common.lang.constants.DateConstants.FMT_ISO_DATETIME;
+import static com.loserico.common.lang.constants.DateConstants.FMT_ISO_DATETIME_1;
+import static com.loserico.common.lang.constants.DateConstants.FMT_RFC1123_FORMAT;
+import static com.loserico.common.lang.constants.DateConstants.GMT;
+import static com.loserico.common.lang.constants.DateConstants.PT_DATETIME_FORMAT_EN;
+import static com.loserico.common.lang.constants.DateConstants.PT_DATETIME_FORMAT_EN_1;
+import static com.loserico.common.lang.constants.DateConstants.PT_DATETIME_FORMAT_EN_2;
+import static com.loserico.common.lang.constants.DateConstants.PT_DATETIME_FORMAT_EN_3;
+import static com.loserico.common.lang.constants.DateConstants.PT_DATETIME_FORMAT_EN_4;
+import static com.loserico.common.lang.constants.DateConstants.PT_DATETIME_FORMAT_EN_5;
+import static com.loserico.common.lang.constants.DateConstants.PT_DATETIME_FORMAT_EN_6;
+import static com.loserico.common.lang.constants.DateConstants.PT_DATETIME_FORMAT_EN_7;
+import static com.loserico.common.lang.constants.DateConstants.PT_DATETIME_FORMAT_EN_8;
+import static com.loserico.common.lang.constants.DateConstants.PT_DATETIME_FORMAT_EN_9;
+import static com.loserico.common.lang.constants.DateConstants.PT_DATE_CONCISE;
+import static com.loserico.common.lang.constants.DateConstants.PT_DATE_EN;
+import static com.loserico.common.lang.constants.DateConstants.PT_DATE_EN_1;
+import static com.loserico.common.lang.constants.DateConstants.PT_DATE_EN_3;
+import static com.loserico.common.lang.constants.DateConstants.PT_DATE_EN_5;
+import static com.loserico.common.lang.constants.DateConstants.PT_DATE_EN_6;
+import static com.loserico.common.lang.constants.DateConstants.PT_DATE_EN_7;
+import static com.loserico.common.lang.constants.DateConstants.PT_ISO_DATE;
+import static com.loserico.common.lang.constants.DateConstants.PT_ISO_DATETIME;
+import static com.loserico.common.lang.constants.DateConstants.PT_ISO_DATETIME_1;
+import static com.loserico.common.lang.constants.DateConstants.PT_ISO_DATETIME_2;
+import static com.loserico.common.lang.constants.DateConstants.PT_ISO_DATETIME_3;
+import static com.loserico.common.lang.constants.DateConstants.PT_ISO_DATETIME_4;
+import static com.loserico.common.lang.constants.DateConstants.PT_ISO_DATETIME_5;
+import static com.loserico.common.lang.constants.DateConstants.PT_ISO_DATETIME_SHORT;
+import static com.loserico.common.lang.constants.DateConstants.PT_ISO_DATETIME_SHORT_1;
+import static com.loserico.common.lang.constants.DateConstants.PT_ISO_DATETIME_SHORT_2;
+import static com.loserico.common.lang.constants.DateConstants.PT_ISO_DATETIME_SHORT_3;
+import static com.loserico.common.lang.constants.DateConstants.PT_ISO_DATETIME_SHORT_4;
+import static com.loserico.common.lang.constants.DateConstants.PT_ISO_DATETIME_SHORT_5;
+import static com.loserico.common.lang.constants.DateConstants.PT_ISO_DATETIME_SHORT_6;
+import static com.loserico.common.lang.constants.DateConstants.PT_ISO_DATETIME_SHORT_7;
+import static com.loserico.common.lang.constants.DateConstants.PT_ISO_DATE_1;
+import static com.loserico.common.lang.constants.DateConstants.PT_ISO_DATE_2;
+import static com.loserico.common.lang.constants.DateConstants.PT_ISO_DATE_3;
+import static com.loserico.common.lang.constants.DateConstants.SDT_GMT;
+import static com.loserico.common.lang.constants.DateConstants.ZONE_ID_GMT;
+import static com.loserico.common.lang.constants.DateConstants.ZONE_ID_SHANG_HAI;
 import static com.loserico.common.lang.utils.SimpleDateFormatHolder.getSimpleDateFormat;
 import static java.time.format.DateTimeFormatter.ofPattern;
 
@@ -275,11 +359,6 @@ public final class DateUtils {
 		return simpleDateFormat.format(date);
 	}
 	
-	public static void main(String[] args) {
-		System.out.println(formatToRfc(LocalDateTime.now()));
-		System.out.println(formatToRfc(new Date()));
-	}
-	
 	// -----------------------------------------------------------------------------------------------------------------
 	
 	/**
@@ -296,9 +375,22 @@ public final class DateUtils {
 		SimpleDateFormat simpleDateFormat = getSimpleDateFormat(source);
 		
 		if (simpleDateFormat == null) {
+			/*
+			 * 2021-05-22T02:01:43.003Z  UTC日期时间格式  包含T和Z, 长度有24
+			 * Sun, 06 Nov 1994 08:49:37 GMT  HTTP请求头的日期格式 长度 25
+			 */
+			ZonedDateTime zonedDateTime = toZonedDateTime(source);
+			if (zonedDateTime != null) {
+				return new Date(zonedDateTime.toInstant().toEpochMilli());
+			}
+			try {
+				return SDT_GMT.parse(source);
+			} catch (ParseException e) {
+			}
 			log.warn("No suitable Dateformat found!");
 			return null;
 		}
+		
 		try {
 			return simpleDateFormat.parse(source);
 		} catch (ParseException e) {
@@ -977,6 +1069,33 @@ public final class DateUtils {
 	}
 	
 	/**
+	 * date1 - date2 相差多少天, date1早于date2返回负数
+	 *
+	 * @param date1
+	 * @param date2
+	 * @return int
+	 */
+	public static long dateDiff(LocalDate date1, LocalDate date2) {
+		Objects.requireNonNull(date1, "date1 cannot be null!");
+		Objects.requireNonNull(date2, "date2 cannot be null!");
+		return ChronoUnit.DAYS.between(date2, date1);
+	}
+	
+	/**
+	 * date1 - date2 相差多少天, date1早于date2返回负数
+	 *
+	 * @param date1
+	 * @param date2
+	 * @return int
+	 */
+	public static long dateDiff(Date date1, Date date2) {
+		Objects.requireNonNull(date1, "date1 cannot be null!");
+		Objects.requireNonNull(date2, "date2 cannot be null!");
+		long diffInMillies = date1.getTime() - date2.getTime();
+		return TimeUnit.DAYS.convert(diffInMillies, TimeUnit.MILLISECONDS);
+	}
+	
+	/**
 	 * 在指定日期上+小时
 	 *
 	 * @param date
@@ -1170,6 +1289,19 @@ public final class DateUtils {
 			return false;
 		}
 		return MILLIS_PATTERN.matcher(value).matches();
+	}
+	
+	public static ZonedDateTime toZonedDateTime(String source) {
+		try {
+			return ZonedDateTime.parse(source);
+		} catch (DateTimeParseException e) {
+		}
+		try {
+			return ZonedDateTime.parse(source, DFT_UTC_DATETIME);
+		} catch (DateTimeParseException e) {
+		}
+		log.warn("{} 转ZonedDateTime失败!", source);
+		return null;
 	}
 	
 	private static boolean isBlank(String s) {

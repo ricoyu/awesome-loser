@@ -61,6 +61,11 @@ public class JedisUtilsTests {
 		JedisUtils.LIST.lpush("dga-metadata", IOUtils.readFileAsString("D:\\Work\\观安信息上海有限公司\\NTA资料\\测试数据\\dga-metadata-response - failed.json"));
 	}
 	
+	@Test
+	public void testPubSub() {
+		JedisUtils.publish("websocket:msg", "{\"command\": \"沙箱启动成功\"}");
+	}
+	
 	@SneakyThrows
 	@Test
 	public void testIdsTraffic() {
@@ -103,10 +108,6 @@ public class JedisUtilsTests {
 	public void testSetNX() {
 		Boolean success = JedisUtils.setnx("k2", "v2", 1, TimeUnit.MINUTES);
 		System.out.println(success);
-	}
-	
-	@Test
-	public void testSubscribe() {
 	}
 	
 	@SneakyThrows
@@ -250,8 +251,10 @@ public class JedisUtilsTests {
 		JedisUtils.del("jobs");
 		size = LIST.lpushLimit("jobs", 6, "a", "b", "v", "aasd", "g", "e", "t");
 		assertEquals(6, size);*/
-		
-		JedisUtils.LIST.lpushLimit("gen_rule_file_tasks", 1, "");
+		JedisUtils.del("k1");
+		JedisUtils.HASH.hget("k1", "k1");
+		JedisUtils.LIST.lpushLimit("gen_rule_file_tasks-ssy1", 1, "新增了开启状态规则文件");
+		JedisUtils.LIST.lpushLimit("gen_rule_file_tasks-ssy1", 1, "新增了开启状态规则文件");
 	}
 	
 	@Test
@@ -270,5 +273,17 @@ public class JedisUtilsTests {
 		//TimeUnit.SECONDS.sleep(3333);
 		String value = JedisUtils.HASH.hget("testMap", "testField");
 		assertNull(value);
+	}
+	
+	@Test
+	public void testPubSub2() {
+		JedisUtils.publish("websocket:msg", "aaa");
+	}
+	
+	@Test
+	public void testSetGetBoolean() {
+		JedisUtils.set("k1", true);
+		Boolean v1 = JedisUtils.get("k1", Boolean.class);
+		assertTrue(v1.booleanValue());
 	}
 }

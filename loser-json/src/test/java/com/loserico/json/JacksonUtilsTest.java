@@ -5,13 +5,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.loserico.common.lang.utils.DateUtils;
 import com.loserico.common.lang.utils.IOUtils;
 import com.loserico.json.jackson.JacksonUtils;
 import com.loserico.json.jackson.deserializer.MongoObjectIdDeserializer;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.Serializable;
@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.loserico.json.jackson.JacksonUtils.toJson;
+import static org.junit.Assert.*;
 
 /**
  * <p>
@@ -58,7 +59,7 @@ public class JacksonUtilsTest {
 		String dateStr = toJson(new DateObj(LocalDateTime.of(2019, 12, 21, 19, 15, 34)));
 		System.out.println(dateStr);
 		DateObj dateObj = JacksonUtils.toObject(dateStr, DateObj.class);
-		Assert.assertEquals(dateObj.getDatetime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")), s);
+		assertEquals(dateObj.getDatetime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")), s);
 	}
 	
 	@Data
@@ -85,7 +86,7 @@ public class JacksonUtilsTest {
 		//Assert.assertEquals("三少爷", person.getFullName());
 		Map<String, Object> resultMap = JacksonUtils.pojoToMap(person);
 		System.out.println(resultMap);
-		Assert.assertEquals("2020-03-20", resultMap.get("birthday"));
+		assertEquals("2020-03-20", resultMap.get("birthday"));
 	}
 	
 	@Test
@@ -100,6 +101,48 @@ public class JacksonUtilsTest {
 		System.out.println(toJson(1L));
 		System.out.println(toJson("hi"));
 		System.out.println(toJson(new Object[]{1L, new Date(), null}));
+	}
+	
+	@Test
+	public void testDeserializer2Long() {
+		String json = "{  \n" +
+				"\"timestamp\":\"2020-07-23 14:12:22\"\n" +
+				" }  ";
+		SimpleEvent event = JacksonUtils.toObject(json, SimpleEvent.class);
+		Long timestamp = DateUtils.parse("2020-07-23 14:12:22").getTime();
+		assertEquals(event.getTimestamp(), timestamp);
+	}
+	
+	@Test
+	public void test() {
+		String json = "{\n" +
+				"        \"flow_id\": 1479552517000986,\n" +
+				"        \"signature_id\": 832661232805232640\n" +
+				"}";
+		
+		CustomRuleEvent customRuleEvent = JacksonUtils.toObject(json, CustomRuleEvent.class);
+	}
+	
+	@Data
+	private static class SimpleEvent {
+		
+		private Long timestamp;
+	}
+	
+	@Data
+	private static class CustomRuleEvent  {
+		/**
+		 * 自定义规则序列id
+		 */
+		@JsonProperty("signature_id")
+		private Long signatureId;
+		
+		/**
+		 * 整型数字, 流编号
+		 */
+		@JsonProperty("flow_id")
+		private Long flowId;
+		
 	}
 	
 	@Data

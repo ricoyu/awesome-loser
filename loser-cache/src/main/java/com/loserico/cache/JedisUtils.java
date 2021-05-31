@@ -54,6 +54,7 @@ import static com.loserico.cache.utils.UnMarshaller.toLong;
 import static com.loserico.cache.utils.UnMarshaller.toObject;
 import static com.loserico.cache.utils.UnMarshaller.toSeconds;
 import static com.loserico.json.jackson.JacksonUtils.toJson;
+import static java.lang.String.join;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.*;
 import static java.util.stream.Collectors.toMap;
@@ -603,8 +604,8 @@ public final class JedisUtils {
 		 * @return long list当前的长度
 		 */
 		public static long lpushLimit(String key, int limit, Object... values) {
-			String hashSha = shaHashs.computeIfAbsent("hash.lua", x -> {
-				log.debug("Load script {}", "hash.lua");
+			String hashSha = shaHashs.computeIfAbsent("lpush.lua", x -> {
+				log.debug("Load script {}", "lpush.lua");
 				if (jedisOperations instanceof JedisClusterOperations) {
 					return jedisOperations.scriptLoad(IOUtils.readClassPathFileAsString("/lua-scripts/lpush.lua"), key);
 				} else {
@@ -2016,6 +2017,38 @@ public final class JedisUtils {
 		
 	}
 	
+	/**
+	 * 一些比较我特色的功能
+	 */
+	public static final class AFFLUENT {
+		
+		/**
+		 * 对给定时间内(expire 秒数)访问次数不超过 count 次
+		 * 返回     true  表示没有超过
+		 * false 表示超过
+		 *
+		 * @param key
+		 * @param expire
+		 * @param count
+		 * @return boolean
+		 */
+		public static boolean rateLimit(String key, int expire, int count) {
+			
+			String hashSha = shaHashs.computeIfAbsent("rateLimit.lua", x -> {
+				log.debug("Load script {}", "rateLimit.lua");
+				if (jedisOperations instanceof JedisClusterOperations) {
+					return jedisOperations.scriptLoad(IOUtils.readClassPathFileAsString("/lua-scripts/rateLimit.lua"), key);
+				}
+				return jedisOperations.scriptLoad(IOUtils.readClassPathFileAsString("/lua-scripts/rateLimit.lua"));
+			});
+			
+			long result = (long) jedisOperations.evalsha(toBytes(hashSha),
+					1,
+					toBytes(join(":", "rate", "limit", key)),
+					toBytes(expire), toBytes(count));
+			return result == 1;
+		}
+	}
 	
 	/**
 	 * 指定key是否存在

@@ -46,7 +46,7 @@ public final class Transformers {
 	 * @param value
 	 * @return String
 	 */
-	public static String convert(Object value) {
+	public static String toString(Object value) {
 		if (value == null) {
 			return null;
 		}

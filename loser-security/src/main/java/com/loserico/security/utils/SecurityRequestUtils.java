@@ -1,6 +1,8 @@
 package com.loserico.security.utils;
 
 import com.google.common.base.Strings;
+import com.loserico.security.exception.TimestampInvalidException;
+import com.loserico.security.exception.TimestampMissingException;
 import com.loserico.security.vo.AuthRequest;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,7 +33,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  * @version 1.0
  */
 @Slf4j
-public final class AuthUtils {
+public final class SecurityRequestUtils {
 	
 	/**
 	 * 将所有参数按字母顺序排序后转成一个字符串
@@ -74,6 +76,7 @@ public final class AuthUtils {
 	
 	/**
 	 * 根据请求URI和请求参数构造AuthRequest对象
+	 *
 	 * @param actualUri
 	 * @param queryString
 	 * @return AuthRequest
@@ -96,15 +99,17 @@ public final class AuthUtils {
 			authRequest.setUri(uris.get(0));
 		}
 		
-		 
+		
 		List<String> timestamps = paramMap.get("timestamp");
-		if (timestamps.size() > 0 && isNotBlank(timestamps.get(0))) {
-			try {
-				authRequest.setTimestamp(Long.parseLong(timestamps.get(0)));
-			} catch (NumberFormatException e) {
-				log.error("timestamp参数需要传UNIX miliseconds", e);
-				throw new IllegalArgumentException("必须穿timestamp参数!");
-			}
+		if (timestamps.size() == 0 || isBlank(timestamps.get(0))) {
+			log.error("缺少timestamp参数!");
+			throw new TimestampMissingException("缺少timestamp参数!");
+		}
+		try {
+			authRequest.setTimestamp(Long.parseLong(timestamps.get(0)));
+		} catch (NumberFormatException e) {
+			log.error("timestamp参数必须是UNIX miliseconds", e);
+			throw new TimestampInvalidException("timestamp参数必须是UNIX miliseconds");
 		}
 		
 		// access_token 参数只支持一个
@@ -125,8 +130,9 @@ public final class AuthUtils {
 	 * 将请求参数转成Map, 如:
 	 * param1=value1&param2=value2                转成:  Map<String, String>形式
 	 * param1=value1&param2=value2&param2=value2  转成: Map<String, List<String>>形式
+	 *
 	 * @param uri
-	 * @return Map<String, List<String>>
+	 * @return Map<String, List < String>>
 	 */
 	public static Map<String, List<String>> splitQuery(String uri) {
 		if (Strings.isNullOrEmpty(uri)) {
@@ -134,7 +140,7 @@ public final class AuthUtils {
 		}
 		
 		return stream(uri.split("&"))
-				.map(AuthUtils::splitQueryParameter)
+				.map(SecurityRequestUtils::splitQueryParameter)
 				.collect(groupingBy(
 						SimpleImmutableEntry::getKey,
 						LinkedHashMap::new,

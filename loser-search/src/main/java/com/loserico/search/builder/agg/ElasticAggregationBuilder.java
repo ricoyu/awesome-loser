@@ -1,4 +1,4 @@
-package com.loserico.search.builder;
+package com.loserico.search.builder.agg;
 
 import lombok.extern.slf4j.Slf4j;
 

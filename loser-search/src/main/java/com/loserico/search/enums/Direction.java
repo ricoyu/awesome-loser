@@ -22,4 +22,9 @@ public enum Direction {
 		
 		return SortOrder.DESC;
 	}
+	
+	@Override
+	public String toString() {
+		return name().toLowerCase();
+	}
 }

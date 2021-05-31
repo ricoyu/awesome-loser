@@ -154,14 +154,14 @@ public abstract class AbstractMappingBuilder {
 		 * 从已有索引中拷贝mapping信息
 		 */
 		if (isNotBlank(copyIndex)) {
-			source = ElasticUtils.getMapping(copyIndex);
+			source = ElasticUtils.Mappings.getMapping(copyIndex);
 		}
 		
 		/*
 		 * 设置dynamic
 		 */
 		if (dynamic != null) {
-			source.put("dynamic", dynamic);
+			source.put("dynamic", dynamic.toString());
 		}
 		
 		/**

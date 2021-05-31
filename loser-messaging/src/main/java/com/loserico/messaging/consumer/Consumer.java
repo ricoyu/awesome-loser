@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 import static java.util.Arrays.asList;
 
@@ -82,13 +83,28 @@ public class Consumer<K, V> extends KafkaConsumer {
 	}
 	
 	/**
-	 * 订阅Topic, 并另起线程拉取消息, 消息来了之后另起线程异步处理
+	 * 订阅Topic, 消息来了之后处理
 	 *
 	 * @param topic
 	 * @param listener
 	 */
 	public void subscribe(String topic, ConsumerListener listener) {
 		subscribe(asList(topic));
+		messageProcess(listener);
+	}
+	
+	/**
+	 * 订阅Topic, 消息来了之后处理
+	 *
+	 * @param topicPattern
+	 * @param listener
+	 */
+	public void subscribePattern(String topicPattern, ConsumerListener listener) {
+		subscribe(Pattern.compile(topicPattern));
+		messageProcess(listener);
+	}
+	
+	private void messageProcess(ConsumerListener listener) {
 		try {
 			while (true) {
 				ConsumerRecords<String, String> consumerRecords = poll(pollDuration);

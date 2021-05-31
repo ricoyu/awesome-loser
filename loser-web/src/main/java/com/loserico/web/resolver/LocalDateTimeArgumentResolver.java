@@ -1,6 +1,6 @@
 package com.loserico.web.resolver;
 
-import com.loserico.common.lang.utils.RegexUtils;
+import com.loserico.common.lang.utils.DateUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
@@ -10,10 +10,6 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.regex.Pattern;
-
-import static java.time.format.DateTimeFormatter.ofPattern;
 
 /**
  * Controller LocalDateTime 参数类型绑定
@@ -28,18 +24,6 @@ import static java.time.format.DateTimeFormatter.ofPattern;
  * @version 1.0
  */
 public class LocalDateTimeArgumentResolver implements HandlerMethodArgumentResolver {
-
-	/**
-	 * yyyy-MM-dd HH:mm:ss
-	 */
-	private static final Pattern ISO_DATETIME_PATTERN = Pattern.compile("\\d{4}-\\d{2}-\\d{2}\\s+\\d{2}:\\d{2}:\\d{2}");
-	private static final DateTimeFormatter ISO_DATETIME_FORMATTER = ofPattern("yyyy-MM-dd HH:mm:ss");
-
-	/**
-	 * YYYY-mm-DD
-	 */
-	public static final Pattern ISO_DATE_PATTERN = Pattern.compile("\\d{4}-\\d{2}-\\d{2}");
-	public static final DateTimeFormatter ISO_DATE_FORMATTER = ofPattern("yyyy-MM-dd");
 
 	@Override
 	public boolean supportsParameter(MethodParameter parameter) {
@@ -56,13 +40,6 @@ public class LocalDateTimeArgumentResolver implements HandlerMethodArgumentResol
 			return null;
 		}
 
-		LocalDateTime result = null;
-		if (RegexUtils.matches(ISO_DATETIME_PATTERN, value)) {
-			result = LocalDateTime.parse(value, ISO_DATETIME_FORMATTER);
-		} else if (RegexUtils.matches(ISO_DATE_PATTERN, value)) {
-			result = LocalDateTime.parse(value, ISO_DATE_FORMATTER);
-		}
-
-		return result;
+		return DateUtils.toLocalDateTime(value);
 	}
 }

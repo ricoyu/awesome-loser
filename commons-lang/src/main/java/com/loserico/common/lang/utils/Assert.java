@@ -18,4 +18,10 @@ public abstract class Assert {
 		}
 	}
 	
+	public static void notEmpty(String object, String message) {
+		if (object == null || object.trim().equals("")) {
+			throw new IllegalArgumentException(message);
+		}
+	}
+	
 }

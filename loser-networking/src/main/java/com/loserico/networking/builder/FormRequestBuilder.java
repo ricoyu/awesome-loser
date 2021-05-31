@@ -2,19 +2,27 @@ package com.loserico.networking.builder;
 
 import com.loserico.common.lang.transformer.Transformers;
 import com.loserico.common.lang.utils.Assert;
+import com.loserico.common.lang.utils.IOUtils;
+import com.loserico.networking.constants.ContentTypes;
 import com.loserico.networking.enums.GrantType;
 import com.loserico.networking.enums.Scope;
 import com.loserico.networking.http.OAuth2Support;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpEntity;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.StringBody;
+import org.apache.http.message.BasicNameValuePair;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -73,7 +81,7 @@ public class FormRequestBuilder extends AbstractRequestBuilder implements OAuth2
 	 * @param paramValue
 	 * @return FormRequestBuilder
 	 */
-	public FormRequestBuilder param(String paramName, String paramValue) {
+	public FormRequestBuilder param(String paramName, Object paramValue) {
 		Assert.notNull(paramName, "Param name cannot be null");
 		params.put(paramName, paramValue);
 		return this;
@@ -88,6 +96,18 @@ public class FormRequestBuilder extends AbstractRequestBuilder implements OAuth2
 	 */
 	public FormRequestBuilder file(String paramName, File file) {
 		formData.put(paramName, file);
+		return this;
+	}
+	
+	/**
+	 * 文件上传
+	 *
+	 * @param paramName
+	 * @param fullFilename
+	 * @return FormRequestBuilder
+	 */
+	public FormRequestBuilder file(String paramName, String fullFilename) {
+		formData.put(paramName, IOUtils.readFile(fullFilename));
 		return this;
 	}
 	
@@ -184,25 +204,52 @@ public class FormRequestBuilder extends AbstractRequestBuilder implements OAuth2
 		MultipartEntityBuilder builder = MultipartEntityBuilder.create();
 		builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
 		
+		/*
+		 * 如果表单数据中有一项数据类型是File类型的, 就认为是文件上传, Content-Type是multipart/form-data
+		 * 否则认为是普通的表单提交, Content-Type是 application/x-www-form-urlencoded
+		 */
+		boolean fileUpload = false;
 		for (Entry<String, Object> entry : formData.entrySet()) {
 			Object value = entry.getValue();
 			//如果是上传文件
 			if (value instanceof File) {
-				FileBody fileBody = new FileBody((File) value, ContentType.DEFAULT_BINARY);
-				builder.addPart(entry.getKey(), fileBody);
-				//同时要修改Content-Type为multipart/form-data
-				//request.setHeader(CONTENT_TYPE, MediaType.MULTIPART_FORM_DATA);
-				request.removeHeaders(CONTENT_TYPE);
-				continue;
+				fileUpload = true;
+				break;
 			}
-			//普通表单数据
-			ContentType.create("multipart/form-data", UTF_8);
-			StringBody stringBody = new StringBody(Transformers.convert(value), ContentType.create("multipart/form-data", UTF_8));
-			//StringBody stringBody = new StringBody(Transformers.convert(value), ContentType.MULTIPART_FORM_DATA);
-			builder.addPart(entry.getKey(), stringBody);
 		}
 		
-		HttpEntity httpEntity = builder.build();
-		request.setEntity(httpEntity);
+		if (fileUpload) {
+			for (Entry<String, Object> entry : formData.entrySet()) {
+				Object value = entry.getValue();
+				//如果是上传文件
+				if (value instanceof File) {
+					FileBody fileBody = new FileBody((File) value, ContentType.DEFAULT_BINARY);
+					builder.addPart(entry.getKey(), fileBody);
+					request.removeHeaders(CONTENT_TYPE);
+					continue;
+				}
+				//普通表单数据
+				StringBody stringBody = new StringBody(Transformers.toString(value), ContentType.create(ContentTypes.MULTIPART_FORM_DATA, UTF_8));
+				builder.addPart(entry.getKey(), stringBody);
+			}
+			
+			HttpEntity httpEntity = builder.build();
+			request.setEntity(httpEntity);
+			return;
+		}
+		
+		List<NameValuePair> params = new ArrayList<NameValuePair>();
+		for (Entry<String, Object> entry : formData.entrySet()) {
+			Object value = entry.getValue();
+			String paramName = entry.getKey();
+			params.add(new BasicNameValuePair(paramName, Transformers.toString(value)));
+		}
+		
+		try {
+			request.setEntity(new UrlEncodedFormEntity(params));
+		} catch (UnsupportedEncodingException e) {
+			log.error("", e);
+			throw new RuntimeException("", e);
+		}
 	}
 }

@@ -15,7 +15,7 @@ import org.elasticsearch.common.settings.Settings;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
-public class ElasticUpdateSettingBuilder extends SettingsBuilder {
+public class ElasticUpdateSettingBuilder extends ElasticSettingsBuilder {
 	
 	private String[] indices;
 	
