@@ -12,11 +12,13 @@ import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
+import org.apache.http.cookie.ClientCookie;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.StringBody;
+import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicNameValuePair;
 
 import java.io.File;
@@ -71,6 +73,25 @@ public class FormRequestBuilder extends AbstractRequestBuilder implements OAuth2
 	@Override
 	public FormRequestBuilder addHeader(String headerName, Object headerValue) {
 		super.addHeader(headerName, headerValue);
+		return this;
+	}
+	
+	@Override
+	public FormRequestBuilder addCookie(String name, String value) {
+		BasicClientCookie cookie = new BasicClientCookie(name, value);
+		cookie.setDomain("sexy-uncle.com");
+		cookie.setPath("/");
+		cookie.setAttribute(ClientCookie.DOMAIN_ATTR, "true");
+		cookieStore.addCookie(cookie);
+		return this;
+	}
+	
+	@Override
+	public FormRequestBuilder addCookie(String name, String value, String domain, String path) {
+		BasicClientCookie cookie = new BasicClientCookie(name, value);
+		cookie.setDomain(domain);
+		cookie.setPath(path);
+		cookieStore.addCookie(cookie);
 		return this;
 	}
 	
@@ -252,4 +273,5 @@ public class FormRequestBuilder extends AbstractRequestBuilder implements OAuth2
 			throw new RuntimeException("", e);
 		}
 	}
+	
 }

@@ -1,24 +1,19 @@
 package com.loserico.cache.auth;
 
 import com.loserico.cache.JedisUtils;
+import com.loserico.common.lang.resource.PropertyReader;
 import com.loserico.common.lang.utils.StringUtils;
 import com.loserico.json.jackson.JacksonUtils;
-import com.loserico.json.jsonpath.JsonPathUtils;
-import com.loserico.common.lang.resource.PropertyReader;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
-import static com.loserico.cache.JedisUtils.subscribe;
 import static com.loserico.json.jackson.JacksonUtils.toJson;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * 基于Redis的登录/认证系统
@@ -47,11 +42,6 @@ public final class AuthUtils {
 	private static final ConcurrentHashMap<String, String> shaHashs = new ConcurrentHashMap<>();
 	
 	/**
-	 * 根据用户名获取token
-	 */
-	public static final String AUTH_USERNAME_TOKEN_HASH = "auth:username:token";
-	
-	/**
 	 * 根据token获取用户名的 Redis Key
 	 */
 	public static final String AUTH_TOKEN_USERNAME_HASH = "auth:token:username";
@@ -72,21 +62,24 @@ public final class AuthUtils {
 	public static final String AUTH_TOKEN_LOGIN_INFO_HASH = "auth:token:login:info";
 	
 	/**
-	 * 一个zset, value是token, score是token的过期时间
+	 * 用户登录时通知的channel
 	 */
-	public static final String AUTH_TOKEN_TTL_ZSET = "auth:token:ttl:zset";
+	public static final String AUTH_LOGIN_CHANNEL = "auth:user:login:channel";
 	
 	/**
-	 * token过期后, 会publish一条消息到这个channel, 消息体是JSON格式的Map
-	 * key是过期的token, value是LoginInfo对象
-	 * 格式: {token:loginInfo, token:loginInfo, ...}
-	 */
-	public static final String AUTH_TOKEN_EXPIRE_CHANNEL = "auth:token:expired";
-	
-	/**
-	 * 用户主动退出登录或者Token过期, 这个channel都会发通知
+	 * 用户主动退出登录, 这个channel会发通知
 	 */
 	public static final String AUTH_LOGOUT_CHANNEL = "auth:logout:channel";
+	
+	/**
+	 * token过期后, 会publish一条消息到这个channel, 消息体是username
+	 */
+	public static final String AUTH_TOKEN_EXPIRE_CHANNEL = "auth:token:expired:channel";
+	
+	/**
+	 * 用户异地登录时踢掉前一个登录时发布的频道, 即单点登录下线通知
+	 */
+	public static final String AUTH_SINGLE_SIGNON_CHANNEL = "auth:single:signon:channel";
 	
 	/**
 	 * 是否自动刷新token
@@ -95,11 +88,29 @@ public final class AuthUtils {
 	 */
 	private static boolean autoRefresh = propertyReader.getBoolean("redis.auth.auto-refresh", true);
 	
-	private static final String sha1 = JedisUtils.scriptLoad("/lua-scripts/spring-security-auth.lua");
+	//private static final String sha1 = JedisUtils.scriptLoad("/lua-scripts/spring-security-auth.lua");
+	private static final String sha1 = JedisUtils.scriptLoad("/lua-scripts/spring-security-multi-auth.lua");
 	
 	/**
-	 * 执行登录操作, 返回登录成功与否, 如果同一账号已经在别处登录, 先对其执行登出, 并将之前的登录信息返回
-	 *
+	 * 执行登录操作, 返回登录成功与否, 如果同一账号已经在别处登录, 先对其执行登出, 
+	 * 然后PUBLIC一条消息到AUTH_SINGLE_SIGNON_CHANNEL, 消息体是
+	 * <pre>
+	 * {
+	 *     "username": "rico",             被踢下线的用户名
+	 *     "timestamp": 1622617668773, 
+	 *     "token": "ajsdiuqhzmnoqiwueia"  被踢下线的token
+	 * }
+	 * </pre>
+	 * 
+	 * 登录成功后再PUBLIC一条消息到AUTH_LOGIN_CHANNEL
+	 * <pre>
+	 * {
+	 *     "username": "rico",           登录的用户名
+	 *     "timestamp": 1622617668773, 
+	 *     "token": "asdasdasdasddfgsd"  登录的token
+	 * }
+	 * </pre>
+	 * 
 	 * @param username       用户名
 	 * @param token          token
 	 * @param expires        过期时间
@@ -109,15 +120,47 @@ public final class AuthUtils {
 	 * @param additionalInfo 额外的登录信息
 	 * @return LoginResult<T>
 	 */
-	public static <T> LoginResult<T> login(String username,
+	public static <T> boolean login(String username,
 	                                       String token,
 	                                       long expires, TimeUnit timeUnit,
 	                                       Object userdetails,
 	                                       List<?> authorities,
 	                                       T additionalInfo) {
+		return login(username, token, expires, timeUnit, userdetails, authorities, additionalInfo, true);
+	}
+	
+	/**
+	 * 执行登录操作, 返回登录成功与否
+	 * 如果同一账号已经在别处登录, 并且singleSigin=true, 那么先对其执行登出, 
+	 * 然后PUBLIC一条消息到AUTH_SINGLE_SIGNON_CHANNEL, 消息体是
+	 * <pre>
+	 * {
+	 *     "username": "rico", 
+	 *     "timestamp": 1622617668773, 
+	 *     "token": "ajsdiuqhzmnoqiwueia"
+	 * }
+	 * </pre>
+	 *
+	 * @param username       用户名
+	 * @param token          token
+	 * @param expires        过期时间
+	 * @param timeUnit       单位
+	 * @param userdetails    Spring Security的UserDetails对象
+	 * @param authorities    Spring Security的GrantedAuthority对象
+	 * @param additionalInfo 额外的登录信息
+	 * @param singleSigin    是否单点登录 -- 指一个用户只能登录一次, 如果在某处已经登录了, 在别处再次登录, 则踢掉前一个登录后重新登录   
+	 * @return LoginResult<T>
+	 */
+	public static <T> boolean login(String username,
+	                                       String token,
+	                                       long expires, TimeUnit timeUnit,
+	                                       Object userdetails,
+	                                       List<?> authorities,
+	                                       T additionalInfo, 
+	                                       boolean singleSigin) {
 		Objects.requireNonNull(timeUnit);
 		
-		byte[] result = JedisUtils.evalsha(sha1,
+		Long result = JedisUtils.evalsha(sha1,
 				0,
 				"login",
 				username,
@@ -125,44 +168,50 @@ public final class AuthUtils {
 				(expires == -1 ? expires : timeUnit.toMillis(expires)),
 				toJson(userdetails),
 				toJson(authorities),
-				additionalInfo);
-		
-		String resultJson = StringUtils.toString(result);
-		T lastLoginInfo = JsonPathUtils.readNode(resultJson, "$.lastLoginInfo");
-		boolean success = JsonPathUtils.readNode(resultJson, "$.success");
-		LoginResult<T> loginResult = new LoginResult<>(success, lastLoginInfo);
-		return (LoginResult<T>) loginResult;
+				additionalInfo, 
+				singleSigin);
+		return toBoolean(result);
 	}
 	
 	/**
-	 * 执行登出操作 返回true表示登出成功 返回false表示该token不存在或者已经登出
-	 *
+	 * 执行登出操作 返回true表示登出成功 返回false表示该token不存在或者已经登出<p>
+	 * 登出成功会发布一条消息到AUTH_LOGOUT_CHANNEL
+	 * <pre>
+	 * {
+	 *     "username": "rico",           退出登录的用户名
+	 *     "timestamp": 1622617668773, 
+	 *     "token": "asdasdasdasddfgsd"  退出登录的token
+	 * }
+	 * </pre>
+	 * 
 	 * @param token
 	 * @return boolean
 	 */
-	public static boolean logout(String token) {
-		byte[] result = JedisUtils.evalsha(sha1,
+	public static <T> boolean logout(String token) {
+		Long result = JedisUtils.evalsha(sha1,
 				0,
 				"logout",
 				token);
-		String str = StringUtils.toString(result);
-		return Boolean.parseBoolean(str);
+		return toBoolean(result);
 	}
 	
 	/**
-	 * 清除过期的token
-	 * <p>
-	 * 没有token过期 返回emptyMap
-	 * token过期, 返回map的key是token, value是LoginInfo
-	 *
+	 * 清除过期的token, 有token过期返回true, 否则返回false
+	 * 如果有token过期, 会发布一条消息到 AUTH_TOKEN_EXPIRE_CHANNEL, 消息体是
+	 * <pre>
+	 * {
+	 *     "username": "rico",             登录过期的用户
+	 *     "timestamp": 1622617668773,     登录过期, token被清理时的时间戳
+	 *     "token": "ajsdiuqhzmnoqiwueia"  登录过期的token
+	 * }
+	 * </pre>
+	 * 
 	 * @return
 	 */
-	public static <T> Map<String, T> clearExpired() {
+	public static boolean clearExpired() {
 		log.info("Start cleaning token...");
-		byte[] result = JedisUtils.evalsha(sha1, 0, "clearExpired");
-		String resultJson = StringUtils.toString(result);
-		log.info("Clean done, expired tokens: {}", resultJson);
-		return resultJson == null ? Collections.emptyMap() : JacksonUtils.toMap(resultJson);
+		Long result = JedisUtils.evalsha(sha1, 0, "clearExpired");
+		return toBoolean(result);
 	}
 	
 	/**
@@ -177,49 +226,22 @@ public final class AuthUtils {
 	public static String auth(String token) {
 		Objects.requireNonNull(token, "token cannot be null");
 		
-		byte[] result = JedisUtils.evalsha(sha1,
+		byte[] bytes = JedisUtils.evalsha(sha1,
 				0,
 				"auth",
 				token,
 				autoRefresh);
-		return StringUtils.toString(result);
-	}
-	
-	/**
-	 * 返回0表示这个username没有登录
-	 * 返回-1表示username Ttl检查的时候发现这个用户登录已经过期, 同时会清理其登录信息
-	 * 返回这个username对应的token剩余多少秒过期
-	 *
-	 * @param username
-	 * @return
-	 * @on
-	 */
-	public static Long usernameTtl(String username) {
-		Objects.requireNonNull(username, "username cannot be null");
 		
-		byte[] bytes = JedisUtils.evalsha(sha1,
-				0,
-				"usernameTtl",
-				username);
-		String s = StringUtils.toString(bytes);
-		Long ttlInSeconds = Long.parseLong(s);
-		log.info("{} remain in {} seconds to expire", username, ttlInSeconds);
-		return ttlInSeconds;
+		return toString(bytes);
 	}
 	
 	/**
-	 * <pre>
-	 * 检查指定用户是否已登录并且token未过期
-	 * 如果通过, 返回对应的token
-	 * 否则返回null
-	 * </pre>
-	 *
+	 * 检查指定用户是否已登录并且token未过期<p>
 	 * @param username
-	 * @on
 	 */
-	public static String isLogined(String username) {
-		byte[] bytes = JedisUtils.evalsha(sha1, 0, "isLogined", username, autoRefresh);
-		return StringUtils.toString(bytes);
+	public static boolean isLogined(String username) {
+		Long result = JedisUtils.evalsha(sha1, 0, "isLogined", username, autoRefresh);
+		return toBoolean(result);
 	}
 	
 	/**
@@ -269,33 +291,33 @@ public final class AuthUtils {
 	}
 	
 	/**
-	 * Token过期后接受通知
-	 * <p>
-	 * 参数是一个Map<String, T>, T 即调用login()时传入的loginInfo
-	 *
-	 * @param consumer
+	 * 获取这个username对应的所有token, 返回的Set有多个元素表示这个用户在多处登录了
+	 * @param username
+	 * @return Set<String>
 	 */
-	public static <T> void onTokenExpire(Consumer<Map<String, T>> consumer) {
-		subscribe((channel, message) -> {
-			log.info("Channel {} Received message: {}", channel, message);
-			Map<String, T> result = JacksonUtils.toMap(message);
-			consumer.accept(result);
-		}, AuthUtils.AUTH_TOKEN_EXPIRE_CHANNEL);
+	public static Set<String> tokens(String username) {
+		String setKey = StringUtils.join("auth:", username, ":token");
+		return JedisUtils.SET.smembers(setKey);
+	}
+	
+	private static String toString(byte[] bytes) {
+		if (bytes == null) {
+			return null;
+		}
+		
+		return new String(bytes, UTF_8);
 	}
 	
 	/**
-	 * 定期自动清理token
+	 * lua脚本返回true/false, Jedis拿到的是1,0
+	 * @param result
+	 * @return boolean
 	 */
-	static {
-		// 默认1分钟执行一次
-		int period = propertyReader.getInt("redis.auth.clear-expired.period", -1);
-		// -1表示不执行清理
-		if (-1 != period) {
-			ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(1);
-			scheduledExecutorService.scheduleAtFixedRate(() -> clearExpired(),
-					1,
-					period,
-					TimeUnit.MINUTES);
+	private static boolean toBoolean(Long result) {
+		if (result == null) {
+			return false;
 		}
+		
+		return result == 1L;
 	}
 }

@@ -4,7 +4,6 @@ import com.loserico.common.lang.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -20,6 +19,7 @@ import java.util.regex.Pattern;
 
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.assertj.core.api.Assertions.*;
 import static org.junit.Assert.*;
 
 /**
@@ -230,10 +230,15 @@ public class DateUtilsTest {
 		Date date = DateUtils.parse(dateStr);
 		System.out.println(date);
 		
-		DateFormat df = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss z");
-		df.setTimeZone(TimeZone.getTimeZone("GMT"));
-		date = df.parse("Mon, 16 Apr 2018 00:00:00 GMT+08:00");
-		System.out.println(date);
+		dateStr = "Mon, 16 Apr 2018 00:00:00 GMT+08:00";
+		Date date2 = DateUtils.parse(dateStr);
+		System.out.println(date2);
+		
+		assertThat(date2.getDate()).isEqualTo(16);
+		assertThat(date2.getMonth()).isEqualTo(3);
+		assertThat(date2.getHours()).isEqualTo(0);
+		assertThat(date2.getMinutes()).isEqualTo(0);
+		assertThat(date2.getSeconds()).isEqualTo(0);
 	}
 	
 	@Test
@@ -244,5 +249,42 @@ public class DateUtilsTest {
 		System.out.println(format.parse("Mon, 16 Apr 2018 00:00:00 GMT+08:00"));
 		System.out.println(DateUtils.parse("Mon, 03 Jun 2013 07:01:29 GMT"));
 		System.out.println(DateUtils.parse("Mon, 16 Apr 2018 00:00:00 GMT+08:00"));
+	}
+	
+	@Test
+	public void testParseJenkinsDateFormat() {
+		String dateStr = "2021-06-01T14:22:04+08:00";
+		LocalDateTime date1 = DateUtils.toLocalDateTime(dateStr);
+		Date date2 = DateUtils.parse(dateStr);
+		assertEquals(date2.getHours(), date1.getHour());
+		assertEquals(date1.getDayOfMonth(), date2.getDate());
+		System.out.println(date1);
+		System.out.println(date2);
+	}
+	
+	@Test
+	public void testCurrentMillis() {
+		System.out.println(System.currentTimeMillis());
+	}
+	
+	@Test
+	public void test() {
+		String dateStr = "2021-06-08T15:44:03";
+		Date date = DateUtils.parse(dateStr);
+		System.out.println(date);
+		
+		LocalDateTime localDateTime = DateUtils.toLocalDateTime("2021-06-08T15:44:03");
+		System.out.println(localDateTime);
+	}
+	
+	@Test
+	public void testParseUTC() {
+		String dateStr = "2018-05-30T14:24:48.933+0800";
+		LocalDateTime date1 = DateUtils.toLocalDateTime(dateStr);
+		Date date2 = DateUtils.parse(dateStr);
+		assertEquals(date2.getHours(), date1.getHour());
+		assertEquals(date1.getDayOfMonth(), date2.getDate());
+		System.out.println(date1);
+		System.out.println(date2);
 	}
 }

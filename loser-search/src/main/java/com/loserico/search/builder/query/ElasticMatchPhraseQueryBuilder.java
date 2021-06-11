@@ -18,6 +18,10 @@ import org.elasticsearch.index.query.QueryBuilder;
  */
 public class ElasticMatchPhraseQueryBuilder extends BaseQueryBuilder {
 	
+	/**
+	 * 如果查询短语"one love", 那么"One I Love"是查不到的<p>
+	 * 但是如果想宽松一点, 中间允许多一个词也能查到, 可以设置slop=1
+	 */
 	private Integer slop;
 	
 	public ElasticMatchPhraseQueryBuilder(String... indices) {

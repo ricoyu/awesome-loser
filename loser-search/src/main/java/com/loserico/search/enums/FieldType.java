@@ -35,7 +35,7 @@ public enum FieldType {
 	 */
 	KEYWORD("keyword"), 
 	
-	DATE("date", "yyyy-MM-dd HH:mm:ss"), 
+	DATE("date", "yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis||strict_date_optional_time"), 
 	
 	LONG("long"), 
 	
@@ -44,6 +44,8 @@ public enum FieldType {
 	FLOAT("float"),
 	
 	DOUBLE("double"),
+	
+	BOOLEAN("boolean"),
 	
 	OBJECT("object"), 
 	
@@ -74,7 +76,7 @@ public enum FieldType {
 	private String type;
 	
 	/**
-	 * 该类型额外的一些属性, 对于date类型是起日期格式化串
+	 * 该类型额外的一些属性
 	 */
 	private Object property;
 	

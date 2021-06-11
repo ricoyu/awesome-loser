@@ -44,6 +44,30 @@ public class TermQueryTest {
 	}
 	
 	@Test
+	public void testTermQueryIphone() {
+		ElasticUtils.Admin.deleteIndex("products");
+		List<String> products = asList(
+				"{\"productID\": \"XHDK-A-1293-#fJ3\", \"desc\": \"iPhone\"}",
+				
+				"{\"productID\": \"KDKE-B-9947-#kL5\", \"desc\": \"iPad\"}",
+				
+				"{\"productID\": \"JODL-X-1937-#pV7\", \"desc\": \"MBP\"}");
+		BulkResult bulkResult = ElasticUtils.bulkIndex("products", products);
+		bulkResult.getIds().forEach(System.out::println);
+		System.out.println(bulkResult.getSuccessCount());
+		
+		List<Object> iphones = ElasticUtils.Query.termQuery("products")
+				.query("desc", "iPhone")
+				.queryForList();
+		assertThat(iphones.size()).isEqualTo(0);
+		
+		iphones = ElasticUtils.Query.termQuery("products")
+				.query("desc", "iphone")
+				.queryForList();
+		assertThat(iphones.size()).isEqualTo(1);
+	}
+	
+	@Test
 	public void testQuery() {
 		List<String> sources = ElasticUtils.Query.query("products")
 				.queryBuilder(QueryBuilders.termQuery("desc", "iphone"))

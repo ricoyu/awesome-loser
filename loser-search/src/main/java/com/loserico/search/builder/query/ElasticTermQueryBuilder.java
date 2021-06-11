@@ -4,6 +4,7 @@ import com.loserico.search.enums.Direction;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.common.lucene.search.function.CombineFunction;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.TermQueryBuilder;
 
 /**
@@ -147,7 +148,6 @@ public final class ElasticTermQueryBuilder extends BaseQueryBuilder {
 		return this;
 	}
 	
-	
 	/**
 	 * 控制返回自己想要的字段, 而不是整个_source
 	 * @param fields
@@ -170,6 +170,11 @@ public final class ElasticTermQueryBuilder extends BaseQueryBuilder {
 	
 	@Override
 	protected QueryBuilder builder() {
-		return new TermQueryBuilder(field, value);
+		TermQueryBuilder termQueryBuilder = new TermQueryBuilder(field, value);
+		if (constantScore) {
+			return QueryBuilders.constantScoreQuery(termQueryBuilder);
+		}
+		
+		return termQueryBuilder;
 	}
 }

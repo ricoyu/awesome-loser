@@ -1,5 +1,6 @@
 package com.loserico.search;
 
+import com.loserico.common.lang.transformer.Transformers;
 import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.search.builder.ClusterSettingBuilder;
 import com.loserico.search.builder.ElasticContextSuggestBuilder;
@@ -13,6 +14,8 @@ import com.loserico.search.builder.ElasticSettingsBuilder;
 import com.loserico.search.builder.ElasticSuggestBuilder;
 import com.loserico.search.builder.ElasticUpdateSettingBuilder;
 import com.loserico.search.builder.agg.ElasticTermsAggregationBuilder;
+import com.loserico.search.builder.query.ElasticBoolQueryBuilder;
+import com.loserico.search.builder.query.ElasticExistsQueryBuilder;
 import com.loserico.search.builder.query.ElasticMatchPhraseQueryBuilder;
 import com.loserico.search.builder.query.ElasticMatchQueryBuilder;
 import com.loserico.search.builder.query.ElasticTermQueryBuilder;
@@ -74,6 +77,7 @@ import org.elasticsearch.search.suggest.completion.CompletionSuggestionBuilder;
 import org.elasticsearch.search.suggest.phrase.PhraseSuggestionBuilder;
 import org.elasticsearch.search.suggest.term.TermSuggestionBuilder;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -81,7 +85,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -89,7 +92,9 @@ import static com.loserico.common.lang.utils.Assert.notNull;
 import static com.loserico.json.jackson.JacksonUtils.toJson;
 import static com.loserico.json.jackson.JacksonUtils.toObject;
 import static java.util.Arrays.asList;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
@@ -243,7 +248,6 @@ public final class ElasticUtils {
 	/**
 	 * 批量创建文档<p>
 	 * 返回创建结果, 包括成功数量, 失败数量, 失败消息, 成功创建的文档id列表<p>
-	 * 注意docs里面的pojo就算加了@DocId也不起作用, 批量只支持自动创建ID<p>
 	 *
 	 * @param index
 	 * @param docs
@@ -560,6 +564,13 @@ public final class ElasticUtils {
 		return new ElasticContextSuggestBuilder(indices);
 	}
 	
+	/**
+	 * 用指定分词器分析文本
+	 *
+	 * @param analyzer
+	 * @param texts
+	 * @return List<String> 分析后的文本
+	 */
 	public static List<String> analyze(Analyzer analyzer, String... texts) {
 		if (texts == null || texts.length == 0) {
 			return Collections.emptyList();
@@ -758,17 +769,11 @@ public final class ElasticUtils {
 		 * @param templateName
 		 * @return IndexTemplateMetaData
 		 */
-		public static IndexTemplateMetaData getIndexTemplate(String templateName) {
+		public static Map<String, IndexTemplateMetaData> getIndexTemplate(String templateName) {
 			GetIndexTemplatesResponse response = client.admin().indices().prepareGetTemplates(templateName).get();
 			List<IndexTemplateMetaData> indexTemplates = response.getIndexTemplates();
-			Optional<IndexTemplateMetaData> first = indexTemplates.stream()
-					.filter(indexTemplate -> templateName.equals(indexTemplate.getName()))
-					.findFirst();
-			if (first.isPresent()) {
-				IndexTemplateMetaData indexTemplateMetaData = first.get();
-				return indexTemplateMetaData;
-			}
-			return null;
+			return indexTemplates.stream()
+					.collect(toMap(IndexTemplateMetaData::getName, identity()));
 		}
 		
 		/**
@@ -957,23 +962,36 @@ public final class ElasticUtils {
 		
 		/**
 		 * 根据ID获取文档
+		 *
 		 * @param index
 		 * @param id
 		 * @return String
 		 */
-		public static String byId(String index, int id) {
-			return byId(index, id + "");
+		public static String byId(String index, Object id) {
+			Objects.requireNonNull(index, "index cannot be null!");
+			Objects.requireNonNull(id, "id cannot be null!");
+			GetResponse response = client.prepareGet(index, ONLY_TYPE, id.toString()).get();
+			return response.getSourceAsString();
 		}
 		
 		/**
 		 * 根据ID获取文档
+		 *
 		 * @param index
 		 * @param id
 		 * @return String
 		 */
-		public static String byId(String index, String id) {
-			GetResponse response = client.prepareGet(index, ONLY_TYPE, id).get();
-			return response.getSourceAsString();
+		public static <T> T byId(String index, Object id, Class<T> resultType) {
+			Objects.requireNonNull(index, "index cannot be null!");
+			Objects.requireNonNull(id, "id cannot be null!");
+			Objects.requireNonNull(resultType, "clazz cannot be null!");
+			GetResponse response = client.prepareGet(index, ONLY_TYPE, id.toString()).get();
+			String source = response.getSourceAsString();
+			T obj = toObject(source, resultType);
+			Field idField = ElasticCacheUtils.idField(resultType);
+			ReflectionUtils.setField(idField, obj, Transformers.convert(id, idField.getType()));
+			
+			return obj;
 		}
 		
 		/**
@@ -1003,6 +1021,8 @@ public final class ElasticUtils {
 		}
 		
 		/**
+		 * 是Match Query的一种
+		 *
 		 * @param index
 		 * @return QueryStringBuilder
 		 */
@@ -1048,6 +1068,26 @@ public final class ElasticUtils {
 		}
 		
 		/**
+		 * exists Query
+		 *
+		 * @param indices
+		 * @return ElasticExistsQueryBuilder
+		 */
+		public static ElasticExistsQueryBuilder exists(String... indices) {
+			return new ElasticExistsQueryBuilder(indices);
+		}
+		
+		/**
+		 * Range Query, 支持日期, 数字类型
+		 *
+		 * @param indices
+		 * @return ElasticRangeQueryBuilder
+		 */
+		public static ElasticRangeQueryBuilder range(String... indices) {
+			return new ElasticRangeQueryBuilder(indices);
+		}
+		
+		/**
 		 * 通用查询接口, 既可以基于值查询, 如: Term Query, Match Query, Query string, Simple query string
 		 * 可以基于字段存在性查询, 比如 Exists Query
 		 * 给ElasticQueryBuilder传入不同的 QueryBuilder即可
@@ -1058,6 +1098,48 @@ public final class ElasticUtils {
 		public static ElasticQueryBuilder query(String... indices) {
 			return ElasticQueryBuilder.instance(indices);
 		}
+		
+		/**
+		 * Multi Match Query 跨字段搜索
+		 *
+		 * <pre> {@code
+		 * POST blogs/_search
+		 * {
+		 *   "query": {
+		 *     "multi_match": {
+		 *       "query": "Quick pets",
+		 *       "type": "best_fields",
+		 *       "fields": ["title", "body"],
+		 *       "tie_breaker": 0.2,
+		 *       "minimum_should_match": "20%"
+		 *     }
+		 *   }
+		 * }
+		 * }</pre>
+		 *
+		 * <ul>
+		 *     <li/>multi_match 声明这是一个Multi Match Query
+		 *     <li/>query       提供一个查询的语句
+		 *     <li/>fields      查询语句要匹配到哪些字段上
+		 *     <li/>type        best_fields 默认类型, 可以不指定. 表示会在fields指定的字段中取一个评分最高的作为一个返回结果
+		 * </ul>
+		 *
+		 * @param indices
+		 */
+		public void multiMatch(String... indices) {
+			
+		}
+		
+		/**
+		 * 布尔/组合 查询
+		 *
+		 * @param indices
+		 * @return ElasticBoolQueryBuilder
+		 */
+		public ElasticBoolQueryBuilder bool(String... indices) {
+			return new ElasticBoolQueryBuilder(indices);
+		}
+		
 	}
 	
 	/**

@@ -151,32 +151,6 @@ public class StreamTest {
                 .forEach(obj -> System.out.println(obj.getClass()));
     }
 
-    @Test
-    public void testListToMap() {
-        List<Hosting> list = new ArrayList<>();
-        list.add(new Hosting(1, "liquidweb.com", 80000));
-        list.add(new Hosting(2, "linode.com", 90000));
-        list.add(new Hosting(3, "digitalocean.com", 120000));
-        list.add(new Hosting(4, "aws.amazon.com", 200000));
-        list.add(new Hosting(5, "mkyong.com", 1));
-
-        // key = id, value - websites
-        Map<Integer, String> result1 = list.stream().collect(
-                toMap(Hosting::getId, Hosting::getName));
-        System.out.println("Result 1 : " + result1);
-
-        // key = name, value - websites
-        Map<String, Long> result2 = list.stream().collect(toMap(Hosting::getName, Hosting::getWebsites));
-        System.out.println("Result 2 : " + result2);
-
-        // Same with result1, just different syntax
-        // key = id, value = name
-        Map<Integer, String> result3 = list.stream().collect(toMap(x -> x.getId(), x -> x.getName()));
-        System.out.println("Result 3 : " + result3);
-
-        Map<String, Hosting> result4 = list.stream().collect(toMap(Hosting::getName, identity()));
-        System.out.println("Result 4: " + toJson(result4));
-    }
 
     @Test
     public void testList2MapWithDuplicateKey() {

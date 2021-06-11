@@ -45,9 +45,9 @@ public class MappingTest {
 		ElasticUtils.Admin.createIndex("users").create();
 		boolean created = ElasticUtils.Mappings.putMapping("users", Dynamic.TRUE)
 				.field("mobile", KEYWORD).index(false).nullValue("")
-				.and()
+				//.and()
 				.field("firstName", TEXT)
-				.and()
+				//.and()
 				.field("lastName", TEXT)
 				.thenCreate();
 		assertTrue(created);
@@ -68,7 +68,7 @@ public class MappingTest {
 		ElasticUtils.Admin.createIndex("users").create();
 		boolean created = ElasticUtils.Mappings.putMapping("users", Dynamic.TRUE)
 				.field("firstName", TEXT).copyTo("fullname")
-				.and()
+				//.and()
 				.field("lastName", TEXT).copyTo("fullname")
 				.thenCreate();
 		assertTrue(created);

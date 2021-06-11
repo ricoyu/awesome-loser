@@ -22,7 +22,7 @@ public class RsyslogTest {
 	
 	@Test
 	public void testRsyslog() {
-		Logger logger = LogbackUtils.addRsyslog(RsyslogTest.class, asList("172.16.0.66:514"));
+		Logger logger = LogbackUtils.addRsyslog(RsyslogTest.class, asList("172.23.12.66:514"));
 		logger.info(">>>>>>>>>>>>>>>>>>");
 		log.info("<<<<<<<<<<<<<<<<<<<<<<<");
 	}

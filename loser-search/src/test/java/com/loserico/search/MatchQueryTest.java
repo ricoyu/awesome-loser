@@ -14,6 +14,9 @@ import org.junit.Test;
 import java.util.List;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.*;
+
 /**
  * <p>
  * Copyright: (C), 2021-01-13 9:03
@@ -78,4 +81,26 @@ public class MatchQueryTest {
 				.queryForScriptFields();
 		resultMap.get("loser_field").forEach(System.out::println);
 	}
+	
+	@Test
+	public void testMinimumShouldMatch() {
+		List<String> titles = ElasticUtils.Query.matchQuery("movies")
+				.query("title", "Once Upon a Time in the Midlands")
+				.includeSources("title")
+				.queryForList();
+		
+		List<String> titles2 = ElasticUtils.Query.matchQuery("movies")
+				.query("title", "Once Upon a Time in the Midlands")
+				.includeSources("title")
+				.minimumShouldMatch(7)
+				.queryForList();
+		
+		assertThat(titles.size()).isGreaterThan(titles2.size());
+		assertEquals(titles2.size(), 1);
+		
+		titles.forEach(System.out::println);
+		System.out.println("------------------------");
+		titles2.forEach(System.out::println);
+	}
+
 }

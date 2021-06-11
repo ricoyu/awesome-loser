@@ -6,6 +6,7 @@ import org.elasticsearch.index.query.MatchAllQueryBuilder;
 import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -19,13 +20,25 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
-public class ElasticMatchQueryBuilder extends BaseQueryBuilder {
+public class ElasticMatchQueryBuilder extends BaseQueryBuilder implements MatchQuerys {
 	
 	/**
 	 * 如果要查询的title值是 "Last Christmas", 那么默认搜索title包含last或者christmas
 	 * 如果要提高查询的精准度, 只想查到同时包含"Last Christmas"的title, 可以设置operator为AND
 	 */
 	protected Operator operator;
+	
+	/**
+	 * 如果用户给定 5 个查询词项, 想查找只包含其中 4 个的文档, 该如何处理？<p>
+	 * match 查询支持 minimum_should_match 最小匹配参数, 这让我们可以指定必须匹配的词项数用来表示一个文档是否相关。
+	 * 我们可以将其设置为某个具体数字, 更常用的做法是将其设置为一个百分数, 因为我们无法控制用户搜索时输入的单词数量:
+	 * <p>
+	 * 比如我们搜索 Once Upon a Time in the Midlands<p>
+	 * 如果是standard分词器, 分词后得到的词项为: "once", "upon", "a", "time", "in", "the", "midlands"<p>
+	 * 所以 minimum_should_match: 7 或者 minimum_should_match: "100%" 表示这些词都要包含<p>
+	 * minimum_should_match: 6 就表示文本中这个字段少一个词项的也可以搜索到
+	 */
+	private Object minimumShouldMatch;
 	
 	public ElasticMatchQueryBuilder(String... indices) {
 		this.indices = indices;
@@ -38,6 +51,7 @@ public class ElasticMatchQueryBuilder extends BaseQueryBuilder {
 	 * @param value
 	 * @return ElasticMatchQueryBuilder
 	 */
+	@Override
 	public ElasticMatchQueryBuilder query(String field, Object value) {
 		this.field = field;
 		this.value = value;
@@ -53,8 +67,51 @@ public class ElasticMatchQueryBuilder extends BaseQueryBuilder {
 	 * @param operator
 	 * @return ElasticMatchQueryBuilder
 	 */
+	@Override
 	public ElasticMatchQueryBuilder operator(Operator operator) {
 		this.operator = operator;
+		return this;
+	}
+	
+	/**
+	 * 数字形式指定 minimum_should_match: 6 <p>
+	 * <p>
+	 * 如果用户给定 5 个查询词项, 想查找只包含其中 4 个的文档, 该如何处理？<p>
+	 * match 查询支持 minimum_should_match 最小匹配参数, 这让我们可以指定必须匹配的词项数用来表示一个文档是否相关。
+	 * 我们可以将其设置为某个具体数字, 更常用的做法是将其设置为一个百分数, 因为我们无法控制用户搜索时输入的单词数量:
+	 * <p>
+	 * 比如我们搜索 Once Upon a Time in the Midlands<p>
+	 * 如果是standard分词器, 分词后得到的词项为: "once", "upon", "a", "time", "in", "the", "midlands"<p>
+	 * 所以 minimum_should_match: 7 或者 minimum_should_match: "100%" 表示这些词都要包含<p>
+	 * minimum_should_match: 6 就表示文本中这个字段少一个词项的也可以搜索到
+	 *
+	 * @param minimumShouldMatch
+	 * @return ElasticMatchQueryBuilder
+	 */
+	@Override
+	public ElasticMatchQueryBuilder minimumShouldMatch(int minimumShouldMatch) {
+		this.minimumShouldMatch = minimumShouldMatch;
+		return this;
+	}
+	
+	/**
+	 * 字符串百分比形式指定 minimum_should_match: 50% <p>
+	 * <p>
+	 * 如果用户给定 5 个查询词项, 想查找只包含其中 4 个的文档, 该如何处理？<p>
+	 * match 查询支持 minimum_should_match 最小匹配参数, 这让我们可以指定必须匹配的词项数用来表示一个文档是否相关。
+	 * 我们可以将其设置为某个具体数字, 更常用的做法是将其设置为一个百分数, 因为我们无法控制用户搜索时输入的单词数量:
+	 * <p>
+	 * 比如我们搜索 Once Upon a Time in the Midlands<p>
+	 * 如果是standard分词器, 分词后得到的词项为: "once", "upon", "a", "time", "in", "the", "midlands"<p>
+	 * 所以 minimum_should_match: 7 或者 minimum_should_match: "100%" 表示这些词都要包含<p>
+	 * minimum_should_match: 6 就表示文本中这个字段少一个词项的也可以搜索到
+	 *
+	 * @param minimumShouldMatch
+	 * @return ElasticMatchQueryBuilder
+	 */
+	@Override
+	public ElasticMatchQueryBuilder minimumShouldMatch(String minimumShouldMatch) {
+		this.minimumShouldMatch = minimumShouldMatch;
 		return this;
 	}
 	
@@ -210,7 +267,7 @@ public class ElasticMatchQueryBuilder extends BaseQueryBuilder {
 	
 	/**
 	 * 脚本字段查询
-	 * 
+	 * <p>
 	 * doc['email'].value 表示获取_source.email字段的值
 	 *
 	 * @param fieldName
@@ -230,9 +287,21 @@ public class ElasticMatchQueryBuilder extends BaseQueryBuilder {
 			if (operator != null) {
 				matchQueryBuilder.operator(operator);
 			}
+			if (minimumShouldMatch != null) {
+				matchQueryBuilder.minimumShouldMatch(minimumShouldMatch.toString());
+			}
+			
+			if (constantScore) {
+				return QueryBuilders.constantScoreQuery(matchQueryBuilder);
+			}
 			return matchQueryBuilder;
 		}
-		return new MatchAllQueryBuilder();
+		
+		MatchAllQueryBuilder matchAllQueryBuilder = new MatchAllQueryBuilder();
+		if (constantScore) {
+			return QueryBuilders.constantScoreQuery(matchAllQueryBuilder);
+		}
+		return matchAllQueryBuilder;
 	}
 	
 }

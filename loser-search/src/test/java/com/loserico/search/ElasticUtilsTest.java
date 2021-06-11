@@ -24,7 +24,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.cluster.metadata.IndexTemplateMetaData;
 import org.elasticsearch.common.lucene.search.function.CombineFunction;
 import org.elasticsearch.common.xcontent.ToXContent;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -288,51 +287,6 @@ public class ElasticUtilsTest {
 				.and()
 				.create();
 		assertTrue(created);
-	}
-	
-	@Test
-	public void testPutIndexTemplate() {
-		boolean created = ElasticUtils.Admin.putIndexTemplate("demo-index-template")
-				.order(0)
-				.patterns("test*")
-				.version(0)
-				.settings(ElasticSettingsBuilder.builder()
-						.numberOfShards(1)
-						.numberOfReplicas(1))
-				/*.settings(Settings.builder()
-						.put("number_of_shards", 1)
-						.put("number_of_replicas", 1)
-						.build())*/
-				.mappings(Dynamic.TRUE)
-				.field("username", FieldType.KEYWORD)
-				.field("read_books", FieldType.TEXT)
-				.field("hobbys", FieldType.TEXT).index(true)
-				.thenCreate();
-		System.out.println(created);
-	}
-	
-	@Test
-	public void testPutIndexTemplate2() {
-		boolean created = ElasticUtils.Admin.putIndexTemplate("demo-index-template")
-				.order(0)
-				.patterns("test*")
-				.version(0)
-				.settings(1)
-				.numberOfReplicas(1)
-				.indexRoutingAllocation("my_route", "hot")
-				.and()
-				.mappings(Dynamic.TRUE)
-				.field("username", FieldType.KEYWORD)
-				.field("read_books", FieldType.TEXT)
-				.field("hobbys", FieldType.TEXT).index(true)
-				.thenCreate();
-		System.out.println(created);
-	}
-	
-	@Test
-	public void testGetIndexTemplate() {
-		IndexTemplateMetaData indexTemplateMetaData = ElasticUtils.Admin.getIndexTemplate("demo-index-template");
-		System.out.println(toJson(indexTemplateMetaData));
 	}
 	
 	@Test

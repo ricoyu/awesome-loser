@@ -1145,7 +1145,7 @@ public final class JedisUtils {
 		 * @param key
 		 * @return Set<String>
 		 */
-		public Set<String> smembers(String key) {
+		public static Set<String> smembers(String key) {
 			return jedisOperations.smembers(key);
 		}
 		
@@ -1155,7 +1155,7 @@ public final class JedisUtils {
 		 * @param key
 		 * @return Set<String>
 		 */
-		public <T> Set<T> smembers(String key, Class<T> clazz) {
+		public static <T> Set<T> smembers(String key, Class<T> clazz) {
 			Set<byte[]> byteSet = jedisOperations.smembers(toBytes(key));
 			if (isEmpty(byteSet)) {
 				return Collections.emptySet();

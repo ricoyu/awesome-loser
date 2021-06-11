@@ -38,9 +38,9 @@ public class KafkaUtilsTest {
 	@SneakyThrows
 	@Test
 	public void testNewProducer() {
-		Producer<String, String> producer = KafkaUtils.newProducer("192.168.100.104:9092")
+		//Producer<String, String> producer = KafkaUtils.newProducer("192.168.100.104:9092")
 		//Producer<String, String> producer = KafkaUtils.newProducer("10.10.26.13:29092")
-		//Producer<String, String> producer = KafkaUtils.newProducer("172.16.0.63:29092")
+		Producer<String, String> producer = KafkaUtils.newProducer("172.23.12.6:9092")
 				.acks(Acks.LEADER)
 				.batchSize(1001, SizeUnit.KB)
 				.clientId("sexyuncle")

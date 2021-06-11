@@ -1,7 +1,9 @@
 package com.loserico.search.builder;
 
+import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.settings.Settings.Builder;
+import org.json.JSONObject;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -16,6 +18,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
+@Slf4j
 public class ElasticSettingsBuilder {
 	
 	/**
@@ -151,7 +154,11 @@ public class ElasticSettingsBuilder {
 		if (blocksWrite != null) {
 			builder.put("index.blocks.write", blocksWrite);
 		}
-		return builder.build();
+		Settings settings = builder.build();
+		if (log.isDebugEnabled()) {
+			log.debug("Settings:\n{}", new JSONObject(settings.toString()).toString(2));
+		}
+		return settings;
 	}
 	
 }

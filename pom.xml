@@ -5,7 +5,7 @@
     <groupId>com.loserico</groupId>
     <artifactId>awesome-loser</artifactId>
     <packaging>pom</packaging>
-    <version>4.9.1</version>
+    <version>4.9.2</version>
     <name>Awesome Loser</name>
     <url>http://maven.apache.org</url>
 
@@ -637,7 +637,7 @@
             <dependency>
                 <groupId>com.github.ben-manes.caffeine</groupId>
                 <artifactId>caffeine</artifactId>
-                <version>2.8.6</version>
+                <version>3.0.2</version>
             </dependency>
 
             <dependency>
@@ -678,7 +678,7 @@
         <repository>
             <id>phantom-maven2</id>
             <name>phantom-maven2</name>
-            <url>http://172.16.0.66:8081/repository/phantom-maven2/</url>
+            <url>http://172.23.12.66:8081/repository/phantom-maven2/</url>
         </repository>
     </distributionManagement>
 
@@ -686,7 +686,7 @@
         <repository>
             <id>public</id>
             <name>Public Repositories</name>
-            <url>http://172.16.0.66:8081/repository/maven-public/</url>
+            <url>http://172.23.12.66:8081/repository/maven-public/</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
@@ -710,7 +710,7 @@
         <pluginRepository>
             <id>public</id>
             <name>Public Repositories</name>
-            <url>http://172.16.0.66:8081/repository/maven-public</url>
+            <url>http://172.23.12.66:8081/repository/maven-public</url>
             <releases>
                 <enabled>true</enabled>
             </releases>

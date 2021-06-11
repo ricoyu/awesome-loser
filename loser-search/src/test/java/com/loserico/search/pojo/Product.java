@@ -19,8 +19,9 @@ import java.time.LocalDate;
 @Data
 @ToString
 public class Product {
+	
 	@DocId
-	private Long id;
+	private String id;
 	
 	private Long price;
 	

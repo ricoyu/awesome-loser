@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import static com.loserico.json.jackson.JacksonUtils.toPrettyJson;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
@@ -43,6 +44,13 @@ public abstract class AbstractMappingBuilder {
 	 * 是否要存储_source
 	 */
 	private Boolean sourceEnabled = null;
+	
+	/**
+	 * 自动将日期字符串识别为date类型
+	 */
+	private Boolean dateDetection = null;
+	
+	private Boolean numericDetection = null;
 	
 	/**
 	 * 字段定义, 字段名-字段类型
@@ -90,6 +98,21 @@ public abstract class AbstractMappingBuilder {
 	 */
 	public AbstractMappingBuilder sourceEnabled(Boolean sourceEnabled) {
 		this.sourceEnabled = sourceEnabled;
+		return this;
+	}
+	
+	/**
+	 * 自动将日期字符串识别为date类型
+	 * @param dateDetection
+	 * @return AbstractMappingBuilder
+	 */
+	public AbstractMappingBuilder dateDetection(Boolean dateDetection) {
+		this.dateDetection = dateDetection;
+		return this;
+	}
+	
+	public AbstractMappingBuilder numericDetection(Boolean numericDetection) {
+		this.numericDetection = numericDetection;
 		return this;
 	}
 	
@@ -147,7 +170,6 @@ public abstract class AbstractMappingBuilder {
 	}
 	
 	Map<String, Object> build() {
-		
 		Map<String, Object> source = new HashMap<>();
 		
 		/*
@@ -173,6 +195,14 @@ public abstract class AbstractMappingBuilder {
 			}});
 		}
 		
+		if (dateDetection != null) {
+			source.put("date_detection", dateDetection);
+		}
+		
+		if (numericDetection != null) {
+			source.put("numeric_detection", numericDetection);
+		}
+		
 		//先取出properties, 如果没有, 那么创建一个
 		Map<String, Object> properties = (Map<String, Object>) source.get("properties");
 		if (properties == null) {
@@ -195,7 +225,9 @@ public abstract class AbstractMappingBuilder {
 				properties.put(fieldDef.getFieldName(), fieldDef.toDefMap());
 			}
 		}
-		
+		if (log.isDebugEnabled()) {
+			log.debug("Mappings:\n{}", toPrettyJson(source));
+		}
 		return source;
 	}
 	

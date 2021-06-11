@@ -220,4 +220,11 @@ public class HttpUtilsTest {
 		
 	}
 	
+	@Test
+	public void testSetLocale() {
+		HttpUtils.form("http://localhost:8080/login")
+				.addCookie("lang", "en")
+				.request();
+	}
+	
 }

@@ -3,6 +3,7 @@ package com.loserico.search.builder;
 import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.search.ElasticUtils;
 import com.loserico.search.enums.Dynamic;
+import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 
@@ -16,6 +17,7 @@ import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
+@Slf4j
 public final class ElasticIndexBuilder {
 	
 	private CreateIndexRequestBuilder createIndexRequestBuilder;
@@ -96,6 +98,7 @@ public final class ElasticIndexBuilder {
 		if (settings != null) {
 			createIndexRequestBuilder.setSettings((org.elasticsearch.common.settings.Settings) ReflectionUtils.invokeMethod(settings, "build" ));
 		}
+
 		CreateIndexResponse response = createIndexRequestBuilder.get();
 		
 		return response.isAcknowledged();

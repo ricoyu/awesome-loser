@@ -38,8 +38,8 @@ public enum ErrorTypes implements ErrorType {
     TIMESTAMP_MISMATCH("4010004", "template.timestamp.mismatch.error", "timestamp参数不匹配"),
     TIMESTAMP_INVALID("4010005", "template.timestamp.invalid.error", "timestamp参数必须是UNIX miliseconds"),
     
-    TOKEN_MISSING("4010006", "template.missing.token.error", "请提供access_token"),
-    TOKEN_INVALID("4010007", "template.invalid.token.error", "无效的access_token"),
+    TOKEN_MISSING("4010006", "template.missing.token.error", "请提供Token"),
+    TOKEN_INVALID("4010007", "template.invalid.token.error", "无效的Token"),
     TOKEN_EXPIRED("4010008", "template.token.expired.error", "您尚未登录或者Token已过期, 请重新登录"),
     
     USERNAME_PASSWORD_MISMATCH("4010009", "template.username.password.error", "用户名或密码错误"),
@@ -96,4 +96,11 @@ public enum ErrorTypes implements ErrorType {
     public String message() {
         return this.msg;
     }
+    
+    @Override
+    public String msgTemplate() {
+        return this.msgTemplate;
+    }
+    
+    
 }

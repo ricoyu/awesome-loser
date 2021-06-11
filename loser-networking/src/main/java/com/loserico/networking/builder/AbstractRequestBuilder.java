@@ -33,6 +33,7 @@ import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
@@ -98,6 +99,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 @Slf4j
 public abstract class AbstractRequestBuilder {
 	
+	public static final String DEFAULT_CHARSET = "UTF-8";
+	
 	protected static PoolingHttpClientConnectionManager connectionManager;
 	
 	protected static SSLConnectionSocketFactory sslConnectionSocketFactory;
@@ -107,9 +110,7 @@ public abstract class AbstractRequestBuilder {
 		
 		SSLContext sslContext = null;
 		try {
-			sslContext = SSLContexts.custom()
-					.loadTrustMaterial(null, acceptingTrustStrategy)
-					.build();
+			sslContext = SSLContexts.custom().loadTrustMaterial(null, acceptingTrustStrategy).build();
 		} catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException e) {
 			log.error("", e);
 			throw new RuntimeException(e);
@@ -164,6 +165,8 @@ public abstract class AbstractRequestBuilder {
 	
 	protected Map<String, Object> headers = new HashMap<>(12);
 	
+	protected BasicCookieStore cookieStore = new BasicCookieStore();
+	
 	protected Class responseType;
 	
 	protected HttpMethod method = HttpMethod.GET;
@@ -180,10 +183,11 @@ public abstract class AbstractRequestBuilder {
 	 *
 	 * @return CloseableHttpClient
 	 */
-	protected CloseableHttpClient getHttpClient() {
+	protected CloseableHttpClient buildHttpClient() {
 		CloseableHttpClient httpClient = HttpClients.custom()
 				.setSSLSocketFactory(sslConnectionSocketFactory)
 				.setConnectionManager(connectionManager)
+				.setDefaultCookieStore(cookieStore)
 				.build();
 		
 		int leased = connectionManager.getTotalStats().getLeased();
@@ -351,6 +355,16 @@ public abstract class AbstractRequestBuilder {
 	}
 	
 	/**
+	 * 添加Cookie
+	 * @param name
+	 * @param value
+	 * @return CookieBuilder
+	 */
+	protected abstract AbstractRequestBuilder addCookie(String name, String value);
+	
+	protected abstract AbstractRequestBuilder addCookie(String name, String value, String domain, String path);
+	
+	/**
 	 * 将Map中的参数名/值对转成HTTPClient的NameValuePair
 	 *
 	 * @param params
@@ -473,7 +487,7 @@ public abstract class AbstractRequestBuilder {
 				}
 			}
 			
-			CloseableHttpClient httpClient = getHttpClient();
+			CloseableHttpClient httpClient = buildHttpClient();
 			CloseableHttpResponse response = httpClient.execute(httpRequest);
 			HttpEntity entity = response.getEntity();
 			if (entity != null) {
@@ -526,4 +540,5 @@ public abstract class AbstractRequestBuilder {
 			request.addHeader(entry.getKey(), Transformers.convert(value, String.class));
 		}
 	}
+	
 }

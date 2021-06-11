@@ -163,6 +163,9 @@ public final class JacksonUtils {
 		if (object == null) {
 			return null;
 		}
+		if (object instanceof String) {
+			return (String) object;
+		}
 		try {
 			return objectMapper.writeValueAsString(object);
 		} catch (JsonProcessingException e) {

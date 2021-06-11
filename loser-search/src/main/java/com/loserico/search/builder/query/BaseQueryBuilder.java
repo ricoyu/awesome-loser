@@ -265,7 +265,7 @@ public abstract class BaseQueryBuilder {
 	 * @return List<T>
 	 */
 	public <T> List<T> queryForList() {
-		SearchHit[] hits = getSearchHits(null);
+		SearchHit[] hits = searchHits(null);
 		
 		if (hits.length == 0) {
 			return Collections.emptyList();
@@ -279,7 +279,7 @@ public abstract class BaseQueryBuilder {
 	 * @return Map<String, List<Object>>
 	 */
 	public Map<String, List<Object>> queryForScriptFields() {
-		SearchHit[] hits = getSearchHits(null);
+		SearchHit[] hits = searchHits(null);
 		
 		if (hits.length == 0) {
 			return Collections.emptyMap();
@@ -353,7 +353,7 @@ public abstract class BaseQueryBuilder {
 	 * @return List<T>
 	 */
 	public <T> PageResult<T> queryForPage(Object[] sort) {
-		SearchHit[] hits = getSearchHits(sort);
+		SearchHit[] hits = searchHits(sort);
 		
 		if (hits.length == 0) {
 			return PageResult.emptyResult();
@@ -377,7 +377,7 @@ public abstract class BaseQueryBuilder {
 	 * @return T
 	 */
 	public <T> T queryForOne() {
-		SearchHit[] hits = getSearchHits(null);
+		SearchHit[] hits = searchHits(null);
 		
 		if (hits.length == 0) {
 			return null;
@@ -424,7 +424,7 @@ public abstract class BaseQueryBuilder {
 	 *
 	 * @return
 	 */
-	private SearchHit[] getSearchHits(Object[] searchAfterValues) {
+	private SearchHit[] searchHits(Object[] searchAfterValues) {
 		
 		SearchRequestBuilder searchRequestBuilder = ElasticUtils.client.prepareSearch(indices).setQuery(builder());
 		

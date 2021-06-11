@@ -3,6 +3,7 @@ package com.loserico.networking.builder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.cookie.BasicClientCookie;
 
 import java.util.function.Consumer;
 
@@ -81,6 +82,23 @@ public class JsonRequestBuilder extends AbstractRequestBuilder {
 	@Override
 	public JsonRequestBuilder addParam(String paramName, Object paramValue) {
 		super.addParam(paramName, paramValue);
+		return this;
+	}
+	
+	@Override
+	public JsonRequestBuilder addCookie(String name, String value) {
+		BasicClientCookie cookie = new BasicClientCookie(name, value);
+		cookie.setPath("/");
+		cookieStore.addCookie(cookie);
+		return this;
+	}
+	
+	@Override
+	public JsonRequestBuilder addCookie(String name, String value, String domain, String path) {
+		BasicClientCookie cookie = new BasicClientCookie(name, value);
+		cookie.setDomain(domain);
+		cookie.setPath("/");
+		cookieStore.addCookie(cookie);
 		return this;
 	}
 	

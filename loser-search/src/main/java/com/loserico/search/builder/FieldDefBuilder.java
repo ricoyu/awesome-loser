@@ -33,7 +33,7 @@ public final class FieldDefBuilder {
 	
 	/**
 	 * 日期类型的话可以设置其日期格式
-	 * yyyy-MM-dd HH:mm:ss
+	 * yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis||strict_date_optional_time
 	 */
 	private String format;
 	
@@ -108,7 +108,6 @@ public final class FieldDefBuilder {
 	 * <ul/>
 	 */
 	private List<Map<String, String>> contexts;
-	private AbstractMappingBuilder elasticMappingBuilder1;
 	
 	public FieldDefBuilder(String fieldName, FieldType fieldType) {
 		this.fieldName = fieldName;
@@ -283,7 +282,7 @@ public final class FieldDefBuilder {
 	public FieldDefBuilder field(String fieldName, FieldType fieldType) {
 		FieldDef fieldDef = build();
 		elasticMappingBuilder.field(fieldDef);
-		return this;
+		return new FieldDefBuilder(elasticMappingBuilder, fieldName, fieldType);
 	}
 	
 	/**
@@ -311,13 +310,12 @@ public final class FieldDefBuilder {
 	
 	FieldDef build() {
 		FieldDef fieldDef = new FieldDef(fieldName, fieldType);
-		//默认用DATE类型的默认格式
 		if (fieldType == FieldType.DATE) {
 			fieldDef.setFormat(fieldType.getProperty().toString());
-		}
-		//如果显式设置了格式, 那么使用显式设置的格式
-		if (format != null) {
-			fieldDef.setFormat(format);
+			//如果显式设置了格式, 那么使用显式设置的格式
+			if (format != null) {
+				fieldDef.setFormat(format);
+			}
 		}
 		
 		if (index != null) {

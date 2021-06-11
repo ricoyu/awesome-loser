@@ -8,6 +8,7 @@ import lombok.Data;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -41,6 +42,8 @@ public class FieldDef {
 	 * yyyy-MM-dd HH:mm:ss
 	 */
 	private String format;
+	
+	private Locale locale;
 	
 	/**
 	 * index=false 表示不支持搜索, 支持terms聚合
@@ -197,6 +200,10 @@ public class FieldDef {
 		
 		if (isNotBlank(format)) {
 			defMap.put("format", format);
+		}
+		
+		if (locale != null) {
+			defMap.put("locale", locale);
 		}
 		
 		if (analyzer != null) {

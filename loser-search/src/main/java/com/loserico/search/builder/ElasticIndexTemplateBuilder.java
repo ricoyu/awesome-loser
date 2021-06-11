@@ -3,6 +3,7 @@ package com.loserico.search.builder;
 import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.search.ElasticUtils;
 import com.loserico.search.enums.Dynamic;
+import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateRequestBuilder;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.transport.TransportClient;
@@ -23,6 +24,7 @@ import static java.util.Arrays.asList;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
+@Slf4j
 public final class ElasticIndexTemplateBuilder {
 	
 	private TransportClient client;
@@ -119,6 +121,7 @@ public final class ElasticIndexTemplateBuilder {
 	
 	/**
 	 * 为索引模板设置Settings
+	 *
 	 * @param numOfShards
 	 * @return ElasticIndexTemplateSettingsBuilder
 	 */
@@ -131,8 +134,18 @@ public final class ElasticIndexTemplateBuilder {
 	/**
 	 * 通过MappingBuilder逐项配置Mapping
 	 *
+	 * @return ElasticIndexTemplateMappingBuilder
+	 */
+	public ElasticIndexTemplateMappingBuilder mappings() {
+		this.mappingBuilder = new ElasticIndexTemplateMappingBuilder(this, Dynamic.TRUE);
+		return mappingBuilder;
+	}
+	
+	/**
+	 * 通过MappingBuilder逐项配置Mapping
+	 *
 	 * @param dynamic
-	 * @return
+	 * @return ElasticIndexTemplateMappingBuilder
 	 */
 	public ElasticIndexTemplateMappingBuilder mappings(Dynamic dynamic) {
 		this.mappingBuilder = new ElasticIndexTemplateMappingBuilder(this, dynamic);
@@ -147,8 +160,10 @@ public final class ElasticIndexTemplateBuilder {
 				.preparePutTemplate(name)
 				.setPatterns(patterns)
 				.setOrder(order)
-				.setVersion(version)
-				.addMapping(ElasticUtils.ONLY_TYPE, mappingBuilder.build());
+				.setVersion(version);
+		if (mappingBuilder != null) {
+			builder.addMapping(ElasticUtils.ONLY_TYPE, mappingBuilder.build());
+		}
 		if (settings != null) {
 			builder.setSettings((org.elasticsearch.common.settings.Settings) ReflectionUtils.invokeMethod(settings, "build"));
 		}

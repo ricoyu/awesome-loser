@@ -1,5 +1,8 @@
 package com.loserico.common.lang;
 
+import org.apache.commons.io.IOUtils;
+import org.junit.Test;
+
 /**
  * <p>
  * Copyright: (C), 2020-08-21 14:10
@@ -11,4 +14,10 @@ package com.loserico.common.lang;
  * @version 1.0
  */
 public class IOUtilsTest {
+	
+	@Test
+	public void testLineSeparator() {
+		String lineSeparator = IOUtils.LINE_SEPARATOR;
+		System.out.println(lineSeparator);
+	}
 }

@@ -3,6 +3,7 @@ package com.loserico.search.builder.agg;
 import com.loserico.search.ElasticUtils;
 import com.loserico.search.vo.AggResult;
 import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
@@ -95,10 +96,12 @@ public class ElasticTermsAggregationBuilder extends AbstractAggregationBuilder {
 			arrregationBuilder.size(size);
 		}
 		
-		SearchResponse searchResponse = ElasticUtils.client.prepareSearch(indices)
+		SearchRequestBuilder builder = ElasticUtils.client.prepareSearch(indices)
 				.addAggregation(arrregationBuilder)
-				.setSize(0)
-				.get();
+				.setSize(0);
+		logDsl(builder);
+		
+		SearchResponse searchResponse = builder.get();
 		Aggregations aggregations = searchResponse.getAggregations();
 		
 		List<AggResult> aggResults = new ArrayList<>();
