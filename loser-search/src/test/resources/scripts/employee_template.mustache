@@ -1,0 +1,20 @@
+{
+  "query": {
+     "bool": {
+       "must": [
+         {"match": {
+           "job": "{{job}}"
+         }}
+         {{#age}},{{/age}}
+         {{#age}}
+         {
+           "term": {
+             "age": {{age}}
+           }
+         }
+         {{/age}}
+       ]
+     }
+   }
+}
+

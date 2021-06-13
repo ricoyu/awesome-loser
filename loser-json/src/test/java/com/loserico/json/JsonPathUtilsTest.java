@@ -25,4 +25,5 @@ public class JsonPathUtilsTest {
 		movies.forEach(System.out::println);
 		JsonPathUtils.readNode(json, "$.hits");
 	}
+	
 }

@@ -51,7 +51,7 @@
         <jsonpath.version>2.4.0</jsonpath.version>
         <jedis.version>2.9.3</jedis.version>
         <!-- 这个是Redis 6的客户端-->
-        <!--<jedis.version>3.5.2</jedis.version>-->
+        <!--<jedis.version>3.6.0</jedis.version>-->
 
         <elasticsearch.version>7.6.2</elasticsearch.version>
         <redisson.version>3.11.5</redisson.version>

@@ -1,6 +1,7 @@
 package com.loserico.search;
 
 import com.loserico.common.lang.transformer.Transformers;
+import com.loserico.common.lang.utils.IOUtils;
 import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.search.builder.ClusterSettingBuilder;
 import com.loserico.search.builder.ElasticContextSuggestBuilder;
@@ -18,6 +19,7 @@ import com.loserico.search.builder.query.ElasticBoolQueryBuilder;
 import com.loserico.search.builder.query.ElasticExistsQueryBuilder;
 import com.loserico.search.builder.query.ElasticMatchPhraseQueryBuilder;
 import com.loserico.search.builder.query.ElasticMatchQueryBuilder;
+import com.loserico.search.builder.query.ElasticTemplateQueryBuilder;
 import com.loserico.search.builder.query.ElasticTermQueryBuilder;
 import com.loserico.search.builder.query.QueryStringBuilder;
 import com.loserico.search.builder.query.UriQueryBuilder;
@@ -61,6 +63,7 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.cluster.metadata.IndexTemplateMetaData;
 import org.elasticsearch.cluster.metadata.MappingMetaData;
+import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -805,6 +808,37 @@ public final class ElasticUtils {
 			return new ElasticReindexBuilder(srcIndex, destIndex);
 		}
 		
+		/**
+		 * 创建 Search Template
+		 * @param templateName
+		 * @return boolean
+		 */
+		public static boolean createSearchTemplate(String templateName, String templateFileName) {
+			String templateContent = IOUtils.readClassPathFileAsString(templateFileName);
+			
+			Map<String, Object> rootNode = new HashMap<>();
+			Map<String, Object> scriptNode = new HashMap<>();
+			rootNode.put("script", scriptNode);
+			scriptNode.put("lang", "mustache");
+			scriptNode.put("source", templateContent);
+			
+			AcknowledgedResponse response = client.admin().cluster().preparePutStoredScript()
+					.setId(templateName)
+					.setContent(new BytesArray(toJson(rootNode)), XContentType.JSON)
+					.get();
+			return response.isAcknowledged();
+		}
+		
+		/**
+		 * 删除 Search Template
+		 * @param templateName
+		 * @return boolean
+		 */
+		public static boolean deleteSearchTemplate(String templateName) {
+			AcknowledgedResponse response = client.admin().cluster().prepareDeleteStoredScript(templateName).get();
+			return response.isAcknowledged();
+		}
+		
 	}
 	
 	/**
@@ -815,7 +849,7 @@ public final class ElasticUtils {
 		/**
 		 * 获取所有的Mapping信息
 		 * 返回的Map是Map套Map, 输出成JSON大概是这样子
-		 * <pre>
+		 * <pre> {@code
 		 * {
 		 *   "properties": {
 		 *     "title": {
@@ -832,7 +866,7 @@ public final class ElasticUtils {
 		 *     }
 		 *   }
 		 * }
-		 * </pre>
+		 * }</pre>
 		 *
 		 * @param index
 		 * @return
@@ -1126,7 +1160,7 @@ public final class ElasticUtils {
 		 *
 		 * @param indices
 		 */
-		public void multiMatch(String... indices) {
+		public static void multiMatch(String... indices) {
 			
 		}
 		
@@ -1136,10 +1170,18 @@ public final class ElasticUtils {
 		 * @param indices
 		 * @return ElasticBoolQueryBuilder
 		 */
-		public ElasticBoolQueryBuilder bool(String... indices) {
+		public static ElasticBoolQueryBuilder bool(String... indices) {
 			return new ElasticBoolQueryBuilder(indices);
 		}
 		
+		/**
+		 * Search Template Query
+		 * @param indices
+		 * @return ElasticTemplateQueryBuilder
+		 */
+		public static ElasticTemplateQueryBuilder templateQuery(String... indices) {
+			return new ElasticTemplateQueryBuilder(indices);
+		}
 	}
 	
 	/**

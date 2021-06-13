@@ -1,0 +1,16 @@
+{
+  "_source": [
+    "title",
+    "overview"
+  ],
+  "size": 20,
+  "query": {
+    "multi_match": {
+      "query": "{{q}}",
+      "fields": [
+        "title",
+        "overview"
+      ]
+    }
+  }
+}

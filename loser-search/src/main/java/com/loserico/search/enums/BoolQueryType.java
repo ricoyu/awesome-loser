@@ -10,7 +10,7 @@ package com.loserico.search.enums;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
-public enum BoolQuery {
+public enum BoolQueryType {
 	
 	MUST, 
 	
