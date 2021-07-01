@@ -1,7 +1,7 @@
 package org.loser.cache;
 
 import org.junit.Test;
-import redis.clients.util.JedisClusterCRC16;
+import redis.clients.jedis.util.JedisClusterCRC16;
 
 /**
  * <p>

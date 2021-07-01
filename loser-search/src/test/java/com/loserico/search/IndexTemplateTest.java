@@ -1,6 +1,6 @@
 package com.loserico.search;
 
-import com.loserico.search.builder.ElasticSettingsBuilder;
+import com.loserico.search.builder.admin.ElasticSettingsBuilder;
 import com.loserico.search.enums.Dynamic;
 import com.loserico.search.enums.FieldType;
 import org.elasticsearch.cluster.metadata.IndexTemplateMetaData;
@@ -25,7 +25,7 @@ public class IndexTemplateTest {
 	
 	@Test
 	public void testCreateIndexTemplate() {
-		boolean created = ElasticUtils.Admin.putIndexTemplate("template_default")
+		boolean created = ElasticUtils.Admin.putIndexTemplateByFile("template_default")
 				.patterns("*")
 				.order(0)
 				.version(1)
@@ -37,7 +37,7 @@ public class IndexTemplateTest {
 	
 	@Test
 	public void testCreateIndexTemplateTest() {
-		ElasticUtils.Admin.putIndexTemplate("tempalate_test")
+		ElasticUtils.Admin.putIndexTemplateByFile("tempalate_test")
 				.patterns("test*")
 				.order(1)
 				.settings(1)
@@ -62,7 +62,7 @@ public class IndexTemplateTest {
 	
 	@Test
 	public void testPutIndexTemplate() {
-		boolean created = ElasticUtils.Admin.putIndexTemplate("demo-index-template")
+		boolean created = ElasticUtils.Admin.putIndexTemplateByFile("demo-index-template")
 				.order(0)
 				.patterns("test*")
 				.version(0)
@@ -84,7 +84,7 @@ public class IndexTemplateTest {
 	
 	@Test
 	public void testPutIndexTemplate2() {
-		boolean created = ElasticUtils.Admin.putIndexTemplate("demo-index-template")
+		boolean created = ElasticUtils.Admin.putIndexTemplateByFile("demo-index-template")
 				.order(0)
 				.patterns("test*")
 				.version(0)

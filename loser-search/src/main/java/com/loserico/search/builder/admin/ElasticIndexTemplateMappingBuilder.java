@@ -1,4 +1,4 @@
-package com.loserico.search.builder;
+package com.loserico.search.builder.admin;
 
 import com.loserico.search.enums.Dynamic;
 

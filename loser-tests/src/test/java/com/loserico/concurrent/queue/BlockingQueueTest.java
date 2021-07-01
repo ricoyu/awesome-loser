@@ -2,10 +2,16 @@ package com.loserico.concurrent.queue;
 
 import com.loserico.common.lang.utils.StringUtils;
 import lombok.Data;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -22,6 +28,7 @@ import static org.assertj.core.api.Assertions.*;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
+@Slf4j
 public class BlockingQueueTest {
 	
 	@Test
@@ -69,6 +76,89 @@ public class BlockingQueueTest {
 		System.out.println(queue.poll());
 		boolean remoted3 = queue.remove(new User("rico"));
 		assertThat(remoted3 == false);
+	}
+	
+	@Test
+	public void testDrainTo() throws InterruptedException {
+		BlockingQueue<User> queue = new LinkedBlockingQueue<>();
+		
+		Runnable target;
+		Thread t1 = new Thread(() -> {
+			while (true) {
+				log.info("从Queue中DrainTo");
+				List<User> users = new ArrayList<>();
+				queue.drainTo(users);
+				log.info("Size:{}", users.size());
+			}
+		});
+		Thread t2 = new Thread(() -> {
+			log.info("丢2个到Queue中");
+			User u1 = new User("rico");
+			User u2 = new User("俞雪华");
+			queue.offer(u1);
+			queue.offer(u2);
+			
+			try {
+				TimeUnit.SECONDS.sleep(4);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
+			log.info("丢1个到Queue中");
+			User u3 = new User("rico");
+			queue.offer(u3);
+		});
+		
+		t1.start();
+		TimeUnit.SECONDS.sleep(3);
+		t2.start();
+	}
+	
+	@SneakyThrows
+	@Test
+	public void testTake() {
+		BlockingQueue<User> queue = new LinkedBlockingQueue<>();
+		
+		Runnable target;
+		Thread t1 = new Thread(() -> {
+			while (true) {
+				log.info("从Queue中Take");
+				try {
+					User user = queue.take();
+					log.info("Size:{}", user);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		});
+		Thread t2 = new Thread(() -> {
+			log.info("丢2个到Queue中");
+			User u1 = new User("rico");
+			User u2 = new User("俞雪华");
+			queue.offer(u1);
+			queue.offer(u2);
+			
+			try {
+				TimeUnit.SECONDS.sleep(4);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
+			log.info("丢1个到Queue中");
+			User u3 = new User("rico");
+			queue.offer(u3);
+		});
+		
+		t1.start();
+		TimeUnit.SECONDS.sleep(3);
+		t2.start();
+		
+		Thread.currentThread().join();
+	}
+	
+	@Test
+	public void test() {
+		System.out.println(new Date(1624005395304L));
 	}
 	
 	@Data

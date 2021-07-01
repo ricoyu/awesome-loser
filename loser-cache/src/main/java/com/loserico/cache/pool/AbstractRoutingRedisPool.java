@@ -4,7 +4,7 @@ import com.loserico.cache.config.RedisProperties;
 import com.loserico.cache.factory.JedisPoolFactories;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import redis.clients.util.Pool;
+import redis.clients.jedis.util.Pool;
 
 import javax.annotation.PostConstruct;
 import java.util.HashMap;

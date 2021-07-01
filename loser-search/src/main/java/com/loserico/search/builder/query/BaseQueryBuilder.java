@@ -7,7 +7,7 @@ import com.loserico.search.enums.Direction;
 import com.loserico.search.enums.SortOrder;
 import com.loserico.search.enums.SortOrder.SortOrderBuilder;
 import com.loserico.search.support.SearchHitsSupport;
-import com.loserico.search.vo.PageResult;
+import com.loserico.search.vo.ElasticPage;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.lucene.search.TotalHits;
 import org.elasticsearch.action.search.SearchRequestBuilder;
@@ -41,7 +41,9 @@ import static org.elasticsearch.common.lucene.search.function.CombineFunction.MU
  * @version 1.0
  */
 @Slf4j
-public abstract class BaseQueryBuilder {
+public abstract class BaseQueryBuilder implements BoolQuery {
+	
+	private ElasticBoolQueryBuilder boolQueryBuilder;
 	
 	/**
 	 * 要查询的索引
@@ -276,7 +278,8 @@ public abstract class BaseQueryBuilder {
 	
 	/**
 	 * 执行查询并返回script_fields指定的字段
-	 * @return Map<String, List<Object>>
+	 *
+	 * @return Map<String, List < Object>>
 	 */
 	public Map<String, List<Object>> queryForScriptFields() {
 		SearchHit[] hits = searchHits(null);
@@ -294,7 +297,7 @@ public abstract class BaseQueryBuilder {
 	 * @param <T>
 	 * @return PageResult
 	 */
-	public <T> PageResult<T> queryForPage() {
+	public <T> ElasticPage<T> queryForPage() {
 		return queryForPage(null);
 	}
 	
@@ -352,11 +355,11 @@ public abstract class BaseQueryBuilder {
 	 * @param <T>
 	 * @return List<T>
 	 */
-	public <T> PageResult<T> queryForPage(Object[] sort) {
+	public <T> ElasticPage<T> queryForPage(Object[] sort) {
 		SearchHit[] hits = searchHits(sort);
 		
 		if (hits.length == 0) {
-			return PageResult.emptyResult();
+			return ElasticPage.emptyResult();
 		}
 		
 		//拿到本次的sort
@@ -364,7 +367,7 @@ public abstract class BaseQueryBuilder {
 		//本次查询得到结果集
 		List<T> results = SearchHitsSupport.toList(hits, resultType);
 		
-		return PageResult.<T>builder()
+		return ElasticPage.<T>builder()
 				.results(results)
 				.sort(sortValues)
 				.build();
@@ -400,11 +403,47 @@ public abstract class BaseQueryBuilder {
 	}
 	
 	/**
+	 * 执行查询, 返回一个文档ID
+	 *
+	 * @return String
+	 */
+	public String queryForId() {
+		SearchHit[] hits = searchHits(null);
+		
+		if (hits.length == 0) {
+			return null;
+		}
+		
+		SearchHit hit = hits[0];
+		return hit.getId();
+	}
+	
+	/**
+	 * 执行查询, 返回文档ID列表
+	 *
+	 * @return List<String
+	 */
+	public List<String> queryForIds() {
+		SearchHit[] hits = searchHits(null);
+		
+		if (hits.length == 0) {
+			return Collections.emptyList();
+		}
+		
+		List<String> ids = new ArrayList<>();
+		for (int i = 0; i < hits.length; i++) {
+			ids.add(hits[i].getId());
+		}
+		
+		return ids;
+	}
+	
+	/**
 	 * 返回查询到的记录数, 查询不会真正返回文档
 	 *
 	 * @return
 	 */
-	public long getCount() {
+	public long queryForCount() {
 		SearchRequestBuilder builder = ElasticUtils.client.prepareSearch(indices)
 				.setQuery(builder())
 				.setSize(0) //count 不需要真正返回数据
@@ -476,5 +515,30 @@ public abstract class BaseQueryBuilder {
 		if (obj == null) {
 			throw new IllegalArgumentException(msg);
 		}
+	}
+	
+	
+	@Override
+	public ElasticBoolQueryBuilder must() {
+		boolQueryBuilder.must(builder());
+		return boolQueryBuilder;
+	}
+	
+	@Override
+	public ElasticBoolQueryBuilder mustNot() {
+		boolQueryBuilder.mustNot(builder());
+		return boolQueryBuilder;
+	}
+	
+	@Override
+	public ElasticBoolQueryBuilder should() {
+		boolQueryBuilder.should(builder());
+		return boolQueryBuilder;
+	}
+	
+	@Override
+	public ElasticBoolQueryBuilder filter() {
+		boolQueryBuilder.filter(builder());
+		return boolQueryBuilder;
 	}
 }

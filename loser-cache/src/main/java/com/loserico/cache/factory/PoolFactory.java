@@ -5,7 +5,7 @@ import com.loserico.common.lang.resource.PropertyReader;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPoolConfig;
-import redis.clients.util.Pool;
+import redis.clients.jedis.util.Pool;
 
 /**
  * Redis连接池工厂类，生成JedisPool 或者 ShardedJedisPool

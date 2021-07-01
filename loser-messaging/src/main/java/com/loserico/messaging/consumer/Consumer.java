@@ -1,6 +1,7 @@
 package com.loserico.messaging.consumer;
 
 import com.loserico.common.lang.concurrent.LoserThreadExecutor;
+import com.loserico.common.lang.constants.Units;
 import com.loserico.common.lang.transformer.Transformers;
 import com.loserico.common.lang.utils.DateUtils;
 import com.loserico.messaging.listener.ConsumerListener;
@@ -108,11 +109,23 @@ public class Consumer<K, V> extends KafkaConsumer {
 		try {
 			while (true) {
 				ConsumerRecords<String, String> consumerRecords = poll(pollDuration);
-				List messages = new ArrayList(consumerRecords.count());
+				int count = consumerRecords.count();
+				if (count == 0) {
+					continue;
+				}
+				
+				List messages = new ArrayList(count);
 				for (ConsumerRecord record : consumerRecords) {
 					messages.add(record.value());
 				}
-				log.debug("拉取到{}条消息", messages.size());
+				
+				StringBuilder sb = new StringBuilder();
+				messages.forEach(msg -> sb.append(msg));
+				byte[] bytes = sb.toString().getBytes();
+				int messageInKB = bytes.length / Units.KB;
+				log.info("拉取到消息大小{}KB", messageInKB);
+				
+				log.info("拉取到{}条消息", messages.size());
 				if (messages.isEmpty()) {
 					continue;
 				}
@@ -121,7 +134,7 @@ public class Consumer<K, V> extends KafkaConsumer {
 					listener.onMessage(messages);
 					commitSync();
 				} catch (Exception e) {
-					log.error("消费消息失败, 不提交", e);
+					log.info("消费消息失败, 不提交", e);
 				}
 			}
 		} finally {

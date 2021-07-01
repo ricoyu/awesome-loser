@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.loserico.json.jackson.JacksonUtils.toJson;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.*;
 
 /**
@@ -123,6 +124,16 @@ public class JacksonUtilsTest {
 		CustomRuleEvent customRuleEvent = JacksonUtils.toObject(json, CustomRuleEvent.class);
 	}
 	
+	@Test
+	public void testSerializeRawString() {
+		String eventJson = IOUtils.readClassPathFileAsString("ids-event1.json");
+		byte[] bytes = JacksonUtils.toBytes(eventJson);
+		String deserializeback = new String(bytes, UTF_8);
+		System.out.println(deserializeback);
+		
+		System.out.println(JacksonUtils.toPrettyJson(eventJson));
+	}
+	
 	@Data
 	private static class SimpleEvent {
 		
@@ -212,6 +223,7 @@ public class JacksonUtilsTest {
 		System.out.println(toJson(event));
 	}
 	
+	
 	@Data
 	private static class Event implements Serializable {
 		
@@ -221,9 +233,9 @@ public class JacksonUtilsTest {
 		private String event_type;
 		private List<Integer> vlan;
 		private String src_ip;
-		private Integer src_port;
+		private Long src_port;
 		private String dest_ip;
-		private Integer dest_port;
+		private Long dest_port;
 		private String proto;
 		private Metadata metadata;
 		private Alert alert;
@@ -232,7 +244,7 @@ public class JacksonUtilsTest {
 		private String app_proto_ts;
 		private Flow flow;
 		private String payload;
-		private Integer stream;
+		private Long stream;
 		private String pcap;
 		private Http http;
 		private Dns dns;
@@ -262,12 +274,13 @@ public class JacksonUtilsTest {
 		@lombok.Data
 		public static class Alert implements Serializable {
 			private String action;
-			private Integer gid;
+			private Long gid;
 			private Long signature_id;
-			private Integer rev;
+			private Long rev;
 			private String signature;
+			@JsonProperty(index = 0)
 			private String category;
-			private Integer severity;
+			private Long severity;
 			private String risk_level;
 			private String name;
 			private String rule_type;
@@ -281,10 +294,10 @@ public class JacksonUtilsTest {
 		
 		@lombok.Data
 		public static class Flow implements Serializable {
-			private Integer pkts_toserver;
-			private Integer pkts_toclient;
-			private Integer bytes_toserver;
-			private Integer bytes_toclient;
+			private Long pkts_toserver;
+			private Long pkts_toclient;
+			private Long bytes_toserver;
+			private Long bytes_toclient;
 			private String start;
 		}
 		
@@ -306,8 +319,8 @@ public class JacksonUtilsTest {
 			private String http_content_type;
 			private String http_method;
 			private String protocol;
-			private Integer status;
-			private Integer length;
+			private Long status;
+			private Long length;
 			private List<Header> request_headers;
 			private List<Header> response_headers;
 			private String httpRequestBody;

@@ -19,7 +19,7 @@ import java.util.List;
  */
 @Data
 @Builder
-public class PageResult<T> implements Serializable {
+public class ElasticPage<T> implements Serializable {
 	
 	private static final long serialVersionUID = 4426577582458914214L;
 	
@@ -37,8 +37,8 @@ public class PageResult<T> implements Serializable {
 	 * 返回一个空的PageResult, results是一个空的不可变List, sort是一个长度为0的数组
 	 * @return PageResult
 	 */
-	public static PageResult emptyResult() {
-		return PageResult.builder()
+	public static ElasticPage emptyResult() {
+		return ElasticPage.builder()
 				.results(Collections.emptyList())
 				.sort(new Object[0])
 				.build();

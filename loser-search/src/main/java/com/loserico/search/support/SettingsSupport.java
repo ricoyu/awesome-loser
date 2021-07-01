@@ -1,7 +1,7 @@
 package com.loserico.search.support;
 
 import com.loserico.search.annotation.Index;
-import com.loserico.search.builder.ElasticSettingsBuilder;
+import com.loserico.search.builder.admin.ElasticSettingsBuilder;
 import com.loserico.search.exception.InvalidSettingsException;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;

@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisSentinelPool;
-import redis.clients.util.Pool;
+import redis.clients.jedis.util.Pool;
 
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toSet;

@@ -20,7 +20,7 @@ import static org.junit.Assert.*;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
-public class ElasticUtilsUriQueryTest {
+public class UriQueryTest {
 	
 	@Test
 	public void testQueryReturnString() {
@@ -125,5 +125,32 @@ public class ElasticUtilsUriQueryTest {
 				.queryForList();
 		movies.forEach(System.out::println);
 	}
+	
+	@Test
+	public void testIncludeExclude() {
+		List<Object> movies = Query.uriQuery("movies")
+				.query("title:(Beautiful +Mind)")
+				.sort("title.keyword:asc")
+				.queryForList();
+		movies.forEach(System.out::println);
+		
+		ElasticUtils.Query.uriQuery("movies")
+				.query("title:(Beautiful +Mind)")
+				.sort("title.keyword:asc")
+				.excludeSources("@version")
+				.queryForList()
+				.forEach(System.out::println);
+		
+		ElasticUtils.Query.uriQuery("movies")
+				.query("title:(Beautiful +Mind)")
+				.sort("title.keyword:asc")
+				.includeSources("title")
+				.queryForList()
+				.forEach(System.out::println);
+	}
 
+	@Test
+	public void testPaging() {
+		
+	}
 }

@@ -47,8 +47,36 @@ public enum FieldType {
 	
 	BOOLEAN("boolean"),
 	
-	OBJECT("object"), 
+	OBJECT("object"),
 	
+	/**
+	 * 可以存IPv4, IPv6地址
+	 * <ul>
+	 *     <li/> 定义Mapping
+	 * <pre> {@code
+	 * PUT my_index
+	 * {"mappings":{"properties":{"ip_addr":{"type":"ip"}}}}
+	 * }</pre>
+	 *      <li/> 索引数据
+	 * <pre> {@code
+	 * PUT my_index/_doc/1
+	 * {
+	 *   "ip_addr": "192.168.1.1"
+	 * }
+	 * }</pre>
+	 *      <li/> 查询, 支持CIDR形式
+	 * <pre> {@code
+	 * POST my_index/_search
+	 * {
+	 *    "query": {
+	 *       "term": {
+	 *          "ip_addr": "192.168.0.0/12"
+	 *       }
+	 *    }
+	 * }
+	 * }</pre>
+	 * </ul>
+	 */
 	IP("ip"), 
 	
 	GEO_POINT("geo_point"),

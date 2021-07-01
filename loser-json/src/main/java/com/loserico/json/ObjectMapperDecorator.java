@@ -105,6 +105,10 @@ public class ObjectMapperDecorator {
 		objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, failOnUnknownProperties);
 		//JSON字符串field允许使用单引号括起来, 标准JSON是不允许的, 只可以使用双引号
 		objectMapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
+		//对POJO字段排序
+		objectMapper.configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
+		//对Map字段排序
+		objectMapper.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
 		/*
 		 * 用来处理没有默认构造函数的bean
 		 * POJO的有参构造函数需要标注@JsonCreator

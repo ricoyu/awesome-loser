@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
 import redis.clients.jedis.Pipeline;
-import redis.clients.util.Pool;
+import redis.clients.jedis.util.Pool;
 
 import java.util.List;
 import java.util.Map;

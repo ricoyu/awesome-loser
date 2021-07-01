@@ -4,10 +4,10 @@ import com.loserico.networking.utils.HttpUtils;
 import com.loserico.search.ElasticUtils.Admin;
 import com.loserico.search.ElasticUtils.Cluster;
 import com.loserico.search.annotation.DocId;
-import com.loserico.search.builder.AbstractMappingBuilder;
-import com.loserico.search.builder.ElasticIndexMappingBuilder;
-import com.loserico.search.builder.ElasticSettingsBuilder;
-import com.loserico.search.builder.FieldDefBuilder;
+import com.loserico.search.builder.admin.AbstractMappingBuilder;
+import com.loserico.search.builder.admin.ElasticIndexMappingBuilder;
+import com.loserico.search.builder.admin.ElasticSettingsBuilder;
+import com.loserico.search.builder.admin.FieldDefBuilder;
 import com.loserico.search.enums.Analyzer;
 import com.loserico.search.enums.ContextType;
 import com.loserico.search.enums.Direction;
@@ -18,13 +18,17 @@ import com.loserico.search.pojo.Movie;
 import com.loserico.search.support.BulkResult;
 import com.loserico.search.support.FieldDef;
 import com.loserico.search.support.UpdateResult;
-import com.loserico.search.vo.PageResult;
+import com.loserico.search.vo.ElasticPage;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.action.ActionFuture;
+import org.elasticsearch.action.admin.indices.forcemerge.ForceMergeResponse;
+import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.common.lucene.search.function.CombineFunction;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.ToXContent;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.BoostingQueryBuilder;
@@ -37,6 +41,7 @@ import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
+import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.suggest.SuggestBuilders;
 import org.elasticsearch.search.suggest.completion.CompletionSuggestionBuilder;
 import org.elasticsearch.search.suggest.completion.context.CategoryQueryContext;
@@ -171,7 +176,7 @@ public class ElasticUtilsTest {
 	
 	@Test
 	public void testSearchAfter() {
-		PageResult<String> pageResult = ElasticUtils.Query.query("users")
+		ElasticPage<String> page = ElasticUtils.Query.query("users")
 				.size(1)
 				.queryBuilder(matchAllQuery())
 				.addFieldSort("age", Direction.DESC)
@@ -888,4 +893,22 @@ public class ElasticUtilsTest {
 		assertTrue(acknowledge);
 	}
 	
+	@Test
+	public void testSetReadOnly() {
+		AcknowledgedResponse response = ElasticUtils.client.admin().indices()
+				.prepareUpdateSettings("test_index")
+				.setSettings(Settings.builder().put("blocks.read_only", true))
+				.get();
+		boolean acknowledged = response.isAcknowledged();
+		assertTrue(acknowledged);
+	}
+	
+	@SneakyThrows
+	@Test
+	public void testFormceMerge() {
+		ActionFuture<ForceMergeResponse> future = ElasticUtils.client.admin().indices().prepareForceMerge("my_movies").setMaxNumSegments(1).execute();
+		ForceMergeResponse mergeResponse = future.get();
+		RestStatus status = mergeResponse.getStatus();
+		System.out.println(status);
+	}
 }

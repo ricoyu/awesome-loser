@@ -1,4 +1,4 @@
-package com.loserico.search.builder;
+package com.loserico.search.builder.admin;
 
 import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.search.ElasticUtils;

@@ -75,6 +75,47 @@ public final class SearchHitsSupport {
 	}
 	
 	/**
+	 * 将SearchHit[]转成List
+	 *
+	 * @param hits
+	 * @param resultType
+	 * @param <T>
+	 * @return List<T>
+	 */
+	@SuppressWarnings({"unchecked"})
+	public static <T> T toObject(SearchHit[] hits, Class resultType) {
+		if (hits.length == 0) {
+			return null;
+		}
+		
+		String source = hits[0].getSourceAsString();
+		if (resultType == null) {
+			return (T) source;
+		}
+		
+		if (isBlank(source)) {
+			return null;
+		}
+		
+		//pojo标注了@DocId
+		Field id = ElasticCacheUtils.idField(resultType);
+		boolean hasDocId = id != null;
+		//@DocId标注的字段是String类型
+		boolean isStringId = hasDocId && id.getType() == String.class;
+		
+		T obj = (T) JacksonUtils.toObject(source, resultType);
+		if (hasDocId) {
+			if (isStringId) {
+				ReflectionUtils.setField(id, obj, hits[0].getId());
+			} else {
+				ReflectionUtils.setField(id, obj, Transformers.convert(hits[0].getId(), id.getType()));
+			}
+		}
+		
+		return obj;
+	}
+	
+	/**
 	 * 从SearchHit[]中取script_fields, 并转成Map
 	 *
 	 * @param hits

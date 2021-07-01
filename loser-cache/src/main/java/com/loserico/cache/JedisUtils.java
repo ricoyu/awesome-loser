@@ -238,6 +238,35 @@ public final class JedisUtils {
 	}
 	
 	/**
+	 * Integer, Long等数字类型的cas
+	 * <ul>
+	 *     <li/>如果原来key不存在, 直接set值
+	 *     <li/>如果mode<0, value要比原来的的值小才会set
+	 *     <li/>如果mode>0, value要比原来的值大才会set
+	 * </ul>
+	 * @param key
+	 * @param value
+	 * @param mode
+	 * @return boolean
+	 */
+	public static boolean casNumber(String key, Object value, int mode) {
+		return casNumber(toBytes(key), toBytes(value), toBytes(mode));
+	}
+	
+	public static boolean casNumber(byte[] key, byte[] value, byte[] mode) {
+		String sampleKey = "cas.lua";
+		String setExpireSha1 = shaHashs.computeIfAbsent(sampleKey, (x) -> {
+			log.debug("Load script {}", sampleKey);
+			if (jedisOperations instanceof JedisClusterOperations) {
+				jedisOperations.scriptLoad(IOUtils.readClassPathFileAsBytes("/lua-scripts/cas.lua"), key);
+			}
+			return jedisOperations.scriptLoad(IOUtils.readClassPathFileAsString("/lua-scripts/cas.lua"));
+		});
+		long result = (long) jedisOperations.evalsha(toBytes(setExpireSha1), 1, key, value, mode);
+		return result == 1;
+	}
+	
+	/**
 	 * 如果 key 不存在则设置 key=value
 	 * 原子操作
 	 *

@@ -8,7 +8,7 @@ import com.loserico.search.enums.SortOrder;
 import com.loserico.search.enums.SortOrder.SortOrderBuilder;
 import com.loserico.search.exception.ElasticQueryException;
 import com.loserico.search.support.SearchHitsSupport;
-import com.loserico.search.vo.PageResult;
+import com.loserico.search.vo.ElasticPage;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.lucene.search.TotalHits;
 import org.elasticsearch.action.search.SearchRequestBuilder;
@@ -355,7 +355,7 @@ public final class ElasticQueryBuilder {
 	 * @param <T>
 	 * @return
 	 */
-	public <T> PageResult<T> queryForPage() {
+	public <T> ElasticPage<T> queryForPage() {
 		return queryForPage(null);
 	}
 	
@@ -412,11 +412,11 @@ public final class ElasticQueryBuilder {
 	 * @param <T>
 	 * @return List<T>
 	 */
-	public <T> PageResult<T> queryForPage(Object[] sort) {
+	public <T> ElasticPage<T> queryForPage(Object[] sort) {
 		SearchHit[] hits = getSearchHits(sort);
 		
 		if (hits.length == 0) {
-			return PageResult.emptyResult();
+			return ElasticPage.emptyResult();
 		}
 		
 		//拿到本次的sort
@@ -424,7 +424,7 @@ public final class ElasticQueryBuilder {
 		//本次查询得到结果集
 		List<T> results = SearchHitsSupport.toList(hits, resultType);
 		
-		return PageResult.<T>builder()
+		return ElasticPage.<T>builder()
 				.results(results)
 				.sort(sortValues)
 				.build();

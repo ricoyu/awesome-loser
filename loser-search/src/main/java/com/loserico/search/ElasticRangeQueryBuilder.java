@@ -2,7 +2,6 @@ package com.loserico.search;
 
 import com.loserico.search.builder.query.BaseQueryBuilder;
 import com.loserico.search.builder.query.BoolRangeQuery;
-import com.loserico.search.builder.query.ElasticBoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.RangeQueryBuilder;
@@ -26,8 +25,6 @@ public class ElasticRangeQueryBuilder extends BaseQueryBuilder implements BoolRa
 	private Object gt;
 	
 	private Object lt;
-	
-	private ElasticBoolQueryBuilder boolQueryBuilder;
 	
 	public ElasticRangeQueryBuilder() {
 	}
@@ -84,28 +81,5 @@ public class ElasticRangeQueryBuilder extends BaseQueryBuilder implements BoolRa
 		
 		return QueryBuilders.constantScoreQuery(rangeQueryBuilder);
 	}
-	
-	@Override
-	public ElasticBoolQueryBuilder must() {
-		boolQueryBuilder.must(builder());
-		return boolQueryBuilder;
-	}
-	
-	@Override
-	public ElasticBoolQueryBuilder mustNot() {
-		boolQueryBuilder.mustNot(builder());
-		return boolQueryBuilder;
-	}
-	
-	@Override
-	public ElasticBoolQueryBuilder should() {
-		boolQueryBuilder.should(builder());
-		return boolQueryBuilder;
-	}
-	
-	@Override
-	public ElasticBoolQueryBuilder filter() {
-		boolQueryBuilder.should(builder());
-		return boolQueryBuilder;
-	}
+
 }

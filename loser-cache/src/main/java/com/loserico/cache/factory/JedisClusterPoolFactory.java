@@ -6,7 +6,7 @@ import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPoolConfig;
-import redis.clients.util.Pool;
+import redis.clients.jedis.util.Pool;
 
 import java.util.Set;
 

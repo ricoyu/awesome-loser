@@ -1,6 +1,6 @@
 package com.loserico.search.support;
 
-import com.loserico.search.builder.FieldDefBuilder;
+import com.loserico.search.builder.admin.FieldDefBuilder;
 import com.loserico.search.enums.Analyzer;
 import com.loserico.search.enums.FieldType;
 import lombok.Data;
@@ -52,7 +52,15 @@ public class FieldDef {
 	
 	/**
 	 * 如将enabled设置为false, 则无法进行搜索和聚合分析<p>
-	 * enabled 只能用在 object 类型字段上
+	 * enabled 只能用在 object 类型字段上, 设置了enabled=false, type="keyword"之类就不需要了
+	 * 
+	 * Elasticsearch tries to index all of the fields you give it, but sometimes you want to just store the field without indexing it. 
+	 * For instance, imagine that you are using Elasticsearch as a web session store. You may want to index the session ID and last update time, 
+	 * but you don’t need to query or run aggregations on the session data itself.
+	 * <p>
+	 * The enabled setting, which can be applied only to the top-level mapping definition and to object fields, 
+	 * causes Elasticsearch to skip parsing of the contents of the field entirely. 
+	 * The JSON can still be retrieved from the _source field, but it is not searchable or stored in any other way
 	 */
 	private Boolean enabled;
 	
@@ -71,6 +79,31 @@ public class FieldDef {
 	 * you may want to retrieve just the title and the date without having to extract those fields from a large _source field
 	 */
 	private Boolean store;
+	
+	/**
+	 * 如果字段仅用来过滤和聚合分析, 可以关闭, 节约存储<br/>
+	 * Norms store various normalization factors that are later used at query time in order to compute the score of a document relatively to a query.
+	 * <p/>
+	 * Although useful for scoring, norms also require quite a lot of disk 
+	 * (typically in the order of one byte per document per field in your index, 
+	 * even for documents that don’t have this specific field). As a consequence, 
+	 * if you don’t need scoring on a specific field, you should disable norms on that field. 
+	 * <p/>
+	 * In particular, this is the case for fields that are used solely for filtering or aggregations.
+	 * 
+	 * <pre> {@code
+	 * PUT my_index/_mapping
+	 * {
+	 *   "properties": {
+	 *     "title": {
+	 *       "type": "text",
+	 *       "norms": false
+	 *     }
+	 *   }
+	 * }
+	 * }</pre>
+	 */
+	private Boolean norms;
 	
 	/**
 	 * 在数据建模时, 为字段设置null_value, 可以避免空值引起的聚合不准
@@ -97,13 +130,22 @@ public class FieldDef {
 	private String copyTo;
 	
 	/**
-	 * 为该字段指定分词器
+	 * 为该字段指定分词器, 默认索引时和查询时都是有这个analyzer <br/>
+	 * this analyzer is used for both index and search analysis.
 	 */
 	private Analyzer analyzer;
 	
 	/**
+	 * 指定检索时使用的分词器, 不指定的话采用跟analyzer一样的分词器
+	 * Ik分词在建立的时候要注意: 建索引采用ik_max_word 检索采用ik_smart
+	 */
+	private Analyzer searchAnalyzer;
+	
+	/**
 	 * 如果这个字段是keyword类型, 并且需要对这个字段做聚合, 那么可以打开eagerGlobalOrdinals以提高性能
 	 * 打开后一旦有文档写入, 这个字段都会被预加载以提高聚合性能
+	 * 
+	 * 更新频繁, 聚合查询频繁的keyword类型字段, 推荐将eager_global_ordinals设置为true
 	 * Global ordinals are a data structure that is used to optimize the performance of aggregations.
 	 * They are calculated lazily and stored in the JVM heap as part of the field data cache.
 	 * For fields that are heavily used for bucketing aggregations, you can tell Elasticsearch to
@@ -112,12 +154,6 @@ public class FieldDef {
 	 * This should be done carefully because it will increase heap usage and can make refreshes take longer.
 	 */
 	private boolean eagerGlobalOrdinals = false;
-	
-	/**
-	 * 指定检索时使用的分词器, 不指定的话采用跟analyzer一样的分词器
-	 * Ik分词在建立的时候要注意: 建索引采用ik_max_word 检索采用ik_smart
-	 */
-	private Analyzer searchAnalyzer;
 	
 	/**
 	 * https://www.elastic.co/guide/en/elasticsearch/reference/7.10/text.html#fielddata-mapping-param
@@ -192,6 +228,10 @@ public class FieldDef {
 		
 		if (store != null) {
 			defMap.put("store", store);
+		}
+		
+		if (norms != null) {
+			defMap.put("norms", norms);
 		}
 		
 		if (nullValue != null) {

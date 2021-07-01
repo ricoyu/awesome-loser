@@ -842,6 +842,19 @@ public abstract class StringUtils {
 	}
 	
 	/**
+	 * 去掉str开头和结尾处的空白符
+	 * @param str
+	 * @return String
+	 */
+	public static String trim(String str) {
+		if (str == null) {
+			return null;
+		}
+		
+		return str.trim();
+	}
+	
+	/**
 	 * 去掉str中的所有空白符，包括开头、结尾及中间任何位置
 	 *
 	 * @param str

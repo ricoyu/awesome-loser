@@ -153,7 +153,7 @@ public final class ElasticTermQueryBuilder extends BaseQueryBuilder {
 	 * @param fields
 	 * @return QueryStringBuilder
 	 */
-	public BaseQueryBuilder includeSources(String... fields) {
+	public ElasticTermQueryBuilder includeSources(String... fields) {
 		this.includeSource = fields;
 		return this;
 	}
@@ -163,7 +163,7 @@ public final class ElasticTermQueryBuilder extends BaseQueryBuilder {
 	 * @param fields
 	 * @return QueryStringBuilder
 	 */
-	public BaseQueryBuilder excludeSources(String... fields) {
+	public ElasticTermQueryBuilder excludeSources(String... fields) {
 		this.excludeSource = fields;
 		return this;
 	}

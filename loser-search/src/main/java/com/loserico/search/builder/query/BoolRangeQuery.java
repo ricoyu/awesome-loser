@@ -10,7 +10,7 @@ package com.loserico.search.builder.query;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
-public interface BoolRangeQuery {
+public interface BoolRangeQuery extends BoolQuery{
 	
 	
 	/**
@@ -29,11 +29,4 @@ public interface BoolRangeQuery {
 	
 	public BoolRangeQuery lt(Object lt);
 	
-	public ElasticBoolQueryBuilder must();
-	
-	public ElasticBoolQueryBuilder mustNot();
-	
-	public ElasticBoolQueryBuilder should();
-	
-	public ElasticBoolQueryBuilder filter();
 }

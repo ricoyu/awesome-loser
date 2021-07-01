@@ -3,36 +3,49 @@ package com.loserico.search;
 import com.loserico.common.lang.transformer.Transformers;
 import com.loserico.common.lang.utils.IOUtils;
 import com.loserico.common.lang.utils.ReflectionUtils;
-import com.loserico.search.builder.ClusterSettingBuilder;
+import com.loserico.json.jsonpath.JsonPathUtils;
+import com.loserico.networking.enums.HttpMethod;
+import com.loserico.networking.utils.HttpUtils;
 import com.loserico.search.builder.ElasticContextSuggestBuilder;
-import com.loserico.search.builder.ElasticIndexBuilder;
-import com.loserico.search.builder.ElasticIndexTemplateBuilder;
 import com.loserico.search.builder.ElasticMultiGetBuilder;
-import com.loserico.search.builder.ElasticPutMappingBuilder;
 import com.loserico.search.builder.ElasticQueryBuilder;
-import com.loserico.search.builder.ElasticReindexBuilder;
-import com.loserico.search.builder.ElasticSettingsBuilder;
 import com.loserico.search.builder.ElasticSuggestBuilder;
-import com.loserico.search.builder.ElasticUpdateSettingBuilder;
+import com.loserico.search.builder.admin.ClusterSettingBuilder;
+import com.loserico.search.builder.admin.ElasticIndexBuilder;
+import com.loserico.search.builder.admin.ElasticIndexTemplateBuilder;
+import com.loserico.search.builder.admin.ElasticPutMappingBuilder;
+import com.loserico.search.builder.admin.ElasticReindexBuilder;
+import com.loserico.search.builder.admin.ElasticSettingsBuilder;
+import com.loserico.search.builder.admin.ElasticUpdateSettingBuilder;
+import com.loserico.search.builder.agg.ElasticAvgAggregationBuilder;
+import com.loserico.search.builder.agg.ElasticCardinalityAggregationBuilder;
+import com.loserico.search.builder.agg.ElasticCompositeAggregationBuilder;
+import com.loserico.search.builder.agg.ElasticMaxAggregationBuilder;
+import com.loserico.search.builder.agg.ElasticMinAggregationBuilder;
+import com.loserico.search.builder.agg.ElasticSumAggregationBuilder;
 import com.loserico.search.builder.agg.ElasticTermsAggregationBuilder;
 import com.loserico.search.builder.query.ElasticBoolQueryBuilder;
 import com.loserico.search.builder.query.ElasticExistsQueryBuilder;
 import com.loserico.search.builder.query.ElasticMatchPhraseQueryBuilder;
 import com.loserico.search.builder.query.ElasticMatchQueryBuilder;
+import com.loserico.search.builder.query.ElasticQueryStringBuilder;
 import com.loserico.search.builder.query.ElasticTemplateQueryBuilder;
 import com.loserico.search.builder.query.ElasticTermQueryBuilder;
-import com.loserico.search.builder.query.QueryStringBuilder;
-import com.loserico.search.builder.query.UriQueryBuilder;
+import com.loserico.search.builder.query.ElasticTermsQueryBuilder;
+import com.loserico.search.builder.query.ElasticUriQueryBuilder;
 import com.loserico.search.cache.ElasticCacheUtils;
 import com.loserico.search.enums.Analyzer;
 import com.loserico.search.enums.Dynamic;
+import com.loserico.search.exception.IndexTemplateCreateException;
 import com.loserico.search.factory.TransportClientFactory;
 import com.loserico.search.support.BulkResult;
 import com.loserico.search.support.IndexSupport;
 import com.loserico.search.support.MappingSupport;
+import com.loserico.search.support.RestSupport;
 import com.loserico.search.support.SettingsSupport;
 import com.loserico.search.support.UpdateResult;
 import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.DocWriteResponse;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
@@ -42,6 +55,7 @@ import org.elasticsearch.action.admin.indices.analyze.AnalyzeAction.Response;
 import org.elasticsearch.action.admin.indices.analyze.AnalyzeRequestBuilder;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
+import org.elasticsearch.action.admin.indices.forcemerge.ForceMergeResponse;
 import org.elasticsearch.action.admin.indices.mapping.get.GetFieldMappingsAction;
 import org.elasticsearch.action.admin.indices.mapping.get.GetFieldMappingsRequestBuilder;
 import org.elasticsearch.action.admin.indices.mapping.get.GetFieldMappingsResponse;
@@ -762,8 +776,44 @@ public final class ElasticUtils {
 		 *
 		 * @param templateName
 		 */
-		public static ElasticIndexTemplateBuilder putIndexTemplate(String templateName) {
+		public static ElasticIndexTemplateBuilder putIndexTemplateByFile(String templateName) {
 			return ElasticIndexTemplateBuilder.newInstance(client, templateName);
+		}
+		
+		/**
+		 * 从classpath读取指定的Index Template文件, 然后创建Index Template
+		 *
+		 * @param templateName
+		 * @param templateFileName
+		 * @return boolean
+		 */
+		public static boolean putIndexTemplateByFile(String templateName, String templateFileName) {
+			return putIndexTemplate(templateName, IOUtils.readClassPathFileAsString(templateFileName));
+		}
+		
+		/**
+		 * 从classpath读取指定的Index Template文件, 然后创建Index Template
+		 *
+		 * @param templateName
+		 * @param templateContent
+		 * @return boolean
+		 */
+		public static boolean putIndexTemplate(String templateName, String templateContent) {
+			String result = HttpUtils.post(RestSupport.HOST + "/_template/" + templateName)
+					.body(templateContent)
+					.method(HttpMethod.PUT)
+					.request();
+			
+			boolean hasError = JsonPathUtils.ifExists(result, "$.error");
+			if (hasError) {
+				String errors = JsonPathUtils.readNode(result, "$.error.caused_by.reason");
+				log.error("PUT index template failed, [{}]", errors);
+				throw new IndexTemplateCreateException(errors);
+			}
+			
+			Boolean acknowledged = JsonPathUtils.readNode(result, "$.acknowledged");
+			log.info("acknowledged: {}", acknowledged);
+			return acknowledged;
 		}
 		
 		/**
@@ -810,6 +860,7 @@ public final class ElasticUtils {
 		
 		/**
 		 * 创建 Search Template
+		 *
 		 * @param templateName
 		 * @return boolean
 		 */
@@ -831,6 +882,7 @@ public final class ElasticUtils {
 		
 		/**
 		 * 删除 Search Template
+		 *
 		 * @param templateName
 		 * @return boolean
 		 */
@@ -839,6 +891,31 @@ public final class ElasticUtils {
 			return response.isAcknowledged();
 		}
 		
+		/**
+		 * 将索引设为只读, 不再写入的索引设为只读后, 可以提升索引的读性能
+		 *
+		 * @param indices
+		 * @return boolean
+		 */
+		public boolean setReadOnly(String... indices) {
+			AcknowledgedResponse response = ElasticUtils.client.admin().indices()
+					.prepareUpdateSettings(indices)
+					.setSettings(org.elasticsearch.common.settings.Settings.builder().put("blocks.read_only", true))
+					.get();
+			return response.isAcknowledged();
+		}
+		
+		/**
+		 * 执行端
+		 * @param indices
+		 * @return ActionFuture<ForceMergeResponse>
+		 */
+		public ActionFuture<ForceMergeResponse> forceMerge(String indices) {
+			return ElasticUtils.client.admin().indices()
+					.prepareForceMerge(indices)
+					.setMaxNumSegments(1)
+					.execute();
+		}
 	}
 	
 	/**
@@ -1050,8 +1127,8 @@ public final class ElasticUtils {
 		 * @param index
 		 * @return QueryStringQueryBuilder
 		 */
-		public static UriQueryBuilder uriQuery(String index) {
-			return new UriQueryBuilder(index);
+		public static ElasticUriQueryBuilder uriQuery(String index) {
+			return new ElasticUriQueryBuilder(index);
 		}
 		
 		/**
@@ -1060,8 +1137,8 @@ public final class ElasticUtils {
 		 * @param index
 		 * @return QueryStringBuilder
 		 */
-		public static QueryStringBuilder queryString(String index) {
-			return new QueryStringBuilder(index);
+		public static ElasticQueryStringBuilder queryString(String index) {
+			return new ElasticQueryStringBuilder(index);
 		}
 		
 		/**
@@ -1075,12 +1152,12 @@ public final class ElasticUtils {
 		}
 		
 		/**
-		 * 在ES中, Term查询, 对输入**不做分词**. 会将输入作为一个整体, 在倒排索引中查找准确的词项, 并且使用相关度计算公式为每个包含该此项的文档进行相关度算分<p>
+		 * 在ES中, Term查询, 对输入不做分词. 会将输入作为一个整体, 在倒排索引中查找准确的词项, 并且使用相关度计算公式为每个包含该此项的文档进行相关度算分<p>
 		 * <ol>
 		 * <li/> Term Query 不会对查询条件做分词
 		 * <li/> 如果被查询字段在文档里面是被分词的, 但是又想用Term Query对其做精确匹配, 那么可以使用Elasticsearch提供的多字段特性, 查询其keyword字段, 如productID.keyword
 		 * <li/> Term Query 会算分
-		 * <li/> 可以通过 Constant Score 将查询转换成一个 Filtering, **避免算分, 并利用缓存**, 提高性能
+		 * <li/> 可以通过 Constant Score 将查询转换成一个 Filtering, 避免算分, 并利用缓存, 提高性能
 		 * <li/> Avoid using the term query for text fields.
 		 * </ol>
 		 *
@@ -1089,6 +1166,23 @@ public final class ElasticUtils {
 		 */
 		public static ElasticTermQueryBuilder termQuery(String... indices) {
 			return new ElasticTermQueryBuilder(indices);
+		}
+		
+		/**
+		 * 在ES中, Term查询, 对输入不做分词. 会将输入作为一个整体, 在倒排索引中查找准确的词项, 并且使用相关度计算公式为每个包含该此项的文档进行相关度算分<p>
+		 * <ol>
+		 * <li/> Term Query 不会对查询条件做分词
+		 * <li/> 如果被查询字段在文档里面是被分词的, 但是又想用Term Query对其做精确匹配, 那么可以使用Elasticsearch提供的多字段特性, 查询其keyword字段, 如productID.keyword
+		 * <li/> Term Query 会算分
+		 * <li/> 可以通过 Constant Score 将查询转换成一个 Filtering, 避免算分, 并利用缓存, 提高性能
+		 * <li/> Avoid using the term query for text fields.
+		 * </ol>
+		 *
+		 * @param indices
+		 * @return ElasticTermsQueryBuilder
+		 */
+		public static ElasticTermsQueryBuilder termsQuery(String... indices) {
+			return new ElasticTermsQueryBuilder(indices);
 		}
 		
 		/**
@@ -1176,6 +1270,7 @@ public final class ElasticUtils {
 		
 		/**
 		 * Search Template Query
+		 *
 		 * @param indices
 		 * @return ElasticTemplateQueryBuilder
 		 */
@@ -1185,12 +1280,38 @@ public final class ElasticUtils {
 	}
 	
 	/**
-	 * 聚合查询相关API
+	 * 聚合查询相关API<p/>
+	 * 聚合分两大类
+	 * <ol>
+	 *     <li/>Bucket 聚合<br/>
+	 *          按照一定的规则, 将文档分配到不同的桶中, 从而达到分类的目的. ES提供了一些常见的Bucket Aggregation
+	 *          <ul>
+	 *              <li/>Terms
+	 *              <li/>Range / Date Range
+	 *              <li/>Histogram / Date Histogram
+	 *              <li/>支持嵌套, 也就是在桶里再做分桶
+	 *          </ul>
+	 *     <li/>Metric 聚合<br/>
+	 *          主要是对数据做一些统计分析, 分为两大类
+	 *          <ul>
+	 *              <li/>单值分析: 只输出一个统计结果
+	 *              <ul>
+	 *                  <li/>min max avg sum
+	 *                  <li/>Cardinality(类似distinct count)
+	 *              </ul>
+	 *              <li/>多值分析:输出多个分析结果
+	 *              <ul>
+	 *                  <li/>stats, extended stats
+	 *                  <li/>percentile, percentile rank
+	 *                  <li/>top_hits(排在前面的示例)
+	 *              </ul>
+	 *          </ul>
+	 * </ol>
 	 */
 	public static class Aggs {
 		
 		/**
-		 * terms聚合
+		 * terms聚合, Bucket聚合的一种
 		 * https://www.elastic.co/guide/en/elasticsearch/client/java-api/7.x/java-aggs.html
 		 *
 		 * @param indices
@@ -1198,6 +1319,62 @@ public final class ElasticUtils {
 		 */
 		public static ElasticTermsAggregationBuilder terms(String... indices) {
 			return ElasticTermsAggregationBuilder.instance(indices);
+		}
+		
+		/**
+		 * min聚合, Metric聚合的一种
+		 *
+		 * @param indices
+		 * @return ElasticMinAggregationBuilder
+		 */
+		public static ElasticMinAggregationBuilder min(String... indices) {
+			return ElasticMinAggregationBuilder.instance(indices);
+		}
+		
+		/**
+		 * max聚合, Bucket聚合的一种
+		 *
+		 * @param indices
+		 * @return ElasticMaxAggregationBuilder
+		 */
+		public static ElasticMaxAggregationBuilder max(String... indices) {
+			return ElasticMaxAggregationBuilder.instance(indices);
+		}
+		
+		/**
+		 * avg聚合
+		 *
+		 * @param indices
+		 * @return ElasticMaxAggregationBuilder
+		 */
+		public static ElasticAvgAggregationBuilder avg(String... indices) {
+			return ElasticAvgAggregationBuilder.instance(indices);
+		}
+		
+		/**
+		 * sum聚合
+		 *
+		 * @param indices
+		 * @return ElasticSumAggregationBuilder
+		 */
+		public static ElasticSumAggregationBuilder sum(String... indices) {
+			return ElasticSumAggregationBuilder.instance(indices);
+		}
+		
+		/**
+		 * Cardinality聚合, 对字段去重后统计数量 <br/>
+		 * 比如你想通过聚合分析知道, 每天网站中的访客来自多少个不同的IP
+		 * <p>
+		 *
+		 * @param indices
+		 * @return ElasticCardinalityAggregationBuilder
+		 */
+		public static ElasticCardinalityAggregationBuilder cardinality(String... indices) {
+			return ElasticCardinalityAggregationBuilder.instance(indices);
+		}
+		
+		public static ElasticCompositeAggregationBuilder composite(String... indices) {
+			return ElasticCompositeAggregationBuilder.instance(indices);
 		}
 	}
 }

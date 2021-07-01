@@ -1,18 +1,16 @@
 package com.loserico.search.builder.agg;
 
-import com.loserico.search.ElasticUtils;
+import com.loserico.search.builder.query.BaseQueryBuilder;
+import com.loserico.search.support.AggResultSupport;
 import com.loserico.search.vo.AggResult;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.search.aggregations.Aggregation;
+import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.Aggregations;
-import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
-import org.elasticsearch.search.aggregations.bucket.terms.StringTerms.Bucket;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -27,24 +25,21 @@ import java.util.List;
  * @version 1.0
  */
 @Slf4j
-public class ElasticTermsAggregationBuilder extends AbstractAggregationBuilder {
+public class ElasticTermsAggregationBuilder extends AbstractAggregationBuilder implements TermAggregationBuilder, Compositable {
 	
 	/**
 	 * 这个是限制返回桶的数量, 如果总共有10个桶, 但是size设为5, 那么聚合结果中只会返回前5个桶
 	 */
 	private Integer size;
 	
-	private String[] indices;
-	
 	/**
-	 * 聚合名字
+	 * 帮助解决Terms不准的问题<br/>
+	 * Terms 聚合分析不准的原因, 数据分散在多个不同的分片上, Coordinating Node 无法获取数据全貌<br/>
+	 * 解决方案 1: 当数据量不大时, 设置Primary Shard为1; 实现准确性<br/>
+	 * 方案 2: 在分布式数据上, 设置shard_size参数, 提高精确度<br/>
+	 * 原理: 每次从Shard上额外多获取数据, 提升准确率
 	 */
-	private String name;
-	
-	/**
-	 * 要对哪个字段聚合
-	 */
-	private String field;
+	private Integer shardSize;
 	
 	private ElasticTermsAggregationBuilder(String[] indices) {
 		this.indices = indices;
@@ -57,24 +52,15 @@ public class ElasticTermsAggregationBuilder extends AbstractAggregationBuilder {
 		return new ElasticTermsAggregationBuilder(indices);
 	}
 	
-	/**
-	 * 给聚合起个名字, 后续获取聚合数据时需要
-	 *
-	 * @param name
-	 * @return ElasticTermsAggregationBuilder
-	 */
-	public ElasticTermsAggregationBuilder name(String name) {
-		this.name = name;
+	@Override
+	public ElasticTermsAggregationBuilder setQuery(BaseQueryBuilder queryBuilder) {
+		super.setQuery(queryBuilder);
 		return this;
 	}
 	
-	/**
-	 * 要对哪个字段聚合, 不能对TEXT类型字段做聚合, 不过可以用field.keyword代替
-	 *
-	 * @param field
-	 * @return ElasticTermsAggregationBuilder
-	 */
-	public ElasticTermsAggregationBuilder field(String field) {
+	@Override
+	public ElasticTermsAggregationBuilder of(String name, String field) {
+		this.name = name;
 		this.field = field;
 		return this;
 	}
@@ -90,31 +76,51 @@ public class ElasticTermsAggregationBuilder extends AbstractAggregationBuilder {
 		return this;
 	}
 	
-	public List<AggResult> get() {
-		TermsAggregationBuilder arrregationBuilder = AggregationBuilders.terms(name).field(field);
+	/**
+	 * 帮助解决Terms不准的问题<br/>
+	 * Terms 聚合分析不准的原因, 数据分散在多个不同的分片上, Coordinating Node 无法获取数据全貌<br/>
+	 * 解决方案 1: 当数据量不大时, 设置Primary Shard为1; 实现准确性<br/>
+	 * 方案 2: 在分布式数据上, 设置shard_size参数, 提高精确度<br/>
+	 * 原理: 每次从Shard上额外多获取数据, 提升准确率
+	 *
+	 * @param shardSize
+	 * @return ElasticTermsAggregationBuilder
+	 */
+	public ElasticTermsAggregationBuilder shardSize(Integer shardSize) {
+		this.shardSize = shardSize;
+		return this;
+	}
+	
+	@Override
+	public AggregationBuilder build() {
+		TermsAggregationBuilder aggregationBuilder = AggregationBuilders.terms(name).field(field);
 		if (size != null) {
-			arrregationBuilder.size(size);
+			aggregationBuilder.size(size);
 		}
+		if (shardSize != null) {
+			aggregationBuilder.shardSize(shardSize);
+		}
+		return aggregationBuilder;
+	}
+	
+	@Override
+	public ElasticCompositeAggregationBuilder and() {
+		compositeAggregationBuilder.add(build());
+		return compositeAggregationBuilder;
+	}
+	
+	public List<AggResult> get() {
+		TermsAggregationBuilder arrregationBuilder = (TermsAggregationBuilder) build();
 		
-		SearchRequestBuilder builder = ElasticUtils.client.prepareSearch(indices)
+		SearchRequestBuilder searchRequestBuilder = searchRequestBuilder();
+		
+		SearchRequestBuilder builder = searchRequestBuilder
 				.addAggregation(arrregationBuilder)
 				.setSize(0);
 		logDsl(builder);
-		
 		SearchResponse searchResponse = builder.get();
 		Aggregations aggregations = searchResponse.getAggregations();
 		
-		List<AggResult> aggResults = new ArrayList<>();
-		for (Aggregation aggregation : aggregations) {
-			List<Bucket> buckets = ((StringTerms) aggregation).getBuckets();
-			for (Bucket bucket : buckets) {
-				String key = bucket.getKeyAsString();
-				long docCount = bucket.getDocCount();
-				log.info("Bucket: {}, Doc Count: {}", key, docCount);
-				aggResults.add(new AggResult(key, docCount));
-			}
-		}
-		
-		return aggResults;
+		return AggResultSupport.termsResult(aggregations);
 	}
 }

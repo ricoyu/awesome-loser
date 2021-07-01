@@ -1,0 +1,80 @@
+{
+  "timestamp": "2021-06-24 10:28:55",
+  "flow_id": 1616097105620813,
+  "in_iface": "enp2s0",
+  "event_type": "alert",
+  "vlan": [
+    0
+  ],
+  "src_ip": "192.168.101.23",
+  "src_port": 35354,
+  "dest_ip": "59.110.69.35",
+  "dest_port": 80,
+  "proto": "TCP",
+  "create_time": 1624501735798,
+  "model_ver": "6.0.1 RELEASE",
+  "proto_type": "http",
+  "tx_id": 0,
+  "alert_action": "allowed",
+  "alert_gid": 1,
+  "alert_signature_id": 2002910,
+  "alert_rev": 0,
+  "alert_signature": "scan.SCAN Potential http Scan 5800-5820",
+  "alert_category": "",
+  "alert_severity": 3,
+  "event_engine": "ids",
+  "event_id": "ec8a55b0-d493-11eb-8ab0-e03f49ac253d",
+  "http_hostname": "www.9wyo.com",
+  "http_url": "/test.txt",
+  "http_http_user_agent": "Wget/1.14 (linux-gnu)",
+  "http_http_content_type": "text/plain",
+  "http_http_method": "GET",
+  "http_protocol": "HTTP/1.1",
+  "http_status": 200,
+  "http_length": 0,
+  "http_response_headers": [
+    {
+      "name": "Server",
+      "value": "nginx/1.17.2"
+    },
+    {
+      "name": "Date",
+      "value": "Tue, 27 Aug 2019 05:55:14 GMT"
+    },
+    {
+      "name": "Content-Type",
+      "value": "text/plain"
+    },
+    {
+      "name": "Content-Length",
+      "value": "22"
+    },
+    {
+      "name": "Last-Modified",
+      "value": "Sat, 27 Jul 2019 09:00:17 GMT"
+    },
+    {
+      "name": "Connection",
+      "value": "keep-alive"
+    },
+    {
+      "name": "ETag",
+      "value": "\"5d3c12a1-16\""
+    },
+    {
+      "name": "Accept-Ranges",
+      "value": "bytes"
+    }
+  ],
+  "app_proto": "http",
+  "flow_pkts_toserver": 4,
+  "flow_pkts_toclient": 3,
+  "flow_bytes_toserver": 390,
+  "flow_bytes_toclient": 443,
+  "flow_start": "2021-06-24 10:28:55",
+  "payload": "R0VUIC90ZXN0LnR4dCBIVFRQLzEuMQ0KVXNlci1BZ2VudDogV2dldC8xLjE0IChsaW51eC1nbnUpDQpBY2NlcHQ6ICovKg0KSG9zdDogd3d3Ljl3eW8uY29tDQpDb25uZWN0aW9uOiBLZWVwLUFsaXZlDQoNCg==",
+  "stream": 1,
+  "pcap": "/opt/ids/pcaps/1624501735_1500118692_1616097105620813.pcap",
+  "packet": "AC7H4eEAAAwpXiF+CABFAAA08D9AAEAGpDPAqGUXO25FI4oaAFAtEKO6YA1G8oAQAO2mdwAAAQEICgDoU4iPR9/V",
+  "packet_info_linktype": 1
+}

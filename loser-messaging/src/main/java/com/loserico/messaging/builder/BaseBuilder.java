@@ -37,15 +37,6 @@ public abstract class BaseBuilder {
 	private List<String> bootstrapServerPorts = new ArrayList<>();
 	
 	/**
-	 * 默认 ""
-	 * ID to pass to the server when making requests. Used for server-side logging.
-	 * The purpose of this is to be able to track the source of requests beyond just ip/port by allowing
-	 * a logical application name to be included in server-side request logging.
-	 */
-	protected String clientId;
-	
-	
-	/**
 	 * Additional producer-specific properties used to configure the client.<p>
 	 * 其他一些通用属性
 	 */
@@ -75,20 +66,6 @@ public abstract class BaseBuilder {
 		notNull(host, "host cannot be null!");
 		notNull(port, "port cannot be null!");
 		bootstrapServerPorts.add(host + ":" + port);
-		return this;
-	}
-	
-	/**
-	 * 默认 ""<p>
-	 * ID to pass to the server when making requests. Used for server-side logging.<p>
-	 * The purpose of this is to be able to track the source of requests beyond just ip/port by allowing<p>
-	 * a logical application name to be included in server-side request logging.
-	 *
-	 * @param clientId
-	 * @return BaseBuilder
-	 */
-	public BaseBuilder clientId(String clientId) {
-		this.clientId = clientId;
 		return this;
 	}
 	

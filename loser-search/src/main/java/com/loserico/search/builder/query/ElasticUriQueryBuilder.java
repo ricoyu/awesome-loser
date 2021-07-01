@@ -1,10 +1,11 @@
 package com.loserico.search.builder.query;
 
-import com.loserico.common.lang.resource.PropertyReader;
+import com.loserico.common.lang.utils.StringUtils;
 import com.loserico.json.jsonpath.JsonPathUtils;
 import com.loserico.networking.utils.HttpUtils;
 import com.loserico.search.enums.Direction;
 import com.loserico.search.exception.UriQueryException;
+import com.loserico.search.support.RestSupport;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -15,6 +16,8 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
+ * URI Query 接收的查询参数
+ * https://www.elastic.co/guide/en/elasticsearch/reference/7.6/search-search.html#search-search-api-query-params
  * <p>
  * Copyright: (C), 2021-04-28 17:30
  * <p>
@@ -25,23 +28,12 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  * @version 1.0
  */
 @Slf4j
-public class UriQueryBuilder {
+public class ElasticUriQueryBuilder {
 	
 	private static final String DF = "df=";
-	private static final String COLON = ":";
 	private static final String SORT = "sort=";
 	private static final String FROM = "from=";
 	private static final String SIZE = "size=";
-	private static String host = null;
-	
-	{
-		PropertyReader reader = new PropertyReader("elastic");
-		String hosts = reader.getString("elastic.rest.hosts");
-		if (!hosts.contains(COLON)) {
-			hosts = hosts + COLON + "9200"; //每页包含端口号就把默认的9200 端口拼接上去
-		}
-		host = hosts;
-	}
 	
 	/**
 	 * 要查询的索引, 可以:<ol>
@@ -97,11 +89,28 @@ public class UriQueryBuilder {
 	private Integer size;
 	
 	/**
+	 * 是否要返回source, 默认_source=true
+	 */
+	private boolean fetchSource = true;
+	
+	/**
+	 * 控制要排除哪些返回的字段, 而不是整个_source
+	 * _source_excludes 参数, 多个值逗号隔开
+	 */
+	private String[] excludeSources;
+	
+	/**
+	 * 控制返回自己想要的字段, 而不是整个_source
+	 * _source_includes 参数, 多个值逗号隔开
+	 */
+	private String[] includeSources;
+	
+	/**
 	 * 查询返回的结果类型
 	 */
 	private Class resultType;
 	
-	public UriQueryBuilder(String index) {
+	public ElasticUriQueryBuilder(String index) {
 		notNull(index, "index cannot be null!");
 		this.index = index;
 	}
@@ -110,17 +119,17 @@ public class UriQueryBuilder {
 	 * 指定查询语句, 使用Query String Syntax<p>
 	 * 有多种查询语法
 	 * <ul>
-	 * <li/>df查询 GET movies/_search?q=2012&df=title
+	 * <li/>df查询      GET movies/_search?q=2012&df=title
 	 * <li/>指定字段查询 GET movies/_search?q=title:2012
-	 * <li/>泛查询 GET movies/_search?q=2012              会对文档中所有字段进行查询
-	 * <li/>GET movies/_search?q=title:Beautiful Mind     与下面的等价
-	 * <li/>GET movies/_search?q=title:Beautiful OR Mind
-	 * <li/>Pahrase Query(引号引起来的) GET movies/_search?q=title:"Beautiful Mind"  表示Beautiful Mind要同时出现并且按照规定的顺序, 与下面的等价
-	 * <li/>GET movies/_search?q=title:Beautiful AND Mind
-	 * <li/>分组 GET movies/_search?q=title:(Beautiful Mind)
-	 * <li/>GET movies/_search?q=title:(Beautiful NOT Mind)  包含Beautiful 不包含 Mind
-	 * <li/>GET movies/_search?q=title:(Beautiful %2BMind)   必须包含Mind, %2B是 + 号的转义字符
-	 * <li/>范围查询 GET movies/_search?q=year:>1980
+	 * <li/>泛查询      GET movies/_search?q=2012              会对文档中所有字段进行查询
+	 * <li/>Mind会在所有字段上查询  GET movies/_search?q=title:Beautiful Mind     与下面的等价
+	 * <li/>Mind会在所有字段上查询  GET movies/_search?q=title:Beautiful OR Mind
+	 * <li/>Pahrase Query(引号引起来的) GET movies/_search?q=title:"Beautiful Mind"  表示Beautiful Mind要同时出现并且按照规定的顺序
+	 * <li/>                          GET movies/_search?q=title:Beautiful AND Mind
+	 * <li/>分组        GET movies/_search?q=title:(Beautiful Mind)
+	 * <li/>           GET movies/_search?q=title:(Beautiful NOT Mind)  包含Beautiful 不包含 Mind
+	 * <li/>           GET movies/_search?q=title:(Beautiful %2BMind)   必须包含Mind, %2B是 + 号的转义字符
+	 * <li/>范围查询    GET movies/_search?q=year:>1980
 	 * </ul>
 	 * 你可以就写查询条件: 2012<p>
 	 * 也可以写完成的查询: q=2012 或者 q=2012&df=title 等<p>
@@ -128,7 +137,7 @@ public class UriQueryBuilder {
 	 * @param q
 	 * @return QueryStringQueryBuilder
 	 */
-	public UriQueryBuilder query(String q) {
+	public ElasticUriQueryBuilder query(String q) {
 		notEmpty(q, "q cannot be empty");
 		if (!q.startsWith("q=")) {
 			q = "q=" + q;
@@ -146,7 +155,7 @@ public class UriQueryBuilder {
 	 * @param df
 	 * @return UriQueryBuilder
 	 */
-	public UriQueryBuilder field(String df) {
+	public ElasticUriQueryBuilder field(String df) {
 		notEmpty(df, "df cannot be empty!");
 		this.df = df;
 		return this;
@@ -160,7 +169,7 @@ public class UriQueryBuilder {
 	 * @param sort
 	 * @return
 	 */
-	public UriQueryBuilder sort(String sort) {
+	public ElasticUriQueryBuilder sort(String sort) {
 		notNull(sort, "sort cannot be null!");
 		this.sort = sort;
 		return this;
@@ -173,7 +182,7 @@ public class UriQueryBuilder {
 	 * @param size
 	 * @return QueryStringQueryBuilder
 	 */
-	public UriQueryBuilder page(Integer from, Integer size) {
+	public ElasticUriQueryBuilder page(Integer from, Integer size) {
 		notNull(from, "from cannot be null!");
 		notNull(size, "size cannot be null!");
 		this.from = from;
@@ -187,7 +196,7 @@ public class UriQueryBuilder {
 	 * @param size
 	 * @return QueryStringQueryBuilder
 	 */
-	public UriQueryBuilder size(Integer size) {
+	public ElasticUriQueryBuilder size(Integer size) {
 		notNull(size, "size cannot be null!");
 		this.size = size;
 		return this;
@@ -201,10 +210,43 @@ public class UriQueryBuilder {
 	 * @param direction
 	 * @return UriQueryBuilder
 	 */
-	public UriQueryBuilder sort(String field, Direction direction) {
+	public ElasticUriQueryBuilder sort(String field, Direction direction) {
 		notNull(field, "field cannot be null!");
 		notNull(direction, "direction cannot be null!");
 		this.sort = field + ":" + direction;
+		return this;
+	}
+	
+	/**
+	 * 是否要获取_source
+	 *
+	 * @param fetchSource
+	 * @return UriQueryBuilder
+	 */
+	public ElasticUriQueryBuilder fetchSource(boolean fetchSource) {
+		this.fetchSource = fetchSource;
+		return this;
+	}
+	
+	/**
+	 * 控制返回自己想要的字段, 而不是整个_source
+	 *
+	 * @param fields
+	 * @return UriQueryBuilder
+	 */
+	public ElasticUriQueryBuilder includeSources(String... fields) {
+		this.includeSources = fields;
+		return this;
+	}
+	
+	/**
+	 * 控制要排除哪些返回的字段, 而不是整个_source
+	 *
+	 * @param fields
+	 * @return UriQueryBuilder
+	 */
+	public ElasticUriQueryBuilder excludeSources(String... fields) {
+		this.excludeSources = fields;
 		return this;
 	}
 	
@@ -214,7 +256,7 @@ public class UriQueryBuilder {
 	 * @param resultType
 	 * @return UriQueryBuilder
 	 */
-	public UriQueryBuilder resultType(Class resultType) {
+	public ElasticUriQueryBuilder resultType(Class resultType) {
 		this.resultType = resultType;
 		return this;
 	}
@@ -242,7 +284,7 @@ public class UriQueryBuilder {
 		if (resultType != null) {
 			return JsonPathUtils.readListNode(responseJson, "$.hits.hits[*]._source", resultType);
 		}
-		return (List<T>)JsonPathUtils.readListNode(responseJson, "$.hits.hits[*]._source");
+		return (List<T>) JsonPathUtils.readListNode(responseJson, "$.hits.hits[*]._source");
 	}
 	
 	/**
@@ -265,10 +307,7 @@ public class UriQueryBuilder {
 	 */
 	private String buildQueryString() {
 		StringBuilder sb = new StringBuilder();
-		if (!host.startsWith("http")) {
-			sb.append("http://");
-		}
-		sb.append(host)
+		sb.append(RestSupport.HOST)
 				.append("/").append(index)
 				.append("/").append("_search")
 				.append("?").append(q);
@@ -290,6 +329,20 @@ public class UriQueryBuilder {
 		} else if (size != null) {
 			//只指定了获取的数据量
 			sb.append("&").append(SIZE + size);
+		}
+		
+		if (!fetchSource) {
+			sb.append("&_source=false");
+		}
+		
+		if (excludeSources != null && excludeSources.length > 0) {
+			sb.append("&_source_excludes=")
+					.append(StringUtils.joinWith(",", excludeSources));
+		}
+		
+		if (includeSources != null && includeSources.length > 0) {
+			sb.append("&_source_includes=")
+					.append(StringUtils.joinWith(",", includeSources));
 		}
 		
 		return sb.toString();

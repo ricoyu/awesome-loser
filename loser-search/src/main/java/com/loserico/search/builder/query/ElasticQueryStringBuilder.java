@@ -21,7 +21,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
-public class QueryStringBuilder extends BaseQueryBuilder {
+public class ElasticQueryStringBuilder extends BaseQueryBuilder {
 	
 	/**
 	 * 指定查询的字段
@@ -63,6 +63,18 @@ public class QueryStringBuilder extends BaseQueryBuilder {
 	 *     <li/>(ruan AND yiming) OR (Java AND Elasticsearch)
 	 *     <li/>"name:\"ruan yiming\"" 查询name包含"ruan yiming"这个短语
 	 * </ol>
+	 * 
+	 * 也可以为不同字段指定不同的查询条件
+	 * <pre> {@code
+	 * GET /_search
+	 * {
+	 *   "query": {
+	 *     "query_string": {
+	 *       "query": "(content:this OR name:this) AND (content:that OR name:that)"
+	 *     }
+	 *   }
+	 * }
+	 * }</pre>
 	 */
 	private String queryString;
 	
@@ -72,12 +84,12 @@ public class QueryStringBuilder extends BaseQueryBuilder {
 	 */
 	protected Operator operator;
 	
-	public QueryStringBuilder(String... indices) {
+	public ElasticQueryStringBuilder(String... indices) {
 		notNull(indices, "indices cannot be null!");
 		this.indices = indices;
 	}
 	
-	public QueryStringBuilder query(String queryString) {
+	public ElasticQueryStringBuilder query(String queryString) {
 		notEmpty(queryString, "queryString cannot be empty");
 		this.queryString = queryString;
 		return this;
@@ -100,7 +112,7 @@ public class QueryStringBuilder extends BaseQueryBuilder {
 	 * @param fields
 	 * @return UriQueryBuilder
 	 */
-	public QueryStringBuilder fields(String... fields) {
+	public ElasticQueryStringBuilder fields(String... fields) {
 		this.fields = fields;
 		return this;
 	}
@@ -121,7 +133,7 @@ public class QueryStringBuilder extends BaseQueryBuilder {
 	 * @param defaultField
 	 * @return QueryStringBuilder
 	 */
-	public QueryStringBuilder defaultField(String defaultField) {
+	public ElasticQueryStringBuilder defaultField(String defaultField) {
 		this.defaultField = defaultField;
 		return this;
 	}
@@ -135,7 +147,7 @@ public class QueryStringBuilder extends BaseQueryBuilder {
 	 * @param operator
 	 * @return ElasticMatchQueryBuilder
 	 */
-	public QueryStringBuilder operator(Operator operator) {
+	public ElasticQueryStringBuilder operator(Operator operator) {
 		this.operator = operator;
 		return this;
 	}
@@ -150,7 +162,7 @@ public class QueryStringBuilder extends BaseQueryBuilder {
 	 * @param sort
 	 * @return QueryStringBuilder
 	 */
-	public QueryStringBuilder sort(String sort) {
+	public ElasticQueryStringBuilder sort(String sort) {
 		super.sort(sort);
 		return this;
 	}
@@ -163,7 +175,7 @@ public class QueryStringBuilder extends BaseQueryBuilder {
 	 * @param direction
 	 * @return QueryStringBuilder
 	 */
-	public QueryStringBuilder sort(String field, Direction direction) {
+	public ElasticQueryStringBuilder sort(String field, Direction direction) {
 		notNull(field, "field cannot be null!");
 		notNull(direction, "direction cannot be null!");
 		return sort(field + ":" + direction);
@@ -176,7 +188,7 @@ public class QueryStringBuilder extends BaseQueryBuilder {
 	 * @param size
 	 * @return QueryStringBuilder
 	 */
-	public QueryStringBuilder paging(int from, int size) {
+	public ElasticQueryStringBuilder paging(int from, int size) {
 		this.from = from;
 		this.size = size;
 		return this;
@@ -190,7 +202,7 @@ public class QueryStringBuilder extends BaseQueryBuilder {
 	 * @param size
 	 * @return ElasticMatchQueryBuilder
 	 */
-	public QueryStringBuilder size(int size) {
+	public ElasticQueryStringBuilder size(int size) {
 		this.size = size;
 		return this;
 	}
@@ -206,7 +218,7 @@ public class QueryStringBuilder extends BaseQueryBuilder {
 	 * @param searchAfter
 	 * @return ElasticQueryBuilder
 	 */
-	public QueryStringBuilder searchAfter(Object[] searchAfter) {
+	public ElasticQueryStringBuilder searchAfter(Object[] searchAfter) {
 		this.searchAfter = searchAfter;
 		return this;
 	}
@@ -217,7 +229,7 @@ public class QueryStringBuilder extends BaseQueryBuilder {
 	 * @param fetchSource
 	 * @return QueryBuilder
 	 */
-	public QueryStringBuilder fetchSource(boolean fetchSource) {
+	public ElasticQueryStringBuilder fetchSource(boolean fetchSource) {
 		this.fetchSource = fetchSource;
 		return this;
 	}
@@ -228,7 +240,7 @@ public class QueryStringBuilder extends BaseQueryBuilder {
 	 * @param fields
 	 * @return QueryStringBuilder
 	 */
-	public QueryStringBuilder includeSources(String... fields) {
+	public ElasticQueryStringBuilder includeSources(String... fields) {
 		this.includeSource = fields;
 		return this;
 	}
@@ -239,7 +251,7 @@ public class QueryStringBuilder extends BaseQueryBuilder {
 	 * @param fields
 	 * @return QueryStringBuilder
 	 */
-	public QueryStringBuilder excludeSources(String... fields) {
+	public ElasticQueryStringBuilder excludeSources(String... fields) {
 		this.excludeSource = fields;
 		return this;
 	}
@@ -254,7 +266,7 @@ public class QueryStringBuilder extends BaseQueryBuilder {
 	 * @return ElasticMatchQueryBuilder
 	 */
 	@Override
-	public QueryStringBuilder scriptField(String fieldName, String script) {
+	public ElasticQueryStringBuilder scriptField(String fieldName, String script) {
 		super.scriptField(fieldName, script);
 		return this;
 	}
@@ -265,7 +277,7 @@ public class QueryStringBuilder extends BaseQueryBuilder {
 	 * @param resultType
 	 * @return UriQueryBuilder
 	 */
-	public QueryStringBuilder resultType(Class resultType) {
+	public ElasticQueryStringBuilder resultType(Class resultType) {
 		this.resultType = resultType;
 		return this;
 	}

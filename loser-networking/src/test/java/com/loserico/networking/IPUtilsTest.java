@@ -90,6 +90,7 @@ public class IPUtilsTest {
 	
 	@Test
 	public void testIpInRange() {
+		assertTrue(IPUtils.isIpInRange("172.23.12.161", "172.23.12.161"));
 		assertTrue(IPUtils.isIpInRange("192.168.2.1", "192.168.2.1")); // true
 		assertFalse(IPUtils.isIpInRange("192.168.2.1", "192.168.2.0/32")); // false
 		assertTrue(IPUtils.isIpInRange("192.168.2.5", "192.168.2.0/24")); // true

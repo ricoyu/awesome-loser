@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import com.loserico.json.ObjectMapperDecorator;
 import com.loserico.json.exception.JacksonException;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -178,6 +180,9 @@ public final class JacksonUtils {
 		if (object == null) {
 			return null;
 		}
+		if (object instanceof String) {
+			return ((String)object).getBytes(UTF_8);
+		}
 		try {
 			return objectMapper.writeValueAsBytes(object);
 		} catch (JsonProcessingException e) {
@@ -189,6 +194,10 @@ public final class JacksonUtils {
 	public static <T> String toPrettyJson(T object) {
 		if (object == null) {
 			return null;
+		}
+		
+		if (object instanceof String) {
+			return new JSONObject((String)object).toString(2);
 		}
 		try {
 			return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(object);

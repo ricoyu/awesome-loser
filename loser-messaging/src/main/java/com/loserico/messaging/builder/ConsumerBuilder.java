@@ -15,13 +15,14 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.AUTO_OFFSET_RESET_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG;
-import static org.apache.kafka.clients.consumer.ConsumerConfig.CLIENT_ID_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG;
+import static org.apache.kafka.clients.consumer.ConsumerConfig.FETCH_MAX_BYTES_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.FETCH_MIN_BYTES_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.GROUP_ID_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG;
+import static org.apache.kafka.clients.consumer.ConsumerConfig.MAX_PARTITION_FETCH_BYTES_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.MAX_POLL_RECORDS_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG;
 
@@ -65,14 +66,6 @@ public class ConsumerBuilder extends BaseBuilder {
 	private OffsetReset autoOffsetReset;
 	
 	/**
-	 * 默认 ""
-	 * ID to pass to the server when making requests. Used for server-side logging.
-	 * The purpose of this is to be able to track the source of requests beyond just ip/port by allowing
-	 * a logical application name to be included in server-side request logging.
-	 */
-	private String clientId;
-	
-	/**
 	 * Unique string that identifies the consumer group to which this consumer belongs.
 	 */
 	private String groupId;
@@ -86,9 +79,37 @@ public class ConsumerBuilder extends BaseBuilder {
 	private Integer fetchMaxWait;
 	
 	/**
+	 * 默认57671680 55M
+	 * The maximum number of bytes we will return for a fetch request. Must be at least 1024.
+	 * 
+	 * fetch.max.bytes
+	 */
+	private Integer fetchMaxBytes;
+	
+	/**
 	 * Minimum amount of data the server should return for a fetch request.
 	 */
-	private Long fetchMinSize;
+	private Integer fetchMinBytes;
+	
+	/**
+	 *  默认 1048576 1M
+	 *  
+	 *  The maximum amount of data per-partition the server will return. Records are fetched in batches by the consumer. 
+	 *  If the first record batch in the first non-empty partition of the fetch is larger than this limit, 
+	 *  the batch will still be returned to ensure that the consumer can make progress. 
+	 *  The maximum record batch size accepted by the broker is defined via message.max.bytes (broker config) or max.message.bytes (topic config). 
+	 *  See fetch.max.bytes for limiting the consumer request size.
+	 *  
+	 *  max.partition.fetch.bytes
+	 */
+	private Integer maxPartitionFetchBytes;
+	
+	/**
+	 * 默认 500
+	 * Maximum number of records returned in a single call to poll().
+	 * max.poll.records
+	 */
+	private Integer maxPollRecords;
 	
 	/**
 	 * 默认 3000, 要小于 1/3 of session.timeout.ms(默认 10000)
@@ -121,13 +142,6 @@ public class ConsumerBuilder extends BaseBuilder {
 	 * message 类型, 如果指定, 自动帮你反序列化成该对象
 	 */
 	private Class messageClass;
-	
-	/**
-	 * 默认 500
-	 * Maximum number of records returned in a single call to poll().
-	 * max.poll.records
-	 */
-	private Integer maxPollRecords;
 	
 	@Override
 	public ConsumerBuilder bootstrapServers(String bootstrapServers) {
@@ -189,11 +203,6 @@ public class ConsumerBuilder extends BaseBuilder {
 		return this;
 	}
 	
-	public ConsumerBuilder clientId(String clientId) {
-		super.clientId(clientId);
-		return this;
-	}
-	
 	/**
 	 * Unique string that identifies the consumer group to which this consumer belongs.
 	 *
@@ -221,6 +230,19 @@ public class ConsumerBuilder extends BaseBuilder {
 	}
 	
 	/**
+	 * 默认57671680 55M
+	 * The maximum number of bytes we will return for a fetch request. Must be at least 1024.
+	 *
+	 * fetch.max.bytes
+	 * @param fetchMaxBytes
+	 * @return ConsumerBuilder
+	 */
+	public ConsumerBuilder fetchMaxBytes(Integer fetchMaxBytes) {
+		this.fetchMaxBytes = fetchMaxBytes;
+		return this;
+	}
+	
+	/**
 	 * 设置fetch.min.bytes参数<p>
 	 * <p>
 	 * The minimum amount of data the server should return for a fetch request. <p>
@@ -232,11 +254,32 @@ public class ConsumerBuilder extends BaseBuilder {
 	 * <p>
 	 * 设置大于1可以提供吞吐量但是延迟会高
 	 *
-	 * @param fetchMinSize
+	 * @param fetchMinBytes
 	 * @return ConsumerBuilder
 	 */
-	public ConsumerBuilder fetchMinSzie(Long fetchMinSize) {
-		this.fetchMinSize = fetchMinSize;
+	public ConsumerBuilder fetchMinBytes(Integer fetchMinBytes) {
+		this.fetchMinBytes = fetchMinBytes;
+		return this;
+	}
+	
+	/**
+	 *  默认 1048576 1M
+	 *  
+	 *  从一个Partition上一次拉取消息的bytes上限, 如果消息都在一个Partition上, 那么限制了一次拉取消息的大小
+	 *
+	 *  The maximum amount of data per-partition the server will return. Records are fetched in batches by the consumer. 
+	 *  If the first record batch in the first non-empty partition of the fetch is larger than this limit, 
+	 *  the batch will still be returned to ensure that the consumer can make progress. 
+	 *  The maximum record batch size accepted by the broker is defined via message.max.bytes (broker config) or max.message.bytes (topic config). 
+	 *  See fetch.max.bytes for limiting the consumer request size.
+	 *
+	 *  max.partition.fetch.bytes
+	 *  
+	 * @param maxPartitionFetchBytes
+	 * @return ConsumerBuilder
+	 */
+	public ConsumerBuilder maxPartitionFetchBytes(Integer maxPartitionFetchBytes) {
+		this.maxPartitionFetchBytes = maxPartitionFetchBytes;
 		return this;
 	}
 	
@@ -291,12 +334,12 @@ public class ConsumerBuilder extends BaseBuilder {
 	}
 	
 	/**
-	 * 默认 500<p>
+	 * 默认 500<p> 最多一次能拉取多少条消息
 	 * Maximum number of records returned in a single call to poll().<p>
 	 * 设置 max.poll.records 属性
 	 *
 	 * @param maxPollRecords
-	 * @return
+	 * @return ConsumerBuilder
 	 */
 	public ConsumerBuilder maxPollRecords(Integer maxPollRecords) {
 		notNull(maxPollRecords, "maxPollRecords cannot be null!");
@@ -334,11 +377,9 @@ public class ConsumerBuilder extends BaseBuilder {
 	private Map<String, Object> buildProperties() {
 		Map<String, Object> properties = new HashMap<>();
 		properties.put(BOOTSTRAP_SERVERS_CONFIG, bootstrapServers());
+		
 		if (autoOffsetReset != null) {
-			properties.put(AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
-		}
-		if (isNotBlank(clientId)) {
-			properties.put(CLIENT_ID_CONFIG, clientId);
+			properties.put(AUTO_OFFSET_RESET_CONFIG, autoOffsetReset.toString());
 		}
 		if (enableAutoCommit != null) {
 			properties.put(ENABLE_AUTO_COMMIT_CONFIG, enableAutoCommit);
@@ -349,8 +390,17 @@ public class ConsumerBuilder extends BaseBuilder {
 		if (fetchMaxWait != null) {
 			properties.put(FETCH_MAX_WAIT_MS_CONFIG, fetchMaxWait);
 		}
-		if (fetchMinSize != null) {
-			properties.put(FETCH_MIN_BYTES_CONFIG, fetchMinSize);
+		if (maxPollRecords != null) {
+			properties.put(MAX_POLL_RECORDS_CONFIG, maxPollRecords);
+		}
+		if (fetchMaxBytes != null) {
+			properties.put(FETCH_MAX_BYTES_CONFIG, fetchMaxBytes);
+		}
+		if (fetchMinBytes != null) {
+			properties.put(FETCH_MIN_BYTES_CONFIG, fetchMinBytes);
+		}
+		if (maxPartitionFetchBytes != null) {
+			properties.put(MAX_PARTITION_FETCH_BYTES_CONFIG, maxPartitionFetchBytes);
 		}
 		if (isNotBlank(groupId)) {
 			properties.put(GROUP_ID_CONFIG, groupId);
@@ -364,10 +414,6 @@ public class ConsumerBuilder extends BaseBuilder {
 		if (valueDeserializer != null) {
 			properties.put(VALUE_DESERIALIZER_CLASS_CONFIG, valueDeserializer);
 		}
-		if (maxPollRecords != null) {
-			properties.put(MAX_POLL_RECORDS_CONFIG, maxPollRecords);
-		}
-		
 		if (messageClass != null) {
 			properties.put("message.class", messageClass);
 		}

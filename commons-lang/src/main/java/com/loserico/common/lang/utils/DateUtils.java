@@ -280,6 +280,20 @@ public final class DateUtils {
 	}
 	
 	/**
+	 * 根据指定的format格式化Date对象, 时区为"Asia/Shanghai", Locale为CHINA
+	 *
+	 * @param millis
+	 * @return String
+	 */
+	public static String format(Long millis, String format) {
+		if (millis == null) {
+			return null;
+		}
+		SimpleDateFormat simpleDateFormat = SimpleDateFormatHolder.formatFor(format);
+		return simpleDateFormat.format(new Date(millis));
+	}
+	
+	/**
 	 * 将本地时间localDateTime转成HTTP请求头使用的日期格式<p>
 	 * 时区会转成GMT时区, 英语, 如: Sun, 06 Nov 1994 08:49:37 GMT
 	 *

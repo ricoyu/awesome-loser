@@ -1,4 +1,4 @@
-package com.loserico.search.builder;
+package com.loserico.search.builder.admin;
 
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.common.settings.Settings;

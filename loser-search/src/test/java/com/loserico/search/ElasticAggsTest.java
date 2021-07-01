@@ -60,16 +60,14 @@ public class ElasticAggsTest {
 	@Test
 	public void testAgg() {
 		List<AggResult> aggResults = Aggs.terms("cars")
-				.field("color.keyword")
-				.name("cars-color")
+				.of("cars-color", "color.keyword")
 				.size(5)
 				.get();
 		assertThat(aggResults.size()).isEqualTo(3);
 		aggResults.forEach(System.out::println);
 		
 		List<AggResult> aggResults1 = Aggs.terms("kibana_sample_data_flights")
-				.name("dest-country")
-				.field("DestCountry")
+				.of("dest-country", "DestCountry")
 				.get();
 		aggResults1.forEach(System.out::println);
 	}

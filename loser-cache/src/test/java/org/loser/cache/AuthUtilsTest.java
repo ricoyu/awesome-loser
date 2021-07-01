@@ -4,6 +4,7 @@ import com.loserico.cache.auth.AuthUtils;
 import lombok.SneakyThrows;
 import org.junit.Test;
 
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.*;
@@ -102,6 +103,19 @@ public class AuthUtilsTest {
 		TimeUnit.SECONDS.sleep(4);
 		logined = AuthUtils.isLogined("rico");
 		assertFalse(logined);
+	}
+	
+	@SneakyThrows
+	@Test
+	public void testTokenExpires() {
+		AuthUtils.login("ricoyu", "asdasd", 2L, TimeUnit.MINUTES, null, null, null);
+		TimeUnit.MINUTES.sleep(2);
+		boolean logined = AuthUtils.isLogined("username");
+		assertFalse(logined);
+	}
+	
+	public static void main(String[] args) {
+		System.out.println(new Date(1624937346000L));
 	}
 	
 }

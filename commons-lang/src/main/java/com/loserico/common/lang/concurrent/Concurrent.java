@@ -11,6 +11,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -46,6 +47,11 @@ public final class Concurrent {
 	 * @on
 	 */
 	private static final ExecutorService IO_POOL = TtlExecutors.getTtlExecutorService(ioConcentratedFixedThreadPool());
+	
+	/**
+	 * 负责执行延迟任务
+	 */
+	private static ScheduledThreadPoolExecutor DELAY_POOL = new ScheduledThreadPoolExecutor(NCPUS + 1);
 
 	/**
 	 * 这个ThreadLocal放的是CompletableFuture对象, 这是在主线程里调用的,
@@ -63,7 +69,7 @@ public final class Concurrent {
 	public static ExecutorService ncoreFixedThreadPool() {
 		ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(NCPUS + 1, NCPUS + 1,
 				0L, TimeUnit.MILLISECONDS,
-				new LinkedBlockingQueue<Runnable>(),
+				new LinkedBlockingQueue<Runnable>(2600),
 				defaultThreadFactory);
 		threadPoolExecutor.prestartAllCoreThreads();
 		return threadPoolExecutor;
@@ -79,7 +85,7 @@ public final class Concurrent {
 	public static ExecutorService ioConcentratedFixedThreadPool() {
 		ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(2 * NCPUS + 1, 2 * NCPUS + 1,
 				0L, TimeUnit.MILLISECONDS,
-				new LinkedBlockingQueue<Runnable>(),
+				new LinkedBlockingQueue<Runnable>(2600),
 				defaultThreadFactory);
 		threadPoolExecutor.prestartAllCoreThreads();
 		return threadPoolExecutor;
@@ -151,6 +157,16 @@ public final class Concurrent {
 			log.error("", e);
 			throw new RuntimeException(e);
 		}
+	}
+	
+	/**
+	 * 延迟指定时间执行一次(注意: 是执行一次)
+	 * @param task
+	 * @param delay
+	 * @param timeUnit
+	 */
+	public static void schedule(Runnable task, long delay, TimeUnit timeUnit) {
+		DELAY_POOL.schedule(task, delay, timeUnit);
 	}
 
 	static class ThreadLocalSupplier<V, T> implements Supplier<V> {

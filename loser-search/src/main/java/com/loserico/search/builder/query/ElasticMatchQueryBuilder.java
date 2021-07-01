@@ -20,7 +20,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
-public class ElasticMatchQueryBuilder extends BaseQueryBuilder implements MatchQuerys {
+public class ElasticMatchQueryBuilder extends BaseQueryBuilder implements MatchQuery, BoolMatchQuery {
 	
 	/**
 	 * 如果要查询的title值是 "Last Christmas", 那么默认搜索title包含last或者christmas
@@ -242,7 +242,6 @@ public class ElasticMatchQueryBuilder extends BaseQueryBuilder implements MatchQ
 		return this;
 	}
 	
-	
 	/**
 	 * 控制返回自己想要的字段, 而不是整个_source
 	 *
@@ -303,5 +302,4 @@ public class ElasticMatchQueryBuilder extends BaseQueryBuilder implements MatchQ
 		}
 		return matchAllQueryBuilder;
 	}
-	
 }

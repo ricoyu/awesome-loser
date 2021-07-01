@@ -2,8 +2,8 @@ package com.loserico.search.support;
 
 import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.search.annotation.Index;
-import com.loserico.search.builder.ElasticPutMappingBuilder;
-import com.loserico.search.builder.FieldDefBuilder;
+import com.loserico.search.builder.admin.ElasticPutMappingBuilder;
+import com.loserico.search.builder.admin.FieldDefBuilder;
 import com.loserico.search.enums.Analyzer;
 import com.loserico.search.enums.Dynamic;
 import com.loserico.search.enums.FieldType;

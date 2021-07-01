@@ -19,7 +19,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AggResult {
 	
-	private String bucket;
+	/**
+	 * bucket大部分情况是字符串, 但是也可能对一个Long类型字段做聚合, 此时的Bucket就是long
+	 */
+	private Object bucket;
 	
 	private Object count;
 	

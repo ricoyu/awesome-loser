@@ -1,4 +1,4 @@
-package com.loserico.search.builder;
+package com.loserico.search.builder.admin;
 
 import com.loserico.search.enums.Analyzer;
 import com.loserico.search.enums.ContextType;
@@ -48,9 +48,45 @@ public final class FieldDefBuilder {
 	private Boolean enabled;
 	
 	/**
-	 * 字段是否要存储, 默认字段是不单独存储的, 字段值都是从_source字段中抽取的
+	 * 默认设置下字段可以被索引和搜索, 但是字段值没有被单独存储, 如将enabled设置为false, 则无法进行搜索和聚合分析
+	 * By default, field values are indexed to make them searchable, but they are not stored.
+	 * This means that the field can be queried, but the original field value cannot be retrieved.
+	 * <p>
+	 * 但是因为字段默认就是_source的一部分, 而_source默认是存储的, 所以这样也OK
+	 * Usually this doesn’t matter. The field value is already part of the _source field, which is stored by default. <p>
+	 * <p>
+	 * 就是说如果文档中某个字段内容很大, 比如content存了一整篇文章, 但是我们查询的时候只是想要查一下作者的信息, 那么就可以把author字段设置成store=true<p>
+	 * 这样我们就能单独获取author字段, 而不是从很大的_source中抽取author字段<p>
+	 * In certain situations it can make sense to store a field.
+	 * For instance, if you have a document with a title, a date, and a very large content field,
+	 * you may want to retrieve just the title and the date without having to extract those fields from a large _source field
 	 */
 	private Boolean store;
+	
+	/**
+	 * 如果字段仅用来过滤和聚合分析, 可以关闭, 节约存储<br/>
+	 * Norms store various normalization factors that are later used at query time in order to compute the score of a document relatively to a query.
+	 * <p/>
+	 * Although useful for scoring, norms also require quite a lot of disk 
+	 * (typically in the order of one byte per document per field in your index, 
+	 * even for documents that don’t have this specific field). As a consequence, 
+	 * if you don’t need scoring on a specific field, you should disable norms on that field. 
+	 * <p/>
+	 * In particular, this is the case for fields that are used solely for filtering or aggregations.
+	 *
+	 * <pre> {@code
+	 * PUT my_index/_mapping
+	 * {
+	 *   "properties": {
+	 *     "title": {
+	 *       "type": "text",
+	 *       "norms": false
+	 *     }
+	 *   }
+	 * }
+	 * }</pre>
+	 */
+	private Boolean norms;
 	
 	/**
 	 * 在数据建模时, 为字段设置null_value, 可以避免空值引起的聚合不准
@@ -165,15 +201,60 @@ public final class FieldDefBuilder {
 	 * 如将enabled设置为false, 则无法进行搜索和聚合分析
 	 *
 	 * @param enabled
-	 * @return
+	 * @return FieldDefBuilder
 	 */
 	public FieldDefBuilder enabled(Boolean enabled) {
 		this.enabled = enabled;
 		return this;
 	}
 	
+	/**
+	 * 默认设置下字段可以被索引和搜索, 但是字段值没有被单独存储, 如将enabled设置为false, 则无法进行搜索和聚合分析
+	 * By default, field values are indexed to make them searchable, but they are not stored.
+	 * This means that the field can be queried, but the original field value cannot be retrieved.
+	 * <p>
+	 * 但是因为字段默认就是_source的一部分, 而_source默认是存储的, 所以这样也OK
+	 * Usually this doesn’t matter. The field value is already part of the _source field, which is stored by default. <p>
+	 * <p>
+	 * 就是说如果文档中某个字段内容很大, 比如content存了一整篇文章, 但是我们查询的时候只是想要查一下作者的信息, 那么就可以把author字段设置成store=true<p>
+	 * 这样我们就能单独获取author字段, 而不是从很大的_source中抽取author字段<p>
+	 * In certain situations it can make sense to store a field.
+	 * For instance, if you have a document with a title, a date, and a very large content field,
+	 * you may want to retrieve just the title and the date without having to extract those fields from a large _source field
+	 * 
+	 * @param store
+	 * @return FieldDefBuilder
+	 */
 	public FieldDefBuilder store(Boolean store) {
 		this.store = store;
+		return this;
+	}
+	
+	/**
+	 * 如果字段仅用来过滤和聚合分析, 可以关闭, 节约存储<br/>
+	 * Norms store various normalization factors that are later used at query time in order to compute the score of a document relatively to a query.
+	 * <p/>
+	 * Although useful for scoring, norms also require quite a lot of disk 
+	 * (typically in the order of one byte per document per field in your index, 
+	 * even for documents that don’t have this specific field). As a consequence, 
+	 * if you don’t need scoring on a specific field, you should disable norms on that field. 
+	 * <p/>
+	 * In particular, this is the case for fields that are used solely for filtering or aggregations.
+	 *
+	 * <pre> {@code
+	 * PUT my_index/_mapping
+	 * {
+	 *   "properties": {
+	 *     "title": {
+	 *       "type": "text",
+	 *       "norms": false
+	 *     }
+	 *   }
+	 * }
+	 * }</pre>
+	 */
+	public FieldDefBuilder norms(Boolean norms) {
+		this.norms = norms;
 		return this;
 	}
 	
@@ -332,6 +413,7 @@ public final class FieldDefBuilder {
 		fieldDef.setIndex(index);
 		fieldDef.setEnabled(enabled);
 		fieldDef.setStore(store);
+		fieldDef.setNorms(norms);
 		fieldDef.setNullValue(nullValue);
 		
 		return fieldDef;
