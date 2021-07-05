@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.lucene.search.TotalHits;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.common.lucene.search.function.CombineFunction;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilder;
@@ -267,7 +268,7 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 	 * @return List<T>
 	 */
 	public <T> List<T> queryForList() {
-		SearchHit[] hits = searchHits(null);
+		SearchHit[] hits = searchHits();
 		
 		if (hits.length == 0) {
 			return Collections.emptyList();
@@ -282,23 +283,13 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 	 * @return Map<String, List < Object>>
 	 */
 	public Map<String, List<Object>> queryForScriptFields() {
-		SearchHit[] hits = searchHits(null);
+		SearchHit[] hits = searchHits();
 		
 		if (hits.length == 0) {
 			return Collections.emptyMap();
 		}
 		
 		return SearchHitsSupport.toScriptFieldsMap(hits);
-	}
-	
-	/**
-	 * 分页查询
-	 *
-	 * @param <T>
-	 * @return PageResult
-	 */
-	public <T> ElasticPage<T> queryForPage() {
-		return queryForPage(null);
 	}
 	
 	/**
@@ -355,8 +346,10 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 	 * @param <T>
 	 * @return List<T>
 	 */
-	public <T> ElasticPage<T> queryForPage(Object[] sort) {
-		SearchHit[] hits = searchHits(sort);
+	public <T> ElasticPage<T> queryForPage() {
+		SearchResponse response = searchResponse();
+		Long total = response.getHits().getTotalHits().value;
+		SearchHit[] hits = response.getHits().getHits();
 		
 		if (hits.length == 0) {
 			return ElasticPage.emptyResult();
@@ -367,10 +360,14 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 		//本次查询得到结果集
 		List<T> results = SearchHitsSupport.toList(hits, resultType);
 		
-		return ElasticPage.<T>builder()
+		ElasticPage<T> elasticPage = ElasticPage.<T>builder()
 				.results(results)
 				.sort(sortValues)
 				.build();
+		elasticPage.setTotalCount(total.intValue());
+		elasticPage.setPageSize(size);
+		elasticPage.setCurrentPage(from);
+		return elasticPage;
 	}
 	
 	/**
@@ -380,7 +377,7 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 	 * @return T
 	 */
 	public <T> T queryForOne() {
-		SearchHit[] hits = searchHits(null);
+		SearchHit[] hits = searchHits();
 		
 		if (hits.length == 0) {
 			return null;
@@ -408,7 +405,7 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 	 * @return String
 	 */
 	public String queryForId() {
-		SearchHit[] hits = searchHits(null);
+		SearchHit[] hits = searchHits();
 		
 		if (hits.length == 0) {
 			return null;
@@ -424,7 +421,7 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 	 * @return List<String
 	 */
 	public List<String> queryForIds() {
-		SearchHit[] hits = searchHits(null);
+		SearchHit[] hits = searchHits();
 		
 		if (hits.length == 0) {
 			return Collections.emptyList();
@@ -463,22 +460,25 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 	 *
 	 * @return
 	 */
-	private SearchHit[] searchHits(Object[] searchAfterValues) {
-		
-		SearchRequestBuilder searchRequestBuilder = ElasticUtils.client.prepareSearch(indices).setQuery(builder());
+	private SearchHit[] searchHits() {
+		SearchResponse response = searchResponse();
+		SearchHits searchHits = response.getHits();
+		return searchHits.getHits();
+	}
+	
+	private SearchResponse searchResponse() {
+		SearchRequestBuilder searchRequestBuilder = ElasticUtils.client.prepareSearch(indices)
+				.setIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN)
+				.setQuery(builder());
 		
 		/*
 		 * Search After 避免深度分页
 		 */
-		if (searchAfterValues != null) {
-			searchRequestBuilder.searchAfter(searchAfterValues);
-		}
-		
-		sortOrders.forEach(sortOrder -> sortOrder.addTo(searchRequestBuilder));
-		
 		if (searchAfter != null) {
 			searchRequestBuilder.searchAfter(searchAfter);
 		}
+		
+		sortOrders.forEach(sortOrder -> sortOrder.addTo(searchRequestBuilder));
 		
 		if (from != null) {
 			searchRequestBuilder.setFrom(from);
@@ -506,9 +506,7 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 		if (log.isDebugEnabled()) {
 			log.debug("Query DSL:\n{}", new JSONObject(searchRequestBuilder.toString()).toString(2));
 		}
-		SearchResponse response = searchRequestBuilder.get();
-		SearchHits searchHits = response.getHits();
-		return searchHits.getHits();
+		return searchRequestBuilder.get();
 	}
 	
 	protected static void notNull(Object obj, String msg) {

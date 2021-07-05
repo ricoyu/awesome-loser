@@ -1,5 +1,6 @@
 package com.loserico.datetime;
 
+import com.loserico.common.lang.utils.DateUtils;
 import org.junit.Test;
 
 import java.text.MessageFormat;
@@ -1062,5 +1063,14 @@ public class DateTimeTest {
 	    ZonedDateTime ldtAtCST = ldt.atZone(ZoneOffset.ofHours(+8));    //2016-06-13T11:34:50+08:00
 	    ldtAtUTC.toInstant().toEpochMilli();         //1465817690000
 	    ldtAtCST.toInstant().toEpochMilli(); //1465817690000
+	}
+	
+	@Test
+	public void testDateBeginEnd() {
+		LocalDateTime begin = LocalDateTime.of(2021, 06, 29, 0, 0);
+		LocalDateTime end = LocalDateTime.of(2021, 06, 29, 23, 59);
+		
+		System.out.println(DateUtils.toEpochMilis(begin));
+		System.out.println(DateUtils.toEpochMilis(end));
 	}
 }

@@ -1,6 +1,5 @@
-package com.loserico.codec.com.loserico.codec;
+package com.loserico.codec;
 
-import com.loserico.codec.RedixUtils;
 import org.junit.Test;
 
 /**
@@ -28,6 +27,7 @@ public class RedixUtilsTest {
 	@Test
 	public void testBinary2Int() {
 		System.out.println(RedixUtils.binaryToInt("11111111"));
+		System.out.println(RedixUtils.binaryToInt("00011111111111111111111111111111"));
 	}
 	
 	@Test

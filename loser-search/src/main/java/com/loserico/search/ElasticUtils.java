@@ -906,7 +906,7 @@ public final class ElasticUtils {
 		}
 		
 		/**
-		 * 执行端
+		 * 执行段合并, 可以先设为只读, 然后进行段合并
 		 * @param indices
 		 * @return ActionFuture<ForceMergeResponse>
 		 */

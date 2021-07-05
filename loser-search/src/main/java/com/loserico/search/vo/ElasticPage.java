@@ -1,5 +1,6 @@
 package com.loserico.search.vo;
 
+import com.loserico.common.lang.vo.Page;
 import lombok.Builder;
 import lombok.Data;
 
@@ -19,7 +20,7 @@ import java.util.List;
  */
 @Data
 @Builder
-public class ElasticPage<T> implements Serializable {
+public class ElasticPage<T> extends Page implements Serializable {
 	
 	private static final long serialVersionUID = 4426577582458914214L;
 	

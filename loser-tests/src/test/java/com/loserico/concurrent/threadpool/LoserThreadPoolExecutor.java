@@ -102,51 +102,61 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	 */
 	private final AtomicInteger ctl = new AtomicInteger(ctlOf(RUNNING, 0));
 	private static final int COUNT_BITS = Integer.SIZE - 3;    //29
-	private static final int CAPACITY = (1 << COUNT_BITS) - 1; //00011111111111111111111111111111, 整型值:536870911
 	
-	/*
-	 * 线程池的状态 runState is stored in the high-order bits
-	 *
-	 * 注意数字在计算机中的二进制都是补码形式
-	 * -1的二进制形式是: 11111111 11111111 11111111 11111111
-	 * 左移29位得到:     11100000 00000000 00000000 00000000
-	 *
-	 * 1的二进制形式是:  00000000 00000000 00000000 00000001
-	 * 左移29位得到:     001
-	 *
-	 * 2的二进制形式是:  00000000 00000000 00000000 00000010
-	 * 左移29位得到:     010
-	 *
-	 * 2的二进制形式是:  00000000 00000000 00000000 00000011
-	 * 左移29位得到:     011
-	 *
-	 * 线程池处在RUNNING状态时，能够接收新任务，以及对已添加的任务进行处理。
-	 * 状态切换: 线程池的初始化状态是RUNNING. 换句话说, 线程池被一旦被创建, 就处于RUNNING状态, 并且线程池中的任务数为0!
+	/**
+	 * int型占4byte, 32bit <br/>
+	 * 00000000 00000000 00000000 00000001<br/>
+	 * 00100000 00000000 00000000 00000000 左移29位<br/>
+	 * 00011111 11111111 11111111 11111111 左移29位-1 整型值:536870911 5个多亿
 	 */
-	private static final int RUNNING = -1 << COUNT_BITS;  //高3位为111, 整型值为:-536870912
-	/*
+	private static final int CAPACITY = (1 << COUNT_BITS) - 1;
+	
+	/**
+	 * 线程池的状态 runState is stored in the high-order bits
+	 * <p>
+	 * 注意数字在计算机中的二进制都是补码形式
+	 * 11111111 11111111 11111111 11111111  1的二进制形式(在原码的基础上符号位不变, 其余按位取反, 然后+1)
+	 * 11100000 00000000 00000000 00000000  左移29位
+	 * <p>
+	 * 线程池处在RUNNING状态时, 能够接收新任务, 以及对已添加的任务进行处理
+	 * 状态切换: 线程池的初始化状态是RUNNING. 换句话说, 线程池被一旦被创建, 就处于RUNNING状态, 并且线程池中的任务数为0
+	 */
+	private static final int RUNNING = -1 << COUNT_BITS;  //高3位 111
+	
+	/**
 	 * 线程池处在SHUTDOWN状态时, 不接收新任务, 但能处理已添加的任务
 	 * 状态切换: 调用线程池的shutdown()接口时, 线程池由RUNNING -> SHUTDOWN
 	 */
-	private static final int SHUTDOWN = 0 << COUNT_BITS;  //高3位为000, 整型值为:0
-	/*
+	private static final int SHUTDOWN = 0 << COUNT_BITS;  //高3位 000
+	
+	/**
+	 * 00000000 00000000 00000000 00000001 这是1
+	 * 00100000 00000000 00000000 00000000 左移29位
 	 * 线程池处在STOP状态时, 不接收新任务, 不处理已添加的任务, 并且会中断正在处理的任务。
 	 * 状态切换: 调用线程池的shutdownNow()接口时, 线程池由(RUNNING or SHUTDOWN) -> STOP
 	 */
-	private static final int STOP = 1 << COUNT_BITS;  //高3位为001, 整型值为:536870912
-	/*
+	private static final int STOP = 1 << COUNT_BITS;      //高3位 001
+	
+	/**
+	 * 00000000 00000000 00000000 00000010  2的二进制形式
+	 * 01000000 00000000 00000000 00000000  左移29位
+	 * <p>
 	 * 当所有的任务已终止, ctl记录的 "任务数量" 为0, 线程池会变为TIDYING状态.
 	 * 当线程池变为TIDYING状态时, 会执行钩子函数terminated(). terminated()在ThreadPoolExecutor类中是空的,
 	 * 若用户想在线程池变为TIDYING时, 进行相应的处理, 可以通过重载terminated()函数来实现.
-	 *
+	 * <p>
 	 * 状态切换: 当线程池在SHUTDOWN状态下, 阻塞队列为空并且线程池中执行的任务也为空时, 就会由 SHUTDOWN -> TIDYING.
 	 * 当线程池在STOP状态下, 线程池中执行的任务为空时, 就会由STOP -> TIDYING
 	 */
-	private static final int TIDYING = 2 << COUNT_BITS;  //高3位为010, 整型值为:1073741824
-	/*
+	private static final int TIDYING = 2 << COUNT_BITS;   //高3位 010
+	
+	/**
+	 * 00000000 00000000 00000000 00000011  3的二进制形式
+	 * 01100000 00000000 00000000 00000000  3左移29位
+	 * <p>
 	 * 线程池彻底终止, 就变成TERMINATED状态
 	 * 状态切换: 线程池处在TIDYING状态时, 执行完terminated()之后, 就会由 TIDYING -> TERMINATED
-	 *
+	 * <p>
 	 * 进入TERMINATED的条件如下:
 	 * 1: 线程池不是RUNNING状态
 	 * 2: 线程池状态不是TIDYING状态或TERMINATED状态
@@ -154,65 +164,132 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	 * 4: workerCount为0
 	 * 5: 设置TIDYING状态成功
 	 */
-	private static final int TERMINATED = 3 << COUNT_BITS;  //高3位为011, 整型值为:1610612736
+	private static final int TERMINATED = 3 << COUNT_BITS;  //高3位 011
 	
-	/*
+	/**
 	 * Packing and unpacking ctlOf
-	 * 获取运行状态
-	 *
+	 * 获取运行状态, 即ctl高3位的值
+	 * <p>
 	 * ~ 是按位取反(连符号位一起取反)
 	 * 比如字长为8, 那么 2的二进制形式为 00000010  ~2 -> 11111101
-	 *                 -2的二进制形式为 11111110 ~-2 -> 00000001
-	 *
+	 * -2的二进制形式为 11111110 ~-2 -> 00000001
+	 * <p>
 	 * CAPACITY 是 00011111111111111111111111111111
 	 * ~CAPACITY是 11100000000000000000000000000000
-	 *
+	 * <p>
 	 * c位与~CAPACITY就是取高3位(不管c的低29位是什么, 位与后都是0)
+	 * <p>
+	 * 线程池状态有 RUNNING, SHUTDOWN, STOP, TIDYING, TERMINATED等几个状态
+	 *
+	 * <ul>高三位代表线程池状态, 我们来看看高3位分别是什么值
+	 *     <li/>RUNNING    111
+	 *     <li/>SHUTDOWN   000
+	 *     <li/>STOP       001
+	 *     <li/>TIDYING    010
+	 *     <li/>TERMINATED 011
+	 * </ul>
 	 */
 	private static int runStateOf(int c) {
 		return c & ~CAPACITY;
 	}
 	
-	/*
+	/**
 	 * 获取活动线程数
-	 * CAPACITY 是 00011111111111111111111111111111
-	 * 1 << 29 - 1 --> 00100000000000000000000000000000 - 1 -> 00011111111111111111111111111111
-	 * 任意数字c按位与上CAPACITY不就是取了c的低29吗? 所以这里是取c的低29位
+	 * <p>
+	 * 00011111111111111111111111111111   CAPACITY <br/>
+	 * 位与后, 低29位保持不变, 高3位都是0, 所以最终获取到低29位工作线程数
 	 */
 	private static int workerCountOf(int c) {
 		return c & CAPACITY;
 	}
 	
-	/*
-	 * 组合ctl变量，rs=runStatue代表的是线程池的状态，wc=workCount代表的是线程池线程的数量
+	/**
+	 * ctl是这么定义的: private final AtomicInteger ctl = new AtomicInteger(ctlOf(RUNNING, 0))
+	 * 这个ctlOf方法就是在初始化ctl这个变量
+	 * <p>
+	 * rs 代表 Running State, 还记得上面我们说过, ctl的高3位保存的是运行状态.
+	 * <p>
+	 * 这边调用ctlOf(RUNNING, 0)初始化ctl, 初始的Running State可以看到是RUNNING, 即:
+	 * 11100000 00000000 00000000 00000000
+	 * <p>
+	 * wc 代表 Work Count, 代表活动线程数
+	 * 同样观察ctlOf(RUNNING, 0), wc是0, 即:
+	 * 00000000 00000000 00000000 00000000
+	 * <p>
+	 * rs | wc
+	 * 位或, 即两个都是0才是0, 其他都是1, 即:
+	 * 11100000 00000000 00000000 00000000
+	 * <p>
+	 * 这就是线程池的初始状态: RUNNING, 活动线程数0
 	 */
 	private static int ctlOf(int rs, int wc) {
 		return rs | wc;
 	}
 	
-	/*
+	/**
 	 * Bit field accessors that don't require unpacking ctl.
 	 * These depend on the bit layout and on workerCount being never negative.
+	 * c 代表 Current State, 调用的地方都是传入ctl.get()
+	 * s 线程池状态, 调用的地方传入的是 RUNNING, SHUTDOWN, STOP, TIDYING 等几个状态
+	 *
+	 * <ul>高三位代表线程池状态, 我们来看看高3位分别是什么值
+	 *     <li/>RUNNING    111
+	 *     <li/>SHUTDOWN   000
+	 *     <li/>STOP       001
+	 *     <li/>TIDYING    010
+	 *     <li/>TERMINATED 011
+	 * </ul>
+	 * <p>
+	 * 所以这个方法就是判断一下, 线程池当前的状态是否小于给定的状态
+	 * RUNNING < SHUTDOWN < STOP < TIDYING < TERMINATED
+	 * <p>
+	 * 注意RUNNING是负数, 所以RUNNING是最小的
 	 */
 	
 	private static boolean runStateLessThan(int c, int s) {
 		return c < s;
 	}
 	
+	/**
+	 * 参考上面的方法, 看方法名就知道了, 判断当前状态是否大于等于指定状态
+	 * <ul>高三位代表线程池状态
+	 *     <li/>RUNNING    111
+	 *     <li/>SHUTDOWN   000
+	 *     <li/>STOP       001
+	 *     <li/>TIDYING    010
+	 *     <li/>TERMINATED 011
+	 * </ul>
+	 * 如 runStateAtLeast(ctl.get(), TIDYING) 满足条件的就是 TIDYING TERMINATED
+	 *
+	 * @param c 当前线程池状态
+	 * @param s 期望的线程池状态
+	 * @return
+	 */
 	private static boolean runStateAtLeast(int c, int s) {
 		return c >= s;
 	}
 	
-	/*
-	 * RUNNING 是 -1, 只有这个状态是负数
-	 * SHUTDOWN是 0
-	 * 所以判断线程池是否处在RUNNING状态时, 直接判断ctl是否小于0就可以了
+	/**
+	 * RUNNING 是负数, 只有这个状态是负数 <br/>
+	 * SHUTDOWN是 0<br/>
+	 * 所以判断线程池是否处在RUNNING状态时, 直接判断 ctl < SHUTDOWN 就可以了
+	 *
+	 * <ul>
+	 *     <li/>RUNNING    111
+	 *     <li/>SHUTDOWN   000
+	 *     <li/>STOP       001
+	 *     <li/>TIDYING    010
+	 *     <li/>TERMINATED 011
+	 * </ul>
+	 * <p>
+	 * 注意RUNNING是负数, 所以RUNNING是最小的
 	 */
 	private static boolean isRunning(int c) {
 		return c < SHUTDOWN;
 	}
 	
 	/**
+	 * 工作线程数+1, 只会尝试1次<br/>
 	 * Attempts to CAS-increment the workerCount field of ctl.
 	 */
 	private boolean compareAndIncrementWorkerCount(int expect) {
@@ -220,6 +297,7 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	}
 	
 	/**
+	 * 工作线程数-1 只会尝试一次<br/>
 	 * Attempts to CAS-decrement the workerCount field of ctl.
 	 */
 	private boolean compareAndDecrementWorkerCount(int expect) {
@@ -227,6 +305,7 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	}
 	
 	/**
+	 * 不断尝试工作线程数-1, 直到成功为止 <br/>
 	 * Decrements the workerCount field of ctl. This is called only on
 	 * abrupt termination of a thread (see processWorkerExit). Other
 	 * decrements are performed within getTask.
@@ -237,6 +316,8 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	}
 	
 	/**
+	 * 保存客户端提交的Runnable任务
+	 * <p>
 	 * The queue used for holding tasks and handing off to worker
 	 * threads.  We do not require that workQueue.poll() returning
 	 * null necessarily means that workQueue.isEmpty(), so rely
@@ -248,11 +329,13 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	 * expire.
 	 * <p>
 	 * 用来保存等待被执行的任务的阻塞队列, 且任务必须实现Runable接口, 在JDK中提供了如下阻塞队列:
-	 * 1: ArrayBlockingQueue  基于数组结构的有界阻塞队列, 按FIFO排序任务
-	 * 2: LinkedBlockingQuene 基于链表结构的阻塞队列, 按FIFO排序任务, 吞吐量通常要高于ArrayBlockingQuene
-	 * 3: SynchronousQueue    一个不存储元素的阻塞队列, 每个插入操作必须等到另一个线程调用移除操作,
-	 *                        否则插入操作一直处于阻塞状态, 吞吐量通常要高于LinkedBlockingQuene
-	 * 4: PriorityBlockingQueue 具有优先级的无界阻塞队列
+	 * <ol>
+	 *     <li/>ArrayBlockingQueue    基于数组结构的有界阻塞队列, 按FIFO排序任务
+	 *     <li/>LinkedBlockingQuene   基于链表结构的阻塞队列, 按FIFO排序任务, 吞吐量通常要高于ArrayBlockingQuene
+	 *     <li/>SynchronousQueue      一个不存储元素的阻塞队列, 每个插入操作必须等到另一个线程调用移除操作, 否则插入操作一直处于阻塞状态,
+	 *                                吞吐量通常要高于LinkedBlockingQuene
+	 *     <li/>PriorityBlockingQueue 具有优先级的无界阻塞队列
+	 * </ol>
 	 */
 	private final BlockingQueue<Runnable> workQueue;
 	
@@ -272,6 +355,8 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	private final ReentrantLock mainLock = new ReentrantLock();
 	
 	/**
+	 * 每一个Worker里面包含一个Thread对象, 线程池中的工作线程其实就可以理解为一个Worker <br/>
+	 * Worker是对Thread对象的封装<br/>
 	 * Set containing all worker threads in pool. Accessed only when
 	 * holding mainLock.
 	 */
@@ -283,12 +368,12 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	private final Condition termination = mainLock.newCondition();
 	
 	/**
-	 * Tracks largest attained pool size. Accessed only under
-	 * mainLock.
+	 * Tracks largest attained pool size. Accessed only under mainLock.
 	 */
 	private int largestPoolSize;
 	
 	/**
+	 * 线程池一共完成的任务数量(每个Worker中还记录了线程池中不同线程各自完成的任务数量)
 	 * Counter for completed tasks. Updated only on termination of
 	 * worker threads. Accessed only under mainLock.
 	 */
@@ -326,12 +411,15 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	
 	/**
 	 * Handler called when saturated or shutdown in execute.
-	 * 线程池的饱和策略, 当阻塞队列满了, 且没有空闲的工作线程, 如果继续提交任务, 必须采取一种策略处理该任务, 线程池提供了4种策略:
-	 * 1: AbortPolicy         直接抛出异常, 默认策略
-	 * 2: CallerRunsPolicy    用调用者所在的线程来执行任务
-	 * 3: DiscardOldestPolicy 丢弃阻塞队列中靠最前的任务, 并执行当前任务
-	 * 4: DiscardPolicy       直接丢弃任务；
-	 * <p>
+	 * 线程池的饱和策略, 当阻塞队列满了, 且没有空闲的工作线程, 如果继续提交任务, 必须采取一种策略处理该任务
+	 * <p/>
+	 * 线程池提供了4种策略:
+	 * <ol>
+	 *     <li/>AbortPolicy         直接抛出异常, 默认策略
+	 *     <li/>CallerRunsPolicy    用调用者所在的线程来执行任务
+	 *     <li/>DiscardOldestPolicy 丢弃阻塞队列中靠最前的任务, 并执行当前任务
+	 *     <li/>DiscardPolicy       直接丢弃任务；
+	 * </ol>
 	 * 当然也可以根据应用场景实现RejectedExecutionHandler接口, 自定义饱和策略, 如记录日志或持久化存储不能处理的任务
 	 */
 	private volatile RejectedExecutionHandler handler;
@@ -341,16 +429,17 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	 * Threads use this timeout when there are more than corePoolSize
 	 * present or if allowCoreThreadTimeOut. Otherwise they wait
 	 * forever for new work.
-	 * 线程池维护线程所允许的空闲时间.
-	 * 当线程池中的线程数量大于corePoolSize的时候, 如果这时没有新的任务提交,
-	 * 核心线程外的线程不会立即销毁, 而是会等待, 直到等待的时间超过了keepAliveTime
+	 * <p/>
+	 * 线程池中空闲线程的存活时间. <br/>
+	 * 当线程池中的线程数量大于corePoolSize的时候, 如果这时没有新的任务提交,<br/>
+	 * 核心线程数外的线程会等待一段时间, 如果等待超过了keepAliveTime, 线程销毁
 	 */
 	private volatile long keepAliveTime;
 	
 	/**
 	 * If false (default), core threads stay alive even when idle.
-	 * If true, core threads use keepAliveTime to time out waiting
-	 * for work.
+	 * If true, core threads use keepAliveTime to time out waiting for work.
+	 * <br/>
 	 * 是否允许核心线程超时
 	 */
 	private volatile boolean allowCoreThreadTimeOut;
@@ -361,7 +450,7 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	 * is set, in which case the minimum is zero.
 	 * <p>
 	 * 线程池中的核心线程数, 当提交一个任务时, 线程池创建一个新线程执行任务, 直到当前线程数等于corePoolSize;
-	 * 如果当前线程数为corePoolSize, 继续提交的任务被保存到阻塞队列中, 等待被执行;
+	 * 如果当前线程数为corePoolSize, 继续提交的任务被保存到阻塞队列(workQueue)中, 等待被执行;
 	 * 如果执行了线程池的prestartAllCoreThreads()方法, 线程池会提前创建并启动所有核心线程。
 	 */
 	private volatile int corePoolSize;
@@ -369,7 +458,7 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	/**
 	 * Maximum pool size. Note that the actual maximum is internally bounded by CAPACITY.
 	 * 线程池中允许的最大线程数.
-	 * 如果当前阻塞队列满了, 且继续提交任务, 则创建新的线程执行任务, 前提是当前线程数小于maximumPoolSize
+	 * 如果当前阻塞队列(workQueue)满了, 且继续提交任务, 则创建新的线程执行任务, 前提是当前线程数小于maximumPoolSize
 	 */
 	private volatile int maximumPoolSize;
 	
@@ -418,23 +507,24 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	 * the thread actually starts running tasks, we initialize lock
 	 * state to a negative value, and clear it upon start (in
 	 * runWorker).
-	 *
+	 * <p>
 	 * 线程池中的每一个线程被封装成一个Worker对象，ThreadPool维护的其实就是一组Worker对象
-	 *
-	 * Worker类继承了AQS, 并实现了Runnable接口, 注意其中的firstTask和thread属性: 
-	 *   firstTask用它来保存传入的任务
-	 *   thread是在调用构造方法时通过ThreadFactory来创建的线程, 是用来处理任务的线程
-	 *
-	 * Worker使用AQS来实现独占锁的功能. 为什么不使用ReentrantLock来实现呢？可以看到tryAcquire方法, 
-	 * 它是不允许重入的, 而ReentrantLock是允许重入的: 
-	 * 1: lock方法一旦获取了独占锁, 表示当前线程正在执行任务中
-	 * 2: 如果正在执行任务, 则不应该中断线程
-	 * 3: 如果该线程现在不是独占锁的状态, 也就是空闲的状态, 说明它没有在处理任务, 这时可以对该线程进行中断
-	 * 4: 线程池在执行shutdown方法或tryTerminate方法时会调用interruptIdleWorkers方法来中断空闲的线程, 
-	 *    interruptIdleWorkers方法会使用tryLock方法来判断线程池中的线程是否是空闲状态
-	 * 5: 之所以设置为不可重入, 是因为我们不希望任务在调用像setCorePoolSize这样的线程池控制方法时重新获取锁. 
-	 *    如果使用ReentrantLock, 它是可重入的, 这样如果在任务中调用了如setCorePoolSize这类线程池控制的方法, 会中断正在运行的线程
-	 *
+	 * <p>
+	 * Worker类继承了AQS, 并实现了Runnable接口, 注意其中的firstTask和thread属性:
+	 * <ul>
+	 *     <li/>firstTask 用它来保存传入的任务
+	 *     <li/>thread    是在调用构造方法时通过ThreadFactory创建的线程, 负责处理任务
+	 * </ul>
+	 * <p>
+	 * Worker使用AQS来实现独占锁的功能. 为什么不使用ReentrantLock来实现呢？可以看到tryAcquire方法, 它是不允许重入的, 而ReentrantLock是允许重入的:
+	 * <ol>
+	 *     <li/>lock方法一旦获取了独占锁, 表示当前线程正在执行任务中
+	 *     <li/>如果正在执行任务, 则不应该中断线程
+	 *     <li/>如果该线程现在不是独占锁的状态, 也就是空闲的状态, 说明它没有在处理任务, 这时可以对该线程进行中断
+	 *     <li/>线程池在执行shutdown方法或tryTerminate方法时会调用interruptIdleWorkers方法来中断空闲的线程, interruptIdleWorkers方法会使用tryLock方法来判断线程池中的线程是否是空闲状态
+	 *     <li/>之所以设置为不可重入, 是因为我们不希望任务在调用像setCorePoolSize这样的线程池控制方法时重新获取锁. 如果使用ReentrantLock, 它是可重入的, 这样如果在任务中调用了如setCorePoolSize这类线程池控制的方法, 会中断正在运行的线程
+	 * </ol>
+	 * <p>
 	 * 所以, Worker继承自AQS, 用于判断线程是否空闲以及是否可以被中断
 	 */
 	private final class Worker extends LoserAbstractQueuedSynchronizer implements Runnable {
@@ -446,6 +536,7 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 		
 		/**
 		 * Thread this worker is running in.  Null if factory fails.
+		 * 线程池中的线程都是封装到这个Worker里面的, 一个Worker对应一个线程
 		 */
 		final Thread thread;
 		/**
@@ -454,16 +545,17 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 		Runnable firstTask;
 		/**
 		 * Per-thread task counter
+		 * 这个线程完成的任务数量
 		 */
 		volatile long completedTasks;
 		
 		/**
 		 * Creates with given first task and thread from ThreadFactory.
-		 *
-		 * 在调用构造方法时, 需要把任务传入, 这里通过 getThreadFactory().newThread(this); 来新建一个线程. 
-		 * newThread方法传入的参数是this, 因为Worker本身继承了Runnable接口, 也就是一个线程, 
+		 * <p>
+		 * 在调用构造方法时, 需要把任务传入, 这里通过 getThreadFactory().newThread(this); 来新建一个线程.
+		 * newThread方法传入的参数是this, 因为Worker本身继承了Runnable接口, 也就是一个线程,
 		 * 所以一个Worker对象在启动的时候会调用Worker类中的run方法。
-		 *
+		 * <p>
 		 * 正因为如此, 在runWorker方法中会先调用Worker对象的unlock方法将state设置为0
 		 *
 		 * @param firstTask the first task (null if none)
@@ -471,8 +563,7 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 		Worker(Runnable firstTask) {
 			/*
 			 * 把state变量设置为-1, 为什么这么做呢? 是因为AQS中默认的state是0, 如果刚创建了一个Worker对象,
-			 * 还没有执行任务时, 这时就不应该被中断, 看一下tryAquire方法.
-			 * ryAcquire方法是根据state是否是0来判断的, 所以, setState(-1);
+			 * 还没有执行任务时, 这时就不应该被中断, 看一下tryAquire方法. tryAcquire方法是根据state是否是0来判断的
 			 * 将state设置为-1是为了禁止在执行任务前对线程进行中断
 			 *
 			 * 其实就表示这个Worker还没有执行过任何任务, 有点还不完全初始化完成得意思
@@ -495,10 +586,22 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 		// The value 0 represents the unlocked state.
 		// The value 1 represents the locked state.
 		
+		/**
+		 * state == 1 代表锁定状态
+		 * state == 0 未锁定
+		 *
+		 * @return boolean
+		 */
 		protected boolean isHeldExclusively() {
 			return getState() != 0;
 		}
 		
+		/**
+		 * 将锁定状态设为1(锁定), 然后设置exclusiveOwnerThread=当前线程
+		 *
+		 * @param unused
+		 * @return
+		 */
 		@Override
 		protected boolean tryAcquire(int unused) {
 			if (compareAndSetState(0, 1)) {
@@ -508,6 +611,13 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 			return false;
 		}
 		
+		/**
+		 * 将exclusiveOwnerThread设为null
+		 * 将state设为0(未锁定)
+		 *
+		 * @param unused
+		 * @return
+		 */
 		protected boolean tryRelease(int unused) {
 			setExclusiveOwnerThread(null);
 			/*
@@ -518,10 +628,20 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 			return true;
 		}
 		
+		/**
+		 * 锁定, 否则进入阻塞状态?
+		 */
 		public void lock() {
 			acquire(1);
 		}
 		
+		/**
+		 * 将锁定状态设为1(锁定), 然后设置exclusiveOwnerThread=当前线程 <br/>
+		 * 如果返回true, 表示加锁成功, 那么也意味着原来没有锁定 <br/>
+		 * 未锁定状态表示这个Worker在等待接收任务?
+		 *
+		 * @return
+		 */
 		public boolean tryLock() {
 			return tryAcquire(1);
 		}
@@ -530,10 +650,18 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 			release(1);
 		}
 		
+		/**
+		 * 通过 state != 0 来判断是否锁定了
+		 *
+		 * @return boolean
+		 */
 		public boolean isLocked() {
 			return isHeldExclusively();
 		}
 		
+		/**
+		 * 如果是锁定状态, 并且线程没有被中断, 那么中断该线程?
+		 */
 		void interruptIfStarted() {
 			Thread t;
 			if (getState() >= 0 && (t = thread) != null && !t.isInterrupted()) {
@@ -550,8 +678,12 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	 */
 	
 	/**
-	 * Transitions runState to given target, or leaves it alone if
-	 * already at least the given target.
+	 * Transitions runState to given target, or leaves it alone if already at least the given target.
+	 * 检查ctl的高3位状态位
+	 * <ul>
+	 *     <li/>如果已经>=targetState 那么一切OK, 不需要动
+	 *     <li/>否则不断尝试将当前的状态位设置为指定的状态
+	 * </ul>
 	 *
 	 * @param targetState the desired state, either SHUTDOWN or STOP
 	 *                    (but not TIDYING or TERMINATED -- use tryTerminate for that)
@@ -567,6 +699,8 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	}
 	
 	/**
+	 * 将线程池的状态转换到 TERMINATED
+	 * <p>
 	 * Transitions to TERMINATED state if either (SHUTDOWN and pool
 	 * and queue empty) or (STOP and pool empty).  If otherwise
 	 * eligible to terminate but workerCount is nonzero, interrupts an
@@ -575,10 +709,28 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	 * termination possible -- reducing worker count or removing tasks
 	 * from the queue during shutdown. The method is non-private to
 	 * allow access from ScheduledThreadPoolExecutor.
+	 * <p>
+	 * runStateAtLeast(c, TIDYING) 表示当前线程池状态是 TIDYING 或者 SHUTDOWN
 	 */
 	final void tryTerminate() {
 		for (; ; ) {
 			int c = ctl.get();
+			/*
+			 * 如果满足下列任意一个条件线程池状态就不能转换成TERMINATED
+			 * <ul>
+			 *     <li/>当前状态是 RUNNING                     正在运行中不可以转换
+			 *     <li/>当前状态是 TIDYING, TERMINATED         表示已经处于TERMINATED的路上了
+			 *     <li/>当前状态是 SHUTDOWN 并且 工作队列不为空  虽然是SHUTDOWN, 但是又任务还没执行完
+			 * </ul>
+			 *
+			 * <ul>线程池状态从从低到高为:
+			 *     <li/>RUNNING    111
+			 *     <li/>SHUTDOWN   000
+			 *     <li/>STOP       001
+			 *     <li/>TIDYING    010
+			 *     <li/>TERMINATED 011
+			 * </ul>
+			 */
 			if (isRunning(c) ||
 					runStateAtLeast(c, TIDYING) ||
 					(runStateOf(c) == SHUTDOWN && !workQueue.isEmpty())) {
@@ -637,6 +789,7 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	}
 	
 	/**
+	 * 中断所有的线程
 	 * Interrupts all threads, even if active. Ignores SecurityExceptions
 	 * (in which case some threads may remain uninterrupted).
 	 */
@@ -653,6 +806,10 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	}
 	
 	/**
+	 * 中断Idle线程, 根据英文注释, 可以这么理解: 如果一个Worker的state是1, 即锁定状态, 那么说明这个Worker有任务在执行, 否则是Idle的 <br/>
+	 * 注: 线程池的线程都被封装进Worker里面, 所以可以理解为 Worker == Thread<br/>
+	 * <p>
+	 * 如果onlyOne是true, 只检查workers中的第一个Worker, 不管最终有没有对这个Worker执行中断, 剩下的都不管了, 直接返回
 	 * Interrupts threads that might be waiting for tasks (as
 	 * indicated by not being locked) so they can check for
 	 * termination or configuration changes. Ignores
@@ -677,6 +834,11 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 		try {
 			for (Worker w : workers) {
 				Thread t = w.thread;
+				/*
+				 * 如果线程还没有中断,
+				 * 并且加锁成功(w.tryLock() 加锁成功就表示原来这个线程闲着),
+				 * 那么中断这个线程
+				 */
 				if (!t.isInterrupted() && w.tryLock()) {
 					try {
 						t.interrupt();
@@ -710,6 +872,7 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	 */
 	
 	/**
+	 * 用线程池拒绝策略处理这个任务
 	 * Invokes the rejected execution handler for the given command.
 	 * Package-protected for use by ScheduledThreadPoolExecutor.
 	 */
@@ -726,6 +889,7 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	}
 	
 	/**
+	 * 获取ctl的高3位, 判断等于 RUNNING 或者 SHUTDOWN <br/>
 	 * State check needed by ScheduledThreadPoolExecutor to
 	 * enable running tasks during shutdown.
 	 *
@@ -737,6 +901,7 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	}
 	
 	/**
+	 * 将workQueue中的任务转移到List里面, workQueue中的任务被清空
 	 * Drains the task queue into a new list, normally using
 	 * drainTo. But if the queue is a DelayQueue or any other kind of
 	 * queue for which poll or drainTo may fail to remove some
@@ -763,21 +928,21 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	/**
 	 * addWorker 方法的主要工作是在线程池中创建一个新的线程并执行
 	 * firstTask 用于指定新增的线程执行的第一个任务
-	 * core      true 表示在新增线程时会判断当前活动线程数是否少于corePoolSize
-	 *           false表示新增线程前需要判断当前活动线程数是否少于maximumPoolSize
-	 *
+	 * core      true  表示在新增线程时会判断当前活动线程数是否少于corePoolSize
+	 * false 表示新增线程前需要判断当前活动线程数是否少于maximumPoolSize
+	 * <p>
 	 * Checks if a new worker can be added with respect to current
-	 * pool state and the given bound (either core or maximum). 
-	 *
-	 * If so, the worker count is adjusted accordingly, and, if possible, 
-	 * a new worker is created and started, running firstTask as its first task. 
-	 * This method returns false if the pool is stopped or eligible to shut down. 
-	 * It also returns false if the thread factory fails to create a thread when asked.  
-	 * If the thread creation fails, either due to the thread factory returning null, 
+	 * pool state and the given bound (either core or maximum).
+	 * <p>
+	 * If so, the worker count is adjusted accordingly, and, if possible,
+	 * a new worker is created and started, running firstTask as its first task.
+	 * This method returns false if the pool is stopped or eligible to shut down.
+	 * It also returns false if the thread factory fails to create a thread when asked.
+	 * If the thread creation fails, either due to the thread factory returning null,
 	 * or due to an exception (typically OutOfMemoryError in Thread.start()), we roll back cleanly.
 	 *
-	 * @param firstTask the task the new thread should run first (or null if none). 
-	 *                  Workers are created with an initial first task  (in method execute()) 
+	 * @param firstTask the task the new thread should run first (or null if none).
+	 *                  Workers are created with an initial first task  (in method execute())
 	 *                  to bypass queuing when there are fewer than corePoolSize threads (in which case we always start one),
 	 *                  or when the queue is full (in which case we must bypass queue).
 	 *                  Initially idle threads are usually created via
@@ -792,26 +957,29 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 		retry:
 		for (; ; ) {
 			int c = ctl.get();
+			/*
+			 * 拿到ctl高3位的值, 表示线程池的状态 <br/>
+			 * <ul>高三位代表线程池状态, 分别有
+			 *     <li/>RUNNING    111
+			 *     <li/>SHUTDOWN   000
+			 *     <li/>STOP       001
+			 *     <li/>TIDYING    010
+			 *     <li/>TERMINATED 011
+			 * </ul>
+			 */
 			int rs = runStateOf(c);
 			
 			/*
 			 * Check if queue empty only if necessary.
 			 *
-			 * RUNNING   -1 << 29 取高3位 111(后面是29个0) 对应整型值:-536870912
-			 * SHUTDOWN   0 << 29         000(后面是29个0) 对应整型值:0
-			 * STOP       1 << 29         001(后面是29个0) 对应整型值:536870912
-			 * TIDYING    2 << 29         010(后面是29个0) 对应整型值:1073741824
-			 * TERMINATED 3 << 29         011(后面是29个0) 对应整型值:1610612736
+			 * 如果线程池状态是 STOP, TIDYING, TERMINATED 就不接受新任务
 			 *
-			 * 如果 rs >= SHUTDOWN, 则表示此时不再接收新任务
+			 * 如果线程池是SHUTDOWN状态, 下面几种情况不接收新任务
+			 * 1: firstTask != null
+			 * 2: workQueue 已经空了
 			 *
-			 * 接着判断以下3个条件, 只要有1个不满足, 就返回false:
-			 * 1: rs == SHUTDOWN, 这时表示关闭状态, 不再接受新提交的任务, 但却可以继续处理阻塞队列中已保存的任务
-			 * 2: firsTask为空
-			 * 3: 阻塞队列不为空
-			 *
-			 * 首先考虑rs == SHUTDOWN的情况, 这种情况下不会接受新提交的任务, 所以在firstTask不为空的时候会返回false
-			 * 然后, 如果firstTask为空, 并且workQueue也为空, 则返回false. 因为队列中已经没有任务了, 不需要再添加线程了
+			 * 如果线程池是SHUTDOWN状态, 反过来说, 此时线程池接收新任务的条件是:
+			 * firstTask == null && workQueue中还有任务
 			 */
 			if (rs >= SHUTDOWN &&
 					!(rs == SHUTDOWN &&
@@ -821,24 +989,34 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 			}
 			
 			for (; ; ) {
-				// 获取线程数
+				// 获取线程数, ctl的低29位
 				int wc = workerCountOf(c);
 				/*
-				 * 如果wc超过CAPACITY, 也就是ctl的低29位的最大值(二进制是29个1), 返回false
+				 * 如果wc超过CAPACITY, 大概5.x个亿, 返回false, 不添加Worker
+				 *
+				 * 如果当前的wc还没有超过CAPACITY, 再往下看
 				 *
 				 * 这里的core是addWorker方法的第二个参数
-				 * 如果为true表示根据corePoolSize来比较, 如果为false则根据maximumPoolSize来比较
+				 * 如果为code == true  表示当前工作线程数跟corePoolSize比, 如果 wc >= corePoolSize 就不添加Worker了
+				 * 如果为code == false 表示当前工作线程数跟maximumPoolSize比, 如果 wc >= maximumPoolSize 就不添加Worker了
+				 *
+				 * maximumPoolSize 哪来的? 什么时候设置?
 				 */
 				if (wc >= CAPACITY ||
 						wc >= (core ? corePoolSize : maximumPoolSize)) {
 					return false;
 				}
-				// 尝试增加workerCount, 如果成功, 则跳出第一个for循环
+				/*
+				 * 尝试增加workerCount, 如果成功, 则跳出最外层的循环
+				 * 注意 break retry; 跳到第一行retry处, 不会进入for循环了哦
+				 */
 				if (compareAndIncrementWorkerCount(c)) {
-					break retry; //直接跳转到第一行定义的retry:处
+					break retry;
 				}
 				
-				// 如果增加workerCount失败, 则重新获取ctl的值
+				/*
+				 * 走到这里表示增加workerCount失败, 重新获取ctl的值
+				 */
 				c = ctl.get();  // Re-read ctl
 				// 如果当前的运行状态不等于rs, 说明状态已被改变, 返回第一个for循环继续执行
 				if (runStateOf(c) != rs) {
@@ -982,7 +1160,7 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	 * {@code allowCoreThreadTimeOut || workerCount > corePoolSize})
 	 * both before and after the timed wait, and if the queue is
 	 * non-empty, this worker is not the last thread in the pool.
-	 *
+	 * <p>
 	 * getTask方法用来从阻塞队列中取任务
 	 *
 	 * @return task, or null if the worker must exit, in which case
@@ -994,6 +1172,14 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 		
 		for (; ; ) {
 			int c = ctl.get();
+			/*
+			 * 高三位代表线程池状态, 我们来看看高3位分别是什么值
+			 * RUNNING    111
+			 * SHUTDOWN   000
+			 * STOP       001
+			 * TIDYING    010
+			 * TERMINATED 011
+			 */
 			int rs = runStateOf(c);
 			
 			/*
@@ -1003,9 +1189,15 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 			 * 2: 阻塞队列是否为空
 			 *
 			 * 如果以上条件满足, 则将workerCount减1并返回null
-			 * 因为如果当前线程池状态的值是SHUTDOWN或以上时, 不允许再向阻塞队列中添加任务
+			 *
+			 * 就是说:
+			 * <ul>
+			 *     <li/>当前是SHUTDOWN状态, workQueue还有任务没有执行, 那么会继续取出任务
+			 *     <li/>当前是STOP或者更高的状态, 不管workQueue中还有没有任务, 都不会执行了
+			 * </ul>
 			 */
 			if (rs >= SHUTDOWN && (rs >= STOP || workQueue.isEmpty())) {
+				//不断尝试将ctl的低29位工作线程数-1
 				decrementWorkerCount();
 				return null;
 			}
@@ -1018,6 +1210,7 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 			 *
 			 * allowCoreThreadTimeOut
 			 * 默认是false, 也就是核心线程不允许进行超时; 如果允许超时, 一旦超时后, 核心线程与非核心线程都会结束生命周期
+			 *
 			 * wc > corePoolSize, 表示当前线程池中的线程数量大于核心线程数量; 对于超过核心线程数量的这些线程, 需要进行超时控制
 			 *
 			 * 在创建ThreadPoolExecutor时候, 会传一个参数keepAliveTime, 如果这个参数是0并且允许核心线程超时, 那么一旦阻塞队列
@@ -1025,8 +1218,9 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 			 */
 			boolean timed = allowCoreThreadTimeOut || wc > corePoolSize;
 			/*
-			 * wc > maximumPoolSize的情况是因为可能在此方法执行阶段同时执行了setMaximumPoolSize方法
-			 * timed && timedOut 如果为true, 表示当前操作需要进行超时控制, 并且上次从阻塞队列中获取任务发生了超时
+			 * wc > maximumPoolSize 的情况是因为可能在此方法执行阶段同时执行了setMaximumPoolSize方法
+			 * timed && timedOut    如果为true, 表示当前操作需要进行超时控制, 并且上次从阻塞队列中获取任务发生了超时
+			 *
 			 * 接下来判断, 如果有效线程数量大于1, 或者阻塞队列是空的, 那么尝试将workerCount减1
 			 * 如果减1失败, 则返回重试
 			 * 如果wc == 1时, 也就说明当前线程是线程池中唯一的一个线程了
@@ -1105,7 +1299,7 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	 * and the thread's UncaughtExceptionHandler have as accurate
 	 * information as we can provide about any problems encountered by
 	 * user code.
-	 *
+	 * <p>
 	 * 在Worker类中的run方法调用了runWorker方法来执行任务
 	 * 总结一下runWorker方法的执行过程:
 	 * 1: while循环不断地通过getTask()方法获取任务
@@ -1114,6 +1308,7 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	 * 4: 调用task.run()执行任务
 	 * 5: 如果task为null则跳出循环, 执行processWorkerExit()方法
 	 * 6: runWorker方法执行完毕, 也代表着Worker中的run方法执行完毕, 销毁线程
+	 *
 	 * @param w the worker
 	 */
 	final void runWorker(Worker w) {

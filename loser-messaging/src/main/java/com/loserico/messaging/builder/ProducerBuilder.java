@@ -4,6 +4,7 @@ import com.loserico.common.lang.enums.SizeUnit;
 import com.loserico.messaging.enums.Acks;
 import com.loserico.messaging.enums.Compression;
 import com.loserico.messaging.producer.Producer;
+import com.loserico.messaging.serializer.JsonSerializer;
 import org.apache.kafka.common.serialization.Serializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 
@@ -63,7 +64,7 @@ public class ProducerBuilder extends BaseBuilder {
 	 *  waiting for more than just one broker to receive the message.
 	 * </ul>
 	 */
-	private Acks acks;
+	private Acks acks = Acks.LEADER;
 	
 	/**
 	 * 默认 16384 16K 0禁用batch操作<br/>
@@ -127,7 +128,7 @@ public class ProducerBuilder extends BaseBuilder {
 	/**
 	 * Serializer class for values.
 	 */
-	private Class<?> valueSerializer = StringSerializer.class;
+	private Class<?> valueSerializer = JsonSerializer.class;
 	
 	@Override
 	public ProducerBuilder bootstrapServers(String bootstrapServers) {

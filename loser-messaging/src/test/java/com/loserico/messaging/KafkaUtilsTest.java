@@ -2,6 +2,7 @@ package com.loserico.messaging;
 
 import com.loserico.common.lang.constants.Units;
 import com.loserico.common.lang.enums.SizeUnit;
+import com.loserico.common.lang.utils.IOUtils;
 import com.loserico.messaging.consumer.Consumer;
 import com.loserico.messaging.deserialzier.JsonDeserializer;
 import com.loserico.messaging.enums.Acks;
@@ -96,14 +97,14 @@ public class KafkaUtilsTest {
 	
 	@Test
 	public void testConsumer() {
-		Consumer consumer = KafkaUtils.newConsumer("10.10.17.31:9092")
+		Consumer consumer = KafkaUtils.newConsumer("172.23.12.65:9092")
 				.groupId("group-kkk222")
 				.autoOffsetReset(OffsetReset.EARLIEST)
 				.autoCommit(false)
 				.fetchMaxWait(500)
 				.fetchMaxBytes(50 * Units.MB)
 				.maxPartitionFetchBytes(50 * Units.MB)
-				.maxPollRecords(30000)
+				.maxPollRecords(1)
 				.heartbeatInterval(3000)
 				.keyDeserializer(StringDeserializer.class)
 				.valueDeserializer(JsonDeserializer.class)
@@ -112,6 +113,12 @@ public class KafkaUtilsTest {
 		consumer.subscribe("ids-event", (messages) -> {
 			messages.forEach(System.out::println);
 		});
+	}
+	
+	@Test
+	public void testSendInterEvent() {
+		Producer<String, String> producer = KafkaUtils.newProducer("172.23.12.65:9092").build();
+		producer.send("intel-event", IOUtils.readClassPathFileAsString("intel-event.json"));
 	}
 	
 	@Data
