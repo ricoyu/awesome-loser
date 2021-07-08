@@ -121,6 +121,8 @@ public class ObjectMapperDecorator {
 		xssModule.addDeserializer(String.class, new XssStringJsonDeserializer());
 		objectMapper.registerModule(xssModule);*/
 		
+		//系列化字符串时候, Jackson会把双引号转义, 如\", 这里配置不需要转义
+		//objectMapper.getFactory().setCharacterEscapes(new CustomCharacterEscapes());
 		return objectMapper;
 	}
 	

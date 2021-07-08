@@ -40,8 +40,8 @@ public class JsonRequestBuilder extends AbstractRequestBuilder {
 	}
 	
 	/**
-	 * 设置请求头: Authorization:Bearer XXXX
-	 *
+	 * 设置请求头: Authorization:Bearer XXXX <br/>
+	 * token不需要加 "Bearer ", 这个会自动补全
 	 * @param token
 	 * @return
 	 */
@@ -70,6 +70,16 @@ public class JsonRequestBuilder extends AbstractRequestBuilder {
 	 */
 	public JsonRequestBuilder responseType(Class responseType) {
 		this.responseType = responseType;
+		return this;
+	}
+	
+	/**
+	 * 返回结果是否以byte[]数组形式给出
+	 * @param returnBytes
+	 * @return JsonRequestBuilder
+	 */
+	public JsonRequestBuilder returnBytes(boolean returnBytes) {
+		this.returnBytes = returnBytes;
 		return this;
 	}
 	

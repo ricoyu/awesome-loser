@@ -149,7 +149,7 @@ public final class ElasticQueryBuilder {
 	 * @param size
 	 * @return QueryBuilder
 	 */
-	public ElasticQueryBuilder paging(int from, int size) {
+	public ElasticQueryBuilder paging(Integer from, Integer size) {
 		this.from = from;
 		this.size = size;
 		return this;

@@ -232,7 +232,7 @@ public class ElasticUriQueryBuilder {
 	 * 控制返回自己想要的字段, 而不是整个_source
 	 *
 	 * @param fields
-	 * @return UriQueryBuilder
+	 * @return ElasticUriQueryBuilder
 	 */
 	public ElasticUriQueryBuilder includeSources(String... fields) {
 		this.includeSources = fields;
@@ -243,13 +243,36 @@ public class ElasticUriQueryBuilder {
 	 * 控制要排除哪些返回的字段, 而不是整个_source
 	 *
 	 * @param fields
-	 * @return UriQueryBuilder
+	 * @return ElasticUriQueryBuilder
 	 */
 	public ElasticUriQueryBuilder excludeSources(String... fields) {
 		this.excludeSources = fields;
 		return this;
 	}
 	
+	/**
+	 * 控制返回自己想要的字段, 而不是整个_source
+	 *
+	 * @param fields
+	 * @return ElasticUriQueryBuilder
+	 */
+	public ElasticUriQueryBuilder includeSources(List<String> fields) {
+		String[] sources = fields.stream().toArray(String[]::new);
+		this.excludeSources = sources;
+		return this;
+	}
+	
+	/**
+	 * 控制要排除哪些返回的字段, 而不是整个_source
+	 *
+	 * @param fields
+	 * @return ElasticUriQueryBuilder
+	 */
+	public ElasticUriQueryBuilder excludeSources(List<String> fields) {
+		String[] sources = fields.stream().toArray(String[]::new);
+		this.excludeSources = sources;
+		return this;
+	}
 	/**
 	 * 查询返回的结果类型
 	 *

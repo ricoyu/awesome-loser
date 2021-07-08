@@ -214,9 +214,14 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 			if (fieldAndDirection.length > 1) {
 				direction = fieldAndDirection[1].trim();
 			}
-			//排序规则为空的话默认升序
+			//排序规则为空的话, 看下字段名是不是-开头的, 如果是的话, 降序, 否则默认升序
 			if (isBlank(direction)) {
-				direction = "asc";
+				if (field.startsWith("-")) {
+					field = field.substring(1);
+					direction = "desc";
+				} else {
+					direction = "asc";
+				}
 			}
 			SortOrder sortOrder = SortOrder.fieldSort(field).direction(direction);
 			this.sortOrders.add(sortOrder);
@@ -231,8 +236,32 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 	 * @param fields
 	 * @return QueryStringBuilder
 	 */
+	public BaseQueryBuilder includeSources(List<String> fields) {
+		String[] sources = fields.stream().toArray(String[]::new);
+		this.includeSource = sources;
+		return this;
+	}
+	
+	/**
+	 * 控制返回自己想要的字段, 而不是整个_source
+	 *
+	 * @param fields
+	 * @return QueryStringBuilder
+	 */
 	public BaseQueryBuilder includeSources(String... fields) {
 		this.includeSource = fields;
+		return this;
+	}
+	
+	/**
+	 * 控制要排除哪些返回的字段, 而不是整个_source
+	 *
+	 * @param fields
+	 * @return QueryStringBuilder
+	 */
+	public BaseQueryBuilder excludeSources(List<String> fields) {
+		String[] sources = fields.stream().toArray(String[]::new);
+		this.excludeSource = sources;
 		return this;
 	}
 	
@@ -365,8 +394,12 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 				.sort(sortValues)
 				.build();
 		elasticPage.setTotalCount(total.intValue());
-		elasticPage.setPageSize(size);
-		elasticPage.setCurrentPage(from);
+		if (size != null) {
+			elasticPage.setPageSize(size);
+		}
+		if (from != null) {
+			elasticPage.setCurrentPage(from);
+		}
 		return elasticPage;
 	}
 	
@@ -468,20 +501,23 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 	
 	private SearchResponse searchResponse() {
 		SearchRequestBuilder searchRequestBuilder = ElasticUtils.client.prepareSearch(indices)
-				.setIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN)
+				.setIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN) //要搜索的index不存在时不报错
 				.setQuery(builder());
 		
 		/*
 		 * Search After 避免深度分页
 		 */
-		if (searchAfter != null) {
+		if (searchAfter != null && searchAfter.length > 0) {
 			searchRequestBuilder.searchAfter(searchAfter);
 		}
 		
 		sortOrders.forEach(sortOrder -> sortOrder.addTo(searchRequestBuilder));
 		
-		if (from != null) {
-			searchRequestBuilder.setFrom(from);
+		/**
+		 * ES分页的页码是从0开始的, 我们的应用在搜索时, 指定的页码从1开始
+		 */
+		if (from != null && from > 0) {
+			searchRequestBuilder.setFrom(from - 1);
 		}
 		if (size != null) {
 			searchRequestBuilder.setSize(size);
@@ -538,5 +574,11 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 	public ElasticBoolQueryBuilder filter() {
 		boolQueryBuilder.filter(builder());
 		return boolQueryBuilder;
+	}
+	
+	protected void logDsl(SearchRequestBuilder builder) {
+		if (log.isDebugEnabled()) {
+			log.debug("Aggregation DSL:\n{}", new JSONObject(builder.toString()).toString(2));
+		}
 	}
 }

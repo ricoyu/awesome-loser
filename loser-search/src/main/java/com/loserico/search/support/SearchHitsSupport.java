@@ -4,6 +4,7 @@ import com.loserico.common.lang.transformer.Transformers;
 import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.json.jackson.JacksonUtils;
 import com.loserico.search.cache.ElasticCacheUtils;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.document.DocumentField;
 import org.elasticsearch.search.SearchHit;
 
@@ -56,6 +57,11 @@ public final class SearchHitsSupport {
 		return Arrays.stream(hits)
 				.filter(Objects::nonNull)
 				.map((hit) -> {
+					if (resultType != null && resultType == Map.class) {
+						Map<String, Object> resultMap = hit.getSourceAsMap();
+						resultMap.put("_id", hit.getId());
+						return (T) resultMap;
+					}
 					String source = hit.getSourceAsString();
 					if (isBlank(source)) {
 						return null;
@@ -86,6 +92,12 @@ public final class SearchHitsSupport {
 	public static <T> T toObject(SearchHit[] hits, Class resultType) {
 		if (hits.length == 0) {
 			return null;
+		}
+		
+		if (resultType != null && resultType == Map.class) {
+			Map<String, Object> resultMap = hits[0].getSourceAsMap();
+			resultMap.put("_id", hits[0].getId());
+			return (T) resultMap;
 		}
 		
 		String source = hits[0].getSourceAsString();
@@ -159,5 +171,14 @@ public final class SearchHitsSupport {
 		SearchHit lastHit = hits[hits.length - 1];
 		//拿到本次的sort
 		return lastHit.getSortValues();
+	}
+	
+	/**
+	 * 总共命中多少条记录
+	 * @param searchResponse
+	 * @return long
+	 */
+	public static long totalHits(SearchResponse searchResponse) {
+		return searchResponse.getHits().getTotalHits().value;
 	}
 }

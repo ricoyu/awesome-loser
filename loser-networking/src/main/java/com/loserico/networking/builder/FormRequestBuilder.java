@@ -214,6 +214,16 @@ public class FormRequestBuilder extends AbstractRequestBuilder implements OAuth2
 		return this;
 	}
 	
+	/**
+	 * 返回结果是否以byte[]数组形式给出
+	 * @param returnBytes
+	 * @return JsonRequestBuilder
+	 */
+	public FormRequestBuilder returnBytes(boolean returnBytes) {
+		this.returnBytes = returnBytes;
+		return this;
+	}
+	
 	@Override
 	public FormRequestBuilder onError(Consumer<Exception> errorCallback) {
 		super.onError(errorCallback);

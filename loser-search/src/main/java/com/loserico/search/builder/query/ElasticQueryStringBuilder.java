@@ -6,6 +6,8 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.QueryStringQueryBuilder;
 
+import java.util.List;
+
 import static com.loserico.common.lang.utils.Assert.notEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -188,7 +190,7 @@ public class ElasticQueryStringBuilder extends BaseQueryBuilder {
 	 * @param size
 	 * @return QueryStringBuilder
 	 */
-	public ElasticQueryStringBuilder paging(int from, int size) {
+	public ElasticQueryStringBuilder paging(Integer from, Integer size) {
 		this.from = from;
 		this.size = size;
 		return this;
@@ -253,6 +255,30 @@ public class ElasticQueryStringBuilder extends BaseQueryBuilder {
 	 */
 	public ElasticQueryStringBuilder excludeSources(String... fields) {
 		this.excludeSource = fields;
+		return this;
+	}
+	
+	/**
+	 * 控制返回自己想要的字段, 而不是整个_source
+	 *
+	 * @param fields
+	 * @return ElasticQueryStringBuilder
+	 */
+	public ElasticQueryStringBuilder includeSources(List<String> fields) {
+		String[] sources = fields.stream().toArray(String[]::new);
+		this.includeSource = sources;
+		return this;
+	}
+	
+	/**
+	 * 控制要排除哪些返回的字段, 而不是整个_source
+	 *
+	 * @param fields
+	 * @return ElasticQueryStringBuilder
+	 */
+	public ElasticQueryStringBuilder excludeSources(List<String> fields) {
+		String[] sources = fields.stream().toArray(String[]::new);
+		this.excludeSource = sources;
 		return this;
 	}
 	

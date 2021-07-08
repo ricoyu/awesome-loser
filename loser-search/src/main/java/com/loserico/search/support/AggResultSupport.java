@@ -53,26 +53,26 @@ public final class AggResultSupport {
 			
 			if (aggregation instanceof LongTerms) {
 				String name = aggregation.getName();
-				List<AggResult> value = new ArrayList<>();
 				List<LongTerms.Bucket> buckets = ((LongTerms) aggregation).getBuckets();
+				Map<Object, Long> value = new HashMap<>(buckets.size());
 				for (LongTerms.Bucket bucket : buckets) {
 					Object key = bucket.getKey();
 					long docCount = bucket.getDocCount();
 					log.info("Bucket: {}, Doc Count: {}", key, docCount);
-					value.add(new AggResult(key, docCount));
+					value.put(key, docCount);
 				}
 				result.put(name, value);
 			}
 			
 			if (aggregation instanceof StringTerms) {
 				String name = aggregation.getName();
-				List<AggResult> value = new ArrayList<>();
 				List<StringTerms.Bucket> buckets = ((StringTerms) aggregation).getBuckets();
+				Map<String, Long> value = new HashMap<>(buckets.size());
 				for (StringTerms.Bucket bucket : buckets) {
 					String key = bucket.getKeyAsString();
 					long docCount = bucket.getDocCount();
 					log.info("Bucket: {}, Doc Count: {}", key, docCount);
-					value.add(new AggResult(key, docCount));
+					value.put(key, docCount);
 				}
 				result.put(name, value);
 			}

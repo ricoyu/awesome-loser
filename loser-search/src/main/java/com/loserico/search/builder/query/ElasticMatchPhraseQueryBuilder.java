@@ -5,6 +5,8 @@ import org.elasticsearch.common.lucene.search.function.CombineFunction;
 import org.elasticsearch.index.query.MatchPhraseQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 
+import java.util.List;
+
 /**
  * 匹配一个短语, 比如查title包含"one love"这个短语, 那么title是"this one love"可以查到, "one I love"是查不到的
  * <p>
@@ -60,7 +62,7 @@ public class ElasticMatchPhraseQueryBuilder extends BaseQueryBuilder {
 	 * @param size
 	 * @return ElasticMatchQueryBuilder
 	 */
-	public ElasticMatchPhraseQueryBuilder paging(int from, int size) {
+	public ElasticMatchPhraseQueryBuilder paging(Integer from, Integer size) {
 		this.from = from;
 		this.size = size;
 		return this;
@@ -200,6 +202,30 @@ public class ElasticMatchPhraseQueryBuilder extends BaseQueryBuilder {
 	 */
 	public ElasticMatchPhraseQueryBuilder excludeSources(String... fields) {
 		this.excludeSource = fields;
+		return this;
+	}
+	
+	/**
+	 * 控制返回自己想要的字段, 而不是整个_source
+	 *
+	 * @param fields
+	 * @return ElasticMatchPhraseQueryBuilder
+	 */
+	public ElasticMatchPhraseQueryBuilder includeSources(List<String> fields) {
+		String[] sources = fields.stream().toArray(String[]::new);
+		this.includeSource = sources;
+		return this;
+	}
+	
+	/**
+	 * 控制要排除哪些返回的字段, 而不是整个_source
+	 *
+	 * @param fields
+	 * @return ElasticMatchPhraseQueryBuilder
+	 */
+	public ElasticMatchPhraseQueryBuilder excludeSources(List<String> fields) {
+		String[] sources = fields.stream().toArray(String[]::new);
+		this.excludeSource = sources;
 		return this;
 	}
 	

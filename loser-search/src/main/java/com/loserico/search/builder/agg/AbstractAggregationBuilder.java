@@ -5,6 +5,7 @@ import com.loserico.search.ElasticUtils;
 import com.loserico.search.builder.query.BaseQueryBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.json.JSONObject;
 
@@ -54,6 +55,8 @@ public abstract class AbstractAggregationBuilder {
 			QueryBuilder queryBuilder = ReflectionUtils.invokeMethod(baseQueryBuilder, "builder");
 			searchRequestBuilder.setQuery(queryBuilder);
 		}
+		//要搜索的index不存在时不报错
+		searchRequestBuilder.setIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN);
 		
 		return searchRequestBuilder;
 	}

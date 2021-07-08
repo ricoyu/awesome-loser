@@ -1,7 +1,9 @@
 package com.loserico.json.jackson;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.loserico.common.lang.utils.EnumUtils;
+import lombok.extern.slf4j.Slf4j;
 
 import static com.loserico.common.lang.utils.StringUtils.trim;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -16,6 +18,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
+@Slf4j
 public final class JsonNodeUtils {
 	
 	public static  String readStr(JsonNode rootNode, String nodeName) {
@@ -39,11 +42,19 @@ public final class JsonNodeUtils {
 	
 	public static  Long readLong(JsonNode node, String nodeName) {
 		JsonNode jsonNode = node.get(nodeName);
-		if (jsonNode == null) {
+		if (jsonNode == null || jsonNode.isNull()) {
 			return null;
 		}
-		
-		return jsonNode.isNull() ? null : jsonNode.longValue();
+		if (jsonNode.getNodeType() == JsonNodeType.STRING) {
+			String strValue = jsonNode.asText();
+			try {
+				return Long.parseLong(strValue);
+			} catch (NumberFormatException e) {
+				log.error("{} 节点读取到的值是 {}, 转成Long类型失败", nodeName, strValue);
+			}
+			return null;
+		}
+		return jsonNode.longValue();
 	}
 	
 	public static  Integer readInt(JsonNode node, String nodeName) {

@@ -8,6 +8,8 @@ import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
+import java.util.List;
+
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
@@ -122,7 +124,7 @@ public class ElasticMatchQueryBuilder extends BaseQueryBuilder implements MatchQ
 	 * @param size
 	 * @return ElasticMatchQueryBuilder
 	 */
-	public ElasticMatchQueryBuilder paging(int from, int size) {
+	public ElasticMatchQueryBuilder paging(Integer from, Integer size) {
 		this.from = from;
 		this.size = size;
 		return this;
@@ -149,7 +151,7 @@ public class ElasticMatchQueryBuilder extends BaseQueryBuilder implements MatchQ
 	 * 注意: text类型字段不能排序, 要用field
 	 *
 	 * @param sort
-	 * @return QueryBuilder
+	 * @return ElasticMatchQueryBuilder
 	 */
 	public ElasticMatchQueryBuilder sort(String sort) {
 		super.sort(sort);
@@ -162,7 +164,7 @@ public class ElasticMatchQueryBuilder extends BaseQueryBuilder implements MatchQ
 	 * 参考上面的查询, sort语法是 字段名:asc|desc
 	 *
 	 * @param direction
-	 * @return UriQueryBuilder
+	 * @return ElasticMatchQueryBuilder
 	 */
 	public ElasticMatchQueryBuilder sort(String field, Direction direction) {
 		notNull(field, "field cannot be null!");
@@ -179,7 +181,7 @@ public class ElasticMatchQueryBuilder extends BaseQueryBuilder implements MatchQ
 	 * 注意设置了searchAfter就不要设置from了, 只要指定size以及排序就可以了
 	 *
 	 * @param searchAfter
-	 * @return ElasticQueryBuilder
+	 * @return ElasticMatchQueryBuilder
 	 */
 	public ElasticMatchQueryBuilder searchAfter(Object[] searchAfter) {
 		this.searchAfter = searchAfter;
@@ -190,7 +192,7 @@ public class ElasticMatchQueryBuilder extends BaseQueryBuilder implements MatchQ
 	 * 是否要获取_source
 	 *
 	 * @param fetchSource
-	 * @return QueryBuilder
+	 * @return ElasticMatchQueryBuilder
 	 */
 	public ElasticMatchQueryBuilder fetchSource(boolean fetchSource) {
 		this.fetchSource = fetchSource;
@@ -201,7 +203,7 @@ public class ElasticMatchQueryBuilder extends BaseQueryBuilder implements MatchQ
 	 * 提升或者降低查询的权重
 	 *
 	 * @param boost
-	 * @return QueryBuilder
+	 * @return ElasticMatchQueryBuilder
 	 */
 	public ElasticMatchQueryBuilder boost(float boost) {
 		this.boost = boost;
@@ -218,7 +220,7 @@ public class ElasticMatchQueryBuilder extends BaseQueryBuilder implements MatchQ
 	 * </ul>
 	 *
 	 * @param boostMode
-	 * @return
+	 * @return ElasticMatchQueryBuilder
 	 */
 	public ElasticMatchQueryBuilder boostMode(CombineFunction boostMode) {
 		notNull(boostMode, "boostMode cannot be null!");
@@ -235,7 +237,7 @@ public class ElasticMatchQueryBuilder extends BaseQueryBuilder implements MatchQ
 	 * 是否要将Query转为constant_scre query, 以避免算分, 提高查询性能
 	 *
 	 * @param constantScore
-	 * @return ElasticQueryBuilder
+	 * @return ElasticMatchQueryBuilder
 	 */
 	public ElasticMatchQueryBuilder constantScore(boolean constantScore) {
 		this.constantScore = constantScore;
@@ -246,7 +248,7 @@ public class ElasticMatchQueryBuilder extends BaseQueryBuilder implements MatchQ
 	 * 控制返回自己想要的字段, 而不是整个_source
 	 *
 	 * @param fields
-	 * @return QueryStringBuilder
+	 * @return ElasticMatchQueryBuilder
 	 */
 	public ElasticMatchQueryBuilder includeSources(String... fields) {
 		this.includeSource = fields;
@@ -257,10 +259,34 @@ public class ElasticMatchQueryBuilder extends BaseQueryBuilder implements MatchQ
 	 * 控制要排除哪些返回的字段, 而不是整个_source
 	 *
 	 * @param fields
-	 * @return QueryStringBuilder
+	 * @return ElasticMatchQueryBuilder
 	 */
 	public ElasticMatchQueryBuilder excludeSources(String... fields) {
 		this.excludeSource = fields;
+		return this;
+	}
+	
+	/**
+	 * 控制返回自己想要的字段, 而不是整个_source
+	 *
+	 * @param fields
+	 * @return ElasticMatchQueryBuilder
+	 */
+	public ElasticMatchQueryBuilder includeSources(List<String> fields) {
+		String[] sources = fields.stream().toArray(String[]::new);
+		this.includeSource = sources;
+		return this;
+	}
+	
+	/**
+	 * 控制要排除哪些返回的字段, 而不是整个_source
+	 *
+	 * @param fields
+	 * @return ElasticMatchQueryBuilder
+	 */
+	public ElasticMatchQueryBuilder excludeSources(List<String> fields) {
+		String[] sources = fields.stream().toArray(String[]::new);
+		this.excludeSource = sources;
 		return this;
 	}
 	

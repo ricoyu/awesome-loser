@@ -4,6 +4,8 @@ import com.loserico.common.lang.utils.ReflectionUtils;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <p>
@@ -22,6 +24,14 @@ public class ReflectionUtilsTest {
 		Field[] fields = ReflectionUtils.getFields(Programmer.class);
 		for (int i = 0; i < fields.length; i++) {
 			System.out.println(fields[i].getName());
+		}
+	}
+	
+	@Test
+	public void testClassEqual() {
+		Class clazz = HashMap.class;
+		if (Map.class.isAssignableFrom(clazz)) {
+			System.out.println("yes");
 		}
 	}
 }

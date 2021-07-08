@@ -13,6 +13,7 @@ import org.junit.Test;
 import java.util.List;
 import java.util.Map;
 
+import static com.loserico.json.jackson.JacksonUtils.toJson;
 import static com.loserico.json.jackson.JacksonUtils.toPrettyJson;
 
 /**
@@ -122,5 +123,24 @@ public class AggTest {
 				.get();
 		
 		aggResults.forEach(System.out::println);
+	}
+	
+	@Test
+	public void testQueryThenComposite() {
+		ElasticRangeQueryBuilder rangeQueryBuilder = ElasticUtils.Query.range("event_2021-07-05")
+				.field("create_time")
+				.gte(1625414400000L)
+				.lte(1625500740000L);
+		
+		Map<String, Object> stringObjectMap = ElasticUtils.Aggs.composite("event_2021-07-05")
+				.setQuery(rangeQueryBuilder)
+				.terms("severity", "severity").and()
+				.terms("attach_result", "attack_result").and()
+				.terms("attacker_ip", "attacker_ip").size(5).and()
+				.terms("victim_ip", "victim_ip").size(5).and()
+				.fetchTotal(true)
+				.get();
+		
+		System.out.println(toJson(stringObjectMap));
 	}
 }

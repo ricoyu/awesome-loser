@@ -3,6 +3,7 @@ package com.loserico.networking.builder;
 import com.loserico.common.lang.bean.UrlParts;
 import com.loserico.common.lang.transformer.Transformers;
 import com.loserico.common.lang.utils.DateUtils;
+import com.loserico.common.lang.utils.IOUtils;
 import com.loserico.common.lang.utils.RegexUtils;
 import com.loserico.common.lang.utils.StringUtils;
 import com.loserico.json.jackson.JacksonUtils;
@@ -162,6 +163,11 @@ public abstract class AbstractRequestBuilder {
 	 * 应该以/开头
 	 */
 	protected String path;
+	
+	/**
+	 * 返回结果以byte[]形式返回
+	 */
+	protected boolean returnBytes;
 	
 	protected Map<String, Object> headers = new HashMap<>(12);
 	
@@ -489,8 +495,17 @@ public abstract class AbstractRequestBuilder {
 			
 			CloseableHttpClient httpClient = buildHttpClient();
 			CloseableHttpResponse response = httpClient.execute(httpRequest);
+			/*
+			 * 如果得到的是一个文件?
+			 * https://www.baeldung.com/spring-resttemplate-download-large-file
+			 */
 			HttpEntity entity = response.getEntity();
 			if (entity != null) {
+				//表示结果要以byte[]数组形式返回
+				if (returnBytes) {
+					return (T)IOUtils.toByteArray(entity.getContent());
+				}
+				
 				String result = EntityUtils.toString(entity, "UTF-8");
 				response.close();
 				

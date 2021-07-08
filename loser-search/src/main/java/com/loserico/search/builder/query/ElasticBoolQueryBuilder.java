@@ -94,6 +94,13 @@ public class ElasticBoolQueryBuilder extends BaseQueryBuilder {
 		return termsQueryBuilder;
 	}
 	
+	public BoolQuery terms(String field, List<Object> values) {
+		ElasticTermsQueryBuilder termsQueryBuilder = new ElasticTermsQueryBuilder();
+		termsQueryBuilder.query(field, values.stream().toArray(Object[]::new));
+		ReflectionUtils.setField("boolQueryBuilder", termsQueryBuilder, this);
+		return termsQueryBuilder;
+	}
+	
 	public BoolMatchQuery match(String field, String value) {
 		ElasticMatchQueryBuilder matchQueryBuilder = new ElasticMatchQueryBuilder();
 		matchQueryBuilder.query(field, value);
@@ -156,7 +163,7 @@ public class ElasticBoolQueryBuilder extends BaseQueryBuilder {
 	 * @param size
 	 * @return ElasticMatchQueryBuilder
 	 */
-	public ElasticBoolQueryBuilder paging(int from, int size) {
+	public ElasticBoolQueryBuilder paging(Integer from, Integer size) {
 		this.from = from;
 		this.size = size;
 		return this;
@@ -239,6 +246,30 @@ public class ElasticBoolQueryBuilder extends BaseQueryBuilder {
 	 */
 	public ElasticBoolQueryBuilder includeSources(String... fields) {
 		this.includeSource = fields;
+		return this;
+	}
+	
+	/**
+	 * 控制返回自己想要的字段, 而不是整个_source
+	 *
+	 * @param fields
+	 * @return QueryStringBuilder
+	 */
+	public ElasticBoolQueryBuilder includeSources(List<String> fields) {
+		String[] sources = fields.stream().toArray(String[]::new);
+		this.includeSource = sources;
+		return this;
+	}
+	
+	/**
+	 * 控制要排除哪些返回的字段, 而不是整个_source
+	 *
+	 * @param fields
+	 * @return QueryStringBuilder
+	 */
+	public ElasticBoolQueryBuilder excludeSources(List<String> fields) {
+		String[] sources = fields.stream().toArray(String[]::new);
+		this.excludeSource = sources;
 		return this;
 	}
 	

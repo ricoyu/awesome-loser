@@ -5,6 +5,7 @@ import com.loserico.json.jackson.JacksonUtils;
 import com.loserico.json.jsonpath.JsonPathUtils;
 import com.loserico.networking.enums.Scheme;
 import com.loserico.networking.utils.HttpUtils;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.ClientProtocolException;
@@ -225,6 +226,17 @@ public class HttpUtilsTest {
 		HttpUtils.form("http://localhost:8080/login")
 				.addCookie("lang", "en")
 				.request();
+	}
+	
+	@SneakyThrows
+	@Test
+	public void testGetOctetStream() {
+		byte[] data = HttpUtils.get("http://localhost:8080/downloadFile")
+				.bearerAuth("XwGnyZ5TWY1d-3jToBhTkA")
+				.returnBytes(true)
+				.request();
+		System.out.println(data.length);
+		IOUtils.write("D://a.zip", data);
 	}
 	
 }

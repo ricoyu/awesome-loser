@@ -69,6 +69,7 @@ import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
@@ -93,6 +94,7 @@ import org.elasticsearch.search.suggest.SuggestBuilders;
 import org.elasticsearch.search.suggest.completion.CompletionSuggestionBuilder;
 import org.elasticsearch.search.suggest.phrase.PhraseSuggestionBuilder;
 import org.elasticsearch.search.suggest.term.TermSuggestionBuilder;
+import org.json.JSONObject;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -371,7 +373,6 @@ public final class ElasticUtils {
 		return response.getDeleted();
 	}
 	
-	
 	/**
 	 * 更新文档的一部分
 	 * <ol>
@@ -388,10 +389,30 @@ public final class ElasticUtils {
 	 * @return Result 更新结果(更新了? 没更新?)
 	 */
 	public static UpdateResult update(String index, String id, String doc) {
-		UpdateResponse response = client.prepareUpdate(index, ONLY_TYPE, id)
-				.setDoc(doc, XContentType.JSON)
-				.get();
+		UpdateRequestBuilder updateRequestBuilder = client.prepareUpdate(index, ONLY_TYPE, id)
+				.setDoc(doc, XContentType.JSON);
+		logDsl(updateRequestBuilder);
+		UpdateResponse response = updateRequestBuilder.get();
 		return UpdateResult.from(response);
+	}
+	
+	/**
+	 * 更新文档的一部分
+	 * <ol>
+	 * <li/>如果ID对应的文档在ES中还不存在, 那么报错
+	 * <li/>如果docPiece对应的字段在文档中还不存在, 那么在原文档中插入这个字段
+	 * <li/>如果docPiece对应的字段在文档中存在, 并且值不一样, 那么执行更新
+	 * <li/>docPiece对应的字段在文档中存在, 但是值是一样的, 那么不执行更新
+	 * </ol>
+	 * https://www.elastic.co/guide/en/elasticsearch/client/java-rest/7.6/java-rest-high-document-update.html
+	 *
+	 * @param index
+	 * @param id
+	 * @param doc   整篇文档或者文档的一部分
+	 * @return Result 更新结果(更新了? 没更新?)
+	 */
+	public static UpdateResult update(String index, String id, Map<String, Object> doc) {
+		return update(index, id, toJson(doc));
 	}
 	
 	/**
@@ -1375,6 +1396,19 @@ public final class ElasticUtils {
 		
 		public static ElasticCompositeAggregationBuilder composite(String... indices) {
 			return ElasticCompositeAggregationBuilder.instance(indices);
+		}
+	}
+	
+	
+	protected static void logDsl(SearchRequestBuilder builder) {
+		if (log.isDebugEnabled()) {
+			log.debug("Query DSL:\n{}", new JSONObject(builder.toString()).toString(2));
+		}
+	}
+	
+	protected static void logDsl(UpdateRequestBuilder builder) {
+		if (log.isDebugEnabled()) {
+			log.debug("Update DSL:\n{}", new JSONObject(builder.toString()).toString(2));
 		}
 	}
 }

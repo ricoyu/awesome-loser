@@ -7,6 +7,8 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.TermsQueryBuilder;
 
+import java.util.List;
+
 /**
  * Terms Query: <p>
  * ES 不会对你输入的条件做任何的分词处理<p>
@@ -48,7 +50,7 @@ public final class ElasticTermsQueryBuilder extends BaseQueryBuilder {
 	 * @param size
 	 * @return ElasticTermsQueryBuilder
 	 */
-	public ElasticTermsQueryBuilder paging(int from, int size) {
+	public ElasticTermsQueryBuilder paging(Integer from, Integer size) {
 		this.from = from;
 		this.size = size;
 		return this;
@@ -167,6 +169,45 @@ public final class ElasticTermsQueryBuilder extends BaseQueryBuilder {
 	 */
 	public ElasticTermsQueryBuilder excludeSources(String... fields) {
 		this.excludeSource = fields;
+		return this;
+	}
+	
+	/**
+	 * 控制返回自己想要的字段, 而不是整个_source
+	 *
+	 * @param fields
+	 * @return ElasticTermsQueryBuilder
+	 */
+	public ElasticTermsQueryBuilder includeSources(List<String> fields) {
+		String[] sources = fields.stream().toArray(String[]::new);
+		this.includeSource = sources;
+		return this;
+	}
+	
+	/**
+	 * 控制要排除哪些返回的字段, 而不是整个_source
+	 *
+	 * @param fields
+	 * @return ElasticTermsQueryBuilder
+	 */
+	public ElasticTermsQueryBuilder excludeSources(List<String> fields) {
+		String[] sources = fields.stream().toArray(String[]::new);
+		this.excludeSource = sources;
+		return this;
+	}
+	
+	/**
+	 * 添加排序规则<p>
+	 * sort格式: 字段1:asc,字段2:desc,字段3<p>
+	 * 其中字段3按升序排(ASC)<p>
+	 * <p>
+	 * 注意: text类型字段不能排序, 要用field
+	 *
+	 * @param sort
+	 * @return ElasticTermsQueryBuilder
+	 */
+	public ElasticTermsQueryBuilder sort(String sort) {
+		super.sort(sort);
 		return this;
 	}
 	
