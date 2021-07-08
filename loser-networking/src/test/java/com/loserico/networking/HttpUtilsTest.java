@@ -5,6 +5,7 @@ import com.loserico.json.jackson.JacksonUtils;
 import com.loserico.json.jsonpath.JsonPathUtils;
 import com.loserico.networking.enums.Scheme;
 import com.loserico.networking.utils.HttpUtils;
+import com.loserico.networking.wrapper.RequestTimeout;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpEntity;
@@ -47,23 +48,40 @@ import static org.junit.Assert.*;
  */
 @Slf4j
 public class HttpUtilsTest {
-	
+
+	@Test
+	public void testTimeoutGet() {
+		String response2 = HttpUtils.get()
+				.scheme(Scheme.HTTP)
+				.host("localhost")
+				.port(8080)
+				.path("/test")
+				.timeout(RequestTimeout.builder()
+						.connectTimeout(5000)
+						.connectRequestTimeout(1000)
+						.socketTimeout(3000)
+						.build())
+				.retryCount(3)
+				.request();
+		System.out.println(response2);
+	}
+
 	@Test
 	public void testGet() {
 		String url = "http://192.168.100.101:9200/rico/_mapping";
 		String response = HttpUtils.get(url).request();
 		System.out.println(response);
-		
+
 		String response2 = HttpUtils.get()
 				.scheme(Scheme.HTTP)
 				.host("192.168.100.101")
 				.port(9200)
 				.path("/rico/_mapping")
 				.request();
-		
+
 		assertEquals(response, response2);
 	}
-	
+
 	@Test
 	public void testGetWithHeadersAndParams() {
 		String response = HttpUtils.get("http://localhost:8080/hello-boot/hello?name=三少爷")
@@ -75,7 +93,7 @@ public class HttpUtilsTest {
 				.request();
 		System.out.println(response);
 	}
-	
+
 	@Test
 	public void testPost() {
 		String response = HttpUtils.post("http://localhost:8080/hello-boot/body?name=三少爷")
@@ -88,20 +106,20 @@ public class HttpUtilsTest {
 				.request();
 		System.out.println(response);
 	}
-	
+
 	@Test
 	public void testElasticAuth() {
 		String response = HttpUtils.get("http://192.168.100.104:9200").request();
 		assertThat(response).contains("401");
 		System.out.println(response);
-		
+
 		response = HttpUtils.get("http://192.168.100.104:9200")
 				.basicAuth("elastic", "123456")
 				.request();
 		assertThat(response).contains("version");
 		System.out.println(response);
 	}
-	
+
 	@Test
 	public void testFormSubmit() {
 		Object response = HttpUtils.form("http://localhost:8080/form-submit")
@@ -109,7 +127,7 @@ public class HttpUtilsTest {
 				.request();
 		System.out.println(response);
 	}
-	
+
 	@Test
 	public void testFileUpload() {
 		Object response = HttpUtils.form("http://localhost:8080/upload")
@@ -119,7 +137,7 @@ public class HttpUtilsTest {
 				.request();
 		System.out.println(response);
 	}
-	
+
 	@Test
 	public void testFormSubmit2() {
 		String json = HttpUtils.get("http://10.10.26.22:8090/token/get").request();
@@ -132,7 +150,7 @@ public class HttpUtilsTest {
 				.request();
 		System.out.println(result);
 	}
-	
+
 	@Test
 	public void testSwitch() {
 		String json = HttpUtils.get("http://10.10.26.22:8090/token/get").request();
@@ -143,7 +161,7 @@ public class HttpUtilsTest {
 				.request();
 		System.out.println(result);
 	}
-	
+
 	@Test
 	public void testBasicAuth() {
 		Object response = HttpUtils.get("http://localhost:8080/security")
@@ -154,7 +172,7 @@ public class HttpUtilsTest {
 				.request();
 		System.out.println(response);
 	}
-	
+
 	@Test
 	public void testSSLAcceptAll() {
 		TrustStrategy acceptingTrustStrategy = (cert, authType) -> true;
@@ -162,20 +180,20 @@ public class HttpUtilsTest {
 			SSLContext sslContext = SSLContexts.custom()
 					.loadTrustMaterial(null, acceptingTrustStrategy)
 					.build();
-			
+
 			SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
-			
+
 			Registry<ConnectionSocketFactory> socketFactoryRegistry = RegistryBuilder.<ConnectionSocketFactory>create()
 					.register("https", sslsf)
 					.register("http", new PlainConnectionSocketFactory())
 					.build();
-			
+
 			BasicHttpClientConnectionManager connectionManager = new BasicHttpClientConnectionManager(socketFactoryRegistry);
 			CloseableHttpClient httpClient = HttpClients.custom()
 					.setSSLSocketFactory(sslsf)
 					.setConnectionManager(connectionManager)
 					.build();
-			
+
 			HttpEntity entity = httpClient.execute(new HttpGet("https://192.168.100.101:9200/_cat/nodeattrs?v")).getEntity();
 			String response = EntityUtils.toString(entity);
 			System.out.println(response);
@@ -190,17 +208,17 @@ public class HttpUtilsTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+
 	}
-	
-	
+
+
 	@Test
 	public void testNodeAttr() {
 		Object response = HttpUtils.get("https://192.168.100.101:9200/_cat/nodeattrs?v").request();
 		System.out.println(JacksonUtils.toPrettyJson(response));
 	}
-	
-	
+
+
 	@Test
 	public void testPostBody() {
 		String response = HttpUtils.post("http://localhost:8081/body?name=三少爷")
@@ -213,21 +231,21 @@ public class HttpUtilsTest {
 				.request();
 		System.out.println(response);
 	}
-	
+
 	@Test
 	public void testAuth() {
 		String responseJson = HttpUtils.get("http://localhost:8083/pic-code").request();
 		String codeId = JsonPathUtils.readNode(responseJson, "$.data.codeId");
-		
+
 	}
-	
+
 	@Test
 	public void testSetLocale() {
 		HttpUtils.form("http://localhost:8080/login")
 				.addCookie("lang", "en")
 				.request();
 	}
-	
+
 	@SneakyThrows
 	@Test
 	public void testGetOctetStream() {
@@ -238,5 +256,5 @@ public class HttpUtilsTest {
 		System.out.println(data.length);
 		IOUtils.write("D://a.zip", data);
 	}
-	
+
 }
