@@ -4,6 +4,7 @@ import com.loserico.common.lang.utils.IOUtils;
 import com.loserico.json.jackson.JacksonUtils;
 import com.loserico.json.jsonpath.JsonPathUtils;
 import com.loserico.networking.enums.Scheme;
+import com.loserico.networking.exception.HttpRequestException;
 import com.loserico.networking.utils.HttpUtils;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +13,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
@@ -26,12 +28,15 @@ import org.junit.Test;
 
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.nio.file.Paths;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 
+import static java.util.concurrent.TimeUnit.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 
@@ -237,6 +242,127 @@ public class HttpUtilsTest {
 				.request();
 		System.out.println(data.length);
 		IOUtils.write("D://a.zip", data);
+	}
+	
+	@Test
+	public void testTimeout() {
+		byte[] data = null;
+		try {
+			data = HttpUtils.get("http://localhost:8080/downloadFile")
+					.bearerAuth("XwGnyZ5TWY1d-3jToBhTkA")
+					.returnBytes(true)
+					.connectionManagerTimeout(5, SECONDS)
+					.connectionTimeout(1, SECONDS)
+					.soTimeout(2, SECONDS)
+					.request();
+		} catch (Exception e) {
+			if (e instanceof ConnectTimeoutException) {
+				log.error("连接超时", e);
+			} else if (e instanceof SocketTimeoutException) {
+				log.error("数据传输超时", e);
+			}
+		}
+		
+		if (data != null) {
+			System.out.println(data.length);
+			IOUtils.write("D://a.zip", data);
+		}
+		
+		data = HttpUtils.get("http://localhost:8080/downloadFile")
+				.bearerAuth("XwGnyZ5TWY1d-3jToBhTkA")
+				.returnBytes(true)
+				.request();
+		
+		
+		if (data != null) {
+			System.out.println(data.length);
+			IOUtils.write("D://b.zip", data);
+		}
+	}
+	
+	@Test
+	public void testRequestTimeout() {
+		byte[] data = null;
+		try {
+			data = HttpUtils.get("http://localhost:8080/downloadFile")
+					.bearerAuth("XwGnyZ5TWY1d-3jToBhTkA")
+					.returnBytes(true)
+					.connectionManagerTimeout(5, SECONDS)
+					.connectionTimeout(6, SECONDS)
+					.soTimeout(7, SECONDS)
+					.timeout(1, SECONDS)
+					.request();
+		} catch (HttpRequestException e) {
+			if (e.getCause() instanceof ConnectTimeoutException) {
+				log.error("连接超时", e);
+			} else if (e.getCause() instanceof SocketTimeoutException) {
+				log.error("数据传输超时", e);
+			} else if (e.getCause() instanceof SocketException) {
+				log.error("请求超时被取消了", e);
+			}
+		}
+		
+		if (data != null) {
+			System.out.println(data.length);
+			IOUtils.write("D://a.zip", data);
+		}
+		
+		data = HttpUtils.get("http://localhost:8080/downloadFile")
+				.bearerAuth("XwGnyZ5TWY1d-3jToBhTkA")
+				.returnBytes(true)
+				.request();
+		
+		
+		if (data != null) {
+			System.out.println(data.length);
+			IOUtils.write("D://b.zip", data);
+		}
+	}
+	
+	
+	@Test
+	public void testRequestTimeoutWithCallback() {
+		byte[] data = null;
+		data = HttpUtils.get("http://localhost:8080/downloadFile")
+				.bearerAuth("XwGnyZ5TWY1d-3jToBhTkA")
+				.returnBytes(true)
+				.connectionManagerTimeout(5, SECONDS)
+				.connectionTimeout(6, SECONDS)
+				.soTimeout(7, SECONDS)
+				.timeout(1, SECONDS)
+				.onError((e) -> log.error("出错了, 调用回调函数", e))
+				.request();
+		
+		
+		if (data != null) {
+			System.out.println(data.length);
+			IOUtils.write("D://a.zip", data);
+		}
+		
+		data = HttpUtils.get("http://localhost:8080/downloadFile")
+				.bearerAuth("XwGnyZ5TWY1d-3jToBhTkA")
+				.returnBytes(true)
+				.request();
+		
+		
+		if (data != null) {
+			System.out.println(data.length);
+			IOUtils.write("D://b.zip", data);
+		}
+	}
+	
+	@Test
+	public void testRetry() {
+		byte[] data = null;
+		data = HttpUtils.get("http://localhost:8080/downloadFile")
+				.bearerAuth("XwGnyZ5TWY1d-3jToBhTkA")
+				.returnBytes(true)
+				//.connectionManagerTimeout(5, SECONDS)
+				//.connectionTimeout(6, SECONDS)
+				.soTimeout(1, SECONDS)
+				.onError((e) -> log.error("出错了, 调用回调函数", e))
+				.retries(6)
+				.request();
 	}
 	
 }

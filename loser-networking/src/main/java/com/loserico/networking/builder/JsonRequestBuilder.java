@@ -5,6 +5,8 @@ import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.cookie.BasicClientCookie;
 
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -42,6 +44,7 @@ public class JsonRequestBuilder extends AbstractRequestBuilder {
 	/**
 	 * 设置请求头: Authorization:Bearer XXXX <br/>
 	 * token不需要加 "Bearer ", 这个会自动补全
+	 *
 	 * @param token
 	 * @return
 	 */
@@ -75,6 +78,7 @@ public class JsonRequestBuilder extends AbstractRequestBuilder {
 	
 	/**
 	 * 返回结果是否以byte[]数组形式给出
+	 *
 	 * @param returnBytes
 	 * @return JsonRequestBuilder
 	 */
@@ -115,6 +119,109 @@ public class JsonRequestBuilder extends AbstractRequestBuilder {
 	@Override
 	public JsonRequestBuilder onError(Consumer<Exception> errorCallback) {
 		super.onError(errorCallback);
+		return this;
+	}
+	
+	/**
+	 * http.connection.timeout
+	 * <p>
+	 * 与远程主机建立连接的超时时间
+	 * <p>
+	 * 超时会抛出org.apache.http.conn.ConnectTimeoutException
+	 *
+	 * @param timeout
+	 * @param timeUnit
+	 * @return JsonRequestBuilder
+	 */
+	public JsonRequestBuilder connectionTimeout(Integer timeout, TimeUnit timeUnit) {
+		Objects.requireNonNull(timeout, "timeout cannot be null!");
+		Objects.requireNonNull(timeUnit, "timeUnit cannot be null!");
+		this.connectionTimeout = timeUnit.toMillis(timeout);
+		return this;
+	}
+	
+	/**
+	 * http.socket.timeout
+	 * <p>
+	 * 建立连接后, 传输数据的超时时间
+	 * <p>
+	 * 超时会抛出 java.net.SocketTimeoutException
+	 * <p>
+	 * The time waiting for data – after establishing the connection; maximum time of inactivity between two data packets
+	 *
+	 * @param timeout
+	 * @param timeUnit
+	 * @return JsonRequestBuilder
+	 */
+	public JsonRequestBuilder soTimeout(Integer timeout, TimeUnit timeUnit) {
+		Objects.requireNonNull(timeout, "timeout cannot be null!");
+		Objects.requireNonNull(timeUnit, "timeUnit cannot be null!");
+		this.soTimeout = timeUnit.toMillis(timeout);
+		;
+		return this;
+	}
+	
+	/**
+	 * 从连接池中获取连接的超时时间, 在高负载情况下比较有必要设置
+	 * <p>
+	 * http.connection-manager.timeout
+	 * <p>
+	 * The time to wait for a connection from the connection manager/pool
+	 *
+	 * @param timeout
+	 * @param timeUnit
+	 * @return JsonRequestBuilder
+	 */
+	public JsonRequestBuilder connectionManagerTimeout(Integer timeout, TimeUnit timeUnit) {
+		Objects.requireNonNull(timeout, "timeout cannot be null!");
+		Objects.requireNonNull(timeUnit, "timeUnit cannot be null!");
+		this.connectionManagerTimeout = timeUnit.toMillis(timeout);
+		;
+		return this;
+	}
+	
+	/**
+	 * 请求生命周期超时时间, 大致= connectionTimeout + soTimeout
+	 *
+	 * @param timeout
+	 * @param timeUnit
+	 * @return JsonRequestBuilder
+	 */
+	public JsonRequestBuilder timeout(Integer timeout, TimeUnit timeUnit) {
+		Objects.requireNonNull(timeout, "timeout cannot be null!");
+		Objects.requireNonNull(timeUnit, "timeUnit cannot be null!");
+		this.timeout = timeUnit.toMillis(timeout);
+		return this;
+	}
+	
+	/**
+	 * 请求超时重试次数
+	 * <p>
+	 * 如果发生了以下几种异常, 不会重试
+	 * <ul>
+	 *     <li/>InterruptedIOException, SocketTimeoutException
+	 *     <li/>UnknownHostException
+	 *     <li/>ConnectException
+	 *     <li/>SSLException
+	 * </ul>
+	 * 
+	 * @param retries
+	 * @return JsonRequestBuilder
+	 */
+	public JsonRequestBuilder retries(Integer retries) {
+		Objects.requireNonNull(retries, "retries cannot be null!");
+		this.retries = retries;
+		return this;
+	}
+	
+	/**
+	 * 请求超时重试次数
+	 *
+	 * @param requestSentRetryEnabled
+	 * @return JsonRequestBuilder
+	 */
+	public JsonRequestBuilder requestSentRetryEnabled(boolean requestSentRetryEnabled) {
+		this.requestSentRetryEnabled = requestSentRetryEnabled;
 		return this;
 	}
 	

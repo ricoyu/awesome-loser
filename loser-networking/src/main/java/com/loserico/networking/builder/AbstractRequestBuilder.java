@@ -16,6 +16,7 @@ import org.apache.commons.collections.MultiMap;
 import org.apache.commons.collections.map.MultiValueMap;
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
@@ -36,7 +37,9 @@ import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.ssl.SSLContexts;
@@ -44,7 +47,6 @@ import org.apache.http.ssl.TrustStrategy;
 import org.apache.http.util.EntityUtils;
 
 import javax.net.ssl.SSLContext;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
@@ -61,6 +63,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.function.Consumer;
 
 import static com.loserico.common.lang.utils.Assert.notNull;
@@ -126,10 +130,10 @@ public abstract class AbstractRequestBuilder {
 		connectionManager = new PoolingHttpClientConnectionManager(socketFactoryRegistry);
 		connectionManager.setMaxTotal(100);// 整个连接池最大连接数
 		/*
-		 * 设置每一个路由的最大连接数, 这里的路由是指 IP+PORT. 
-		 * 例如连接池大小(MaxTotal)设置为300, 路由连接数设置为200(DefaultMaxPerRoute), 
-		 * 对于www.a.com 与 www.b.com 两个路由来说, 
-		 * 发起服务的主机连接到每个路由的最大连接数(并发数)不能超过200, 
+		 * 设置每一个路由的最大连接数, 这里的路由是指 IP+PORT.
+		 * 例如连接池大小(MaxTotal)设置为300, 路由连接数设置为200(DefaultMaxPerRoute),
+		 * 对于www.a.com 与 www.b.com 两个路由来说,
+		 * 发起服务的主机连接到每个路由的最大连接数(并发数)不能超过200,
 		 * 两个路由的总连接数不能超过300。
 		 */
 		connectionManager.setDefaultMaxPerRoute(20);
@@ -165,6 +169,59 @@ public abstract class AbstractRequestBuilder {
 	protected String path;
 	
 	/**
+	 * http.connection.timeout
+	 * <p>
+	 * 与远程主机建立连接的超时时间
+	 * <p>
+	 * 超时会抛出org.apache.http.conn.ConnectTimeoutException
+	 */
+	protected Long connectionTimeout;
+	
+	/**
+	 * http.socket.timeout
+	 * <p>
+	 * 建立连接后, 传输数据的超时时间
+	 * <p>
+	 * 超时会抛出 java.net.SocketTimeoutException
+	 * <p>
+	 * The time waiting for data – after establishing the connection; maximum time of inactivity between two data packets
+	 */
+	protected Long soTimeout;
+	
+	/**
+	 * 从连接池中获取连接的超时时间, 在高负载情况下比较有必要设置
+	 * <p>
+	 * http.connection-manager.timeout
+	 * <p>
+	 * The time to wait for a connection from the connection manager/pool
+	 */
+	protected Long connectionManagerTimeout;
+	
+	/**
+	 * 请求生命周期超时时间, 大致= connectionTimeout + soTimeout
+	 */
+	protected Long timeout;
+	
+	/**
+	 * 设置失败重试次数
+	 * <p>
+	 * 如果发生了以下几种异常, 不会重试
+	 * <ul>
+	 *     <li/>InterruptedIOException, SocketTimeoutException
+	 *     <li/>UnknownHostException
+	 *     <li/>ConnectException
+	 *     <li/>SSLException
+	 * </ul>
+	 */
+	protected Integer retries;
+	
+	/**
+	 * 如果接口是幂等的, 可以放心重试, 设为true, 否则设为false
+	 * true if it's OK to retry non-idempotent requests that have been sent
+	 */
+	protected boolean requestSentRetryEnabled = false;
+	
+	/**
 	 * 返回结果以byte[]形式返回
 	 */
 	protected boolean returnBytes;
@@ -190,26 +247,49 @@ public abstract class AbstractRequestBuilder {
 	 * @return CloseableHttpClient
 	 */
 	protected CloseableHttpClient buildHttpClient() {
-		CloseableHttpClient httpClient = HttpClients.custom()
+		//超时设置
+		RequestConfig.Builder builder = RequestConfig.custom();
+		if (connectionManagerTimeout != null) {
+			builder.setConnectionRequestTimeout(connectionManagerTimeout.intValue());
+		}
+		if (connectionTimeout != null) {
+			builder.setConnectTimeout(connectionTimeout.intValue());
+		}
+		if (soTimeout != null) {
+			builder.setSocketTimeout(soTimeout.intValue());
+		}
+		HttpClientBuilder httpClientBuilder = HttpClients.custom()
 				.setSSLSocketFactory(sslConnectionSocketFactory)
 				.setConnectionManager(connectionManager)
 				.setDefaultCookieStore(cookieStore)
-				.build();
+				.setDefaultRequestConfig(builder.build());
+		/*
+		 * 如果设置了重试次数
+		 * requestSentRetryEnabled 如果调用的接口是幂等的, 可以设为true, 如果不幂等, 设为false, 避免重复提交
+		 */
+		if (retries != null) {
+			httpClientBuilder.setRetryHandler(new StandardHttpRequestRetryHandler(retries, requestSentRetryEnabled));
+		}
+		
+		CloseableHttpClient httpClient = httpClientBuilder.build();
 		
 		int leased = connectionManager.getTotalStats().getLeased();
 		int available = connectionManager.getTotalStats().getAvailable();
 		int total = leased + available;
-		log.debug("HttpClient连接池\n" +
-						"最大连接数: {}\n" +
-						"已创建的连接数: {}\n" +
-						"当前正在执行任务的连接数: {}\n" +
-						"当前空闲的连接数: {}\n" +
-						"当前等待获取连接的任务数: {}",
-				connectionManager.getTotalStats().getMax(),
-				total,
-				leased,
-				available,
-				connectionManager.getTotalStats().getPending());
+		
+		if (log.isDebugEnabled()) {
+			log.debug("HttpClient连接池\n" +
+							"最大连接数: {}\n" +
+							"已创建的连接数: {}\n" +
+							"当前正在执行任务的连接数: {}\n" +
+							"当前空闲的连接数: {}\n" +
+							"当前等待获取连接的任务数: {}",
+					connectionManager.getTotalStats().getMax(),
+					total,
+					leased,
+					available,
+					connectionManager.getTotalStats().getPending());
+		}
 		
 		return httpClient;
 	}
@@ -362,6 +442,7 @@ public abstract class AbstractRequestBuilder {
 	
 	/**
 	 * 添加Cookie
+	 *
 	 * @param name
 	 * @param value
 	 * @return CookieBuilder
@@ -494,16 +575,28 @@ public abstract class AbstractRequestBuilder {
 			}
 			
 			CloseableHttpClient httpClient = buildHttpClient();
-			CloseableHttpResponse response = httpClient.execute(httpRequest);
+			
 			/*
-			 * 如果得到的是一个文件?
-			 * https://www.baeldung.com/spring-resttemplate-download-large-file
+			 * 如果设置了整个请求生命周期的超时时间, 超时后中断请求
 			 */
+			if (timeout != null) {
+				TimerTask task = new TimerTask() {
+					@Override
+					public void run() {
+						if (httpRequest != null) {
+							httpRequest.abort();
+						}
+					}
+				};
+				new Timer(true).schedule(task, timeout);
+			}
+			CloseableHttpResponse response = httpClient.execute(httpRequest);
+			
 			HttpEntity entity = response.getEntity();
 			if (entity != null) {
 				//表示结果要以byte[]数组形式返回
 				if (returnBytes) {
-					return (T)IOUtils.toByteArray(entity.getContent());
+					return (T) IOUtils.toByteArray(entity.getContent());
 				}
 				
 				String result = EntityUtils.toString(entity, "UTF-8");
@@ -517,9 +610,13 @@ public abstract class AbstractRequestBuilder {
 				}
 				return (T) result;
 			}
-		} catch (IOException e) {
+		} catch (Exception e) {
 			log.error("", e);
-			throw new HttpRequestException(e);
+			if (errorCallback != null) {
+				errorCallback.accept(e);
+			} else {
+				throw new HttpRequestException(e);
+			}
 		}
 		
 		return null;
