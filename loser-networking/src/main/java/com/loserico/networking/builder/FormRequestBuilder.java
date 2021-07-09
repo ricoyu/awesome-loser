@@ -289,7 +289,7 @@ public class FormRequestBuilder extends AbstractRequestBuilder implements OAuth2
 	/**
 	 * 请求超时重试次数
 	 * <p>
-	 * 如果发生了以下几种异常, 不会重试
+	 * 如果发生了以下几种异常, 不会重试:
 	 * <ul>
 	 *     <li/>InterruptedIOException, SocketTimeoutException
 	 *     <li/>UnknownHostException
