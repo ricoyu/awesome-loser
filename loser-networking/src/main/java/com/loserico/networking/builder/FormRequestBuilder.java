@@ -307,7 +307,8 @@ public class FormRequestBuilder extends AbstractRequestBuilder implements OAuth2
 	}
 	
 	/**
-	 * 请求超时重试次数
+	 * 如果接口是幂等的, 可以放心重试, 设为true, 否则设为false
+	 * true if it's OK to retry non-idempotent requests that have been sent
 	 *
 	 * @param requestSentRetryEnabled
 	 * @return FormRequestBuilder
