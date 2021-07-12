@@ -29,10 +29,9 @@ public class LoserThreadFactory implements ThreadFactory {
 	}
 	
 	public LoserThreadFactory(String namePrefix) {
-		this.poolNamePrefix = namePrefix;
 		SecurityManager s = System.getSecurityManager();
 		group = (s != null) ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
-		namePrefix = namePrefix + "-" + poolNumber.getAndIncrement() + "-thread-";
+		this.poolNamePrefix  = namePrefix + "-" + poolNumber.getAndIncrement() + "-thread-";
 	}
 	
 	public Thread newThread(Runnable r) {

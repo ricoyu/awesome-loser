@@ -2,7 +2,6 @@ package com.loserico.search.builder.agg;
 
 import com.loserico.search.builder.query.BaseQueryBuilder;
 import com.loserico.search.support.AggResultSupport;
-import com.loserico.search.vo.AggResult;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
@@ -11,7 +10,7 @@ import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 
-import java.util.List;
+import java.util.Map;
 
 /**
  * Terms 聚合
@@ -109,7 +108,7 @@ public class ElasticTermsAggregationBuilder extends AbstractAggregationBuilder i
 		return compositeAggregationBuilder;
 	}
 	
-	public List<AggResult> get() {
+	public Map<String, Object> get() {
 		TermsAggregationBuilder arrregationBuilder = (TermsAggregationBuilder) build();
 		
 		SearchRequestBuilder searchRequestBuilder = searchRequestBuilder();

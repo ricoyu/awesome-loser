@@ -49,7 +49,7 @@ public class LoserThreadExecutor extends ThreadPoolExecutor {
 				unit,
 				new SynchronousQueue<>(),
 				new LoserThreadFactory(),
-				new RejectedPolicyWithReport());
+				new AbortWithReportPolicy());
 		this.timeUnit = unit;
 	}
 	
@@ -70,7 +70,7 @@ public class LoserThreadExecutor extends ThreadPoolExecutor {
 				unit,
 				new SynchronousQueue<>(),
                 new LoserThreadFactory(poolNamePrefix),
-				new RejectedPolicyWithReport());
+				new AbortWithReportPolicy());
 		this.timeUnit = unit;
 	}
 	

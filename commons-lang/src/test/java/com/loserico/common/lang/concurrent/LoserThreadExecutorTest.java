@@ -1,6 +1,7 @@
 package com.loserico.common.lang.concurrent;
 
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
@@ -44,5 +45,21 @@ public class LoserThreadExecutorTest {
 				LockSupport.parkNanos(TimeUnit.SECONDS.toNanos(1));
 			}
 		});
+	}
+	
+	@Test
+	public void test() {
+		Thread t = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				while (true) {
+					
+				}
+			}
+		});
+		boolean alive = t.isAlive();
+		System.out.println(alive);
+		t.start();
+		System.out.println(t.isAlive());
 	}
 }

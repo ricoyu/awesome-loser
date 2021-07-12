@@ -12,5 +12,10 @@ package com.loserico.search.builder.agg;
  */
 public interface TermAggregationBuilder extends ElasticAggregationBuilder, Compositable{
 	
+	/**
+	 * 配置聚合后返回的分桶的数量
+	 * @param size
+	 * @return ElasticTermsAggregationBuilder
+	 */
 	public ElasticTermsAggregationBuilder size(Integer size);
 }

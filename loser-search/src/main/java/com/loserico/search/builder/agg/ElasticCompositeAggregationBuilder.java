@@ -125,15 +125,14 @@ public class ElasticCompositeAggregationBuilder extends AbstractAggregationBuild
 		logDsl(searchRequestBuilder);
 		
 		SearchResponse searchResponse = searchRequestBuilder.get();
-		Aggregations aggregations = searchResponse.getAggregations();
 		
+		Aggregations aggregations = searchResponse.getAggregations();
 		Map<String, Object> resultMap = AggResultSupport.compositeResult(aggregations);
 		
 		if (fetchTotal) {
 			long totalHits = SearchHitsSupport.totalHits(searchResponse);
 			resultMap.put("total", totalHits);
 		}
-		
 		return resultMap;
 	}
 }

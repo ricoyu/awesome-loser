@@ -1,6 +1,5 @@
 package com.loserico.search.support;
 
-import com.loserico.search.vo.AggResult;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.Aggregations;
@@ -12,7 +11,6 @@ import org.elasticsearch.search.aggregations.metrics.InternalMax;
 import org.elasticsearch.search.aggregations.metrics.InternalMin;
 import org.elasticsearch.search.aggregations.metrics.InternalSum;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,24 +29,29 @@ import java.util.Map;
 public final class AggResultSupport {
 	
 	public static Map<String, Object> compositeResult(Aggregations aggregations) {
-		Map<String, Object> result = new HashMap<>();
+		Map<String, Object> resultMap = new HashMap<>();
+		
+		if (aggregations == null ) {
+			return resultMap;
+		}
+		
 		for (Aggregation aggregation : aggregations) {
 			if (aggregation instanceof InternalMax) {
 				Double value = ((InternalMax) aggregation).getValue();
 				String name = aggregation.getName();
-				result.put(name, value);
+				resultMap.put(name, value);
 			}
 			
 			if (aggregation instanceof InternalMin) {
 				Double value = ((InternalMin) aggregation).getValue();
 				String name = aggregation.getName();
-				result.put(name, value);
+				resultMap.put(name, value);
 			}
 			
 			if (aggregation instanceof InternalAvg) {
 				Double value = ((InternalAvg) aggregation).getValue();
 				String name = aggregation.getName();
-				result.put(name, value);
+				resultMap.put(name, value);
 			}
 			
 			if (aggregation instanceof LongTerms) {
@@ -61,7 +64,7 @@ public final class AggResultSupport {
 					log.info("Bucket: {}, Doc Count: {}", key, docCount);
 					value.put(key, docCount);
 				}
-				result.put(name, value);
+				resultMap.put(name, value);
 			}
 			
 			if (aggregation instanceof StringTerms) {
@@ -74,29 +77,37 @@ public final class AggResultSupport {
 					log.info("Bucket: {}, Doc Count: {}", key, docCount);
 					value.put(key, docCount);
 				}
-				result.put(name, value);
+				resultMap.put(name, value);
 			}
 		}
 		
-		return result;
+		return resultMap;
 	}
 	
-	public static List<AggResult> termsResult(Aggregations aggregations) {
-		List<AggResult> aggResults = new ArrayList<>();
+	public static Map<String, Object> termsResult(Aggregations aggregations) {
+		Map<String, Object> aggResults = new HashMap<>();
+		if (aggregations == null) {
+			return aggResults;
+		}
 		for (Aggregation aggregation : aggregations) {
 			List<StringTerms.Bucket> buckets = ((StringTerms) aggregation).getBuckets();
+			Map<String, Object> result = new HashMap<>();
 			for (StringTerms.Bucket bucket : buckets) {
 				String key = bucket.getKeyAsString();
 				long docCount = bucket.getDocCount();
 				log.info("Bucket: {}, Doc Count: {}", key, docCount);
-				aggResults.add(new AggResult(key, docCount));
+				result.put(key, docCount);
 			}
+			aggResults.put(aggregation.getName(), result);
 		}
 		
 		return aggResults;
 	}
 	
 	public static Double avgResult(Aggregations aggregations) {
+		if (aggregations == null) {
+			return null;
+		}
 		for (Aggregation aggregation : aggregations) {
 			return ((InternalAvg) aggregation).getValue();
 		}
@@ -105,6 +116,9 @@ public final class AggResultSupport {
 	}
 	
 	public static Long cardinalityResult(Aggregations aggregations) {
+		if (aggregations == null) {
+			return null;
+		}
 		for (Aggregation aggregation : aggregations) {
 			return ((InternalCardinality) aggregation).getValue();
 		}
@@ -113,6 +127,9 @@ public final class AggResultSupport {
 	}
 	
 	public static Double maxResult(Aggregations aggregations) {
+		if (aggregations == null) {
+			return null;
+		}
 		for (Aggregation aggregation : aggregations) {
 			return ((InternalMax) aggregation).getValue();
 		}
@@ -121,6 +138,9 @@ public final class AggResultSupport {
 	}
 	
 	public static Double minResult(Aggregations aggregations) {
+		if (aggregations == null) {
+			return null;
+		}
 		for (Aggregation aggregation : aggregations) {
 			return ((InternalMin) aggregation).getValue();
 		}
@@ -129,6 +149,9 @@ public final class AggResultSupport {
 	}
 	
 	public static Double sumResult(Aggregations aggregations) {
+		if (aggregations == null) {
+			return null;
+		}
 		for (Aggregation aggregation : aggregations) {
 			return ((InternalSum) aggregation).getValue();
 		}

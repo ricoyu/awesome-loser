@@ -104,6 +104,7 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	private static final int COUNT_BITS = Integer.SIZE - 3;    //29
 	
 	/**
+	 * 代表预设的一个工作线程数的最大值<br/>
 	 * int型占4byte, 32bit <br/>
 	 * 00000000 00000000 00000000 00000001<br/>
 	 * 00100000 00000000 00000000 00000000 左移29位<br/>
@@ -332,8 +333,7 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	 * <ol>
 	 *     <li/>ArrayBlockingQueue    基于数组结构的有界阻塞队列, 按FIFO排序任务
 	 *     <li/>LinkedBlockingQuene   基于链表结构的阻塞队列, 按FIFO排序任务, 吞吐量通常要高于ArrayBlockingQuene
-	 *     <li/>SynchronousQueue      一个不存储元素的阻塞队列, 每个插入操作必须等到另一个线程调用移除操作, 否则插入操作一直处于阻塞状态,
-	 *                                吞吐量通常要高于LinkedBlockingQuene
+	 *     <li/>SynchronousQueue      一个不存储元素的阻塞队列, 每个插入操作必须等到另一个线程调用移除操作, 否则插入操作一直处于阻塞状态
 	 *     <li/>PriorityBlockingQueue 具有优先级的无界阻塞队列
 	 * </ol>
 	 */
@@ -432,7 +432,8 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	 * <p/>
 	 * 线程池中空闲线程的存活时间. <br/>
 	 * 当线程池中的线程数量大于corePoolSize的时候, 如果这时没有新的任务提交,<br/>
-	 * 核心线程数外的线程会等待一段时间, 如果等待超过了keepAliveTime, 线程销毁
+	 * 核心线程数外的线程会等待一段时间, 如果等待超过了keepAliveTime, 线程销毁<br/>
+	 * 实际所谓的等待时间, 就是调用BlockQueue.poll(long timeout, TimeUnit unit)的timeout
 	 */
 	private volatile long keepAliveTime;
 	
@@ -457,8 +458,10 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	
 	/**
 	 * Maximum pool size. Note that the actual maximum is internally bounded by CAPACITY.
-	 * 线程池中允许的最大线程数.
-	 * 如果当前阻塞队列(workQueue)满了, 且继续提交任务, 则创建新的线程执行任务, 前提是当前线程数小于maximumPoolSize
+	 * 线程池中允许的最大线程数.<br/>
+	 * 如果当前阻塞队列(workQueue)满了, 且继续提交任务, 则创建新的线程执行任务, 前提是当前线程数小于maximumPoolSize<br/>
+	 * 这个所谓的maximumPoolSize并不是真正意义上的最大线程数, 它上面还有个太上皇CAPACITY, <br/>
+	 * 即如果 maximumPoolSize > CAPACITY, 那么实际的最大线程数是 CAPACITY
 	 */
 	private volatile int maximumPoolSize;
 	
@@ -553,7 +556,7 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 		 * Creates with given first task and thread from ThreadFactory.
 		 * <p>
 		 * 在调用构造方法时, 需要把任务传入, 这里通过 getThreadFactory().newThread(this); 来新建一个线程.
-		 * newThread方法传入的参数是this, 因为Worker本身继承了Runnable接口, 也就是一个线程,
+		 * newThread方法传入的参数是this, 因为Worker本身继承了Runnable接口, 
 		 * 所以一个Worker对象在启动的时候会调用Worker类中的run方法。
 		 * <p>
 		 * 正因为如此, 在runWorker方法中会先调用Worker对象的unlock方法将state设置为0
@@ -587,6 +590,7 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 		// The value 1 represents the locked state.
 		
 		/**
+		 * 判断是否上锁了
 		 * state == 1 代表锁定状态
 		 * state == 0 未锁定
 		 *
@@ -678,6 +682,7 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	 */
 	
 	/**
+	 * 将高3位线程池状态改为targetState, 会一直尝试直到成功 <br/>
 	 * Transitions runState to given target, or leaves it alone if already at least the given target.
 	 * 检查ctl的高3位状态位
 	 * <ul>
@@ -699,7 +704,7 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	}
 	
 	/**
-	 * 将线程池的状态转换到 TERMINATED
+	 * 将线程池的状态转换到 TERMINATED, 会一直尝试直到成功 <br/>
 	 * <p>
 	 * Transitions to TERMINATED state if either (SHUTDOWN and pool
 	 * and queue empty) or (STOP and pool empty).  If otherwise
@@ -929,7 +934,7 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	 * addWorker 方法的主要工作是在线程池中创建一个新的线程并执行
 	 * firstTask 用于指定新增的线程执行的第一个任务
 	 * core      true  表示在新增线程时会判断当前活动线程数是否少于corePoolSize
-	 * false 表示新增线程前需要判断当前活动线程数是否少于maximumPoolSize
+	 *           false 表示新增线程前需要判断当前活动线程数是否少于maximumPoolSize
 	 * <p>
 	 * Checks if a new worker can be added with respect to current
 	 * pool state and the given bound (either core or maximum).
@@ -1049,6 +1054,10 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 					 */
 					if (rs < SHUTDOWN ||
 							(rs == SHUTDOWN && firstTask == null)) {
+						/*
+						 * 在 new Worker(firstTask)时, 构造函数里面创建了Thread对象
+						 * 此时t.isAlive()应该是false, 因为刚刚创建, 还没有start
+						 */
 						if (t.isAlive()) // precheck that t is startable
 						{
 							throw new IllegalThreadStateException();
@@ -1405,16 +1414,8 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	 *
 	 * @param corePoolSize    the number of threads to keep in the pool, even if they are idle,
 	 *                        unless {@code allowCoreThreadTimeOut} is set
-	 *                        1: 默认情况下, 线程池在初始的时候, 线程数为0, 除非调用了prestartCoreThread()
-	 *                        或者prestartAllCoreThreads()方法来预创建线程; 前者是初始一个, 后者是初始全部.
-	 *                        当接收到一个任务时, 如果线程池中存活的线程数小于corePoolSize核心线程, 则新建一个线程。
-	 *                        2: 如果所有运行的核心线程都都在忙, 超出核心线程数的任务, 执行器更多地选择把任务放进队列, 而不是新建一个线程。
-	 *                        3: 如果一个任务不能再提交到队列, 在不超出最大线程数量情况下, 会新建线程; 超出了就会报错.
 	 * @param maximumPoolSize the maximum number of threads to allow in the pool
 	 *                        线程池中线程最大数量
-	 *                        线程池中的当前线程数目不会超过该值。如果队列中任务已满, 并且当前线程个数小于maximumPoolSize,
-	 *                        那么会创建新的线程来执行任务. 这里值得一提的是largestPoolSize, 该变量记录了线程池在整个生命
-	 *                        周期中曾经出现的最大线程个数, 因为线程池创建之后, 可以调用setMaximumPoolSize()改变运行的最大线程的数目。
 	 * @param keepAliveTime   when the number of threads is greater than the core, this is the maximum time
 	 *                        that excess idle threads will wait for new tasks before terminating.
 	 *                        当线程池中的线程数大于corePoolSize时, 如果有线程闲置时间超过keepAliveTime, 那么该线程会被终止
@@ -1650,9 +1651,9 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 		/*
 		 * 如果执行到这里, 有两种情况:
 		 * 1. 线程池已经不是RUNNING状态
-		 * 2. 线程池是RUNNING状态, 但 workerCount >= corePoolSize 并且workQueue已满
+		 * 2. 线程池是RUNNING状态, 但workQueue已满
 		 *
-		 * 这时, 再次调用 addWorker方法, 但第二个参数传入为false, 将线程池的有限线程数量的上限设置为maximumPoolSize, 如果失败则拒绝该任务
+		 * 这时, 再次调用 addWorker方法, 但第二个参数传入为false, 将当前线程池数量跟maximumPoolSize比, 如果失败则拒绝该任务
 		 */
 		else if (!addWorker(command, false)) {
 			reject(command);

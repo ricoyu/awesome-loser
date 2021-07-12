@@ -2,7 +2,6 @@ package com.loserico.search;
 
 import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.search.ElasticUtils.Aggs;
-import com.loserico.search.vo.AggResult;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.io.stream.NamedWriteable;
 import org.elasticsearch.search.aggregations.Aggregation;
@@ -17,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.loserico.json.jackson.JacksonUtils.toJson;
+import static com.loserico.json.jackson.JacksonUtils.toPrettyJson;
 import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.search.aggregations.AggregationBuilders.*;
 
@@ -59,17 +59,17 @@ public class ElasticAggsTest {
 	
 	@Test
 	public void testAgg() {
-		List<AggResult> aggResults = Aggs.terms("cars")
+		Map<String, Object> aggResults = Aggs.terms("cars")
 				.of("cars-color", "color.keyword")
 				.size(5)
 				.get();
 		assertThat(aggResults.size()).isEqualTo(3);
-		aggResults.forEach(System.out::println);
+		System.out.println(toPrettyJson(aggResults));
 		
-		List<AggResult> aggResults1 = Aggs.terms("kibana_sample_data_flights")
+		Map<String, Object> aggResults1 = Aggs.terms("kibana_sample_data_flights")
 				.of("dest-country", "DestCountry")
 				.get();
-		aggResults1.forEach(System.out::println);
+		System.out.println(toPrettyJson(aggResults1));
 	}
 	
 	/**

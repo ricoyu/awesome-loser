@@ -2,7 +2,6 @@ package com.loserico.search;
 
 import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.search.builder.query.ElasticTermQueryBuilder;
-import com.loserico.search.vo.AggResult;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -10,7 +9,6 @@ import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.junit.Test;
 
-import java.util.List;
 import java.util.Map;
 
 import static com.loserico.json.jackson.JacksonUtils.toJson;
@@ -32,19 +30,19 @@ public class AggTest {
 	
 	@Test
 	public void testAggOnDestContry() {
-		List<AggResult> aggResults = ElasticUtils.Aggs.terms("kibana_sample_data_flights")
+		Map<String, Object> aggResults = ElasticUtils.Aggs.terms("kibana_sample_data_flights")
 				.of("flight_dest", "DestCountry")
 				.get();
 		
-		aggResults.forEach(agg -> System.out.println(toPrettyJson(agg)));
+		System.out.println(toPrettyJson(aggResults));
 	}
 	
 	@Test
 	public void testSubAggregate() {
-		List<AggResult> aggResults = ElasticUtils.Aggs.terms("kibana_sample_data_flights")
+		Map<String, Object> aggResults = ElasticUtils.Aggs.terms("kibana_sample_data_flights")
 				.of("flight_dest", "DestCountry")
 				.get();
-		aggResults.forEach(System.out::println);
+		System.out.println(toPrettyJson(aggResults));
 	}
 	
 	@Test
@@ -116,13 +114,13 @@ public class AggTest {
 	@Test
 	public void testQueryThenAgg() {
 		ElasticRangeQueryBuilder rangeQueryBuilder = ElasticUtils.Query.range("employees").field("age").gt(20);
-		List<AggResult> aggResults = ElasticUtils.Aggs.terms("employees")
+		Map<String, Object> aggResults = ElasticUtils.Aggs.terms("employees")
 				.of("jobs", "job.keyword")
 				.size(10)
 				.setQuery(rangeQueryBuilder)
 				.get();
 		
-		aggResults.forEach(System.out::println);
+		System.out.println(toPrettyJson(aggResults));
 	}
 	
 	@Test

@@ -30,9 +30,9 @@ import java.util.concurrent.TimeUnit;
  * @author Rico Yu  ricoyu520@gmail.com
  * @version 1.0
  */
-public class RejectedPolicyWithReport implements RejectedExecutionHandler {
+public class AbortWithReportPolicy implements RejectedExecutionHandler {
 	
-	private static final Logger log = LoggerFactory.getLogger(RejectedPolicyWithReport.class);
+	private static final Logger log = LoggerFactory.getLogger(AbortWithReportPolicy.class);
 	
 	private static volatile long lastPrintTime = 0;
 	

@@ -11,18 +11,21 @@ import java.util.List;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 public final class EnumUtils {
-
+	
 	private static final Logger logger = LoggerFactory.getLogger(EnumUtils.class);
-
+	
 	/**
 	 * 根据value的类型自动解析成对应的enum
-	 * 
+	 *
 	 * @param clazz
 	 * @param value
 	 * @return
 	 */
-	@SuppressWarnings({ "rawtypes" })
+	@SuppressWarnings({"rawtypes"})
 	public static Enum lookupEnum(Class clazz, Object value) {
+		if (value == null) {
+			return null;
+		}
 		Enum result = null;
 		if (value instanceof String) {
 			result = lookup(clazz, value.toString());
@@ -49,16 +52,20 @@ public final class EnumUtils {
 		}
 		return null;
 	}
-
+	
 	/**
 	 * 根据value的类型,并根据指定的enum的某个属性去自动解析成对应的enum
-	 * 
+	 *
 	 * @param clazz
 	 * @param value
 	 * @return
 	 */
 	@SuppressWarnings("rawtypes")
 	public static Enum lookupEnum(Class clazz, Object value, String property) {
+		if (value == null) {
+			return null;
+		}
+		
 		Enum result = null;
 		if (value instanceof String) {
 			result = lookup(clazz, value.toString(), property);
@@ -89,11 +96,11 @@ public final class EnumUtils {
 	/**
 	 * 根据value的类型,并根据指定的enum的某个属性去自动解析成对应的enum
 	 * 如果根据property匹配不到, 回退到downgradeProperty去匹配
-	 * 
+	 * <p>
 	 * 这是为了应对如下情况的enum:
 	 * TO_AUDIT(101, "待审核", "未审核")
 	 * Enum的某个值有描述, 还有别名, 解析的时候希望优先根据描述匹配, 匹配不到根据别名匹配
-	 * 
+	 *
 	 * @param clazz
 	 * @param value
 	 * @return Enum
@@ -101,6 +108,10 @@ public final class EnumUtils {
 	 */
 	@SuppressWarnings("rawtypes")
 	public static Enum lookupEnum(Class clazz, Object value, String property, String downgradeProperty) {
+		if (value == null) {
+			return null;
+		}
+		
 		Enum result = null;
 		if (value instanceof String) {
 			result = lookup(clazz, value.toString(), property);
@@ -131,52 +142,59 @@ public final class EnumUtils {
 		}
 		return null;
 	}
-
+	
 	/**
 	 * 根据value的类型自动解析成对应的enum
-	 * 
+	 *
 	 * @param clazz
 	 * @param value
 	 * @return
 	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({"rawtypes", "unchecked"})
 	public static <T extends Enum> T toEnum(Class clazz, Object value) {
-		return (T)lookupEnum(clazz, value);
+		return (T) lookupEnum(clazz, value);
 	}
 	
 	/**
 	 * 泛型化的版本
+	 *
 	 * @param clazz
 	 * @param value
 	 * @param property
 	 * @return T
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	public static <T extends Enum> T toEnum(Class<T> clazz, Object value, String property) {
-		return (T)lookupEnum(clazz, value, property);
+		return (T) lookupEnum(clazz, value, property);
 	}
 	
 	/**
 	 * 泛型化的版本
+	 *
 	 * @param clazz
 	 * @param value
 	 * @param property
 	 * @return T
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	public static <T extends Enum> T toEnum(Class<T> clazz, Object value, String property, String downgradeProperty) {
-		return (T)lookupEnum(clazz, value, property, downgradeProperty);
+		return (T) lookupEnum(clazz, value, property, downgradeProperty);
 	}
 	
 	/**
 	 * 泛型化的版本,支持根据多个property按顺序匹配
+	 *
 	 * @param clazz
 	 * @param value
 	 * @param properties
 	 * @return T
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	public static <T extends Enum> T toEnum(Class<T> clazz, Object value, List<String> properties) {
+		if (value == null) {
+			return null;
+		}
+		
 		for (String property : properties) {
 			Object enumObj = lookupEnum(clazz, value, property);
 			if (enumObj != null) {
@@ -185,16 +203,20 @@ public final class EnumUtils {
 		}
 		return null;
 	}
-
+	
 	/**
 	 * 根据ordinal获取enum实例
-	 * 
+	 *
 	 * @param clazz
 	 * @param ordinal
 	 * @return
 	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({"rawtypes", "unchecked"})
 	private static Enum lookup(Class clazz, Integer ordinal) {
+		if (ordinal == null) {
+			return null;
+		}
+		
 		EnumSet enumSet = EnumSet.allOf(clazz);
 		if (ordinal < enumSet.size()) {
 			Iterator<Enum> iterator = enumSet.iterator();
@@ -203,14 +225,18 @@ public final class EnumUtils {
 			}
 			Enum rval = iterator.next();
 			if (rval.ordinal() == ordinal.intValue()) {
-				return (Enum)rval;
+				return (Enum) rval;
 			}
 		}
 		return null;
 	}
-
+	
 	@SuppressWarnings("rawtypes")
 	private static Enum lookup(Class clazz, Integer value, String property) {
+		if (value == null) {
+			return null;
+		}
+		
 		Enum[] consts = (Enum[]) clazz.getEnumConstants();
 		for (int i = 0; i < consts.length; i++) {
 			Enum enumObj = consts[i];
@@ -225,21 +251,25 @@ public final class EnumUtils {
 				break;
 			}
 			if (propertyValue != null && value != null && value.intValue() == propertyValue.intValue()) {
-				return (Enum)enumObj;
+				return (Enum) enumObj;
 			}
 		}
 		return null;
 	}
-
+	
 	/**
 	 * 根据ordinal获取enum实例
-	 * 
+	 *
 	 * @param clazz
 	 * @param ordinal
 	 * @return
 	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({"rawtypes", "unchecked"})
 	private static Enum lookup(Class clazz, Long ordinal) {
+		if (ordinal == null) {
+			return null;
+		}
+		
 		EnumSet enumSet = EnumSet.allOf(clazz);
 		if (ordinal < enumSet.size()) {
 			Iterator<Enum> iterator = enumSet.iterator();
@@ -248,13 +278,17 @@ public final class EnumUtils {
 			}
 			Enum rval = iterator.next();
 			assert (rval.ordinal() == ordinal.intValue());
-			return (Enum)rval;
+			return (Enum) rval;
 		}
 		return null;
 	}
-
+	
 	@SuppressWarnings("rawtypes")
 	private static Enum lookup(Class clazz, Long value, String property) {
+		if (value == null) {
+			return null;
+		}
+		
 		Enum[] consts = (Enum[]) clazz.getEnumConstants();
 		for (int i = 0; i < consts.length; i++) {
 			Enum enumObj = consts[i];
@@ -268,16 +302,20 @@ public final class EnumUtils {
 		}
 		return null;
 	}
-
+	
 	/**
 	 * 根据ordinal获取enum实例
-	 * 
+	 *
 	 * @param clazz
 	 * @param ordinal
 	 * @return
 	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({"rawtypes", "unchecked"})
 	private static Enum lookup(Class clazz, BigInteger ordinal) {
+		if (ordinal == null) {
+			return null;
+		}
+		
 		EnumSet enumSet = EnumSet.allOf(clazz);
 		if (ordinal.intValue() < enumSet.size()) {
 			Iterator<Enum> iterator = enumSet.iterator();
@@ -286,36 +324,40 @@ public final class EnumUtils {
 			}
 			Enum rval = iterator.next();
 			assert (rval.ordinal() == ordinal.intValue());
-			return (Enum)rval;
+			return (Enum) rval;
 		}
 		throw new IllegalArgumentException(
 				"Invalid value " + ordinal + " for " + clazz.getName() + ", must be < " + enumSet.size());
 	}
-
+	
 	@SuppressWarnings("rawtypes")
 	private static Enum lookup(Class clazz, BigInteger value, String property) {
+		if (value == null) {
+			return null;
+		}
+		
 		Enum[] consts = (Enum[]) clazz.getEnumConstants();
 		for (int i = 0; i < consts.length; i++) {
 			Enum enumObj = consts[i];
 			Object objValue = ReflectionUtils.getField(enumObj, clazz, property);
 			if (objValue instanceof BigInteger) {
-				BigInteger propertyValue = (BigInteger)objValue ;
+				BigInteger propertyValue = (BigInteger) objValue;
 				if (value != null && propertyValue != null && value.intValue() == propertyValue.intValue()) {
-					return (Enum)enumObj;
+					return (Enum) enumObj;
 				}
 			}
 		}
 		return null;
 	}
-
+	
 	/**
 	 * 根据name获取enum实例
-	 * 
+	 *
 	 * @param clazz
 	 * @param name
 	 * @return
 	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({"rawtypes", "unchecked"})
 	private static Enum lookup(Class clazz, String name) {
 		if (isBlank(name)) {
 			throw new IllegalArgumentException("Invalid value " + name + " for " + clazz.getName() + ", must be" + EnumSet.allOf(clazz));
@@ -332,20 +374,19 @@ public final class EnumUtils {
 			return null;
 		}
 	}
-
+	
 	/**
 	 * 根据指定的enum类中的属性去获取enum实例
-	 * 
+	 *
 	 * @param clazz
 	 * @param value
 	 * @param property
 	 * @return
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	private static Enum lookup(Class clazz, String value, String property) {
 		if (isBlank(value)) {
-			throw new IllegalArgumentException(
-					"Invalid value " + value + " for " + clazz.getName() + ", must be" + EnumSet.allOf(clazz));
+			return null;
 		}
 		Enum[] consts = (Enum[]) clazz.getEnumConstants();
 		for (int i = 0; i < consts.length; i++) {
@@ -361,10 +402,10 @@ public final class EnumUtils {
 				break; //不再继续尝试
 			}
 			if (StringUtils.equalsIgCase(propertyValue, value)) {
-				return (Enum)enumObj;
+				return (Enum) enumObj;
 			}
 		}
 		return null;
 	}
-
+	
 }

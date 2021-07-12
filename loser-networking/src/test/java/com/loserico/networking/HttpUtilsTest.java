@@ -357,11 +357,12 @@ public class HttpUtilsTest {
 		data = HttpUtils.get("http://localhost:8080/downloadFile")
 				.bearerAuth("XwGnyZ5TWY1d-3jToBhTkA")
 				.returnBytes(true)
-				//.connectionManagerTimeout(5, SECONDS)
-				//.connectionTimeout(6, SECONDS)
+				.connectionManagerTimeout(5, SECONDS)
+				.connectionTimeout(6, SECONDS)
 				.soTimeout(1, SECONDS)
 				.onError((e) -> log.error("出错了, 调用回调函数", e))
 				.retries(6)
+				.requestSentRetryEnabled(false)
 				.request();
 	}
 	
