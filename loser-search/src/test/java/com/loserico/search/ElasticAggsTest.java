@@ -62,14 +62,14 @@ public class ElasticAggsTest {
 	
 	@Test
 	public void testAgg() {
-		Map<String, Object> aggResults = Aggs.terms("cars")
+		List<Map<String, Object>> aggResults = Aggs.terms("cars")
 				.of("cars-color", "color.keyword")
 				.size(5)
 				.get();
 		assertThat(aggResults.size()).isEqualTo(3);
 		System.out.println(toPrettyJson(aggResults));
 		
-		Map<String, Object> aggResults1 = Aggs.terms("kibana_sample_data_flights")
+		List<Map<String, Object>> aggResults1 = Aggs.terms("kibana_sample_data_flights")
 				.of("dest-country", "DestCountry")
 				.get();
 		System.out.println(toPrettyJson(aggResults1));
@@ -153,10 +153,14 @@ public class ElasticAggsTest {
 	
 	@Test
 	public void testSubAgg() {
-		Map<String, Object> resultMap = Aggs.terms("kibana_sample_data_flights")
-				.of("flight_dest", "DestCountry")
-				.get();
+		List<Map<String, Object>> resultMap = Aggs.terms("event_2021-07-07")
+				.of("event_engine_agg", "event_engine")
+				.subHistogram("create_time_agg", "create_time")
+				.interval(1000)
+				.minDocCount(0)
+				.extendedBounds(1625642342501L, 1625642350168L)
+				.thenGet();
 		
-		System.out.println(toPrettyJson(resultMap));
+		log.info(toPrettyJson(resultMap));
 	}
 }

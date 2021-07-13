@@ -1,5 +1,7 @@
 package com.loserico.search.builder.agg;
 
+import com.loserico.search.builder.agg.sub.SubHistogramAgg;
+
 /**
  * <p>
  * Copyright: (C), 2021-07-12 18:33
@@ -12,7 +14,11 @@ package com.loserico.search.builder.agg;
  */
 public interface SubAggable {
 	
-	public default ElasticSubAggBuilder subAgg(String name) {
-		return ElasticSubAggBuilder.instance(name);
-	}
+	/**
+	 * 添加 Histogram 子聚合
+	 * @param name
+	 * @param field
+	 * @return SubHistogramAgg
+	 */
+	public SubHistogramAgg subHistogram(String name, String field);
 }

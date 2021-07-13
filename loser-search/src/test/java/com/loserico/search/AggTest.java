@@ -9,6 +9,7 @@ import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.junit.Test;
 
+import java.util.List;
 import java.util.Map;
 
 import static com.loserico.json.jackson.JacksonUtils.toJson;
@@ -30,7 +31,7 @@ public class AggTest {
 	
 	@Test
 	public void testAggOnDestContry() {
-		Map<String, Object> aggResults = ElasticUtils.Aggs.terms("kibana_sample_data_flights")
+		List<Map<String, Object>> aggResults = ElasticUtils.Aggs.terms("kibana_sample_data_flights")
 				.of("flight_dest", "DestCountry")
 				.get();
 		
@@ -39,7 +40,7 @@ public class AggTest {
 	
 	@Test
 	public void testSubAggregate() {
-		Map<String, Object> aggResults = ElasticUtils.Aggs.terms("kibana_sample_data_flights")
+		List<Map<String, Object>> aggResults = ElasticUtils.Aggs.terms("kibana_sample_data_flights")
 				.of("flight_dest", "DestCountry")
 				.get();
 		System.out.println(toPrettyJson(aggResults));
@@ -114,7 +115,7 @@ public class AggTest {
 	@Test
 	public void testQueryThenAgg() {
 		ElasticRangeQueryBuilder rangeQueryBuilder = ElasticUtils.Query.range("employees").field("age").gt(20);
-		Map<String, Object> aggResults = ElasticUtils.Aggs.terms("employees")
+		List<Map<String, Object>> aggResults = ElasticUtils.Aggs.terms("employees")
 				.of("jobs", "job.keyword")
 				.size(10)
 				.setQuery(rangeQueryBuilder)

@@ -12,6 +12,7 @@ import org.elasticsearch.search.aggregations.metrics.InternalMax;
 import org.elasticsearch.search.aggregations.metrics.InternalMin;
 import org.elasticsearch.search.aggregations.metrics.InternalSum;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +33,7 @@ public final class AggResultSupport {
 	public static Map<String, Object> compositeResult(Aggregations aggregations) {
 		Map<String, Object> resultMap = new HashMap<>();
 		
-		if (aggregations == null ) {
+		if (aggregations == null) {
 			return resultMap;
 		}
 		
@@ -85,21 +86,26 @@ public final class AggResultSupport {
 		return resultMap;
 	}
 	
-	public static Map<String, Object> termsResult(Aggregations aggregations) {
-		Map<String, Object> aggResults = new HashMap<>();
+	public static <T> List<Map<String, T>> termsResult(Aggregations aggregations) {
+		List<Map<String, T>> aggResults = new ArrayList<>();
 		if (aggregations == null) {
 			return aggResults;
 		}
 		for (Aggregation aggregation : aggregations) {
 			List<StringTerms.Bucket> buckets = ((StringTerms) aggregation).getBuckets();
-			Map<String, Object> result = new HashMap<>();
 			for (StringTerms.Bucket bucket : buckets) {
+				Map<String, T> result = new HashMap<>();
 				String key = bucket.getKeyAsString();
-				long docCount = bucket.getDocCount();
+				Long docCount = bucket.getDocCount();
 				log.info("Bucket: {}, Doc Count: {}", key, docCount);
-				result.put(key, docCount);
+				result.put(key, (T) docCount);
+				
+				Aggregations subAggs = bucket.getAggregations();
+				for (Aggregation subAgg : subAggs) {
+					result.put(subAgg.getName(), aggResult(subAgg));
+				}
+				aggResults.add(result);
 			}
-			aggResults.put(aggregation.getName(), result);
 		}
 		
 		return aggResults;
@@ -123,6 +129,32 @@ public final class AggResultSupport {
 		}
 		
 		return aggResults;
+	}
+	
+	private static <T> T aggResult(Aggregation aggregation) {
+		if (aggregation instanceof InternalHistogram) {
+			return (T) aggResult((InternalHistogram) aggregation);
+		}
+		
+		return null;
+	}
+	
+	/**
+	 * 负责处理Histogram结果
+	 *
+	 * @param aggregation
+	 * @return Map<String, Object>
+	 */
+	private static Map<String, Object> aggResult(InternalHistogram aggregation) {
+		List<InternalHistogram.Bucket> buckets = aggregation.getBuckets();
+		Map<String, Object> result = new HashMap<>();
+		for (InternalHistogram.Bucket bucket : buckets) {
+			String key = bucket.getKeyAsString();
+			long docCount = bucket.getDocCount();
+			log.info("Bucket: {}, Doc Count: {}", key, docCount);
+			result.put(key, docCount);
+		}
+		return result;
 	}
 	
 	public static Double avgResult(Aggregations aggregations) {

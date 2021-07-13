@@ -1,5 +1,6 @@
 package com.loserico.search.builder.agg;
 
+import com.loserico.search.builder.agg.sub.TermsSubHistogramAgg;
 import com.loserico.search.builder.query.BaseQueryBuilder;
 import com.loserico.search.support.AggResultSupport;
 import lombok.extern.slf4j.Slf4j;
@@ -10,7 +11,10 @@ import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Terms 聚合, 这是 Bucket Aggregation
@@ -24,7 +28,7 @@ import java.util.Map;
  * @version 1.0
  */
 @Slf4j
-public class ElasticTermsAggregationBuilder extends AbstractAggregationBuilder implements TermAggregationBuilder, Compositable {
+public class ElasticTermsAggregationBuilder extends AbstractAggregationBuilder implements TermAggregationBuilder, SubAggable, Compositable {
 	
 	/**
 	 * 这个是限制返回桶的数量, 如果总共有10个桶, 但是size设为5, 那么聚合结果中只会返回前5个桶
@@ -39,6 +43,11 @@ public class ElasticTermsAggregationBuilder extends AbstractAggregationBuilder i
 	 * 原理: 每次从Shard上额外多获取数据, 提升准确率
 	 */
 	private Integer shardSize;
+	
+	/**
+	 * 为Terms聚合添加的子聚合
+	 */
+	private List<AggregationBuilder> subAggBuilders = new ArrayList<>();
 	
 	private ElasticTermsAggregationBuilder(String[] indices) {
 		this.indices = indices;
@@ -99,6 +108,7 @@ public class ElasticTermsAggregationBuilder extends AbstractAggregationBuilder i
 		if (shardSize != null) {
 			aggregationBuilder.shardSize(shardSize);
 		}
+		subAggBuilders.forEach(subAgg -> aggregationBuilder.subAggregation(subAgg));
 		return aggregationBuilder;
 	}
 	
@@ -108,7 +118,7 @@ public class ElasticTermsAggregationBuilder extends AbstractAggregationBuilder i
 		return compositeAggregationBuilder;
 	}
 	
-	public <T> Map<String, T> get() {
+	public <T> List<Map<String, T>> get() {
 		TermsAggregationBuilder arrregationBuilder = (TermsAggregationBuilder) build();
 		
 		SearchRequestBuilder searchRequestBuilder = searchRequestBuilder();
@@ -120,6 +130,17 @@ public class ElasticTermsAggregationBuilder extends AbstractAggregationBuilder i
 		SearchResponse searchResponse = builder.get();
 		Aggregations aggregations = searchResponse.getAggregations();
 		
-		return (Map<String, T>)AggResultSupport.termsResult(aggregations);
+		return AggResultSupport.termsResult(aggregations);
+	}
+	
+	@Override
+	public TermsSubHistogramAgg subHistogram(String name, String field) {
+		TermsSubHistogramAgg subHistogramAgg = new TermsSubHistogramAgg(this, name, field);
+		return subHistogramAgg;
+	}
+	
+	private void subAggregation(AggregationBuilder subAggregationBuilder) {
+		Objects.requireNonNull(subAggregationBuilder, "subAggregationBuilder cannot be null!");
+		subAggBuilders.add(subAggregationBuilder);
 	}
 }
