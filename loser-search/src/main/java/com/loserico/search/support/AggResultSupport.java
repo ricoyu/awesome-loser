@@ -3,6 +3,7 @@ package com.loserico.search.support;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.bucket.histogram.InternalHistogram;
 import org.elasticsearch.search.aggregations.bucket.terms.LongTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
 import org.elasticsearch.search.aggregations.metrics.InternalAvg;
@@ -93,6 +94,26 @@ public final class AggResultSupport {
 			List<StringTerms.Bucket> buckets = ((StringTerms) aggregation).getBuckets();
 			Map<String, Object> result = new HashMap<>();
 			for (StringTerms.Bucket bucket : buckets) {
+				String key = bucket.getKeyAsString();
+				long docCount = bucket.getDocCount();
+				log.info("Bucket: {}, Doc Count: {}", key, docCount);
+				result.put(key, docCount);
+			}
+			aggResults.put(aggregation.getName(), result);
+		}
+		
+		return aggResults;
+	}
+	
+	public static Map<String, Object> histogramResult(Aggregations aggregations) {
+		Map<String, Object> aggResults = new HashMap<>();
+		if (aggregations == null) {
+			return aggResults;
+		}
+		for (Aggregation aggregation : aggregations) {
+			List<InternalHistogram.Bucket> buckets = ((InternalHistogram) aggregation).getBuckets();
+			Map<String, Object> result = new HashMap<>();
+			for (InternalHistogram.Bucket bucket : buckets) {
 				String key = bucket.getKeyAsString();
 				long docCount = bucket.getDocCount();
 				log.info("Bucket: {}, Doc Count: {}", key, docCount);

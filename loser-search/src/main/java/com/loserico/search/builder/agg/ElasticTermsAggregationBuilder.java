@@ -13,7 +13,7 @@ import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilde
 import java.util.Map;
 
 /**
- * Terms 聚合
+ * Terms 聚合, 这是 Bucket Aggregation
  * <p>
  * Copyright: (C), 2021-05-10 11:34
  * <p>
@@ -108,7 +108,7 @@ public class ElasticTermsAggregationBuilder extends AbstractAggregationBuilder i
 		return compositeAggregationBuilder;
 	}
 	
-	public Map<String, Object> get() {
+	public <T> Map<String, T> get() {
 		TermsAggregationBuilder arrregationBuilder = (TermsAggregationBuilder) build();
 		
 		SearchRequestBuilder searchRequestBuilder = searchRequestBuilder();
@@ -120,6 +120,6 @@ public class ElasticTermsAggregationBuilder extends AbstractAggregationBuilder i
 		SearchResponse searchResponse = builder.get();
 		Aggregations aggregations = searchResponse.getAggregations();
 		
-		return AggResultSupport.termsResult(aggregations);
+		return (Map<String, T>)AggResultSupport.termsResult(aggregations);
 	}
 }

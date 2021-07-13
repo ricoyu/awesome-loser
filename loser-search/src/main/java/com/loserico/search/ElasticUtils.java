@@ -20,6 +20,7 @@ import com.loserico.search.builder.admin.ElasticUpdateSettingBuilder;
 import com.loserico.search.builder.agg.ElasticAvgAggregationBuilder;
 import com.loserico.search.builder.agg.ElasticCardinalityAggregationBuilder;
 import com.loserico.search.builder.agg.ElasticCompositeAggregationBuilder;
+import com.loserico.search.builder.agg.ElasticHistogramAggregationBuilder;
 import com.loserico.search.builder.agg.ElasticMaxAggregationBuilder;
 import com.loserico.search.builder.agg.ElasticMinAggregationBuilder;
 import com.loserico.search.builder.agg.ElasticSumAggregationBuilder;
@@ -1331,6 +1332,8 @@ public final class ElasticUtils {
 	 */
 	public static class Aggs {
 		
+		// ---------------------- Bucket 聚合 ----------------------
+		
 		/**
 		 * terms聚合, Bucket聚合的一种
 		 * https://www.elastic.co/guide/en/elasticsearch/client/java-api/7.x/java-aggs.html
@@ -1341,6 +1344,19 @@ public final class ElasticUtils {
 		public static ElasticTermsAggregationBuilder terms(String... indices) {
 			return ElasticTermsAggregationBuilder.instance(indices);
 		}
+		
+		/**
+		 * Histogram Aggregation
+		 * 
+		 * https://www.elastic.co/guide/en/elasticsearch/reference/7.6/search-aggregations-bucket-histogram-aggregation.html
+		 * @param indices
+		 * @return ElasticHistogramAggregationBuilder
+		 */
+		public static ElasticHistogramAggregationBuilder histogram(String... indices) {
+			return ElasticHistogramAggregationBuilder.instance(indices);
+		}
+		
+		// ---------------------- Metric 聚合 ----------------------
 		
 		/**
 		 * min聚合, Metric聚合的一种
@@ -1394,6 +1410,11 @@ public final class ElasticUtils {
 			return ElasticCardinalityAggregationBuilder.instance(indices);
 		}
 		
+		/**
+		 * 组合多个聚合
+		 * @param indices 
+		 * @return ElasticCompositeAggregationBuilder
+		 */
 		public static ElasticCompositeAggregationBuilder composite(String... indices) {
 			return ElasticCompositeAggregationBuilder.instance(indices);
 		}

@@ -2,6 +2,7 @@ package com.loserico.search;
 
 import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.search.ElasticUtils.Aggs;
+import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.io.stream.NamedWriteable;
 import org.elasticsearch.search.aggregations.Aggregation;
@@ -12,6 +13,7 @@ import org.elasticsearch.search.aggregations.bucket.terms.StringTerms.Bucket;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.junit.Test;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -30,6 +32,7 @@ import static org.elasticsearch.search.aggregations.AggregationBuilders.*;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
+@Slf4j
 public class ElasticAggsTest {
 	
 	/**
@@ -111,5 +114,49 @@ public class ElasticAggsTest {
 				}
 			}
 		}
+	}
+	
+	@Test
+	public void testHistogramAgg() {
+		Map<String, Object> resultMap = Aggs.histogram("employees")
+				.of("salary_histogram", "salary")
+				.interval(5000)
+				.get();
+		
+		System.out.println(toPrettyJson(resultMap));
+	}
+	
+	@Test
+	public void testHistogramAggWithMinDocCountAndExtendedBounds() {
+		//long min = 1625642342501L - 5 * 60 * 60 * 1000L;
+		long min = 1625642342501L;
+		long max = 1625642350168L;
+		
+		log.info("Min {}", new Date(min));
+		log.info("Max {}", new Date(max));
+		
+		ElasticRangeQueryBuilder rangeQueryBuilder = ElasticUtils.Query.range("event_2021-07-07")
+				.field("create_time")
+				.gte(min)
+				.lte(max);
+		
+		Map<String, Object> resultMap = Aggs.histogram("event_2021-07-07")
+				.of("event_count_agg", "create_time")
+				.setQuery(rangeQueryBuilder)
+				.interval(2000)
+				.minDocCount(0)
+				//.extendedBounds(min - 10 * 1000, max)
+				.get();
+		
+		log.info(toPrettyJson(resultMap));
+	}
+	
+	@Test
+	public void testSubAgg() {
+		Map<String, Object> resultMap = Aggs.terms("kibana_sample_data_flights")
+				.of("flight_dest", "DestCountry")
+				.get();
+		
+		System.out.println(toPrettyJson(resultMap));
 	}
 }

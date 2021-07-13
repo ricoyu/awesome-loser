@@ -114,7 +114,7 @@ public class ElasticCompositeAggregationBuilder extends AbstractAggregationBuild
 		return this;
 	}
 	
-	public Map<String, Object> get() {
+	public <T> Map<String, T> get() {
 		String name = UUID.randomUUID().toString().replaceAll("-", "");
 		SearchRequestBuilder searchRequestBuilder = searchRequestBuilder();
 		for (AggregationBuilder builder : builders) {
@@ -133,6 +133,6 @@ public class ElasticCompositeAggregationBuilder extends AbstractAggregationBuild
 			long totalHits = SearchHitsSupport.totalHits(searchResponse);
 			resultMap.put("total", totalHits);
 		}
-		return resultMap;
+		return (Map<String, T>)resultMap;
 	}
 }
