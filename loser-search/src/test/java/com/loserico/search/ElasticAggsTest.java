@@ -2,6 +2,8 @@ package com.loserico.search;
 
 import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.search.ElasticUtils.Aggs;
+import com.loserico.search.enums.CalendarInterval;
+import com.loserico.search.enums.FixedInterval;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.io.stream.NamedWriteable;
@@ -19,7 +21,6 @@ import java.util.Map;
 
 import static com.loserico.json.jackson.JacksonUtils.toJson;
 import static com.loserico.json.jackson.JacksonUtils.toPrettyJson;
-import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.search.aggregations.AggregationBuilders.*;
 
 /**
@@ -62,19 +63,23 @@ public class ElasticAggsTest {
 	
 	@Test
 	public void testAgg() {
-		List<Map<String, Object>> aggResults = Aggs.terms("cars")
-				.of("cars-color", "color.keyword")
-				.size(5)
-				.get();
-		assertThat(aggResults.size()).isEqualTo(3);
-		System.out.println(toPrettyJson(aggResults));
+		//List<Map<String, Object>> aggResults = Aggs.terms("cars")
+		//		.of("cars-color", "color.keyword")
+		//		.size(5)
+		//		.get();
+		//assertThat(aggResults.size()).isEqualTo(3);
+		//System.out.println(toPrettyJson(aggResults));
 		
 		List<Map<String, Object>> aggResults1 = Aggs.terms("kibana_sample_data_flights")
 				.of("dest-country", "DestCountry")
+				.sort("count")
 				.get();
 		System.out.println(toPrettyJson(aggResults1));
 	}
 	
+	public static void main(String[] args) {
+		System.out.println(new Date(1628214321781L));
+	}
 	/**
 	 * 查看航班目的地的统计信息, 增加平均, 最高最低价格
 	 */
@@ -152,6 +157,31 @@ public class ElasticAggsTest {
 	}
 	
 	@Test
+	public void testDateHistogramAggWithMinDocCountAndExtendedBounds() {
+		//long min = 1625642342501L - 5 * 60 * 60 * 1000L;
+		long min = 1625642342501L;
+		long max = 1625642350168L;
+		
+		log.info("Min {}", new Date(min));
+		log.info("Max {}", new Date(max));
+		
+		ElasticRangeQueryBuilder rangeQueryBuilder = ElasticUtils.Query.range("event_2021-07-07")
+				.field("create_time")
+				.gte(min)
+				.lte(max);
+		
+		Map<String, Object> resultMap = Aggs.dateHistogram("event_2021-07-07")
+				.of("event_count_agg", "create_time")
+				.setQuery(rangeQueryBuilder)
+				.calendarInterval(CalendarInterval.MINUTE)
+				.minDocCount(0)
+				//.extendedBounds(min - 10 * 1000, max)
+				.get();
+		
+		log.info(toPrettyJson(resultMap));
+	}
+	
+	@Test
 	public void testSubAgg() {
 		List<Map<String, Object>> resultMap = Aggs.terms("event_2021-07-07")
 				.of("event_engine_agg", "event_engine")
@@ -162,5 +192,37 @@ public class ElasticAggsTest {
 				.thenGet();
 		
 		log.info(toPrettyJson(resultMap));
+	}
+	
+	@Test
+	public void testSubDateAgg() {
+		List<Map<String, Object>> resultMap = Aggs.terms("event_2021-07-07")
+				.of("event_engine_agg", "event_engine")
+				.subDateHistogram("create_time_agg", "create_time")
+				.calendarInterval(CalendarInterval.MINUTE)
+				.minDocCount(0)
+				.extendedBounds(1625642342501L, 1625642350168L)
+				.thenGet();
+		
+		log.info(toPrettyJson(resultMap));
+	}
+	
+	@Test
+	public void testDateHistogramSubAvgAgg() {
+		Map<String, Object> resultMap = Aggs.dateHistogram("event_2021-08-02")
+				.of("date_his_agg", "create_time")
+				.fixedInterval(5, FixedInterval.MINUTES)
+				.subAvg("event_count_avg", "event_count")
+				.thenGet();
+		
+		System.out.println(toJson(resultMap));
+	}
+	
+	@Test
+	public void testTermsThenDateHistogramThenAvg() {
+		//Aggs.terms("flow_2021-08-18")
+		//		.of("tags_agg", "tags")
+		//		.subDateHistogram("timestamp_agg", "timestamp")
+		//		.
 	}
 }

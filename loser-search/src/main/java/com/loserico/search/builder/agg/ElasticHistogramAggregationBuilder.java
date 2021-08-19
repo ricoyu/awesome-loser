@@ -144,6 +144,16 @@ public class ElasticHistogramAggregationBuilder extends AbstractAggregationBuild
 		return this;
 	}
 	
+	/**
+	 * 聚合返回的结果中是否要包含总命中数 
+	 * @param fetchTotalHits
+	 * @return ElasticHistogramAggregationBuilder
+	 */
+	public ElasticHistogramAggregationBuilder fetchTotalHits(boolean fetchTotalHits) {
+		this.fetchTotalHits = fetchTotalHits;
+		return this;
+	}
+	
 	@Override
 	public AggregationBuilder build() {
 		HistogramAggregationBuilder aggregationBuilder = AggregationBuilders.histogram(name)
@@ -176,6 +186,7 @@ public class ElasticHistogramAggregationBuilder extends AbstractAggregationBuild
 				.setSize(0);
 		logDsl(builder);
 		SearchResponse searchResponse = builder.get();
+		addTotalHitsToThreadLocal(searchResponse);
 		Aggregations aggregations = searchResponse.getAggregations();
 		
 		return (Map<String, T>) AggResultSupport.histogramResult(aggregations);

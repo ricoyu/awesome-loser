@@ -41,6 +41,11 @@ public class TermQueryTest {
 		BulkResult bulkResult = ElasticUtils.bulkIndex("products", products);
 		
 		assertThat(bulkResult.getSuccessCount() == 3);
+		
+		List<Object> iphones = ElasticUtils.Query.termQuery("products")
+				.query("desc", "iPhone")
+				.queryForList();
+		assertThat(iphones.size()).isEqualTo(0);
 	}
 	
 	@Test
@@ -48,9 +53,7 @@ public class TermQueryTest {
 		ElasticUtils.Admin.deleteIndex("products");
 		List<String> products = asList(
 				"{\"productID\": \"XHDK-A-1293-#fJ3\", \"desc\": \"iPhone\"}",
-				
 				"{\"productID\": \"KDKE-B-9947-#kL5\", \"desc\": \"iPad\"}",
-				
 				"{\"productID\": \"JODL-X-1937-#pV7\", \"desc\": \"MBP\"}");
 		BulkResult bulkResult = ElasticUtils.bulkIndex("products", products);
 		bulkResult.getIds().forEach(System.out::println);

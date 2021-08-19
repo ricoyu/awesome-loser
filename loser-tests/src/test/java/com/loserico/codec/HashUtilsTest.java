@@ -5,8 +5,11 @@ import com.loserico.common.lang.utils.IOUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Test;
 
+import java.io.File;
+import java.nio.file.Paths;
+
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class HashUtilsTest {
 	
@@ -103,5 +106,19 @@ public class HashUtilsTest {
 		String decode =
 				Base64Utils.decode("FvEDAC4AAAAqAgPxAKhmdM2OAcln7BNvmAk7/5vllOHHHsNhhw6mc66AUQLe4QAAAAEAFvEDADdvTD19EUvhHDBeOdPV3jGrRKQOPa5h1VOi/0y0UAo4M10rJPdRcCW8qMcHmbAIMj5TAr3lZm6kF/EDAFUO+WIExWfCAHWDNJ2j22kRgIiirsyeB5HE44csMCqXOVieK8an9X/13rc9L0wltUsMf9Rf1rYHAvwm323wQrnzILaE3k06KodxqCn25LT8tETwzYNAFfEDABemEILzmqfv7gvE3HfcF6xVRB6BPT8y/Q==");
 		System.out.println(decode);
+	}
+	
+	@Test
+	public void testFileHash() {
+		String filePath1 = "D:\\Work\\观安信息上海有限公司\\NTA资料\\测试流量包\\bug15560-测试流量包-pop3_fj.pcap";
+		String filePath2 = "D:\\Work\\观安信息上海有限公司\\NTA资料\\测试流量包\\s2-016漏洞插件-CVE-高危.pcap";
+		File file = Paths.get(filePath1).toFile();
+		String fileHash1 = HashUtils.md5Hex(file);
+		String fileHash2 = HashUtils.md5Hex(file);
+		String fileHash3 = HashUtils.md5Hex(Paths.get(filePath2).toFile());
+		assertEquals(fileHash1, fileHash2);
+		assertNotEquals(fileHash2, fileHash3);
+		System.out.println(fileHash1);
+		System.out.println(fileHash3);
 	}
 }

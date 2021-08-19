@@ -39,14 +39,6 @@ public class AggTest {
 	}
 	
 	@Test
-	public void testSubAggregate() {
-		List<Map<String, Object>> aggResults = ElasticUtils.Aggs.terms("kibana_sample_data_flights")
-				.of("flight_dest", "DestCountry")
-				.get();
-		System.out.println(toPrettyJson(aggResults));
-	}
-	
-	@Test
 	public void testCardinalityAgg() {
 		Long count = ElasticUtils.Aggs.cardinality("employees")
 				.of("cardinality_agg", "job.keyword")
@@ -137,9 +129,25 @@ public class AggTest {
 				.terms("attach_result", "attack_result").and()
 				.terms("attacker_ip", "attacker_ip").size(5).and()
 				.terms("victim_ip", "victim_ip").size(5).and()
-				.fetchTotal(true)
+				.fetchTotalHits(true)
 				.get();
 		
 		System.out.println(toJson(stringObjectMap));
+	}
+	
+	@Test
+	public void testMultiTerms() {
+		ElasticUtils.Aggs.multiTerms("event_2021-01-27")
+				.of("multi_terms_agg", "name", "age")
+				.get();
+	}
+	
+	@Test
+	public void testTerms() {
+		List<Map<String, Object>> maps = ElasticUtils.Aggs.terms("event_2021-01-27")
+				.of("terms_agg", "killchain_stage")
+				.get();
+		
+		System.out.println(toJson(maps));
 	}
 }

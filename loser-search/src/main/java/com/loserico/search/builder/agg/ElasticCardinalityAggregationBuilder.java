@@ -54,6 +54,16 @@ public class ElasticCardinalityAggregationBuilder extends AbstractAggregationBui
 		return this;
 	}
 	
+	/**
+	 * 聚合返回的结果中是否要包含总命中数 
+	 * @param fetchTotalHits
+	 * @return ElasticCardinalityAggregationBuilder
+	 */
+	public ElasticCardinalityAggregationBuilder fetchTotalHits(boolean fetchTotalHits) {
+		this.fetchTotalHits = fetchTotalHits;
+		return this;
+	}
+	
 	@Override
 	public AggregationBuilder build() {
 		return AggregationBuilders.cardinality(name).field(field);
@@ -67,6 +77,7 @@ public class ElasticCardinalityAggregationBuilder extends AbstractAggregationBui
 		logDsl(builder);
 		
 		SearchResponse searchResponse = builder.get();
+		addTotalHitsToThreadLocal(searchResponse);
 		Aggregations aggregations = searchResponse.getAggregations();
 		
 		return AggResultSupport.cardinalityResult(aggregations);

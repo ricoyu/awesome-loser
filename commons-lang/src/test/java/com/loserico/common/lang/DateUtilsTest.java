@@ -36,6 +36,17 @@ import static org.junit.Assert.*;
 public class DateUtilsTest {
 	
 	@Test
+	public void testDate() {
+		System.out.println(new Date(1629045321942L));
+		
+		ZoneId zoneId = ZoneId.of("+08:00");
+		ZoneId zoneId1 = ZoneId.of("Asia/Shanghai");
+		ZoneId zoneId2 = TimeZone.getTimeZone("Asia/Shanghai").toZoneId();
+		System.out.println(zoneId.equals(zoneId1));
+		System.out.println(zoneId2.equals(zoneId1));
+	}
+	
+	@Test
 	public void testStartUpTimes() throws ClassNotFoundException {
 		long begin = System.nanoTime();
 		//Class.forName("com.loserico.common.lang.utils.DateUtils");
@@ -51,6 +62,9 @@ public class DateUtilsTest {
 	public void testParse() {
 		String startDateTime = "2021-03-18 13:30:47";
 		String endDateTime = "2021-03-19 13:45:47";
+		
+		Date date = DateUtils.parse("2021-07-22 10:58:17");
+		assertNotNull(date);
 		
 		long startTime = DateUtils.toEpochMilis(startDateTime);
 		System.out.println("startTime:" + startTime);
@@ -286,5 +300,27 @@ public class DateUtilsTest {
 		assertEquals(date1.getDayOfMonth(), date2.getDate());
 		System.out.println(date1);
 		System.out.println(date2);
+	}
+	
+	@Test
+	public void testToLocaldate() {
+		Date date = new Date(2021, 7, 20);
+		LocalDate localDate = DateUtils.toLocalDate(date);
+		System.out.println(localDate);
+	}
+	
+	@Test
+	public void testToMillis() {
+		LocalDateTime begin = LocalDateTime.of(2021, 7, 28, 10, 41, 0);
+		LocalDateTime end = LocalDateTime.of(2021, 7, 28, 10, 43, 2);
+		
+		System.out.println(DateUtils.toEpochMilis(begin));;
+		System.out.println(DateUtils.toEpochMilis(end));;
+	}
+	
+	@Test
+	public void testToDate() {
+		System.out.println(new Date(1627452912796L));
+		System.out.println(new Date(1627439417482L));
 	}
 }

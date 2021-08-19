@@ -1,5 +1,7 @@
 package com.loserico.networking.builder;
 
+import com.loserico.networking.enums.HttpMethod;
+import com.loserico.networking.enums.Scheme;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.entity.StringEntity;
@@ -23,6 +25,42 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  */
 @Slf4j
 public class JsonRequestBuilder extends AbstractRequestBuilder {
+	
+	public JsonRequestBuilder url(String url) {
+		super.url(url);
+		return this;
+	}
+	
+	public JsonRequestBuilder scheme(Scheme scheme) {
+		super.scheme(scheme);
+		return this;
+	}
+	
+	public JsonRequestBuilder host(String host) {
+		super.host(host);
+		return this;
+	}
+	
+	public JsonRequestBuilder port(int port) {
+		super.port(port);
+		return this;
+	}
+	
+	public JsonRequestBuilder path(String path) {
+		super.path(path);
+		return this;
+	}
+	
+	/**
+	 * 设置 HTTP 请求方法
+	 *
+	 * @param method
+	 * @return AbstractRequestBuilder
+	 */
+	public JsonRequestBuilder method(HttpMethod method) {
+		super.method(method);
+		return this;
+	}
 	
 	/**
 	 * 提交的json数据
@@ -181,7 +219,7 @@ public class JsonRequestBuilder extends AbstractRequestBuilder {
 	}
 	
 	/**
-	 * 请求生命周期超时时间, 大致= connectionTimeout + soTimeout
+	 * 整个请求生命周期超时时间, 大致 = connectionTimeout + soTimeout
 	 *
 	 * @param timeout
 	 * @param timeUnit

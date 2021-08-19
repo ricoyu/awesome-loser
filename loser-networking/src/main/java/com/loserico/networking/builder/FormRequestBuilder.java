@@ -5,6 +5,8 @@ import com.loserico.common.lang.utils.Assert;
 import com.loserico.common.lang.utils.IOUtils;
 import com.loserico.networking.constants.ContentTypes;
 import com.loserico.networking.enums.GrantType;
+import com.loserico.networking.enums.HttpMethod;
+import com.loserico.networking.enums.Scheme;
 import com.loserico.networking.enums.Scope;
 import com.loserico.networking.http.OAuth2Support;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +50,42 @@ import static org.apache.http.HttpHeaders.CONTENT_TYPE;
  */
 @Slf4j
 public class FormRequestBuilder extends AbstractRequestBuilder implements OAuth2Support {
+	
+	public FormRequestBuilder url(String url) {
+		super.url(url);
+		return this;
+	}
+	
+	public FormRequestBuilder scheme(Scheme scheme) {
+		super.scheme(scheme);
+		return this;
+	}
+	
+	public FormRequestBuilder host(String host) {
+		super.host(host);
+		return this;
+	}
+	
+	public FormRequestBuilder port(int port) {
+		super.port(port);
+		return this;
+	}
+	
+	public FormRequestBuilder path(String path) {
+		super.path(path);
+		return this;
+	}
+	
+	/**
+	 * 设置 HTTP 请求方法
+	 *
+	 * @param method
+	 * @return AbstractRequestBuilder
+	 */
+	public FormRequestBuilder method(HttpMethod method) {
+		super.method(method);
+		return this;
+	}
 	
 	/**
 	 * 表单提交时的一些表单参数放在这里
@@ -273,7 +311,7 @@ public class FormRequestBuilder extends AbstractRequestBuilder implements OAuth2
 	}
 	
 	/**
-	 * 请求生命周期超时时间, 大致= connectionTimeout + soTimeout
+	 * 整个请求生命周期超时时间, 大致= connectionTimeout + soTimeout
 	 *
 	 * @param timeout
 	 * @param timeUnit

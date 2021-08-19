@@ -2,6 +2,7 @@ package com.loserico.search.enums;
 
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.search.aggregations.BucketOrder;
 import org.elasticsearch.search.sort.SortBuilders;
 
 /**
@@ -45,6 +46,14 @@ public class SortOrder {
 		} else if (sortType == SortType.FIELD) {
 			builder.addSort(SortBuilders.fieldSort(field).order(direction.toSortOrder()));
 		}
+	}
+	
+	public BucketOrder toBucketOrder() {
+		if ("key".equalsIgnoreCase(field)) {
+			return BucketOrder.key(direction == Direction.ASC);
+		}
+		
+		return BucketOrder.count(direction == Direction.ASC);
 	}
 	
 	/**

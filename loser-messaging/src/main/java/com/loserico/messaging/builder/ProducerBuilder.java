@@ -146,6 +146,7 @@ public class ProducerBuilder extends BaseBuilder {
 	}
 	
 	/**
+	 * 默认 acks=1 <br/>
 	 * The acks parameter controls how many partition replicas must receive the record before the producer can consider the write successful.
 	 * This option has a significant impact on how likely messages are to be lost.
 	 * 可以有以下三个值:

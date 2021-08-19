@@ -40,7 +40,9 @@ public class BoolQueryTest {
 				.range("datetime").gte(1623134434000L).lte(1623134434000L).must()
 				.term("alert_category", "web-attack").filter()
 				.includeSources("datetime", "alert_risk_level", "src_ip", "dest_ip")
+				//.queryForCount()
 				.queryForList();
+		
 		
 		events.forEach(System.out::println);
 	}

@@ -54,6 +54,16 @@ public class ElasticAvgAggregationBuilder extends AbstractAggregationBuilder imp
 		return this;
 	}
 	
+	/**
+	 * 聚合返回的结果中是否要包含总命中数 
+	 * @param fetchTotalHits
+	 * @return ElasticAvgAggregationBuilder
+	 */
+	public ElasticAvgAggregationBuilder fetchTotalHits(boolean fetchTotalHits) {
+		this.fetchTotalHits = fetchTotalHits;
+		return this;
+	}
+	
 	@Override
 	public AggregationBuilder build() {
 		return AggregationBuilders.avg(name).field(field);
@@ -68,6 +78,7 @@ public class ElasticAvgAggregationBuilder extends AbstractAggregationBuilder imp
 		logDsl(builder);
 		
 		SearchResponse searchResponse = builder.get();
+		addTotalHitsToThreadLocal(searchResponse);
 		Aggregations aggregations = searchResponse.getAggregations();
 		
 		return AggResultSupport.avgResult(aggregations);

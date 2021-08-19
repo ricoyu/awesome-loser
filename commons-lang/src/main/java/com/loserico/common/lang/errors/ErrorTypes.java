@@ -28,6 +28,7 @@ public enum ErrorTypes implements ErrorType {
      */
     VALIDATION_FAIL("4000001","template.bad.request", "数据校验失败"),
     DUPLICATE_SUBMISSION("4000002", "duplicate.submit", "请勿重复提交"),
+    MAX_UPLOAD_SIZE_EXCEEDED("4000003", "max.uploadsize.exceeded", "超出最大上传文件大小限制"),
     
     /*
      * 安全相关

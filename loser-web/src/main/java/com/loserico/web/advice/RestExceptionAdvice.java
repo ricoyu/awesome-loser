@@ -14,6 +14,7 @@ import com.loserico.validation.exception.ValidationException;
 import com.loserico.validation.utils.ValidationUtils;
 import com.loserico.web.exception.LocalizedException;
 import com.loserico.web.utils.MessageHelper;
+import com.loserico.web.utils.RestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.http.HttpHeaders;
@@ -29,14 +30,18 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.loserico.common.lang.errors.ErrorTypes.BAD_REQUEST;
 import static com.loserico.common.lang.errors.ErrorTypes.INTERNAL_SERVER_ERROR;
+import static com.loserico.common.lang.errors.ErrorTypes.MAX_UPLOAD_SIZE_EXCEEDED;
 import static com.loserico.common.lang.errors.ErrorTypes.METHOD_NOT_ALLOWED;
 import static com.loserico.common.lang.errors.ErrorTypes.NOT_FOUND;
 import static com.loserico.common.lang.errors.ErrorTypes.VALIDATION_FAIL;
@@ -57,13 +62,20 @@ import static java.util.stream.Collectors.toList;
 @Slf4j
 public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	
-	private static Pattern messageTemplatePattern = Pattern.compile("\\{(.+)\\}");
+	private static final Pattern MESSAGE_TEMPLATE_PATTERN = Pattern.compile("\\{(.+)\\}");
+	
+	/**
+	 * 这个Pattern是用来提取上传文件超过限制时候, 错误消息里面包含的实际文件大小以及限制大小 <br/>
+	 * String的错误消息大概是这样的: <br/>
+	 * org.springframework.web.multipart.MaxUploadSizeExceededException: Maximum upload size exceeded; nested exception is java.lang.IllegalStateException: org.apache.tomcat.util.http.fileupload.impl.SizeLimitExceededException: the request was rejected because its size (405491652) exceeds the configured maximum (104857600)
+	 */
+	private static final Pattern ACTUAL_SIZE_PATTERN = Pattern.compile(".*size\\s{1}\\((\\d+)\\).*maximum\\s{1}\\((\\d+)\\)$");
 	
 	@Override
 	@ResponseBody
 	protected ResponseEntity<Object> handleTypeMismatch(TypeMismatchException ex, HttpHeaders headers,
 	                                                    HttpStatus status, WebRequest request) {
-		logger.error("Rest API ERROR happen", ex);
+		logger.debug("Rest API ERROR happen", ex);
 		return super.handleTypeMismatch(ex, headers, status, request);
 	}
 	
@@ -74,7 +86,7 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	@Override
 	protected ResponseEntity<Object> handleBindException(BindException ex, HttpHeaders headers, HttpStatus status,
 	                                                     WebRequest request) {
-		logger.error("Rest API ERROR happen", ex);
+		logger.debug("Rest API ERROR happen", ex);
 		headers.add("Content-Type", "application/json");
 		ErrorMessage errorMessage = ValidationUtils.getErrorMessage(ex.getBindingResult());
 		
@@ -93,6 +105,7 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	@ResponseStatus(value = HttpStatus.OK)
 	@ResponseBody
 	protected ResponseEntity<Object> handleValidationException(ValidationException e) {
+		logger.debug("Rest API ERROR happen", e);
 		Throwable cause = e.getCause();
 		if (cause != null && cause instanceof BindException) {
 			BindException bindException = (BindException) cause;
@@ -110,7 +123,7 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	@Override
 	protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex,
 	                                                              HttpHeaders headers, HttpStatus status, WebRequest request) {
-		logger.error("Rest API ERROR happen", ex);
+		logger.debug("Rest API ERROR happen", ex);
 		headers.add("Content-Type", "application/json");
 		Result result = Results.status(BAD_REQUEST).build();
 		return new ResponseEntity(result, headers, HttpStatus.OK);
@@ -119,12 +132,12 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	@Override
 	protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
 	                                                              HttpHeaders headers, HttpStatus status, WebRequest request) {
-		logger.error("Rest API ERROR happen", ex);
+		logger.debug("Rest API ERROR happen", ex);
 		ErrorMessage errorMessage = ValidationUtils.getErrorMessage(ex.getBindingResult());
 		List<String[]> msgs = errorMessage.getErrors()
 				.stream()
 				.map((errArray) -> {
-					Matcher matcher = messageTemplatePattern.matcher(errArray[1]);
+					Matcher matcher = MESSAGE_TEMPLATE_PATTERN.matcher(errArray[1]);
 					if (matcher.matches()) {
 						errArray[1] = MessageHelper.getMessage(matcher.group(1));
 					}
@@ -145,12 +158,12 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	@ResponseStatus(value = HttpStatus.OK)
 	@ResponseBody
 	protected ResponseEntity<Object> handleMethodArgumentNotValid(GeneralValidationException e) {
-		logger.error("Rest API ERROR happen", e);
+		logger.debug("Rest API ERROR happen", e);
 		ErrorMessage errorMessage = e.getErrorMessage();
 		List<String[]> msgs = errorMessage.getErrors()
 				.stream()
 				.map((errArray) -> {
-					Matcher matcher = messageTemplatePattern.matcher(errArray[1]);
+					Matcher matcher = MESSAGE_TEMPLATE_PATTERN.matcher(errArray[1]);
 					if (matcher.matches()) {
 						errArray[1] = MessageHelper.getMessage(matcher.group(1));
 					}
@@ -213,6 +226,35 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	public Result handleApplicationException(ApplicationException e) {
 		logger.error("Rest API ERROR happen", e);
 		return Results.status(e.getCode(), e.getMessage()).build();
+	}
+	
+	/**
+	 * 上传文件是multipart/form-data类型, 所以这边@ResponseBody实际是不生效的, 需要通过Response手工返回REST结果
+	 *
+	 * @param e
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@ExceptionHandler(MaxUploadSizeExceededException.class)
+	@ResponseStatus(value = HttpStatus.BAD_REQUEST)
+	@ResponseBody
+	public Result handleMaxUploadSizeExceededException(MaxUploadSizeExceededException e, HttpServletRequest request, HttpServletResponse response) {
+		Matcher matcher = ACTUAL_SIZE_PATTERN.matcher(e.getMessage());
+		String message;
+		if (matcher.matches()) {
+			Long actualSize = Long.parseLong(matcher.group(1));
+			Long LimitSize = Long.parseLong(matcher.group(2));
+			log.error("Max upload size exceeded! Actual {}, Limit {}", actualSize, LimitSize);
+			message = I18N.i18nMessage(MAX_UPLOAD_SIZE_EXCEEDED.msgTemplate(), new Long[]{actualSize, LimitSize}, MAX_UPLOAD_SIZE_EXCEEDED.message());
+		} else {
+			message = I18N.i18nMessage(MAX_UPLOAD_SIZE_EXCEEDED.msgTemplate(), MAX_UPLOAD_SIZE_EXCEEDED.message());
+		}
+		
+		logger.error(message, e);
+		Result result = Results.status(MAX_UPLOAD_SIZE_EXCEEDED.code(), message).build();
+		RestUtils.writeJson(response, HttpStatus.BAD_REQUEST, result);
+		return null;
 	}
 	
 	@ExceptionHandler(Throwable.class)

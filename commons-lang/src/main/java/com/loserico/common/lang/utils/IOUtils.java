@@ -45,6 +45,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Scanner;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -102,6 +103,11 @@ public class IOUtils {
 	 * Represents the end-of-file (or stream).
 	 */
 	public static final int EOF = -1;
+	
+	/**
+	 * 匹配文件名中不允许出现的字符
+	 */
+	public static final Pattern INVALID_FILENAME_PATTERN = Pattern.compile("[`~!@#$%^&*()+=|{}':;',\\\\\\[\\].<>\\/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]");
 	
 	/**
 	 * 从InputStream读取字符串
@@ -264,7 +270,7 @@ public class IOUtils {
 	
 	/**
 	 * 读取文件为File对象
-	 * 
+	 *
 	 * @param fullFilename
 	 * @return File
 	 */
@@ -389,6 +395,23 @@ public class IOUtils {
 	 * @return
 	 */
 	public static InputStream readClasspathFileAsInputStream(String fileName) {
+		if (isBlank(fileName)) {
+			return null;
+		}
+		
+		ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+		if (fileName.startsWith("classpath")) {
+			Resource resource = resolver.getResource(fileName);
+			if (resource.exists()) {
+				try {
+					return resource.getInputStream();
+				} catch (IOException e) {
+					log.error("", e);
+					return null;
+				}
+			}
+		}
+		
 		/*
 		 * 先读classpath根目录
 		 */
@@ -413,17 +436,6 @@ public class IOUtils {
 				return url.openStream();
 			} catch (IOException e) {
 				log.error(e.getMessage(), e);
-				return null;
-			}
-		}
-		
-		ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-		Resource resource = resolver.getResource(fileName);
-		if (resource.exists()) {
-			try {
-				return resource.getInputStream();
-			} catch (IOException e) {
-				log.error("", e);
 				return null;
 			}
 		}
@@ -1344,20 +1356,48 @@ public class IOUtils {
 	
 	/**
 	 * 返回文件的后缀, 包含前面的.号
+	 *
 	 * @param file
 	 * @return String
 	 */
-	public static String suffic(File file) {
+	public static String suffix(File file) {
 		if (file == null) {
 			return null;
 		}
 		
 		String fileName = file.getName();
+		return suffix(fileName);
+	}
+	
+	/**
+	 * 返回文件的后缀, 包含前面的.号
+	 *
+	 * @param fileName
+	 * @return String
+	 */
+	public static String suffix(String fileName) {
+		if (isBlank(fileName)) {
+			return null;
+		}
+		
 		int index = fileName.lastIndexOf(".");
 		if (index != -1) {
 			return fileName.substring(index);
 		}
 		
 		return null;
+	}
+	
+	/**
+	 * 检查文件名是否出现了不允许出现的特殊字符
+	 * @param filename
+	 * @return
+	 */
+	public static boolean isInvalidFilename(String filename) {
+		if (isBlank(filename)) {
+			return false;
+		}
+		
+		return INVALID_FILENAME_PATTERN.matcher(filename).matches();
 	}
 }

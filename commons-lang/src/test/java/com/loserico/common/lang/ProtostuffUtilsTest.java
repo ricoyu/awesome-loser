@@ -8,6 +8,8 @@ import org.springframework.util.Assert;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.Assert.*;
+
 /**
  * <p>
  * Copyright: (C), 2020-10-13 10:55
@@ -23,12 +25,15 @@ public class ProtostuffUtilsTest {
 	@Test
 	public void test() {
 		SimpleGrantedAuthority grantedAuthority = new SimpleGrantedAuthority("ROLE_USER");
-		System.out.println(grantedAuthority);
+		
 		byte[] bytes = ProtostuffUtils.toBytes(grantedAuthority);
 		SimpleGrantedAuthority grantedAuthority1 = ProtostuffUtils.toObject(bytes, SimpleGrantedAuthority.class);
-		System.out.println(grantedAuthority1);
-		Object object = ProtostuffUtils.toObject(bytes, SimpleGrantedAuthority.class);
-		System.out.println(object);
+		assertEquals(grantedAuthority.getAuthority(), "ROLE_USER");
+		
+		SimpleGrantedAuthority grantedAuthority2 = ProtostuffUtils.toObject(bytes, SimpleGrantedAuthority.class);
+		assertEquals(grantedAuthority.getAuthority(), grantedAuthority2.getAuthority());
+		
+		assertFalse(grantedAuthority1 == grantedAuthority2);
 	}
 	
 	static class SimpleGrantedAuthority  {

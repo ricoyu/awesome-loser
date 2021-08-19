@@ -1,9 +1,12 @@
 package com.loserico.messaging.producer;
 
 import com.loserico.common.lang.utils.IOUtils;
+import com.loserico.messaging.KafkaUtils;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.junit.Test;
 
+import java.util.Date;
 import java.util.Properties;
 
 /**
@@ -47,5 +50,16 @@ public class PlainProducer {
 		producer.send(record);
 		System.out.println("Sent!");
 		producer.close();
+	}
+	
+	@Test
+	public void testSendIdsEvent() {
+		Producer<String, String> producer = KafkaUtils.newProducer("10.10.17.31:9092").build();
+		producer.send("ids-event", IOUtils.readClassPathFileAsString("ids-event.json"));
+	}
+	
+	@Test
+	public void test() {
+		System.out.println(new Date().getTime());
 	}
 }

@@ -6,6 +6,7 @@ import org.junit.Test;
 import java.util.List;
 
 import static java.util.Arrays.asList;
+import static org.junit.Assert.*;
 
 public class StringUtilsTest {
 
@@ -32,5 +33,17 @@ public class StringUtilsTest {
 		for (int i = 0; i < 11; i++) {
 			System.out.println(StringUtils.uniqueKey(50));
 		}
+	}
+	
+	@Test
+	public void testJoinWith() {
+		List<String> ids = asList("123", "456", "123131");
+		String result = StringUtils.joinWith(",", ids);
+		System.out.println(result);
+		assertTrue(!result.endsWith(","));
+		ids = asList("123", "456", "123131", "");
+		result = StringUtils.joinWith(",", ids);
+		System.out.println(result);
+		assertTrue(!result.endsWith(","));
 	}
 }

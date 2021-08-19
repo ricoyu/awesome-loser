@@ -49,6 +49,16 @@ public class ElasticSumAggregationBuilder extends AbstractAggregationBuilder imp
 		return this;
 	}
 	
+	/**
+	 * 聚合返回的结果中是否要包含总命中数 
+	 * @param fetchTotalHits
+	 * @return ElasticSumAggregationBuilder
+	 */
+	public ElasticSumAggregationBuilder fetchTotalHits(boolean fetchTotalHits) {
+		this.fetchTotalHits = fetchTotalHits;
+		return this;
+	}
+	
 	@Override
 	public AggregationBuilder build() {
 		return AggregationBuilders.sum(name).field(field);
@@ -69,6 +79,7 @@ public class ElasticSumAggregationBuilder extends AbstractAggregationBuilder imp
 		logDsl(builder);
 		
 		SearchResponse searchResponse = builder.get();
+		addTotalHitsToThreadLocal(searchResponse);
 		Aggregations aggregations = searchResponse.getAggregations();
 		
 		return AggResultSupport.sumResult(aggregations);

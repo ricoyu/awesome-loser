@@ -3,7 +3,6 @@ package com.loserico.search.builder.agg;
 import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.search.builder.query.BaseQueryBuilder;
 import com.loserico.search.support.AggResultSupport;
-import com.loserico.search.support.SearchHitsSupport;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
@@ -31,11 +30,6 @@ import java.util.UUID;
 public class ElasticCompositeAggregationBuilder extends AbstractAggregationBuilder {
 	
 	private List<AggregationBuilder> builders = new ArrayList<>();
-	
-	/**
-	 * 是否要获取命中文档数
-	 */
-	private Boolean fetchTotal = false;
 	
 	private ElasticCompositeAggregationBuilder(String[] indices) {
 		this.indices = indices;
@@ -109,8 +103,13 @@ public class ElasticCompositeAggregationBuilder extends AbstractAggregationBuild
 		return this;
 	}
 	
-	public ElasticCompositeAggregationBuilder fetchTotal(boolean fetchTotal) {
-		this.fetchTotal = fetchTotal;
+	/**
+	 * 聚合返回的结果中是否要包含总命中数 
+	 * @param fetchTotalHits
+	 * @return ElasticCompositeAggregationBuilder
+	 */
+	public ElasticCompositeAggregationBuilder fetchTotalHits(boolean fetchTotalHits) {
+		this.fetchTotalHits = fetchTotalHits;
 		return this;
 	}
 	
@@ -125,14 +124,11 @@ public class ElasticCompositeAggregationBuilder extends AbstractAggregationBuild
 		logDsl(searchRequestBuilder);
 		
 		SearchResponse searchResponse = searchRequestBuilder.get();
+		addTotalHitsToThreadLocal(searchResponse);
 		
 		Aggregations aggregations = searchResponse.getAggregations();
 		Map<String, Object> resultMap = AggResultSupport.compositeResult(aggregations);
 		
-		if (fetchTotal) {
-			long totalHits = SearchHitsSupport.totalHits(searchResponse);
-			resultMap.put("total", totalHits);
-		}
 		return (Map<String, T>)resultMap;
 	}
 }

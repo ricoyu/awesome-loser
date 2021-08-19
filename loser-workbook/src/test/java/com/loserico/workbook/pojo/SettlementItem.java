@@ -3,12 +3,14 @@ package com.loserico.workbook.pojo;
 import com.loserico.workbook.annotation.Col;
 import com.loserico.workbook.enums.Ticket;
 import lombok.Data;
+import lombok.ToString;
 
 import javax.validation.constraints.NotBlank;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
+@ToString
 public class SettlementItem {
 
 	@Col(index = 0)

@@ -10,6 +10,7 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import static com.loserico.search.enums.BoolQueryType.FILTER;
@@ -87,16 +88,20 @@ public class ElasticBoolQueryBuilder extends BaseQueryBuilder {
 		return termQueryBuilder;
 	}
 	
+	/**
+	 * terms query
+	 * @param field  要对哪个字段聚合
+	 * @param values 可以是 "val1", "val2" 数组形式; 也可以是一个List类型
+	 * @return BoolQuery
+	 */
 	public BoolQuery terms(String field, Object... values) {
+		if (values != null && values.length == 1) {
+			if (values[0] instanceof Collection) {
+				values = ((Collection)values[0]).stream().toArray(Object[]::new);
+			}
+		}
 		ElasticTermsQueryBuilder termsQueryBuilder = new ElasticTermsQueryBuilder();
 		termsQueryBuilder.query(field, values);
-		ReflectionUtils.setField("boolQueryBuilder", termsQueryBuilder, this);
-		return termsQueryBuilder;
-	}
-	
-	public BoolQuery terms(String field, List<Object> values) {
-		ElasticTermsQueryBuilder termsQueryBuilder = new ElasticTermsQueryBuilder();
-		termsQueryBuilder.query(field, values.stream().toArray(Object[]::new));
 		ReflectionUtils.setField("boolQueryBuilder", termsQueryBuilder, this);
 		return termsQueryBuilder;
 	}

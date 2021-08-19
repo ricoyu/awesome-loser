@@ -1,5 +1,6 @@
 package com.loserico.validation.validation;
 
+import com.loserico.common.lang.i18n.I18N;
 import com.loserico.networking.utils.IPUtils;
 import com.loserico.validation.enums.IPCategory;
 import com.loserico.validation.validation.annotation.IP;
@@ -62,7 +63,8 @@ public class IPValidator implements ConstraintValidator<IP, String> {
 		
 		if (!isValid) {
 			context.disableDefaultConstraintViolation();
-			context.buildConstraintViolationWithTemplate(ofNullable(message).orElse("IP 地址不合法"))
+			String msg = I18N.i18nMessage(message);
+			context.buildConstraintViolationWithTemplate(ofNullable(msg).orElse("IP 地址不合法"))
 					.addConstraintViolation();
 		}
 		

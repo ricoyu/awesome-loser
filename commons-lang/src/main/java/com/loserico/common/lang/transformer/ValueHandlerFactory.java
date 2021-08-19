@@ -335,6 +335,7 @@ public class ValueHandlerFactory {
 	public static class LocalDateValueHandler extends BaseValueHandler<LocalDate> implements Serializable {
 		private static final long serialVersionUID = 1L;
 		public static final LocalDateValueHandler INSTANCE = new LocalDateValueHandler();
+		private static final Class SQL_DATE_TYPE = java.sql.Date.class;
 		private static final Class DATE_TYPE = Date.class;
 		private static final Class TIMESTAMP_TYPE = Timestamp.class;
 		
@@ -346,6 +347,10 @@ public class ValueHandlerFactory {
 			
 			if (value instanceof LocalDate) {
 				return (LocalDate) value;
+			}
+			
+			if (SQL_DATE_TYPE.isInstance(value)) {
+				return DateUtils.toLocalDate((java.sql.Date) value);
 			}
 			
 			if (DATE_TYPE.isInstance(value)) {

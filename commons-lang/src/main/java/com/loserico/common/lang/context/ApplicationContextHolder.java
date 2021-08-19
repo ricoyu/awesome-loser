@@ -5,6 +5,11 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
+import java.util.List;
+import java.util.Map;
+
+import static java.util.stream.Collectors.toList;
+
 /**
  * 获取ApplicationContext对象的帮助类
  * 需要定义Spring Bean ApplicationContextHolder，以注入applicationContext
@@ -61,5 +66,14 @@ public class ApplicationContextHolder implements ApplicationContextAware {
 			return null;
 		}
 		return applicationContext.getBean(clazz);
+	}
+	
+	public static <T> List<T> getBeans(Class<T> clazz) {
+		if (applicationContext == null) {
+			log.warn("applicationContext is null, consider add bean of ApplicationContextHolder type or add dependency loser-spring-boot-starter");
+			return null;
+		}
+		Map<String, T> beansMap = applicationContext.getBeansOfType(clazz);
+		return beansMap.values().stream().collect(toList());
 	}
 }

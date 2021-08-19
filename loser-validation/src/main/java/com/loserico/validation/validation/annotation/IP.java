@@ -32,6 +32,10 @@ import static com.loserico.validation.enums.IPCategory.UN_RESTRICTED;
 @Constraint(validatedBy = IPValidator.class)
 public @interface IP {
 	
+	/**
+	 * 可以直接给出验证错误消息, 也可以给出国际化消息模板, 如{ip.notvalid}
+	 * @return String
+	 */
 	String message() default "IP 地址不合法";
 	
 	Class<?>[] groups() default {};

@@ -25,6 +25,7 @@ import java.util.Map;
 
 import static com.loserico.json.jackson.JacksonUtils.toJson;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.assertj.core.api.Assertions.*;
 import static org.junit.Assert.*;
 
 /**
@@ -75,6 +76,7 @@ public class JacksonUtilsTest {
 		String jsonString = "{\"name\":\"Mahesh\", \"age\":21}";
 		Map<String, Object> params = JacksonUtils.toMap(jsonString);
 		Map<Object, Object> genericMap = JacksonUtils.toGenericMap(jsonString);
+		assertThat(params.get("name")).isEqualTo("Mahesh");
 	}
 	
 	@Test
@@ -221,6 +223,7 @@ public class JacksonUtilsTest {
 		String json = IOUtils.readClassPathFileAsString("intTooLong.json");
 		Event event = JacksonUtils.toObject(json, Event.class);
 		System.out.println(toJson(event));
+		assertThat(event.getSrc_ip()).isEqualTo("192.168.43.65");
 	}
 	
 	

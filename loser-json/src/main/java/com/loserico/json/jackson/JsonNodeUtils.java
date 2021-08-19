@@ -21,7 +21,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 @Slf4j
 public final class JsonNodeUtils {
 	
-	public static  String readStr(JsonNode rootNode, String nodeName) {
+	public static String readStr(JsonNode rootNode, String nodeName) {
 		JsonNode jsonNode = rootNode.get(nodeName);
 		if (jsonNode == null) {
 			return null;
@@ -31,7 +31,7 @@ public final class JsonNodeUtils {
 		return trim(nodeValue);
 	}
 	
-	public static  <T> T readEnum(JsonNode rootNode, String nodeName, Class<?> clazz) {
+	public static <T> T readEnum(JsonNode rootNode, String nodeName, Class<?> clazz) {
 		String value = readStr(rootNode, nodeName);
 		if (isBlank(value)) {
 			return null;
@@ -40,7 +40,7 @@ public final class JsonNodeUtils {
 		return (T) EnumUtils.lookupEnum(clazz, value);
 	}
 	
-	public static  Long readLong(JsonNode node, String nodeName) {
+	public static Long readLong(JsonNode node, String nodeName) {
 		JsonNode jsonNode = node.get(nodeName);
 		if (jsonNode == null || jsonNode.isNull()) {
 			return null;
@@ -57,12 +57,40 @@ public final class JsonNodeUtils {
 		return jsonNode.longValue();
 	}
 	
-	public static  Integer readInt(JsonNode node, String nodeName) {
+	public static Integer readInt(JsonNode node, String nodeName) {
 		JsonNode jsonNode = node.get(nodeName);
 		if (jsonNode == null) {
 			return null;
 		}
 		
 		return jsonNode.isNull() ? null : jsonNode.intValue();
+	}
+	
+	/**
+	 * 读取Boolean节点, 如果是字符串值: true/false 也能识别
+	 * @param node
+	 * @param nodeName
+	 * @return Boolean
+	 */
+	public static Boolean readBoolean(JsonNode node, String nodeName) {
+		JsonNode jsonNode = node.get(nodeName);
+		if (jsonNode == null) {
+			return null;
+		}
+		
+		if (jsonNode.isNull()) {
+			return null;
+		}
+		
+		if (jsonNode.isBoolean()) {
+			return jsonNode.booleanValue();
+		}
+		
+		if (jsonNode.getNodeType() == JsonNodeType.STRING) {
+			String strValue = jsonNode.asText();
+			return Boolean.parseBoolean(strValue);
+		}
+		
+		return null;
 	}
 }

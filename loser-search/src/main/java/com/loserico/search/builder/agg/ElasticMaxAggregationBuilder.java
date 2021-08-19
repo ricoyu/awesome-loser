@@ -47,6 +47,16 @@ public class ElasticMaxAggregationBuilder extends AbstractAggregationBuilder imp
 		return this;
 	}
 	
+	/**
+	 * 聚合返回的结果中是否要包含总命中数 
+	 * @param fetchTotalHits
+	 * @return ElasticMaxAggregationBuilder
+	 */
+	public ElasticMaxAggregationBuilder fetchTotalHits(boolean fetchTotalHits) {
+		this.fetchTotalHits = fetchTotalHits;
+		return this;
+	}
+	
 	@Override
 	public ElasticMaxAggregationBuilder setQuery(BaseQueryBuilder queryBuilder) {
 		super.setQuery(queryBuilder);
@@ -66,6 +76,7 @@ public class ElasticMaxAggregationBuilder extends AbstractAggregationBuilder imp
 		logDsl(builder);
 		
 		SearchResponse searchResponse = builder.get();
+		addTotalHitsToThreadLocal(searchResponse);
 		Aggregations aggregations = searchResponse.getAggregations();
 		
 		return AggResultSupport.maxResult(aggregations);

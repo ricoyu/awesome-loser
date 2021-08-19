@@ -611,10 +611,10 @@ public abstract class AbstractRequestBuilder {
 				return (T) result;
 			}
 		} catch (Exception e) {
-			log.error("", e);
 			if (errorCallback != null) {
 				errorCallback.accept(e);
 			} else {
+				log.error("", e);
 				throw new HttpRequestException(e);
 			}
 		}

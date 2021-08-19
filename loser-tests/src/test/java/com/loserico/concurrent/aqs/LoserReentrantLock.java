@@ -97,28 +97,25 @@ public class LoserReentrantLock implements Lock, java.io.Serializable {
 			//acquires = 1
 			final Thread current = Thread.currentThread();
 			int c = getState();
-			/**
+			/*
 			 * 不需要判断同步队列（CLH）中是否有排队等待线程
-			 * 判断state状态是否为0，不为0可以加锁
 			 */
 			if (c == 0) {
 				//unsafe操作，cas修改state状态
 				if (compareAndSetState(0, acquires)) {
-					//独占状态锁持有者指向当前线程
 					setExclusiveOwnerThread(current);
-					return true;
+					return true; //加锁成功
 				}
 			}
-			/**
-			 * state状态不为0，判断锁持有者是否是当前线程，
-			 * 如果是当前线程持有 则state+1
+			/*
+			 * state状态不为0, 判断锁持有者是否是当前线程, 如果是当前线程则state+1
 			 */
 			else if (current == getExclusiveOwnerThread()) {
 				int nextc = c + acquires;
-                if (nextc < 0) // overflow
-                {
-                    throw new Error("Maximum lock count exceeded");
-                }
+				if (nextc < 0) // overflow
+				{
+					throw new Error("Maximum lock count exceeded");
+				}
 				setState(nextc);
 				return true;
 			}
@@ -130,11 +127,21 @@ public class LoserReentrantLock implements Lock, java.io.Serializable {
 		 * 释放锁
 		 */
 		protected final boolean tryRelease(int releases) {
+			//本次释放锁之后, 剩下的加锁次数
 			int c = getState() - releases;
-            if (Thread.currentThread() != getExclusiveOwnerThread()) {
-                throw new IllegalMonitorStateException();
-            }
+			/*
+			 * 如果不是当前线程加锁的, 那么调用tryRelease就会抛出异常
+			 * 你都没有获取锁, 怎么解锁呢?
+			 */
+			if (Thread.currentThread() != getExclusiveOwnerThread()) {
+				throw new IllegalMonitorStateException();
+			}
+			//表示锁是否释放了
 			boolean free = false;
+			/*
+			 * 如果此时c==0, 表示锁完全释放了, 因为这是一个可重入锁, 可能加锁了多次
+			 * 只有全部释放了, free才是true, 同时把exclusiveOwnerThread(标记加锁的线程)清除
+			 */
 			if (c == 0) {
 				free = true;
 				setExclusiveOwnerThread(null);
@@ -185,27 +192,30 @@ public class LoserReentrantLock implements Lock, java.io.Serializable {
 		private static final long serialVersionUID = 7316153563782823691L;
 		
 		/**
-		 * 加锁行为
+		 * 直接尝试加锁 <br/>
+		 * 与公平锁实现的加锁行为一个最大的区别在于，此处不会去判断同步队列(CLH队列)中是否有排队等待加锁的节点
+		 * 并将独占锁持有者 exclusiveOwnerThread 指向当前线程
+		 * <p/>
+		 * 如果当前有人占用锁，再尝试去加一次锁, 如果还加锁失败则入队等待
 		 */
 		final void lock() {
-			/**
-			 * 第一步：直接尝试加锁
-			 * 与公平锁实现的加锁行为一个最大的区别在于，此处不会去判断同步队列(CLH队列)中
-			 * 是否有排队等待加锁的节点，上来直接加锁（判断state是否为0,CAS修改state为1）
-			 * ，并将独占锁持有者 exclusiveOwnerThread 属性指向当前线程
-			 * 如果当前有人占用锁，再尝试去加一次锁
-			 */
-            if (compareAndSetState(0, 1)) {
-                setExclusiveOwnerThread(Thread.currentThread());
-            } else
-            //AQS定义的方法,加锁
-            {
-                acquire(1);
-            }
+			if (compareAndSetState(0, 1)) {
+				//标记当前锁属于这哥线程
+				setExclusiveOwnerThread(Thread.currentThread());
+			} else {
+				acquire(1);
+			}
 		}
 		
 		/**
-		 * 父类AbstractQueuedSynchronizer.acquire()中调用本方法
+		 * 尝试获取锁, 如果成功则将ExclusiveOwnerThread设为当前线程, 失败不会block
+		 * <ul>
+		 *     <li/>如果资源还没有被锁定, 尝试加锁并设置state=acquires
+		 *     <li/>如果资源已经被锁定且是被当前线程锁定的, 那么state=state+acquires
+		 * </ul>
+		 *
+		 * @param acquires
+		 * @return boolean
 		 */
 		protected final boolean tryAcquire(int acquires) {
 			return nonfairTryAcquire(acquires);
@@ -218,33 +228,41 @@ public class LoserReentrantLock implements Lock, java.io.Serializable {
 	static final class FairSync extends Sync {
 		private static final long serialVersionUID = -3000897897090466540L;
 		
+		/**
+		 * 看队列中是否已经有Worker在排队, 有的话将自己加入CLH队列中等待
+		 */
 		final void lock() {
 			acquire(1);
 		}
 		
 		/**
-		 * 重写aqs中的方法逻辑
-		 * 尝试加锁，被AQS的acquire()方法调用
+		 * 尝试加锁, 返回加锁成功与否标识
 		 */
 		protected final boolean tryAcquire(int acquires) {
 			final Thread current = Thread.currentThread();
+			//状态(锁)变量
 			int c = getState();
+			//如果没有线程获得锁
 			if (c == 0) {
 				/**
-				 * 与非公平锁中的区别，需要先判断队列当中是否有等待的节点
+				 * 与非公平锁中的区别, 需要先判断队列当中是否有等待的节点(已经有别的线程在等待获取锁)
 				 * 如果没有则可以尝试CAS获取锁
 				 */
 				if (!hasQueuedPredecessors() &&
 						compareAndSetState(0, acquires)) {
-					//独占线程指向当前线程
+					//如果抢到了锁, 将独占线程指向当前线程
 					setExclusiveOwnerThread(current);
 					return true;
 				}
-			} else if (current == getExclusiveOwnerThread()) {
+			} 
+			/*
+			 * 当前获取锁的线程就是自己, 那么加锁次数+1(可重入)
+			 */
+			else if (current == getExclusiveOwnerThread()) {
 				int nextc = c + acquires;
-                if (nextc < 0) {
-                    throw new Error("Maximum lock count exceeded");
-                }
+				if (nextc < 0) {
+					throw new Error("Maximum lock count exceeded");
+				}
 				setState(nextc);
 				return true;
 			}
@@ -393,12 +411,12 @@ public class LoserReentrantLock implements Lock, java.io.Serializable {
 	 * 条件队列当中是否有正在等待的节点
 	 */
 	public boolean hasWaiters(Condition condition) {
-        if (condition == null) {
-            throw new NullPointerException();
-        }
-        if (!(condition instanceof LoserAbstractQueuedSynchronizer.ConditionObject)) {
-            throw new IllegalArgumentException("not owner");
-        }
+		if (condition == null) {
+			throw new NullPointerException();
+		}
+		if (!(condition instanceof LoserAbstractQueuedSynchronizer.ConditionObject)) {
+			throw new IllegalArgumentException("not owner");
+		}
 		return sync.hasWaiters((LoserAbstractQueuedSynchronizer.ConditionObject) condition);
 	}
 	
@@ -418,12 +436,12 @@ public class LoserReentrantLock implements Lock, java.io.Serializable {
 	 * @throws NullPointerException         if the condition is null
 	 */
 	public int getWaitQueueLength(Condition condition) {
-        if (condition == null) {
-            throw new NullPointerException();
-        }
-        if (!(condition instanceof LoserAbstractQueuedSynchronizer.ConditionObject)) {
-            throw new IllegalArgumentException("not owner");
-        }
+		if (condition == null) {
+			throw new NullPointerException();
+		}
+		if (!(condition instanceof LoserAbstractQueuedSynchronizer.ConditionObject)) {
+			throw new IllegalArgumentException("not owner");
+		}
 		return sync.getWaitQueueLength((LoserAbstractQueuedSynchronizer.ConditionObject) condition);
 	}
 	
@@ -445,12 +463,12 @@ public class LoserReentrantLock implements Lock, java.io.Serializable {
 	 * @throws NullPointerException         if the condition is null
 	 */
 	protected Collection<Thread> getWaitingThreads(Condition condition) {
-        if (condition == null) {
-            throw new NullPointerException();
-        }
-        if (!(condition instanceof LoserAbstractQueuedSynchronizer.ConditionObject)) {
-            throw new IllegalArgumentException("not owner");
-        }
+		if (condition == null) {
+			throw new NullPointerException();
+		}
+		if (!(condition instanceof LoserAbstractQueuedSynchronizer.ConditionObject)) {
+			throw new IllegalArgumentException("not owner");
+		}
 		return sync.getWaitingThreads((LoserAbstractQueuedSynchronizer.ConditionObject) condition);
 	}
 	

@@ -104,8 +104,16 @@ public final class Pages<T> {
 		private Long maxLimit;
 		
 		private PageBuilder(long current, long size) {
-			this.current = current;
-			this.size = size;
+			if (current < 0) {
+				this.current = 0;
+			} else {
+				this.current = current;
+			}
+			if (size < 0) {
+				this.size = 10;
+			} else {
+				this.size = size;
+			}
 		}
 		
 		/**

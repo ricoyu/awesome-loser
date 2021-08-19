@@ -360,7 +360,7 @@ public class HttpUtilsTest {
 				.connectionManagerTimeout(5, SECONDS)
 				.connectionTimeout(6, SECONDS)
 				.soTimeout(1, SECONDS)
-				.onError((e) -> log.error("出错了, 调用回调函数", e))
+				.onError((e) -> log.error("出错了, 调用回调函数"))
 				.retries(6)
 				.requestSentRetryEnabled(false)
 				.request();

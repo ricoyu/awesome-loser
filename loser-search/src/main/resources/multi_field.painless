@@ -1,0 +1,1 @@
+{  "script": { "lang": "painless", "source": "String fieldName = ''; for(int i=0; i<params.fields.length; i++) {String field = params.fields[i];if(!''.equals(fieldName)) {fieldName +='|';}if(doc.containsKey(field+'.keyword')) {fieldName += doc[field+'.keyword'].value;} else {fieldName += doc[field].value;}}return fieldName;" }}

@@ -3,6 +3,7 @@ package com.loserico.common.lang.exception;
 import com.loserico.common.lang.errors.ErrorType;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -34,6 +35,14 @@ public class BusinessException extends RuntimeException {
 		this.code = errorType.code();
 		this.msgTemplate = errorType.msgTemplate();
 		this.message = errorType.message();
+	}
+	
+	public BusinessException(ErrorType errorType, Object... messageParams) {
+		super(errorType.message());
+		this.code = errorType.code();
+		this.msgTemplate = errorType.msgTemplate();
+		this.message = errorType.message();
+		this.messageParams = Arrays.asList(messageParams);
 	}
 	
 	public BusinessException(String code, String message) {

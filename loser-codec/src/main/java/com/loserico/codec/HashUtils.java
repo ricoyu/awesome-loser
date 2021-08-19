@@ -3,17 +3,20 @@ package com.loserico.codec;
 import com.loserico.codec.exception.EncodeException;
 import com.loserico.codec.exception.HmacSha256Exception;
 import com.loserico.codec.exception.NoSuchHashAlgorithmException;
+import com.loserico.common.lang.utils.IOUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.DigestUtils;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Objects;
 
 /**
  * <p>
@@ -153,7 +156,7 @@ public final class HashUtils {
 	
 	
 	/**
-	 * 使用UTF-8编码进行MD5加密
+	 * 使用UTF-8编码进行MD5哈希
 	 * MD5 is a widely used cryptographic hash function, which produces a hash of 128 bit.
 	 *
 	 * @param bytes
@@ -164,7 +167,7 @@ public final class HashUtils {
 	}
 	
 	/**
-	 * 使用UTF-8编码进行MD5加密
+	 * 使用UTF-8编码进行MD5哈希
 	 * MD5 is a widely used cryptographic hash function, which produces a hash of 128 bit.
 	 *
 	 * @param source
@@ -172,6 +175,22 @@ public final class HashUtils {
 	 */
 	public static String md5Hex(String source) {
 		return DigestUtils.md5Hex(source);
+	}
+	
+	/**
+	 * 使用UTF-8编码进行MD5哈希
+	 * MD5 is a widely used cryptographic hash function, which produces a hash of 128 bit.
+	 *
+	 * @param file
+	 * @return String
+	 */
+	public static String md5Hex(File file) {
+		Objects.requireNonNull(file, "file cannot be null!");
+		if (!file.exists()) {
+			return null;
+		}
+		byte[] bytes = IOUtils.readFileAsBytes(file);
+		return DigestUtils.md5Hex(bytes);
 	}
 	
 	/**

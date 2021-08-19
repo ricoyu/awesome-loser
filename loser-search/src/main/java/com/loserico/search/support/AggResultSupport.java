@@ -3,9 +3,11 @@ package com.loserico.search.support;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.bucket.histogram.InternalDateHistogram;
 import org.elasticsearch.search.aggregations.bucket.histogram.InternalHistogram;
 import org.elasticsearch.search.aggregations.bucket.terms.LongTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
+import org.elasticsearch.search.aggregations.bucket.terms.UnmappedTerms;
 import org.elasticsearch.search.aggregations.metrics.InternalAvg;
 import org.elasticsearch.search.aggregations.metrics.InternalCardinality;
 import org.elasticsearch.search.aggregations.metrics.InternalMax;
@@ -92,7 +94,13 @@ public final class AggResultSupport {
 			return aggResults;
 		}
 		for (Aggregation aggregation : aggregations) {
+			if (aggregation instanceof UnmappedTerms) {
+				log.warn("聚合的字段是一个未映射的字段, 比如enabled=false");
+				continue;
+			}
+			
 			List<StringTerms.Bucket> buckets = ((StringTerms) aggregation).getBuckets();
+			
 			for (StringTerms.Bucket bucket : buckets) {
 				Map<String, T> result = new HashMap<>();
 				String key = bucket.getKeyAsString();
@@ -131,9 +139,40 @@ public final class AggResultSupport {
 		return aggResults;
 	}
 	
+	public static Map<String, Object> dateHistogramResult(Aggregations aggregations) {
+		Map<String, Object> aggResults = new HashMap<>();
+		if (aggregations == null) {
+			return aggResults;
+		}
+		for (Aggregation aggregation : aggregations) {
+			List<InternalDateHistogram.Bucket> buckets = ((InternalDateHistogram) aggregation).getBuckets();
+			Map<String, Object> result = new HashMap<>();
+			for (InternalDateHistogram.Bucket bucket : buckets) {
+				String key = bucket.getKeyAsString();
+				long docCount = bucket.getDocCount();
+				log.info("Bucket: {}, Doc Count: {}", key, docCount);
+				result.put(key, docCount);
+				
+				Aggregations subAggs = bucket.getAggregations();
+				for (Aggregation subAgg : subAggs) {
+					result.put(subAgg.getName(), aggResult(subAgg));
+				}
+			}
+			aggResults.put(aggregation.getName(), result);
+		}
+		
+		return aggResults;
+	}
+	
 	private static <T> T aggResult(Aggregation aggregation) {
 		if (aggregation instanceof InternalHistogram) {
 			return (T) aggResult((InternalHistogram) aggregation);
+		}
+		if (aggregation instanceof InternalDateHistogram) {
+			return (T) aggResult((InternalDateHistogram) aggregation);
+		}
+		if (aggregation instanceof InternalAvg) {
+			return (T) aggResult((InternalAvg) aggregation);
 		}
 		
 		return null;
@@ -155,6 +194,34 @@ public final class AggResultSupport {
 			result.put(key, docCount);
 		}
 		return result;
+	}
+	
+	/**
+	 * 负责处理DateHistogram结果
+	 *
+	 * @param aggregation
+	 * @return Map<String, Object>
+	 */
+	private static Map<String, Object> aggResult(InternalDateHistogram aggregation) {
+		List<InternalDateHistogram.Bucket> buckets = aggregation.getBuckets();
+		Map<String, Object> result = new HashMap<>();
+		for (InternalDateHistogram.Bucket bucket : buckets) {
+			String key = bucket.getKeyAsString();
+			long docCount = bucket.getDocCount();
+			log.info("Bucket: {}, Doc Count: {}", key, docCount);
+			result.put(key, docCount);
+		}
+		return result;
+	}
+	
+	/**
+	 * 负责处理AVG结果
+	 *
+	 * @param aggregation
+	 * @return Double
+	 */
+	private static Double aggResult(InternalAvg aggregation) {
+		return aggregation.getValue();
 	}
 	
 	public static Double avgResult(Aggregations aggregations) {

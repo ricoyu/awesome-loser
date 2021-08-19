@@ -338,6 +338,8 @@ public final class DateUtils {
 			return null;
 		}
 		
+		source = StringUtils.trimQuote(source);
+		
 		SimpleDateFormat simpleDateFormat = getSimpleDateFormat(source);
 		
 		if (simpleDateFormat == null) {
@@ -377,6 +379,8 @@ public final class DateUtils {
 		if (isBlank(source)) {
 			return null;
 		}
+		source = StringUtils.trimQuote(source);
+		
 		Objects.requireNonNull(format);
 		SimpleDateFormat simpleDateFormat = SimpleDateFormatHolder.formatFor(format);
 		try {
@@ -399,6 +403,7 @@ public final class DateUtils {
 		if (isBlank(source)) {
 			return null;
 		}
+		source = StringUtils.trimQuote(source);
 		
 		SimpleDateFormat simpleDateFormat = getSimpleDateFormat(source, timezone);
 		
@@ -428,6 +433,8 @@ public final class DateUtils {
 		if (isBlank(source)) {
 			return null;
 		}
+		source = StringUtils.trimQuote(source);
+		
 		Objects.requireNonNull(format);
 		SimpleDateFormat simpleDateFormat = SimpleDateFormatHolder.formatFor(format, timezone);
 		try {
@@ -452,6 +459,8 @@ public final class DateUtils {
 		if (isBlank(source)) {
 			return null;
 		}
+		source = StringUtils.trimQuote(source);
+		
 		Objects.requireNonNull(format);
 		SimpleDateFormat simpleDateFormat = SimpleDateFormatHolder.formatFor(format, locale);
 		try {
@@ -477,6 +486,8 @@ public final class DateUtils {
 		if (isBlank(source)) {
 			return null;
 		}
+		source = StringUtils.trimQuote(source);
+		
 		SimpleDateFormat simpleDateFormat = SimpleDateFormatHolder.formatFor(FMT_ISO_DATETIME_1, timezone, locale);
 		try {
 			return simpleDateFormat.parse(source);
@@ -500,6 +511,8 @@ public final class DateUtils {
 		if (isBlank(source)) {
 			return null;
 		}
+		source = StringUtils.trimQuote(source);
+		
 		SimpleDateFormat simpleDateFormat = SimpleDateFormatHolder.formatFor(format, timezone, locale);
 		try {
 			return simpleDateFormat.parse(source);
@@ -648,6 +661,21 @@ public final class DateUtils {
 			return null;
 		}
 		Instant instant = date.toInstant();
+		LocalDateTime localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+		return localDateTime.toLocalDate();
+	}
+	
+	/**
+	 * 将Date用系统默认时区转成LocalDate
+	 *
+	 * @param date
+	 * @return LocalDate
+	 */
+	public static LocalDate toLocalDate(java.sql.Date date) {
+		if (date == null) {
+			return null;
+		}
+		Instant instant = new Date(date.getTime()).toInstant();
 		LocalDateTime localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
 		return localDateTime.toLocalDate();
 	}

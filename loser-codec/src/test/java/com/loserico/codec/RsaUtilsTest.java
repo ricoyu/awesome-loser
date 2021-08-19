@@ -35,8 +35,8 @@ public class RsaUtilsTest {
 		//System.out.println(RsaUtils.getPublicKeyStr());
 		//long millis = System.currentTimeMillis();
 		//System.out.println(millis);
-		System.out.println(RsaUtils.publicEncrypt("123456"));
-		//System.out.println(RsaUtils.publicEncrypt("123456", "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAm0TOI2rlCmYWDVDu3EJvvdxK6/esXgF+iPvZQPO1cLxe+2JU5cqthD4mB8tOz6J8A31oAtS82hVkEzHv6d/dDOiAOJ93oKOd4+3+PKNtN09TV4YAsMu5oRnGd5SwXNDJX88v6oiHfTwMYAOxdNeACK9ySKYZYdbZZUZ9pnmC1mbeHjdeVAaFZgmkfg7EJifZ8T/Fz2rAKDIdHNNVCMHPYvzkNYmzX6AvqM9sJB9f38YuUxf1jbC0x/QAYwEiAZgqJ7U091FCkRmQBC4gOsHuY1AfyPNslRnBGKlGDJtPePWy1H08BQ5hy0ZorD/ZX9vClksnoCY38EqwHk+CSByHcQIDAQAB"));
+		//System.out.println(RsaUtils.publicEncrypt("123456"));
+		System.out.println(RsaUtils.publicEncrypt("Admin#124", "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsTQOJ+BXnBdfxgpS/G/g13oidcx3tQMLCwUKDUat0stjWvOzYgnulj1WPT7Aci1XpP72IXNMhvSEIpqc8KC5n6ywpmHJbF/3sPU+/Z9q5PSetCpEB8rJL0lIfclG7b0Cb8gZ7KEO592shKjn7qrFdDq4YYSX1xrPv3Jn3Ze6O3rlU+8X+BnBKhd+EbyukJk0hdzl4nWpl7DLubSR4BDpngLV7D4QHWJDpbBvrgV7PTKWBW3DMET+iDjcfOnXdwUNQ+ToF0oSY46y8J0y0Vwi12+m7IXtjyWe4NWtaOt9K5NRBgGPNtHLOaEsEhdkInWSKw5fMuot16P2xyeNaQqSYQIDAQAB"));
 	}
 	
 	

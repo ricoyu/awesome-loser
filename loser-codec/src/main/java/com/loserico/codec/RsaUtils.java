@@ -839,9 +839,9 @@ public final class RsaUtils {
 					privateKeyBytes = IOUtils.readClassPathFileAsBytes(privateKeyName + suffix);
 					
 					//记录公钥文件的后缀
-					publicKeySuffix = IOUtils.suffic(publicKeyFile);
+					publicKeySuffix = IOUtils.suffix(publicKeyFile);
 					//记录私钥文件的后缀
-					privateKeySuffix = IOUtils.suffic(privateKeyFile);
+					privateKeySuffix = IOUtils.suffix(privateKeyFile);
 					
 					return true;
 				}
@@ -861,9 +861,9 @@ public final class RsaUtils {
 					privateKeyBytes = IOUtils.readFileAsBytes(privateKeyFile);
 					
 					//记录公钥文件的后缀
-					publicKeySuffix = IOUtils.suffic(publicKeyFile);
+					publicKeySuffix = IOUtils.suffix(publicKeyFile);
 					//记录私钥文件的后缀
-					privateKeySuffix = IOUtils.suffic(privateKeyFile);
+					privateKeySuffix = IOUtils.suffix(privateKeyFile);
 					
 					return true;
 				}
@@ -883,9 +883,9 @@ public final class RsaUtils {
 					privateKeyBytes = IOUtils.readFileAsBytes(privateKeyFile);
 					
 					//记录公钥文件的后缀
-					publicKeySuffix = IOUtils.suffic(publicKeyFile);
+					publicKeySuffix = IOUtils.suffix(publicKeyFile);
 					//记录私钥文件的后缀
-					privateKeySuffix = IOUtils.suffic(privateKeyFile);
+					privateKeySuffix = IOUtils.suffix(privateKeyFile);
 					
 					return true;
 				}

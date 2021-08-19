@@ -16,6 +16,9 @@ import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.common.lucene.search.function.CombineFunction;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilder;
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
+import org.elasticsearch.index.reindex.DeleteByQueryAction;
+import org.elasticsearch.index.reindex.DeleteByQueryRequestBuilder;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
@@ -393,13 +396,13 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 				.results(results)
 				.sort(sortValues)
 				.build();
-		elasticPage.setTotalCount(total.intValue());
 		if (size != null) {
 			elasticPage.setPageSize(size);
 		}
 		if (from != null) {
 			elasticPage.setCurrentPage(from);
 		}
+		elasticPage.setTotalCount(total.intValue());
 		return elasticPage;
 	}
 	
@@ -475,6 +478,8 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 	 */
 	public long queryForCount() {
 		SearchRequestBuilder builder = ElasticUtils.client.prepareSearch(indices)
+				.setIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN) //要搜索的index不存在时不报错
+				.setTrackTotalHits(true) //查询返回的totalHits默认最大值是10000, 如果查到的数据超过10000, 那么拿到的totalHits就不准了, 加上这个配置解决这个问题
 				.setQuery(builder())
 				.setSize(0) //count 不需要真正返回数据
 				.setFetchSource(false);
@@ -486,6 +491,18 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 		}
 		
 		return totalHits.value;
+	}
+	
+	/**
+	 * 根据查询条件来删除
+	 * @return long 删除的文档数量
+	 */
+	public long delete() {
+		BulkByScrollResponse response = new DeleteByQueryRequestBuilder(ElasticUtils.client, DeleteByQueryAction.INSTANCE)
+				.filter(builder())
+				.source(indices)
+				.get();
+		return response.getDeleted();
 	}
 	
 	/**
@@ -502,23 +519,23 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 	private SearchResponse searchResponse() {
 		SearchRequestBuilder searchRequestBuilder = ElasticUtils.client.prepareSearch(indices)
 				.setIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN) //要搜索的index不存在时不报错
+				.setTrackTotalHits(true) //查询返回的totalHits默认最大值是10000, 如果查到的数据超过10000, 那么拿到的totalHits就不准了, 加上这个配置解决这个问题
 				.setQuery(builder());
-		
-		/*
-		 * Search After 避免深度分页
-		 */
-		if (searchAfter != null && searchAfter.length > 0) {
-			searchRequestBuilder.searchAfter(searchAfter);
-		}
 		
 		sortOrders.forEach(sortOrder -> sortOrder.addTo(searchRequestBuilder));
 		
-		/**
-		 * ES分页的页码是从0开始的, 我们的应用在搜索时, 指定的页码从1开始
+		/*
+		 * Search After 避免深度分页, 如果用search after, 不需要指定from了
 		 */
-		if (from != null && from > 0) {
-			searchRequestBuilder.setFrom(from - 1);
+		if (searchAfter != null && searchAfter.length > 0) {
+			searchRequestBuilder.searchAfter(searchAfter);
+		} else {
+			Integer firstResult = getFirstResult();
+			if (firstResult != null) {
+				searchRequestBuilder.setFrom(firstResult);
+			}
 		}
+		
 		if (size != null) {
 			searchRequestBuilder.setSize(size);
 		}
@@ -580,5 +597,22 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 		if (log.isDebugEnabled()) {
 			log.debug("Aggregation DSL:\n{}", new JSONObject(builder.toString()).toString(2));
 		}
+	}
+	
+	/**
+	 * 客户端API传入的from是指页码, 从1开始 <br/>
+	 * ES中分页时, from是指从第几条数据开始, 第一条是0 <br/>
+	 * 所以这里要换算一下, 把页码换算成第几条数据
+	 *
+	 * @return Integer
+	 */
+	public Integer getFirstResult() {
+		//使用search after时, 不需要传入from
+		if (from != null && from > 0) {
+			int pageSize = size == null ? 10 : size;
+			return (from - 1) * pageSize;
+		}
+		
+		return null;
 	}
 }

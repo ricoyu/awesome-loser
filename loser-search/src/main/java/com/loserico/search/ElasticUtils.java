@@ -1,5 +1,6 @@
 package com.loserico.search;
 
+import com.loserico.common.lang.context.ThreadContext;
 import com.loserico.common.lang.transformer.Transformers;
 import com.loserico.common.lang.utils.IOUtils;
 import com.loserico.common.lang.utils.ReflectionUtils;
@@ -20,9 +21,11 @@ import com.loserico.search.builder.admin.ElasticUpdateSettingBuilder;
 import com.loserico.search.builder.agg.ElasticAvgAggregationBuilder;
 import com.loserico.search.builder.agg.ElasticCardinalityAggregationBuilder;
 import com.loserico.search.builder.agg.ElasticCompositeAggregationBuilder;
+import com.loserico.search.builder.agg.ElasticDateHistogramAggregationBuilder;
 import com.loserico.search.builder.agg.ElasticHistogramAggregationBuilder;
 import com.loserico.search.builder.agg.ElasticMaxAggregationBuilder;
 import com.loserico.search.builder.agg.ElasticMinAggregationBuilder;
+import com.loserico.search.builder.agg.ElasticMultiTermsAggregationBuilder;
 import com.loserico.search.builder.agg.ElasticSumAggregationBuilder;
 import com.loserico.search.builder.agg.ElasticTermsAggregationBuilder;
 import com.loserico.search.builder.query.ElasticBoolQueryBuilder;
@@ -35,6 +38,7 @@ import com.loserico.search.builder.query.ElasticTermQueryBuilder;
 import com.loserico.search.builder.query.ElasticTermsQueryBuilder;
 import com.loserico.search.builder.query.ElasticUriQueryBuilder;
 import com.loserico.search.cache.ElasticCacheUtils;
+import com.loserico.search.constants.ElasticConstants;
 import com.loserico.search.enums.Analyzer;
 import com.loserico.search.enums.Dynamic;
 import com.loserico.search.exception.IndexTemplateCreateException;
@@ -477,11 +481,11 @@ public final class ElasticUtils {
 	 * 可以在查询结束后, 对每一个匹配的文档进行一系列的重新算分, 根据新生成的分数进行排序<br/>
 	 * 提供了几种默认的计算分值的函数:
 	 * <ul>
-	 * <li/>Weight  为每一个文档设置一个简单而不被规范化的权重
+	 * <li/>Weight             为每一个文档设置一个简单而不被规范化的权重
 	 * <li/>Field Value Factor 使用该数值来修改_score, 例如将"热度"和"点赞数"作为算分的参考因素
-	 * <li/>Random Score 为每一个用户使用一个不同的, 随机算分结果
-	 * <li/>衰减函数 以某个字段的值为标准, 距离某个值越近, 得分越高
-	 * <li/>Script Score 自定义脚本完全控制所需逻辑
+	 * <li/>Random Score       为每一个用户使用一个不同的, 随机算分结果
+	 * <li/>衰减函数            以某个字段的值为标准, 距离某个值越近, 得分越高
+	 * <li/>Script Score       自定义脚本完全控制所需逻辑
 	 * </ul>
 	 * <p/>
 	 * ScoreFunctionBuilder可以通过ScoreFunctionBuilders构造出来<p/>
@@ -646,14 +650,13 @@ public final class ElasticUtils {
 		return bulkByScrollResponse;
 	}
 	
-	
 	/**
 	 * Elasticsearch 索引管理相关API
 	 */
 	public static class Admin {
 		
 		/**
-		 * 基于Entity上的注解信息创建索引
+		 * 基于Entity上的注解信息创建索引    
 		 *
 		 * @param entityClass 标注了@Index注解的POJO
 		 * @return boolean 索引是否创建成功
@@ -929,6 +932,7 @@ public final class ElasticUtils {
 		
 		/**
 		 * 执行段合并, 可以先设为只读, 然后进行段合并
+		 *
 		 * @param indices
 		 * @return ActionFuture<ForceMergeResponse>
 		 */
@@ -1079,6 +1083,58 @@ public final class ElasticUtils {
 		public static ClusterSettingBuilder settings() {
 			return new ClusterSettingBuilder();
 		}
+		
+		
+		/**
+		 * 创建多字段聚合, 用法:
+		 * <pre> {@code
+		 * Map<String, Object> params = new HashMap<>();
+		 * params.put("fields", new String[]{"src_ip", "src_port"});
+		 * 
+		 * Script painless = new Script(ScriptType.STORED, null, "multi_field_agg", params);
+		 * SearchResponse response = ElasticUtils.client.prepareSearch("events")
+		 * 		.addAggregation(AggregationBuilders.terms("script_agg").script(painless))
+		 * 		.get();
+		 * Aggregations aggregations = response.getAggregations();
+		 * Aggregation scriptAgg = aggregations.get("script_agg");
+		 * System.out.println(JacksonUtils.toPrettyJson(scriptAgg.toString()));
+		 * }</pre>
+		 * 
+		 * @return
+		 */
+		public static boolean createMultiFieldAgg() {
+			String script = "{  \"script\": { " +
+					"\"lang\": \"painless\", " +
+					"\"source\": " +
+					"\"String fieldName = ''; " +
+					"for(int i=0; i<params.fields.length; i++) {" +
+						"String field = params.fields[i];" +
+						"if(!''.equals(fieldName) && (doc.containsKey(field+'.keyword') || doc.containsKey(field))) {" +
+							"fieldName +='|';" +
+						"}" +
+						"if(doc.containsKey(field+'.keyword')) {" +
+							"if(doc[field+'.keyword'].size() != 0) {" +
+								"fieldName += doc[field+'.keyword'].value;" +
+							"} else {" +
+								"fieldName += 'null';" +
+							"}" +
+						"} else if(doc.containsKey(field)){" +
+							"if(doc[field].size() != 0) {" +
+								"fieldName += doc[field].value;" +
+							"} else {" +
+								"fieldName += 'null';"+
+							"}" +
+						"}" +
+					"}" +
+					"return fieldName;\" }}";
+			
+			AcknowledgedResponse response = client.admin().cluster().preparePutStoredScript()
+					.setId("multi_fields")
+					.setContent(new BytesArray(script), XContentType.JSON)
+					.get();
+			
+			return response.isAcknowledged();
+		}
 	}
 	
 	/**
@@ -1131,17 +1187,17 @@ public final class ElasticUtils {
 		 * 指定查询语句, 使用Query String Syntax<p>
 		 * 有多种查询语法
 		 * <ul>
-		 * <li/>df查询                     GET movies/_search?q=2012&df=title
-		 * <li/>指定字段查询                GET movies/_search?q=title:2012
-		 * <li/>泛查询                     GET movies/_search?q=2012              会对文档中所有字段进行查询
-		 * <li/>Term Query                GET movies/_search?q=title:Beautiful Mind     与下面的等价
-		 * <li/>                          GET movies/_search?q=title:Beautiful OR Mind
-		 * <li/>Pahrase Query(引号引起来的)  GET movies/_search?q=title:"Beautiful Mind"  表示Beautiful Mind要同时出现并且按照规定的顺序, 与下面的等价
-		 * <li/>                            GET movies/_search?q=title:Beautiful AND Mind
-		 * <li/>分组                        GET movies/_search?q=title:(Beautiful Mind)
-		 * <li/>包含Beautiful 不包含 Mind    GET movies/_search?q=title:(Beautiful NOT Mind)
-		 * <li/>必须包含Mind, %2B是 + 号的转义字符     GET movies/_search?q=title:(Beautiful %2BMind)
-		 * <li/>范围查询                             GET movies/_search?q=year:>1980
+		 * <li/>df查询                            GET movies/_search?q=2012&df=title
+		 * <li/>指定字段查询                       GET movies/_search?q=title:2012
+		 * <li/>泛查询                            GET movies/_search?q=2012              会对文档中所有字段进行查询
+		 * <li/>Term Query                       GET movies/_search?q=title:Beautiful Mind     与下面的等价
+		 * <li/>                                 GET movies/_search?q=title:Beautiful OR Mind
+		 * <li/>Pahrase Query(引号引起来的)        GET movies/_search?q=title:"Beautiful Mind"  表示Beautiful Mind要同时出现并且按照规定的顺序, 与下面的等价
+		 * <li/>                                  GET movies/_search?q=title:Beautiful AND Mind
+		 * <li/>分组                              GET movies/_search?q=title:(Beautiful Mind)
+		 * <li/>包含Beautiful 不包含 Mind          GET movies/_search?q=title:(Beautiful NOT Mind)
+		 * <li/>必须包含Mind, %2B是 + 号的转义字符  GET movies/_search?q=title:(Beautiful %2BMind)
+		 * <li/>范围查询                          GET movies/_search?q=year:>1980
 		 * </ul>
 		 * 你可以就写查询条件: 2012<p>
 		 * 也可以写完成的查询: q=2012 或者 q=2012&df=title 等<p>
@@ -1332,6 +1388,14 @@ public final class ElasticUtils {
 	 */
 	public static class Aggs {
 		
+		/**
+		 * 返回总命中数
+		 * @return Long
+		 */
+		public static Long totalHits() {
+			return ThreadContext.get(ElasticConstants.TOTAL_HITS);
+		}
+		
 		// ---------------------- Bucket 聚合 ----------------------
 		
 		/**
@@ -1346,14 +1410,36 @@ public final class ElasticUtils {
 		}
 		
 		/**
+		 * multi terms聚合, Bucket聚合的一种, 使用painless script实现
+		 * https://www.elastic.co/guide/en/elasticsearch/client/java-api/7.x/java-aggs.html
+		 *
+		 * @param indices
+		 * @return ElasticTermsAggregationBuilder
+		 */
+		public static ElasticMultiTermsAggregationBuilder multiTerms(String... indices) {
+			return ElasticMultiTermsAggregationBuilder.instance(indices);
+		}
+		
+		/**
 		 * Histogram Aggregation
-		 * 
+		 * <p>
 		 * https://www.elastic.co/guide/en/elasticsearch/reference/7.6/search-aggregations-bucket-histogram-aggregation.html
+		 *
 		 * @param indices
 		 * @return ElasticHistogramAggregationBuilder
 		 */
 		public static ElasticHistogramAggregationBuilder histogram(String... indices) {
 			return ElasticHistogramAggregationBuilder.instance(indices);
+		}
+		
+		/**
+		 * https://www.elastic.co/guide/en/elasticsearch/reference/7.6/search-aggregations-bucket-datehistogram-aggregation.html
+		 *
+		 * @param indices
+		 * @return ElasticDateHistogramAggregationBuilder
+		 */
+		public static ElasticDateHistogramAggregationBuilder dateHistogram(String... indices) {
+			return ElasticDateHistogramAggregationBuilder.instance(indices);
 		}
 		
 		// ---------------------- Metric 聚合 ----------------------
@@ -1412,7 +1498,8 @@ public final class ElasticUtils {
 		
 		/**
 		 * 组合多个聚合
-		 * @param indices 
+		 *
+		 * @param indices
 		 * @return ElasticCompositeAggregationBuilder
 		 */
 		public static ElasticCompositeAggregationBuilder composite(String... indices) {

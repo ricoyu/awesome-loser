@@ -63,7 +63,8 @@ public class JedisUtilsTests {
 	
 	@Test
 	public void testPubSub() {
-		JedisUtils.publish("websocket:msg", "{\"command\": \"沙箱启动成功\"}");
+		//JedisUtils.publish("websocket:msg", "{\"command\": \"沙箱启动成功\"}");
+		JedisUtils.publish("loser-channel", "Hi");
 	}
 	
 	@SneakyThrows

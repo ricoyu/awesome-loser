@@ -1,6 +1,5 @@
 package com.loserico.mybatis.type;
 
-import com.loserico.common.lang.enums.Gender;
 import com.loserico.common.lang.utils.EnumUtils;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
@@ -43,18 +42,18 @@ public class EnumTypeHandler<E extends Enum<E>> extends BaseTypeHandler<E> {
 	@Override
 	public E getNullableResult(ResultSet rs, String columnName) throws SQLException {
 		String s = rs.getString(columnName);
-		return (E)EnumUtils.lookupEnum(Gender.class, s);
+		return (E)EnumUtils.lookupEnum(type, s);
 	}
 	
 	@Override
 	public E getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
 		String s = rs.getString(columnIndex);
-		return (E)EnumUtils.lookupEnum(Gender.class, s);
+		return (E)EnumUtils.lookupEnum(type, s);
 	}
 	
 	@Override
 	public E getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
 		String s = cs.getString(columnIndex);
-		return (E)EnumUtils.lookupEnum(Gender.class, s);
+		return (E)EnumUtils.lookupEnum(type, s);
 	}
 }

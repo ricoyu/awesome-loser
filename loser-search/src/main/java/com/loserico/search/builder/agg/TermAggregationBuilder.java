@@ -15,7 +15,7 @@ public interface TermAggregationBuilder extends ElasticAggregationBuilder, Compo
 	/**
 	 * 配置聚合后返回的分桶的数量
 	 * @param size
-	 * @return ElasticTermsAggregationBuilder
+	 * @return TermAggregationBuilder
 	 */
-	public ElasticTermsAggregationBuilder size(Integer size);
+	public TermAggregationBuilder size(Integer size);
 }

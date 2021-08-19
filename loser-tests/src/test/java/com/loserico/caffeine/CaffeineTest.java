@@ -34,6 +34,8 @@ public class CaffeineTest {
 		Cache<String, DataObject> cache = Caffeine.newBuilder()
 				.expireAfterWrite(1, MINUTES)
 				.maximumSize(100)
+				.weakKeys()
+				.weakValues()
 				.build();
 		
 		String key = "A";
@@ -42,7 +44,10 @@ public class CaffeineTest {
 		
 		DataObject ipInfo = new DataObject("172.23.100.161");
 		cache.put("172.23.100.161", ipInfo);
+		cache.put("172.23.100.161", ipInfo);
 		
+		data = cache.getIfPresent("172.23.100.161");
+		assertNotNull(data);
 		data = cache.getIfPresent("172.23.100.161");
 		assertNotNull(data);
 		
