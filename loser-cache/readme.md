@@ -4,6 +4,27 @@ https://blog.didispace.com/JedisPool%E8%B5%84%E6%BA%90%E6%B1%A0%E4%BC%98%E5%8C%9
 
 https://gist.github.com/JonCole/925630df72be1351b21440625ff2671f
 
+# 摘要
+
+1. redis.host=localhost
+2. redis.port=6379
+3. redis.password
+4. redis.connectionTimeout=50000
+5. redis.socketTimeout=1000
+6. redis.db=0
+7. redis.warmUp=true
+8. redis.maxTotal=50
+9. redis.maxIdle=50
+10. redis.minIdle=8
+11. redis.testOnBorrow=true
+12. redis.testOnReturn=false
+13. redis.blockWhenExhausted=true
+14. redis.maxWaitMillis=60000
+15. redis.testWhileIdle=true
+16. redis.timeBetweenEvictionRunsMillis=30000
+17. redis.minEvictableIdleTimeMillis=60000
+18. redis.numTestsPerEvictionRun=-1
+
 # Tips
 
 1. maxTotal, maxIdle 设置一样大 50
