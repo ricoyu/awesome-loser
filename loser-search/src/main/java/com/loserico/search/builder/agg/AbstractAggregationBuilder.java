@@ -31,7 +31,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
  * @version 1.0
  */
 @Slf4j
-public abstract class AbstractAggregationBuilder {
+public abstract class AbstractAggregationBuilder implements SubAggregateable{
 	
 	protected String[] indices;
 	
@@ -68,6 +68,11 @@ public abstract class AbstractAggregationBuilder {
 	protected ElasticCompositeAggregationBuilder compositeAggregationBuilder;
 	
 	protected BaseQueryBuilder baseQueryBuilder;
+	
+	/**
+	 * 添加的子聚合
+	 */
+	protected List<SubAggregation> subAggregationBuilders = new ArrayList<>();
 	
 	protected void logDsl(SearchRequestBuilder builder) {
 		if (log.isDebugEnabled()) {

@@ -67,7 +67,7 @@ public interface PoolFactory {
 		 * 资源用尽时处理
 		 */
 		config.setBlockWhenExhausted(propertyReader.getBoolean("redis.blockWhenExhausted", true));
-		config.setMaxWaitMillis(propertyReader.getInt("redis.maxWaitMillis", 5000));
+		config.setMaxWaitMillis(propertyReader.getInt("redis.maxWaitMillis", 60000));
 		
 		/*
 		 * 空闲资源监测

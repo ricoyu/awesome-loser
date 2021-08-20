@@ -1,7 +1,5 @@
 package com.loserico.search.builder.agg;
 
-import com.loserico.search.builder.agg.sub.MultiTermsSubDateHistogramAgg;
-import com.loserico.search.builder.agg.sub.MultiTermsSubHistogramAgg;
 import com.loserico.search.builder.query.BaseQueryBuilder;
 import com.loserico.search.support.AggResultSupport;
 import lombok.extern.slf4j.Slf4j;
@@ -14,11 +12,9 @@ import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Multi Terms 聚合, 这是 Bucket Aggregation <br/>
@@ -33,7 +29,7 @@ import java.util.Objects;
  * @version 1.0
  */
 @Slf4j
-public class ElasticMultiTermsAggregationBuilder extends AbstractAggregationBuilder implements TermAggregationBuilder, SubAggable, Compositable {
+public class ElasticMultiTermsAggregationBuilder extends AbstractAggregationBuilder implements TermAggregationBuilder, SubAggregateable, Compositable {
 	
 	/**
 	 * 这个是限制返回桶的数量, 如果总共有10个桶, 但是size设为5, 那么聚合结果中只会返回前5个桶
@@ -53,11 +49,6 @@ public class ElasticMultiTermsAggregationBuilder extends AbstractAggregationBuil
 	 * 要对哪些字段聚合
 	 */
 	private String[] fields;
-	
-	/**
-	 * 为Terms聚合添加的子聚合
-	 */
-	private List<AggregationBuilder> subAggBuilders = new ArrayList<>();
 	
 	private ElasticMultiTermsAggregationBuilder(String[] indices) {
 		this.indices = indices;
@@ -140,7 +131,7 @@ public class ElasticMultiTermsAggregationBuilder extends AbstractAggregationBuil
 		Script painless = new Script(ScriptType.STORED, null, "multi_fields", params);
 		aggregationBuilder.script(painless);
 		
-		subAggBuilders.forEach(subAgg -> aggregationBuilder.subAggregation(subAgg));
+		subAggregationBuilders.forEach(subAggregation -> aggregationBuilder.subAggregation(subAggregation.build()));
 		return aggregationBuilder;
 	}
 	
@@ -167,19 +158,9 @@ public class ElasticMultiTermsAggregationBuilder extends AbstractAggregationBuil
 	}
 	
 	@Override
-	public MultiTermsSubHistogramAgg subHistogram(String name, String field) {
-		MultiTermsSubHistogramAgg subHistogramAgg = new MultiTermsSubHistogramAgg(this, name, field);
-		return subHistogramAgg;
+	public ElasticMultiTermsAggregationBuilder subAggregation(SubAggregation subAggregation) {
+		subAggregationBuilders.add(subAggregation);
+		return this;
 	}
 	
-	@Override
-	public MultiTermsSubDateHistogramAgg subDateHistogram(String name, String field) {
-		MultiTermsSubDateHistogramAgg subHistogramAgg = new MultiTermsSubDateHistogramAgg(this, name, field);
-		return subHistogramAgg;
-	}
-	
-	private void subAggregation(AggregationBuilder subAggregationBuilder) {
-		Objects.requireNonNull(subAggregationBuilder, "subAggregationBuilder cannot be null!");
-		subAggBuilders.add(subAggregationBuilder);
-	}
 }

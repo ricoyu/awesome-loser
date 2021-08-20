@@ -65,7 +65,7 @@ public final class AggResultSupport {
 				for (LongTerms.Bucket bucket : buckets) {
 					Object key = bucket.getKey();
 					long docCount = bucket.getDocCount();
-					log.info("Bucket: {}, Doc Count: {}", key, docCount);
+					log.debug("Bucket: {}, Doc Count: {}", key, docCount);
 					value.put(key, docCount);
 				}
 				resultMap.put(name, value);
@@ -78,7 +78,7 @@ public final class AggResultSupport {
 				for (StringTerms.Bucket bucket : buckets) {
 					String key = bucket.getKeyAsString();
 					long docCount = bucket.getDocCount();
-					log.info("Bucket: {}, Doc Count: {}", key, docCount);
+					log.debug("Bucket: {}, Doc Count: {}", key, docCount);
 					value.put(key, docCount);
 				}
 				resultMap.put(name, value);
@@ -105,7 +105,7 @@ public final class AggResultSupport {
 				Map<String, T> result = new HashMap<>();
 				String key = bucket.getKeyAsString();
 				Long docCount = bucket.getDocCount();
-				log.info("Bucket: {}, Doc Count: {}", key, docCount);
+				log.debug("Bucket: {}, Doc Count: {}", key, docCount);
 				result.put(key, (T) docCount);
 				
 				Aggregations subAggs = bucket.getAggregations();
@@ -130,7 +130,7 @@ public final class AggResultSupport {
 			for (InternalHistogram.Bucket bucket : buckets) {
 				String key = bucket.getKeyAsString();
 				long docCount = bucket.getDocCount();
-				log.info("Bucket: {}, Doc Count: {}", key, docCount);
+				log.debug("Bucket: {}, Doc Count: {}", key, docCount);
 				result.put(key, docCount);
 			}
 			aggResults.put(aggregation.getName(), result);
@@ -150,7 +150,7 @@ public final class AggResultSupport {
 			for (InternalDateHistogram.Bucket bucket : buckets) {
 				String key = bucket.getKeyAsString();
 				long docCount = bucket.getDocCount();
-				log.info("Bucket: {}, Doc Count: {}", key, docCount);
+				log.debug("Bucket: {}, Doc Count: {}", key, docCount);
 				result.put(key, docCount);
 				
 				Aggregations subAggs = bucket.getAggregations();
@@ -190,7 +190,7 @@ public final class AggResultSupport {
 		for (InternalHistogram.Bucket bucket : buckets) {
 			String key = bucket.getKeyAsString();
 			long docCount = bucket.getDocCount();
-			log.info("Bucket: {}, Doc Count: {}", key, docCount);
+			log.debug("Bucket: {}, Doc Count: {}", key, docCount);
 			result.put(key, docCount);
 		}
 		return result;
@@ -202,16 +202,24 @@ public final class AggResultSupport {
 	 * @param aggregation
 	 * @return Map<String, Object>
 	 */
-	private static Map<String, Object> aggResult(InternalDateHistogram aggregation) {
+	private static List<Map<String, Object>> aggResult(InternalDateHistogram aggregation) {
 		List<InternalDateHistogram.Bucket> buckets = aggregation.getBuckets();
-		Map<String, Object> result = new HashMap<>();
+		List<Map<String, Object>> results = new ArrayList<>();
 		for (InternalDateHistogram.Bucket bucket : buckets) {
+			Map<String, Object> result = new HashMap<>();
 			String key = bucket.getKeyAsString();
 			long docCount = bucket.getDocCount();
-			log.info("Bucket: {}, Doc Count: {}", key, docCount);
+			log.debug("Bucket: {}, Doc Count: {}", key, docCount);
 			result.put(key, docCount);
+			results.add(result);
+			
+			//如果有子聚合, 则嵌套处理子聚合
+			Aggregations subAggs = bucket.getAggregations();
+			for (Aggregation subAgg : subAggs) {
+				result.put(subAgg.getName(), aggResult(subAgg));
+			}
 		}
-		return result;
+		return results;
 	}
 	
 	/**

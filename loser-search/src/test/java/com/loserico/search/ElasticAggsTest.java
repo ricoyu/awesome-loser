@@ -2,14 +2,15 @@ package com.loserico.search;
 
 import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.search.ElasticUtils.Aggs;
+import com.loserico.search.builder.agg.SubAggregation;
 import com.loserico.search.enums.CalendarInterval;
-import com.loserico.search.enums.FixedInterval;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.io.stream.NamedWriteable;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramInterval;
 import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.StringTerms.Bucket;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
@@ -80,6 +81,7 @@ public class ElasticAggsTest {
 	public static void main(String[] args) {
 		System.out.println(new Date(1628214321781L));
 	}
+	
 	/**
 	 * 查看航班目的地的统计信息, 增加平均, 最高最低价格
 	 */
@@ -183,20 +185,28 @@ public class ElasticAggsTest {
 	
 	@Test
 	public void testSubAgg() {
-		List<Map<String, Object>> resultMap = Aggs.terms("event_2021-07-07")
+		/*List<Map<String, Object>> resultMap = Aggs.terms("event_2021-07-07")
 				.of("event_engine_agg", "event_engine")
 				.subHistogram("create_time_agg", "create_time")
 				.interval(1000)
 				.minDocCount(0)
 				.extendedBounds(1625642342501L, 1625642350168L)
-				.thenGet();
+				.thenGet();*/
+		List<Map<String, Object>> resultMap = Aggs.terms("event_2021-08-02")
+				.of("event_engine_agg", "event_engine")
+				.subAggregation(SubAggregation.instance(AggregationBuilders.histogram("create_time_agg")
+						.field("create_time")
+						.interval(10000)
+						.minDocCount(0)
+						.extendedBounds(1627874190000L, 1627874200000L)))
+				.get();
 		
 		log.info(toPrettyJson(resultMap));
 	}
 	
 	@Test
 	public void testSubDateAgg() {
-		List<Map<String, Object>> resultMap = Aggs.terms("event_2021-07-07")
+		/*List<Map<String, Object>> resultMap = Aggs.terms("event_2021-07-07")
 				.of("event_engine_agg", "event_engine")
 				.subDateHistogram("create_time_agg", "create_time")
 				.calendarInterval(CalendarInterval.MINUTE)
@@ -204,25 +214,30 @@ public class ElasticAggsTest {
 				.extendedBounds(1625642342501L, 1625642350168L)
 				.thenGet();
 		
-		log.info(toPrettyJson(resultMap));
+		log.info(toPrettyJson(resultMap));*/
 	}
 	
 	@Test
 	public void testDateHistogramSubAvgAgg() {
-		Map<String, Object> resultMap = Aggs.dateHistogram("event_2021-08-02")
+		/*Map<String, Object> resultMap = Aggs.dateHistogram("event_2021-08-02")
 				.of("date_his_agg", "create_time")
 				.fixedInterval(5, FixedInterval.MINUTES)
 				.subAvg("event_count_avg", "event_count")
 				.thenGet();
 		
-		System.out.println(toJson(resultMap));
+		System.out.println(toJson(resultMap));*/
 	}
 	
 	@Test
 	public void testTermsThenDateHistogramThenAvg() {
-		//Aggs.terms("flow_2021-08-18")
-		//		.of("tags_agg", "tags")
-		//		.subDateHistogram("timestamp_agg", "timestamp")
-		//		.
+		SubAggregation subAggregation = SubAggregation.instance(AggregationBuilders.dateHistogram("time_agg").field("timestamp").fixedInterval(DateHistogramInterval.DAY))
+				.subAggregation(AggregationBuilders.avg("in_bytes_avg").field("in_bytes"));
+		
+		List<Map<String, Object>> results = Aggs.terms("flow_2021-08-18")
+				.of("tags_agg", "tags")
+				.subAggregation(subAggregation)
+				.get();
+		
+		System.out.println(toPrettyJson(results));
 	}
 }
