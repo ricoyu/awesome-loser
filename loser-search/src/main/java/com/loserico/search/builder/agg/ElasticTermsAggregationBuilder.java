@@ -1,5 +1,7 @@
 package com.loserico.search.builder.agg;
 
+import com.loserico.search.builder.agg.sub.TermsSubDateHistogramAgg;
+import com.loserico.search.builder.agg.sub.TermsSubHistogramAgg;
 import com.loserico.search.builder.query.BaseQueryBuilder;
 import com.loserico.search.enums.SortOrder;
 import com.loserico.search.support.AggResultSupport;
@@ -11,8 +13,10 @@ import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -27,7 +31,7 @@ import java.util.stream.Collectors;
  * @version 1.0
  */
 @Slf4j
-public class ElasticTermsAggregationBuilder extends AbstractAggregationBuilder implements TermAggregationBuilder {
+public class ElasticTermsAggregationBuilder extends AbstractAggregationBuilder implements TermAggregationBuilder, SubAggable, Compositable {
 	
 	/**
 	 * 这个是限制返回桶的数量, 如果总共有10个桶, 但是size设为5, 那么聚合结果中只会返回前5个桶
@@ -42,6 +46,11 @@ public class ElasticTermsAggregationBuilder extends AbstractAggregationBuilder i
 	 * 原理: 每次从Shard上额外多获取数据, 提升准确率
 	 */
 	private Integer shardSize;
+	
+	/**
+	 * 为Terms聚合添加的子聚合
+	 */
+	private List<AggregationBuilder> subAggBuilders = new ArrayList<>();
 	
 	private ElasticTermsAggregationBuilder(String[] indices) {
 		this.indices = indices;
@@ -114,6 +123,7 @@ public class ElasticTermsAggregationBuilder extends AbstractAggregationBuilder i
 			aggregationBuilder.shardSize(shardSize);
 		}
 		subAggregationBuilders.forEach(subAggregation -> aggregationBuilder.subAggregation(subAggregation.build()));
+		subAggBuilders.forEach(subAgg -> aggregationBuilder.subAggregation(subAgg));
 		if (!sortOrders.isEmpty()) {
 			if (sortOrders.size() == 1) {
 				aggregationBuilder.order(sortOrders.get(0).toBucketOrder());
@@ -153,8 +163,25 @@ public class ElasticTermsAggregationBuilder extends AbstractAggregationBuilder i
 	}
 	
 	@Override
+	public TermsSubHistogramAgg subHistogram(String name, String field) {
+		TermsSubHistogramAgg subHistogramAgg = new TermsSubHistogramAgg(this, name, field);
+		return subHistogramAgg;
+	}
+	
+	@Override
+	public TermsSubDateHistogramAgg subDateHistogram(String name, String field) {
+		TermsSubDateHistogramAgg subHistogramAgg = new TermsSubDateHistogramAgg(this, name, field);
+		return subHistogramAgg;
+	}
+	
+	@Override
 	public ElasticTermsAggregationBuilder sort(String sort) {
 		super.sort(sort);
 		return this;
+	}
+	
+	private void subAggregation(AggregationBuilder subAggregationBuilder) {
+		Objects.requireNonNull(subAggregationBuilder, "subAggregationBuilder cannot be null!");
+		subAggBuilders.add(subAggregationBuilder);
 	}
 }

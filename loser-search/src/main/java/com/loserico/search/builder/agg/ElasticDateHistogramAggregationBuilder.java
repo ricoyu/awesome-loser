@@ -1,6 +1,7 @@
 package com.loserico.search.builder.agg;
 
 import com.loserico.common.lang.constants.DateConstants;
+import com.loserico.search.builder.agg.sub.DateHistogramSubAvgAgg;
 import com.loserico.search.builder.query.BaseQueryBuilder;
 import com.loserico.search.enums.CalendarInterval;
 import com.loserico.search.enums.FixedInterval;
@@ -15,6 +16,8 @@ import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramInter
 import org.elasticsearch.search.aggregations.bucket.histogram.ExtendedBounds;
 
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TimeZone;
@@ -33,7 +36,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
-public class ElasticDateHistogramAggregationBuilder extends AbstractAggregationBuilder implements ElasticAggregationBuilder, SubAggregateable, Compositable {
+public class ElasticDateHistogramAggregationBuilder extends AbstractAggregationBuilder implements ElasticAggregationBuilder, SubAggable,  SubAggregateable, Compositable {
 	
 	/**
 	 * 可以识别 夏令时, 不同月份有不同的天数, 特定年份的润秒
@@ -90,6 +93,11 @@ public class ElasticDateHistogramAggregationBuilder extends AbstractAggregationB
 	 * 上面格式化成日期字符串时使用的时区
 	 */
 	private ZoneId timezone;
+	
+	/**
+	 * 为Terms聚合添加的子聚合
+	 */
+	private List<AggregationBuilder> subAggBuilders = new ArrayList<>();
 	
 	private ElasticDateHistogramAggregationBuilder(String[] indices) {
 		this.indices = indices;
@@ -288,6 +296,11 @@ public class ElasticDateHistogramAggregationBuilder extends AbstractAggregationB
 	}
 	
 	@Override
+	public DateHistogramSubAvgAgg subAvg(String name, String field) {
+		return new DateHistogramSubAvgAgg(this, name, field);
+	}
+	
+	@Override
 	public AggregationBuilder build() {
 		DateHistogramAggregationBuilder aggregationBuilder = AggregationBuilders.dateHistogram(name).field(field);
 		if (fixedInterval != null) {
@@ -312,6 +325,7 @@ public class ElasticDateHistogramAggregationBuilder extends AbstractAggregationB
 		} else {
 			aggregationBuilder.timeZone(DateConstants.CHINA.toZoneId());
 		}
+		subAggBuilders.forEach(subAgg -> aggregationBuilder.subAggregation(subAgg));
 		subAggregationBuilders.forEach(subAggregation -> aggregationBuilder.subAggregation(subAggregation.build()));
 		return aggregationBuilder;
 	}
@@ -339,4 +353,8 @@ public class ElasticDateHistogramAggregationBuilder extends AbstractAggregationB
 		return (Map<String, T>) AggResultSupport.dateHistogramResult(aggregations);
 	}
 	
+	private void subAggregation(AggregationBuilder subAggregationBuilder) {
+		Objects.requireNonNull(subAggregationBuilder, "subAggregationBuilder cannot be null!");
+		subAggBuilders.add(subAggregationBuilder);
+	}
 }
