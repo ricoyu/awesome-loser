@@ -1,22 +1,15 @@
-package com.loserico.search.builder.agg;
+package com.loserico.search.builder.agg.sub;
 
 import com.loserico.common.lang.constants.DateConstants;
-import com.loserico.search.builder.agg.sub.ElasticSubAggregation;
-import com.loserico.search.builder.query.BaseQueryBuilder;
 import com.loserico.search.enums.CalendarInterval;
 import com.loserico.search.enums.FixedInterval;
-import com.loserico.search.support.AggResultSupport;
-import org.elasticsearch.action.search.SearchRequestBuilder;
-import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
-import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramInterval;
 import org.elasticsearch.search.aggregations.bucket.histogram.ExtendedBounds;
 
 import java.time.ZoneId;
-import java.util.Map;
 import java.util.Objects;
 import java.util.TimeZone;
 
@@ -24,9 +17,9 @@ import static com.loserico.common.lang.utils.Assert.notNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
- * https://www.elastic.co/guide/en/elasticsearch/reference/7.6/search-aggregations-bucket-datehistogram-aggregation.html
+ * DateHistogram 子聚合
  * <p>
- * Copyright: (C), 2021-07-12 18:03
+ * Copyright: (C), 2021-08-23 15:21
  * <p>
  * <p>
  * Company: Sexy Uncle Inc.
@@ -34,7 +27,19 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
-public class ElasticDateHistogramAggregationBuilder extends AbstractAggregationBuilder implements ElasticAggregationBuilder, SubAggregatable, Compositable {
+public class ElasticDateHistogramSubAggregation extends ElasticSubAggregation implements AvgSubAggregation{
+	
+	private ElasticSubAggregation parentAggregation;
+	
+	/**
+	 * 聚合名字
+	 */
+	protected String name;
+	
+	/**
+	 * 要对哪个字段聚合
+	 */
+	protected String field;
 	
 	/**
 	 * 可以识别 夏令时, 不同月份有不同的天数, 特定年份的润秒
@@ -44,7 +49,7 @@ public class ElasticDateHistogramAggregationBuilder extends AbstractAggregationB
 	/**
 	 * 就是固定的时间间隔, 不管上面说的日历上的差异
 	 */
-	private DateHistogramInterval fixedInterval ;
+	private DateHistogramInterval fixedInterval;
 	
 	/**
 	 * min_doc_count: 0 <br/>
@@ -60,7 +65,7 @@ public class ElasticDateHistogramAggregationBuilder extends AbstractAggregationB
 	 * <p>
 	 * 上面的结果只有在min_doc_count: 0时才会返回, 如果我们要返回区间内有值的, 可以设置 min_doc_count: 1
 	 */
-	private Integer minDocCount;
+	protected Integer minDocCount;
 	
 	/**
 	 * extended_bounds.min
@@ -70,7 +75,7 @@ public class ElasticDateHistogramAggregationBuilder extends AbstractAggregationB
 	 * 假设你的数据只落在了 4 月和 7 月之间，那么你只能得到这些月份的 buckets（可能为空也可能不为空）。因此为了得到全年数据，
 	 * 我们需要告诉 Elasticsearch 我们想要全部 buckets， 即便那些 buckets 可能落在最小日期 之前 或 最大日期 之后 。
 	 */
-	private Long minBound;
+	protected Long minBound;
 	
 	/**
 	 * extended_bounds.max
@@ -80,7 +85,7 @@ public class ElasticDateHistogramAggregationBuilder extends AbstractAggregationB
 	 * 假设你的数据只落在了 4 月和 7 月之间，那么你只能得到这些月份的 buckets（可能为空也可能不为空）。因此为了得到全年数据，
 	 * 我们需要告诉 Elasticsearch 我们想要全部 buckets， 即便那些 buckets 可能落在最小日期 之前 或 最大日期 之后 。
 	 */
-	private Long maxBound;
+	protected Long maxBound;
 	
 	/**
 	 * 提供日期格式以便 buckets 的键值便于阅读
@@ -92,38 +97,20 @@ public class ElasticDateHistogramAggregationBuilder extends AbstractAggregationB
 	 */
 	private ZoneId timezone;
 	
-	private ElasticDateHistogramAggregationBuilder(String[] indices) {
-		this.indices = indices;
-	}
 	
-	public static ElasticDateHistogramAggregationBuilder instance(String... indices) {
-		if (indices == null || indices.length == 0) {
-			throw new IllegalArgumentException("indices cannot be null!");
-		}
-		return new ElasticDateHistogramAggregationBuilder(indices);
-	}
-	
-	/**
-	 * 给聚合起个名字, 后续获取聚合数据时需要
-	 *
-	 * @param name
-	 * @param field
-	 * @return ElasticHistogramAggregationBuilder
-	 */
-	@Override
-	public ElasticDateHistogramAggregationBuilder of(String name, String field) {
+	public ElasticDateHistogramSubAggregation(String name, String field) {
 		this.name = name;
 		this.field = field;
-		return this;
 	}
 	
 	/**
 	 * 就是固定的时间间隔, 不识别 夏令时, 不同月份有不同的天数, 特定年份的润秒
+	 *
 	 * @param n
 	 * @param interval
-	 * @return ElasticDateHistogramAggregationBuilder
+	 * @return ElasticDateHistogramSubAggregation
 	 */
-	public ElasticDateHistogramAggregationBuilder fixedInterval(Integer n, FixedInterval interval) {
+	public ElasticDateHistogramSubAggregation fixedInterval(Integer n, FixedInterval interval) {
 		notNull(n, "n cannot be null!");
 		notNull(interval, "interval cannot be null!");
 		switch (interval) {
@@ -145,10 +132,11 @@ public class ElasticDateHistogramAggregationBuilder extends AbstractAggregationB
 	
 	/**
 	 * 可以识别 夏令时, 不同月份有不同的天数, 特定年份的润秒
+	 *
 	 * @param interval
-	 * @return ElasticDateHistogramAggregationBuilder
+	 * @return ElasticDateHistogramSubAggregation
 	 */
-	public ElasticDateHistogramAggregationBuilder calendarInterval(CalendarInterval interval) {
+	public ElasticDateHistogramSubAggregation calendarInterval(CalendarInterval interval) {
 		notNull(interval, "interval cannot be null!");
 		switch (interval) {
 			case MINUTE:
@@ -176,6 +164,7 @@ public class ElasticDateHistogramAggregationBuilder extends AbstractAggregationB
 		return this;
 	}
 	
+	
 	/**
 	 * min_doc_count: 0 <br/>
 	 * 就是说如果在interval指定的隔间内, 某个区间没有值, 在返回的结果中, 这个区间要不要包含?
@@ -190,9 +179,9 @@ public class ElasticDateHistogramAggregationBuilder extends AbstractAggregationB
 	 * 上面的结果只有在min_doc_count: 0时才会返回, 如果我们要返回区间内有值的, 可以设置 min_doc_count: 1
 	 *
 	 * @param minDocCount
-	 * @return
+	 * @return ElasticDateHistogramSubAggregation
 	 */
-	public ElasticDateHistogramAggregationBuilder minDocCount(Integer minDocCount) {
+	public ElasticDateHistogramSubAggregation minDocCount(Integer minDocCount) {
 		this.minDocCount = minDocCount;
 		return this;
 	}
@@ -202,7 +191,7 @@ public class ElasticDateHistogramAggregationBuilder extends AbstractAggregationB
 	 * <p>
 	 * 因此如果你的数据只落在了 4 月和 7 月之间，那么你只能得到这些月份的 buckets（可能为空也可能不为空）。因此为了得到全年数据，
 	 * 我们需要告诉 Elasticsearch 我们想要全部 buckets， 即便那些 buckets 可能落在最小日期 之前 或 最大日期 之后 。
-	 * 
+	 *
 	 * <pre> {@code
 	 * "extended_bounds" : {
 	 *     "min" : "2014-01-01",
@@ -212,9 +201,9 @@ public class ElasticDateHistogramAggregationBuilder extends AbstractAggregationB
 	 *
 	 * @param minBound
 	 * @param maxBound
-	 * @return ElasticHistogramAggregationBuilder
+	 * @return ElasticDateHistogramSubAggregation
 	 */
-	public ElasticDateHistogramAggregationBuilder extendedBounds(Long minBound, Long maxBound) {
+	public ElasticDateHistogramSubAggregation extendedBounds(Long minBound, Long maxBound) {
 		Objects.requireNonNull(minBound, "minBound cannot be null!");
 		Objects.requireNonNull(maxBound, "maxBound cannot be null!");
 		this.minBound = minBound;
@@ -224,10 +213,11 @@ public class ElasticDateHistogramAggregationBuilder extends AbstractAggregationB
 	
 	/**
 	 * 提供日期格式以便 buckets 的键值便于阅读
+	 *
 	 * @param format
-	 * @return ElasticDateHistogramAggregationBuilder
+	 * @return ElasticDateHistogramSubAggregation
 	 */
-	public ElasticDateHistogramAggregationBuilder format(String format) {
+	public ElasticDateHistogramSubAggregation format(String format) {
 		notNull(format, "format cannot be null!");
 		this.format = format;
 		return this;
@@ -235,10 +225,11 @@ public class ElasticDateHistogramAggregationBuilder extends AbstractAggregationB
 	
 	/**
 	 * 设置转日期字符串时使用的时区, 默认Asia/Shanghai
+	 *
 	 * @param zoneId
-	 * @return ElasticDateHistogramAggregationBuilder
+	 * @return ElasticDateHistogramSubAggregation
 	 */
-	public ElasticDateHistogramAggregationBuilder timezone(String zoneId) {
+	public ElasticDateHistogramSubAggregation timezone(String zoneId) {
 		notNull(zoneId, "zoneId cannot be null!");
 		this.timezone = ZoneId.of(zoneId);
 		return this;
@@ -246,10 +237,11 @@ public class ElasticDateHistogramAggregationBuilder extends AbstractAggregationB
 	
 	/**
 	 * 设置转日期字符串时使用的时区, 默认Asia/Shanghai
+	 *
 	 * @param zoneId
-	 * @return ElasticDateHistogramAggregationBuilder
+	 * @return ElasticDateHistogramSubAggregation
 	 */
-	public ElasticDateHistogramAggregationBuilder timezone(ZoneId zoneId) {
+	public ElasticDateHistogramSubAggregation timezone(ZoneId zoneId) {
 		notNull(zoneId, "zoneId cannot be null!");
 		this.timezone = zoneId;
 		return this;
@@ -257,38 +249,23 @@ public class ElasticDateHistogramAggregationBuilder extends AbstractAggregationB
 	
 	/**
 	 * 设置转日期字符串时使用的时区, 默认Asia/Shanghai
+	 *
 	 * @param timeZone
-	 * @return ElasticDateHistogramAggregationBuilder
+	 * @return ElasticDateHistogramSubAggregation
 	 */
-	public ElasticDateHistogramAggregationBuilder timezone(TimeZone timeZone) {
+	public ElasticDateHistogramSubAggregation timezone(TimeZone timeZone) {
 		notNull(timeZone, "timeZone cannot be null!");
 		this.timezone = timeZone.toZoneId();
 		return this;
 	}
 	
 	@Override
-	public ElasticDateHistogramAggregationBuilder setQuery(BaseQueryBuilder queryBuilder) {
-		super.setQuery(queryBuilder);
+	public ElasticDateHistogramSubAggregation avgSubAggregation(String name, String field) {
+		ElasticAvgSubAggregation elasticAvgSubAggregation = new ElasticAvgSubAggregation(this, name, field);
+		subAggregations.add(elasticAvgSubAggregation);
 		return this;
 	}
 	
-	/**
-	 * 聚合返回的结果中是否要包含总命中数 
-	 * @param fetchTotalHits
-	 * @return ElasticDateHistogramAggregationBuilder
-	 */
-	public ElasticDateHistogramAggregationBuilder fetchTotalHits(boolean fetchTotalHits) {
-		this.fetchTotalHits = fetchTotalHits;
-		return this;
-	}
-	
-	@Override
-	public ElasticDateHistogramAggregationBuilder subAggregation(ElasticSubAggregation subAggregation) {
-		subAggregations.add(subAggregation);
-		return this;
-	}
-	
-	@Override
 	public AggregationBuilder build() {
 		DateHistogramAggregationBuilder aggregationBuilder = AggregationBuilders.dateHistogram(name).field(field);
 		if (fixedInterval != null) {
@@ -297,14 +274,14 @@ public class ElasticDateHistogramAggregationBuilder extends AbstractAggregationB
 		if (calendarInterval != null) {
 			aggregationBuilder.calendarInterval(calendarInterval);
 		}
+		
 		if (minDocCount != null) {
 			aggregationBuilder.minDocCount(minDocCount);
 		}
 		
-		if (minBound != null && maxBound != null) {
+		if (minDocCount != null && maxBound != null) {
 			aggregationBuilder.extendedBounds(new ExtendedBounds(minBound, maxBound));
 		}
-		
 		if (isNotBlank(format)) {
 			aggregationBuilder.format(format);
 		}
@@ -318,26 +295,8 @@ public class ElasticDateHistogramAggregationBuilder extends AbstractAggregationB
 	}
 	
 	@Override
-	public ElasticCompositeAggregationBuilder and() {
-		compositeAggregationBuilder.add(build());
-		return compositeAggregationBuilder;
-	}
-	
-	@SuppressWarnings({"unchecked"})
-	public <T> Map<String, T> get() {
-		DateHistogramAggregationBuilder arrregationBuilder = (DateHistogramAggregationBuilder) build();
-		
-		SearchRequestBuilder searchRequestBuilder = searchRequestBuilder();
-		
-		SearchRequestBuilder builder = searchRequestBuilder
-				.addAggregation(arrregationBuilder)
-				.setSize(0);
-		logDsl(builder);
-		SearchResponse searchResponse = builder.get();
-		addTotalHitsToThreadLocal(searchResponse);
-		Aggregations aggregations = searchResponse.getAggregations();
-		
-		return (Map<String, T>) AggResultSupport.dateHistogramResult(aggregations);
+	public ElasticSubAggregation and() {
+		return parentAggregation;
 	}
 	
 }

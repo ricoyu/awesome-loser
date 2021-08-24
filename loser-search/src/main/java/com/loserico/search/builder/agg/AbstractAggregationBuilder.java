@@ -3,6 +3,7 @@ package com.loserico.search.builder.agg;
 import com.loserico.common.lang.context.ThreadContext;
 import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.search.ElasticUtils;
+import com.loserico.search.builder.agg.sub.ElasticSubAggregation;
 import com.loserico.search.builder.query.BaseQueryBuilder;
 import com.loserico.search.constants.ElasticConstants;
 import com.loserico.search.enums.SortOrder;
@@ -31,7 +32,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
  * @version 1.0
  */
 @Slf4j
-public abstract class AbstractAggregationBuilder implements SubAggregateable{
+public abstract class AbstractAggregationBuilder{
 	
 	protected String[] indices;
 	
@@ -72,7 +73,7 @@ public abstract class AbstractAggregationBuilder implements SubAggregateable{
 	/**
 	 * 添加的子聚合
 	 */
-	protected List<SubAggregation> subAggregationBuilders = new ArrayList<>();
+	protected List<ElasticSubAggregation> subAggregations = new ArrayList<>();
 	
 	protected void logDsl(SearchRequestBuilder builder) {
 		if (log.isDebugEnabled()) {
@@ -109,7 +110,6 @@ public abstract class AbstractAggregationBuilder implements SubAggregateable{
 			ThreadContext.remove(ElasticConstants.TOTAL_HITS);
 		}
 	}
-	
 	
 	/**
 	 * 添加排序规则<p>

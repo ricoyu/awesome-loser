@@ -120,6 +120,12 @@ public class ElasticBoolQueryBuilder extends BaseQueryBuilder {
 		return rangeQueryBuilder;
 	}
 	
+	public BoolQuery exists(String field) {
+		ElasticExistsQueryBuilder existsQueryBuilder = new ElasticExistsQueryBuilder();
+		existsQueryBuilder.field(field);
+		ReflectionUtils.setField("boolQueryBuilder", existsQueryBuilder, this);
+		return existsQueryBuilder;
+	}
 	
 	/**
 	 * 数字形式指定 minimum_should_match: 6 <p>

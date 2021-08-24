@@ -1,5 +1,6 @@
 package com.loserico.search.builder.agg;
 
+import com.loserico.search.builder.agg.sub.ElasticSubAggregation;
 import com.loserico.search.builder.query.BaseQueryBuilder;
 import com.loserico.search.support.AggResultSupport;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +30,7 @@ import java.util.Map;
  * @version 1.0
  */
 @Slf4j
-public class ElasticMultiTermsAggregationBuilder extends AbstractAggregationBuilder implements TermAggregationBuilder, SubAggregateable, Compositable {
+public class ElasticMultiTermsAggregationBuilder extends AbstractAggregationBuilder implements TermAggregationBuilder, SubAggregatable, Compositable {
 	
 	/**
 	 * 这个是限制返回桶的数量, 如果总共有10个桶, 但是size设为5, 那么聚合结果中只会返回前5个桶
@@ -131,7 +132,7 @@ public class ElasticMultiTermsAggregationBuilder extends AbstractAggregationBuil
 		Script painless = new Script(ScriptType.STORED, null, "multi_fields", params);
 		aggregationBuilder.script(painless);
 		
-		subAggregationBuilders.forEach(subAggregation -> aggregationBuilder.subAggregation(subAggregation.build()));
+		subAggregations.forEach(subAggregation -> aggregationBuilder.subAggregation(subAggregation.build()));
 		return aggregationBuilder;
 	}
 	
@@ -158,8 +159,8 @@ public class ElasticMultiTermsAggregationBuilder extends AbstractAggregationBuil
 	}
 	
 	@Override
-	public ElasticMultiTermsAggregationBuilder subAggregation(SubAggregation subAggregation) {
-		subAggregationBuilders.add(subAggregation);
+	public ElasticMultiTermsAggregationBuilder subAggregation(ElasticSubAggregation subAggregation) {
+		subAggregations.add(subAggregation);
 		return this;
 	}
 	

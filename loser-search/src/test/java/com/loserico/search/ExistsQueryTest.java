@@ -43,4 +43,14 @@ public class ExistsQueryTest {
 			assertTrue(ifExists(product, "$.date"));
 		});
 	}
+	
+	@Test
+	public void testBoolExists() {
+		List<Object> results = ElasticUtils.Query.bool("netlog_*")
+				.exists("dst_city").filter()
+				.exists("dst_country").filter()
+				.includeSources("dst_city", "dst_country")
+				.queryForList();
+		results.forEach(System.out::println);
+	}
 }

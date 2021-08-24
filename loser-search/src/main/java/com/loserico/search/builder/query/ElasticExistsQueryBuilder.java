@@ -14,7 +14,10 @@ import org.elasticsearch.index.query.QueryBuilders;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
-public class ElasticExistsQueryBuilder extends BaseQueryBuilder {
+public class ElasticExistsQueryBuilder extends BaseQueryBuilder implements BoolQuery{
+	
+	public ElasticExistsQueryBuilder() {
+	}
 	
 	public ElasticExistsQueryBuilder(String... indices) {
 		super(indices);
