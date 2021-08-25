@@ -1,7 +1,7 @@
 package com.loserico.search.builder.agg;
 
 import com.loserico.common.lang.constants.DateConstants;
-import com.loserico.search.builder.agg.sub.ElasticSubAggregation;
+import com.loserico.search.builder.agg.sub.SubAggregation;
 import com.loserico.search.builder.query.BaseQueryBuilder;
 import com.loserico.search.enums.CalendarInterval;
 import com.loserico.search.enums.FixedInterval;
@@ -283,7 +283,7 @@ public class ElasticDateHistogramAggregationBuilder extends AbstractAggregationB
 	}
 	
 	@Override
-	public ElasticDateHistogramAggregationBuilder subAggregation(ElasticSubAggregation subAggregation) {
+	public ElasticDateHistogramAggregationBuilder subAggregation(SubAggregation subAggregation) {
 		subAggregations.add(subAggregation);
 		return this;
 	}

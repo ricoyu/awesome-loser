@@ -3,7 +3,7 @@ package com.loserico.search.builder.agg;
 import com.loserico.common.lang.context.ThreadContext;
 import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.search.ElasticUtils;
-import com.loserico.search.builder.agg.sub.ElasticSubAggregation;
+import com.loserico.search.builder.agg.sub.SubAggregation;
 import com.loserico.search.builder.query.BaseQueryBuilder;
 import com.loserico.search.constants.ElasticConstants;
 import com.loserico.search.enums.SortOrder;
@@ -73,7 +73,7 @@ public abstract class AbstractAggregationBuilder{
 	/**
 	 * 添加的子聚合
 	 */
-	protected List<ElasticSubAggregation> subAggregations = new ArrayList<>();
+	protected List<SubAggregation> subAggregations = new ArrayList<>();
 	
 	protected void logDsl(SearchRequestBuilder builder) {
 		if (log.isDebugEnabled()) {

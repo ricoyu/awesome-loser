@@ -27,9 +27,9 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
-public class ElasticDateHistogramSubAggregation extends ElasticSubAggregation implements AvgSubAggregation{
+public class ElasticDateHistogramSubAggregation extends SubAggregation implements AvgSubAggregatable, TopHitsAggregatable {
 	
-	private ElasticSubAggregation parentAggregation;
+	private SubAggregation parentAggregation;
 	
 	/**
 	 * 聚合名字
@@ -97,6 +97,11 @@ public class ElasticDateHistogramSubAggregation extends ElasticSubAggregation im
 	 */
 	private ZoneId timezone;
 	
+	public ElasticDateHistogramSubAggregation(SubAggregation parentAggregation, String name, String field) {
+		this.parentAggregation = parentAggregation;
+		this.name = name;
+		this.field = field;
+	}
 	
 	public ElasticDateHistogramSubAggregation(String name, String field) {
 		this.name = name;
@@ -266,6 +271,11 @@ public class ElasticDateHistogramSubAggregation extends ElasticSubAggregation im
 		return this;
 	}
 	
+	@Override
+	public SubAggregation topHitsSubAggregation(String name) {
+		return new ElasticTopHitsSubAggregation(this, name);
+	}
+	
 	public AggregationBuilder build() {
 		DateHistogramAggregationBuilder aggregationBuilder = AggregationBuilders.dateHistogram(name).field(field);
 		if (fixedInterval != null) {
@@ -295,7 +305,7 @@ public class ElasticDateHistogramSubAggregation extends ElasticSubAggregation im
 	}
 	
 	@Override
-	public ElasticSubAggregation and() {
+	public SubAggregation and() {
 		return parentAggregation;
 	}
 	

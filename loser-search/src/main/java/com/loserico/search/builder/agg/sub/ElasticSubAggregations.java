@@ -23,4 +23,13 @@ public final class ElasticSubAggregations {
 	public static ElasticAvgSubAggregation avg(String name, String field) {
 		return new ElasticAvgSubAggregation(name, field);
 	}
+	
+	/**
+	 * 添加Top Hits子聚合
+	 * @param name
+	 * @return ElasticTopHitsSubAggregation
+	 */
+	public static ElasticTopHitsSubAggregation topHits(String name) {
+		return new ElasticTopHitsSubAggregation(name);
+	}
 }

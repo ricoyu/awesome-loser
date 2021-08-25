@@ -1,6 +1,6 @@
 package com.loserico.search.builder.agg;
 
-import com.loserico.search.builder.agg.sub.ElasticSubAggregation;
+import com.loserico.search.builder.agg.sub.SubAggregation;
 import com.loserico.search.builder.query.BaseQueryBuilder;
 import com.loserico.search.support.AggResultSupport;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +16,7 @@ import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilde
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Multi Terms 聚合, 这是 Bucket Aggregation <br/>
@@ -77,6 +78,13 @@ public class ElasticMultiTermsAggregationBuilder extends AbstractAggregationBuil
 	public ElasticMultiTermsAggregationBuilder of(String name, String field) {
 		this.name = name;
 		this.fields = new String[]{field};
+		return this;
+	}
+	
+	public ElasticMultiTermsAggregationBuilder of(String name, List<String> fields) {
+		Objects.requireNonNull(fields, "fields cannot be null!");
+		this.name = name;
+		this.fields = fields.stream().toArray(String[]::new);
 		return this;
 	}
 	
@@ -159,7 +167,7 @@ public class ElasticMultiTermsAggregationBuilder extends AbstractAggregationBuil
 	}
 	
 	@Override
-	public ElasticMultiTermsAggregationBuilder subAggregation(ElasticSubAggregation subAggregation) {
+	public ElasticMultiTermsAggregationBuilder subAggregation(SubAggregation subAggregation) {
 		subAggregations.add(subAggregation);
 		return this;
 	}

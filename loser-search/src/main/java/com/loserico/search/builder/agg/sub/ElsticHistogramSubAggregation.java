@@ -16,9 +16,9 @@ import java.util.Objects;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
-public class ElsticHistogramSubAggregation extends ElasticSubAggregation implements AvgSubAggregation {
+public class ElsticHistogramSubAggregation extends SubAggregation implements AvgSubAggregatable, TopHitsAggregatable {
 	
-	private ElasticSubAggregation parentAggregation;
+	private SubAggregation parentAggregation;
 	
 	/**
 	 * 聚合名字
@@ -68,14 +68,13 @@ public class ElsticHistogramSubAggregation extends ElasticSubAggregation impleme
 	 */
 	protected Long maxBound;
 	
-	public ElsticHistogramSubAggregation(ElasticSubAggregation parentAggregation, String name, String field) {
+	public ElsticHistogramSubAggregation(SubAggregation parentAggregation, String name, String field) {
 		this.parentAggregation = parentAggregation;
 		this.name = name;
 		this.field = field;
 	}
 	
 	public ElsticHistogramSubAggregation(String name, String field) {
-		this.parentAggregation = parentAggregation;
 		this.name = name;
 		this.field = field;
 	}
@@ -138,6 +137,11 @@ public class ElsticHistogramSubAggregation extends ElasticSubAggregation impleme
 		return this;
 	}
 	
+	@Override
+	public SubAggregation topHitsSubAggregation(String name) {
+		return new ElasticTopHitsSubAggregation(this, name);
+	}
+	
 	public AggregationBuilder build() {
 		HistogramAggregationBuilder aggregationBuilder = AggregationBuilders.histogram(name)
 				.field(field)
@@ -157,7 +161,7 @@ public class ElsticHistogramSubAggregation extends ElasticSubAggregation impleme
 	}
 	
 	@Override
-	public ElasticSubAggregation and() {
+	public SubAggregation and() {
 		return parentAggregation;
 	}
 }

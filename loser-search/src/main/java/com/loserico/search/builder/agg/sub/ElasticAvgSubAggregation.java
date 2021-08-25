@@ -13,9 +13,9 @@ import org.elasticsearch.search.aggregations.AggregationBuilders;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
-public class ElasticAvgSubAggregation extends ElasticSubAggregation {
+public class ElasticAvgSubAggregation extends SubAggregation {
 	
-	private ElasticSubAggregation parentAggregation;
+	private SubAggregation parentAggregation;
 	
 	/**
 	 * 聚合名字
@@ -32,7 +32,7 @@ public class ElasticAvgSubAggregation extends ElasticSubAggregation {
 		this.field = field;
 	}
 	
-	public ElasticAvgSubAggregation(ElasticSubAggregation parentAggregation, String name, String field) {
+	public ElasticAvgSubAggregation(SubAggregation parentAggregation, String name, String field) {
 		this.parentAggregation = parentAggregation;
 		this.name = name;
 		this.field = field;
@@ -44,7 +44,7 @@ public class ElasticAvgSubAggregation extends ElasticSubAggregation {
 	}
 	
 	@Override
-	public ElasticSubAggregation and() {
+	public SubAggregation and() {
 		return parentAggregation;
 	}
 }

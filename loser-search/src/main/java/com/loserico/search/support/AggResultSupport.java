@@ -1,6 +1,7 @@
 package com.loserico.search.support;
 
 import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.histogram.InternalDateHistogram;
@@ -13,6 +14,7 @@ import org.elasticsearch.search.aggregations.metrics.InternalCardinality;
 import org.elasticsearch.search.aggregations.metrics.InternalMax;
 import org.elasticsearch.search.aggregations.metrics.InternalMin;
 import org.elasticsearch.search.aggregations.metrics.InternalSum;
+import org.elasticsearch.search.aggregations.metrics.InternalTopHits;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -107,7 +109,7 @@ public final class AggResultSupport {
 				Long docCount = bucket.getDocCount();
 				log.debug("Bucket: {}, Doc Count: {}", key, docCount);
 				result.put(key, (T) docCount);
-				
+				//没有子聚合的话subAggs也不会为null, 可以放心使用
 				Aggregations subAggs = bucket.getAggregations();
 				for (Aggregation subAgg : subAggs) {
 					result.put(subAgg.getName(), aggResult(subAgg));
@@ -174,6 +176,9 @@ public final class AggResultSupport {
 		if (aggregation instanceof InternalAvg) {
 			return (T) aggResult((InternalAvg) aggregation);
 		}
+		if (aggregation instanceof InternalTopHits) {
+			return (T) aggResult((InternalTopHits) aggregation);
+		}
 		
 		return null;
 	}
@@ -230,6 +235,16 @@ public final class AggResultSupport {
 	 */
 	private static Double aggResult(InternalAvg aggregation) {
 		return aggregation.getValue();
+	}
+	
+	/**
+	 * 负责处理Top Hits聚合的结果
+	 * @param aggregation
+	 * @return
+	 */
+	private static List<Map<String, Object>> aggResult(InternalTopHits aggregation) {
+		SearchHits hits = aggregation.getHits();
+		return SearchHitsSupport.toList(hits.getHits(), Map.class);
 	}
 	
 	public static Double avgResult(Aggregations aggregations) {

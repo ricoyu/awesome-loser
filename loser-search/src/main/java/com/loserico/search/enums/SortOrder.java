@@ -3,6 +3,7 @@ package com.loserico.search.enums;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.search.aggregations.BucketOrder;
+import org.elasticsearch.search.aggregations.metrics.TopHitsAggregationBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 
 /**
@@ -45,6 +46,18 @@ public class SortOrder {
 			builder.addSort(SortBuilders.scoreSort().order(direction.toSortOrder()));
 		} else if (sortType == SortType.FIELD) {
 			builder.addSort(SortBuilders.fieldSort(field).order(direction.toSortOrder()));
+		}
+	}
+	
+	/**
+	 * 为TopHitsAggregationBuilder添加排序
+	 * @param builder
+	 */
+	public void addTo(TopHitsAggregationBuilder builder) {
+		if (sortType == SortType.SCORE) {
+			builder.sort(SortBuilders.scoreSort().order(direction.toSortOrder()));
+		} else if (sortType == SortType.FIELD) {
+			builder.sort(SortBuilders.fieldSort(field).order(direction.toSortOrder()));
 		}
 	}
 	

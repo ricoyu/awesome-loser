@@ -1,6 +1,6 @@
 package com.loserico.search.builder.agg;
 
-import com.loserico.search.builder.agg.sub.ElasticSubAggregation;
+import com.loserico.search.builder.agg.sub.SubAggregation;
 
 /**
  * 表示具有添加子聚合的能力
@@ -20,6 +20,6 @@ public interface SubAggregatable {
 	 * @param subAggregation
 	 * @return
 	 */
-	public ElasticAggregationBuilder subAggregation(ElasticSubAggregation subAggregation);
+	public ElasticAggregationBuilder subAggregation(SubAggregation subAggregation);
 	
 }

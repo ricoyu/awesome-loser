@@ -17,14 +17,14 @@ import java.util.List;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
-public abstract class ElasticSubAggregation {
+public abstract class SubAggregation {
 	
 	/**
 	 * 这里表示aggregationBuilder的子聚合
 	 */
-	protected final List<ElasticSubAggregation> subAggregations = new ArrayList<>();
+	protected final List<SubAggregation> subAggregations = new ArrayList<>();
 	
-	public ElasticSubAggregation() {
+	public SubAggregation() {
 		
 	}
 	
@@ -34,5 +34,10 @@ public abstract class ElasticSubAggregation {
 	 */
 	public abstract AggregationBuilder build();
 	
-	public abstract ElasticSubAggregation and();
+	/**
+	 * 在子聚合中嵌套子聚合时, API调用可以通过and()返回上一次的子聚合, <br/>
+	 * 然后上一级的子聚合可以继续添加子聚合
+	 * @return SubAggregation
+	 */
+	public abstract SubAggregation and();
 }

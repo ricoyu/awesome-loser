@@ -245,4 +245,17 @@ public class ElasticAggsTest {
 		
 		System.out.println(toPrettyJson(results));
 	}
+	
+	@Test
+	public void testElasticTopHitsSubAggregation() {
+		List<Map<String, Object>> resultMap = Aggs.terms("flow_*")
+				.of("agg_data", "tags")
+				.subAggregation(ElasticSubAggregations.topHits("top_hits")
+						.sort("-timestamp")
+						.size(2)
+						.includeSources("tags", "status", "in_bytes", "speed", "type"))
+				.get();
+		
+		log.info(toPrettyJson(resultMap));
+	}
 }

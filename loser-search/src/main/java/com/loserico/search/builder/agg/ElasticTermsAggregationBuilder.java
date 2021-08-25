@@ -1,6 +1,6 @@
 package com.loserico.search.builder.agg;
 
-import com.loserico.search.builder.agg.sub.ElasticSubAggregation;
+import com.loserico.search.builder.agg.sub.SubAggregation;
 import com.loserico.search.builder.query.BaseQueryBuilder;
 import com.loserico.search.enums.SortOrder;
 import com.loserico.search.support.AggResultSupport;
@@ -148,7 +148,7 @@ public class ElasticTermsAggregationBuilder extends AbstractAggregationBuilder i
 	}
 	
 	@Override
-	public ElasticTermsAggregationBuilder subAggregation(ElasticSubAggregation subAggregation) {
+	public ElasticTermsAggregationBuilder subAggregation(SubAggregation subAggregation) {
 		subAggregations.add(subAggregation);
 		return this;
 	}
