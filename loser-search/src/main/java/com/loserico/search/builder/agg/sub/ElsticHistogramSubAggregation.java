@@ -16,7 +16,7 @@ import java.util.Objects;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
-public class ElsticHistogramSubAggregation extends SubAggregation implements AvgSubAggregatable, TopHitsAggregatable {
+public class ElsticHistogramSubAggregation extends SubAggregation implements AvgSubAggregatable, TopHitsSubAggregatable {
 	
 	private SubAggregation parentAggregation;
 	

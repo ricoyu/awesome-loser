@@ -27,7 +27,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
-public class ElasticDateHistogramSubAggregation extends SubAggregation implements AvgSubAggregatable, TopHitsAggregatable {
+public class ElasticDateHistogramSubAggregation extends SubAggregation implements AvgSubAggregatable, TopHitsSubAggregatable {
 	
 	private SubAggregation parentAggregation;
 	
