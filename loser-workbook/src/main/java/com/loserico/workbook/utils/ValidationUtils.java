@@ -77,6 +77,11 @@ public final class ValidationUtils {
 					return previous[0].compareTo(next[0]);
 				}).collect(toList());
 		
+		if (bindingResult instanceof SimpleBindingResult) {
+			Integer rowNum = ((SimpleBindingResult)bindingResult).getRowNum();
+			return new ErrorMessage(rowNum, errors);
+		}
+		
 		return new ErrorMessage(errors);
 	}
 	
@@ -139,6 +144,8 @@ public final class ValidationUtils {
 	
 	public static class ErrorMessage {
 		
+		private Integer rowNum;
+		
 		private List<String[]> errors;
 		
 		public ErrorMessage() {
@@ -146,6 +153,11 @@ public final class ValidationUtils {
 		}
 		
 		public ErrorMessage(List<String[]> errors) {
+			this.errors = errors;
+		}
+		
+		public ErrorMessage(Integer rowNum, List<String[]> errors) {
+			this.rowNum = rowNum;
 			this.errors = errors;
 		}
 		
@@ -163,6 +175,14 @@ public final class ValidationUtils {
 		
 		public void setErrors(List<String[]> errors) {
 			this.errors = errors;
+		}
+		
+		public Integer getRowNum() {
+			return rowNum;
+		}
+		
+		public void setRowNum(Integer rowNum) {
+			this.rowNum = rowNum;
 		}
 	}
 }

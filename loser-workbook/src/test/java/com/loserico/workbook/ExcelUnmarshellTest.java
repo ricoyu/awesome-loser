@@ -23,6 +23,7 @@ public class ExcelUnmarshellTest {
 				.build();
 		
 		List<SettlementItem> settlementItems = unmarshaller.unmarshall();
+		settlementItems.forEach(System.out::println);
 	}
 	
 	@Test
