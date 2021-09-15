@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.ServletRequest;
 import javax.servlet.http.Cookie;
@@ -53,6 +55,22 @@ public final class ServletUtils {
 	public static final String APPLICATION_JSON_UTF8 = "application/json;charset=UTF-8";
 	
 	public static final String DEFAULT_CHARSET = "UTF-8";
+	
+	/**
+	 * 返回HttpServletRequest对象
+	 * @return
+	 */
+	public static HttpServletRequest request() {
+		return ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+	}
+	
+	/**
+	 * 返回HttpServletResponse对象
+	 * @return
+	 */
+	public static HttpServletResponse response() {
+		return ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getResponse();
+	}
 	
 	/**
 	 * 获取请求头

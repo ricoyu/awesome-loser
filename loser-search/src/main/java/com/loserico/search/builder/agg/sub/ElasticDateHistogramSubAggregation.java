@@ -300,7 +300,7 @@ public class ElasticDateHistogramSubAggregation extends SubAggregation implement
 		} else {
 			aggregationBuilder.timeZone(DateConstants.CHINA.toZoneId());
 		}
-		subAggregations.forEach(subAggregation -> aggregationBuilder.subAggregation(subAggregation.build()));
+		SubAggregationSupport.addSubAggregations(aggregationBuilder, subAggregations);
 		return aggregationBuilder;
 	}
 	

@@ -151,30 +151,6 @@ public class StreamTest {
                 .forEach(obj -> System.out.println(obj.getClass()));
     }
 
-
-    @Test
-    public void testList2MapWithDuplicateKey() {
-        List<Hosting> list = new ArrayList<>();
-        list.add(new Hosting(1, "liquidweb.com", 80000));
-        list.add(new Hosting(2, "linode.com", 90000));
-        list.add(new Hosting(3, "digitalocean.com", 120000));
-        list.add(new Hosting(4, "aws.amazon.com", 200000));
-        list.add(new Hosting(5, "mkyong.com", 1));
-
-        list.add(new Hosting(6, "linode.com", 100000)); // new line
-
-        // key = name, value - websites , but the key 'linode' is duplicated!?
-        //Map<String, Long> result1 = list.stream().collect(toMap(Hosting::getName, Hosting::getWebsites));//java.lang.IllegalStateException: Duplicate key 90000
-        //System.out.println("Result 1 : " + result1);
-
-        //To solve the duplicated key issue above, pass in the third mergeFunction argument like this
-        Map<String, Long> result1 = list.stream()
-                //(oldValue, newValue) -> oldValue ==> If the key is duplicated, do you prefer oldKey or newKey?
-                //.collect(toMap(Hosting::getName, Hosting::getWebsites, (oldValue, newValue) -> oldValue));
-                .collect(toMap(Hosting::getName, Hosting::getWebsites, (oldValue, newValue) -> newValue));
-        System.out.println("Result 1 : " + result1);
-    }
-
     @Test
     public void testList2MapWithSort() {
         List<Hosting> list = new ArrayList<>();

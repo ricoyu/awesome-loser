@@ -179,6 +179,9 @@ public final class AggResultSupport {
 		if (aggregation instanceof InternalTopHits) {
 			return (T) aggResult((InternalTopHits) aggregation);
 		}
+		if (aggregation instanceof InternalSum) {
+			return (T) aggResult((InternalSum) aggregation);
+		}
 		
 		return null;
 	}
@@ -234,6 +237,17 @@ public final class AggResultSupport {
 	 * @return Double
 	 */
 	private static Double aggResult(InternalAvg aggregation) {
+		return aggregation.getValue();
+	}
+	
+	
+	/**
+	 * 负责处理Sum结果
+	 *
+	 * @param aggregation
+	 * @return Map<String, Object>
+	 */
+	private static Double aggResult(InternalSum aggregation) {
 		return aggregation.getValue();
 	}
 	

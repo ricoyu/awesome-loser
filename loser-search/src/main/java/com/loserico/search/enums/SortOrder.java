@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.search.aggregations.BucketOrder;
 import org.elasticsearch.search.aggregations.metrics.TopHitsAggregationBuilder;
+import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 
 /**
@@ -67,6 +68,16 @@ public class SortOrder {
 		}
 		
 		return BucketOrder.count(direction == Direction.ASC);
+	}
+	
+	/**
+	 * BucketSortAggregation 用的排序规则
+	 * @return FieldSortBuilder
+	 */
+	public FieldSortBuilder toFieldSortBuilder() {
+		FieldSortBuilder fieldSortBuilder = new FieldSortBuilder(field);
+		fieldSortBuilder.order(direction == Direction.ASC ? org.elasticsearch.search.sort.SortOrder.ASC : org.elasticsearch.search.sort.SortOrder.DESC);
+		return fieldSortBuilder;
 	}
 	
 	/**

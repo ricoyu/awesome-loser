@@ -4,6 +4,8 @@ import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.search.ElasticRangeQueryBuilder;
 import com.loserico.search.enums.BoolQueryType;
 import com.loserico.search.enums.Direction;
+import com.loserico.search.enums.SortOrder;
+import com.loserico.search.support.SortSupport;
 import lombok.Data;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -127,6 +129,27 @@ public class ElasticBoolQueryBuilder extends BaseQueryBuilder {
 		return existsQueryBuilder;
 	}
 	
+	public ElasticQueryStringBuilder queryString(String queryString) {
+		ElasticQueryStringBuilder queryStringBuilder = new ElasticQueryStringBuilder();
+		queryStringBuilder.query(queryString);
+		ReflectionUtils.setField("boolQueryBuilder", queryStringBuilder, this);
+		return queryStringBuilder;
+	}
+	
+	public ElasticIdsQueryBuilder ids(String... ids) {
+		ElasticIdsQueryBuilder elasticIdsQueryBuilder = new ElasticIdsQueryBuilder();
+		elasticIdsQueryBuilder.ids(ids);
+		ReflectionUtils.setField("boolQueryBuilder", elasticIdsQueryBuilder, this);
+		return elasticIdsQueryBuilder;
+	}
+	
+	public ElasticIdsQueryBuilder ids(List<String> ids) {
+		ElasticIdsQueryBuilder elasticIdsQueryBuilder = new ElasticIdsQueryBuilder();
+		elasticIdsQueryBuilder.ids(ids.stream().toArray(String[]::new));
+		ReflectionUtils.setField("boolQueryBuilder", elasticIdsQueryBuilder, this);
+		return elasticIdsQueryBuilder;
+	}
+	
 	/**
 	 * 数字形式指定 minimum_should_match: 6 <p>
 	 * <p>
@@ -204,7 +227,8 @@ public class ElasticBoolQueryBuilder extends BaseQueryBuilder {
 	 * @return QueryBuilder
 	 */
 	public ElasticBoolQueryBuilder sort(String sort) {
-		super.sort(sort);
+		List<SortOrder> sortOrders = SortSupport.sort(sort);
+		this.sortOrders.addAll(sortOrders);
 		return this;
 	}
 	

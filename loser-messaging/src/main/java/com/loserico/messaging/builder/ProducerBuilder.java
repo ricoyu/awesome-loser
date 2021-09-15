@@ -204,7 +204,7 @@ public class ProducerBuilder extends BaseBuilder {
 	public ProducerBuilder batchSize(Integer batchSize, SizeUnit sizeUnit) {
 		notNull(batchSize, "batchSize cannot be null!");
 		notNull(sizeUnit, "sizeUnit cannot be null!");
-		this.batchSize = sizeUnit.toBytes(batchSize);
+		this.batchSize = ((Long)sizeUnit.toBytes(batchSize.longValue())).intValue();
 		return this;
 	}
 	
@@ -222,7 +222,7 @@ public class ProducerBuilder extends BaseBuilder {
 	public ProducerBuilder bufferMemory(Integer bufferMemory, SizeUnit sizeUnit) {
 		notNull(bufferMemory, "bufferMemory cannot be null!");
 		notNull(sizeUnit, "sizeUnit cannot be null!");
-		this.bufferMemory = sizeUnit.toBytes(bufferMemory);
+		this.bufferMemory = ((Long)sizeUnit.toBytes(bufferMemory.longValue())).intValue();
 		return this;
 	}
 	

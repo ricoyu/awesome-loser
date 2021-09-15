@@ -4,15 +4,15 @@ import com.loserico.search.enums.Direction;
 import com.loserico.search.enums.SortOrder;
 import com.loserico.search.support.SortSupport;
 import org.elasticsearch.common.lucene.search.function.CombineFunction;
-import org.elasticsearch.index.query.MatchPhraseQueryBuilder;
+import org.elasticsearch.index.query.MatchAllQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 
 import java.util.List;
 
 /**
- * 匹配一个短语, 比如查title包含"one love"这个短语, 那么title是"this one love"可以查到, "one I love"是查不到的
  * <p>
- * Copyright: (C), 2021-05-28 9:00
+ * Copyright: (C), 2021-05-07 17:54
  * <p>
  * <p>
  * Company: Sexy Uncle Inc.
@@ -20,41 +20,10 @@ import java.util.List;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
-public class ElasticMatchPhraseQueryBuilder extends BaseQueryBuilder {
+public class ElasticMatchAllQueryBuilder extends BaseQueryBuilder {
 	
-	/**
-	 * 如果查询短语"one love", 那么"One I Love"是查不到的<p>
-	 * 但是如果想宽松一点, 中间允许多一个词也能查到, 可以设置slop=1
-	 */
-	private Integer slop;
-	
-	public ElasticMatchPhraseQueryBuilder(String... indices) {
+	public ElasticMatchAllQueryBuilder(String... indices) {
 		this.indices = indices;
-	}
-	
-	/**
-	 * 设置查询字段, 值
-	 *
-	 * @param field
-	 * @param value
-	 * @return ElasticMatchQueryBuilder
-	 */
-	public ElasticMatchPhraseQueryBuilder query(String field, Object value) {
-		this.field = field;
-		this.value = value;
-		return this;
-	}
-	
-	/**
-	 * 如果查询短语"one love", 那么"One I Love"是查不到的<p>
-	 * 但是如果想宽松一点, 中间允许多一个词也能查到, 可以设置slop=1
-	 * <p>
-	 * @param slop
-	 * @return ElasticMatchPhraseQuery
-	 */
-	public ElasticMatchPhraseQueryBuilder slop(Integer slop) {
-		this.slop = slop;
-		return this;
 	}
 	
 	/**
@@ -64,7 +33,7 @@ public class ElasticMatchPhraseQueryBuilder extends BaseQueryBuilder {
 	 * @param size
 	 * @return ElasticMatchQueryBuilder
 	 */
-	public ElasticMatchPhraseQueryBuilder paging(Integer from, Integer size) {
+	public ElasticMatchAllQueryBuilder paging(Integer from, Integer size) {
 		this.from = from;
 		this.size = size;
 		return this;
@@ -78,7 +47,7 @@ public class ElasticMatchPhraseQueryBuilder extends BaseQueryBuilder {
 	 * @param size
 	 * @return ElasticMatchQueryBuilder
 	 */
-	public ElasticMatchPhraseQueryBuilder size(int size) {
+	public ElasticMatchAllQueryBuilder size(int size) {
 		this.size = size;
 		return this;
 	}
@@ -91,9 +60,9 @@ public class ElasticMatchPhraseQueryBuilder extends BaseQueryBuilder {
 	 * 注意: text类型字段不能排序, 要用field
 	 *
 	 * @param sort
-	 * @return QueryBuilder
+	 * @return ElasticMatchQueryBuilder
 	 */
-	public ElasticMatchPhraseQueryBuilder sort(String sort) {
+	public ElasticMatchAllQueryBuilder sort(String sort) {
 		List<SortOrder> sortOrders = SortSupport.sort(sort);
 		this.sortOrders.addAll(sortOrders);
 		return this;
@@ -105,9 +74,9 @@ public class ElasticMatchPhraseQueryBuilder extends BaseQueryBuilder {
 	 * 参考上面的查询, sort语法是 字段名:asc|desc
 	 *
 	 * @param direction
-	 * @return UriQueryBuilder
+	 * @return ElasticMatchQueryBuilder
 	 */
-	public ElasticMatchPhraseQueryBuilder sort(String field, Direction direction) {
+	public ElasticMatchAllQueryBuilder sort(String field, Direction direction) {
 		notNull(field, "field cannot be null!");
 		notNull(direction, "direction cannot be null!");
 		return sort(field + ":" + direction);
@@ -122,9 +91,9 @@ public class ElasticMatchPhraseQueryBuilder extends BaseQueryBuilder {
 	 * 注意设置了searchAfter就不要设置from了, 只要指定size以及排序就可以了
 	 *
 	 * @param searchAfter
-	 * @return ElasticQueryBuilder
+	 * @return ElasticMatchQueryBuilder
 	 */
-	public ElasticMatchPhraseQueryBuilder searchAfter(Object[] searchAfter) {
+	public ElasticMatchAllQueryBuilder searchAfter(Object[] searchAfter) {
 		this.searchAfter = searchAfter;
 		return this;
 	}
@@ -133,9 +102,9 @@ public class ElasticMatchPhraseQueryBuilder extends BaseQueryBuilder {
 	 * 是否要获取_source
 	 *
 	 * @param fetchSource
-	 * @return QueryBuilder
+	 * @return ElasticMatchQueryBuilder
 	 */
-	public ElasticMatchPhraseQueryBuilder fetchSource(boolean fetchSource) {
+	public ElasticMatchAllQueryBuilder fetchSource(boolean fetchSource) {
 		this.fetchSource = fetchSource;
 		return this;
 	}
@@ -144,9 +113,9 @@ public class ElasticMatchPhraseQueryBuilder extends BaseQueryBuilder {
 	 * 提升或者降低查询的权重
 	 *
 	 * @param boost
-	 * @return QueryBuilder
+	 * @return ElasticMatchQueryBuilder
 	 */
-	public ElasticMatchPhraseQueryBuilder boost(float boost) {
+	public ElasticMatchAllQueryBuilder boost(float boost) {
 		this.boost = boost;
 		return this;
 	}
@@ -161,15 +130,15 @@ public class ElasticMatchPhraseQueryBuilder extends BaseQueryBuilder {
 	 * </ul>
 	 *
 	 * @param boostMode
-	 * @return
+	 * @return ElasticMatchQueryBuilder
 	 */
-	public ElasticMatchPhraseQueryBuilder boostMode(CombineFunction boostMode) {
+	public ElasticMatchAllQueryBuilder boostMode(CombineFunction boostMode) {
 		notNull(boostMode, "boostMode cannot be null!");
 		this.boostMode = boostMode;
 		return this;
 	}
 	
-	public ElasticMatchPhraseQueryBuilder resultType(Class resultType) {
+	public ElasticMatchAllQueryBuilder resultType(Class resultType) {
 		this.resultType = resultType;
 		return this;
 	}
@@ -178,21 +147,20 @@ public class ElasticMatchPhraseQueryBuilder extends BaseQueryBuilder {
 	 * 是否要将Query转为constant_scre query, 以避免算分, 提高查询性能
 	 *
 	 * @param constantScore
-	 * @return ElasticQueryBuilder
+	 * @return ElasticMatchQueryBuilder
 	 */
-	public ElasticMatchPhraseQueryBuilder constantScore(boolean constantScore) {
+	public ElasticMatchAllQueryBuilder constantScore(boolean constantScore) {
 		this.constantScore = constantScore;
 		return this;
 	}
-	
 	
 	/**
 	 * 控制返回自己想要的字段, 而不是整个_source
 	 *
 	 * @param fields
-	 * @return QueryStringBuilder
+	 * @return ElasticMatchQueryBuilder
 	 */
-	public ElasticMatchPhraseQueryBuilder includeSources(String... fields) {
+	public ElasticMatchAllQueryBuilder includeSources(String... fields) {
 		this.includeSource = fields;
 		return this;
 	}
@@ -201,9 +169,9 @@ public class ElasticMatchPhraseQueryBuilder extends BaseQueryBuilder {
 	 * 控制要排除哪些返回的字段, 而不是整个_source
 	 *
 	 * @param fields
-	 * @return QueryStringBuilder
+	 * @return ElasticMatchQueryBuilder
 	 */
-	public ElasticMatchPhraseQueryBuilder excludeSources(String... fields) {
+	public ElasticMatchAllQueryBuilder excludeSources(String... fields) {
 		this.excludeSource = fields;
 		return this;
 	}
@@ -212,9 +180,9 @@ public class ElasticMatchPhraseQueryBuilder extends BaseQueryBuilder {
 	 * 控制返回自己想要的字段, 而不是整个_source
 	 *
 	 * @param fields
-	 * @return ElasticMatchPhraseQueryBuilder
+	 * @return ElasticMatchQueryBuilder
 	 */
-	public ElasticMatchPhraseQueryBuilder includeSources(List<String> fields) {
+	public ElasticMatchAllQueryBuilder includeSources(List<String> fields) {
 		String[] sources = fields.stream().toArray(String[]::new);
 		this.includeSource = sources;
 		return this;
@@ -224,25 +192,40 @@ public class ElasticMatchPhraseQueryBuilder extends BaseQueryBuilder {
 	 * 控制要排除哪些返回的字段, 而不是整个_source
 	 *
 	 * @param fields
-	 * @return ElasticMatchPhraseQueryBuilder
+	 * @return ElasticMatchQueryBuilder
 	 */
-	public ElasticMatchPhraseQueryBuilder excludeSources(List<String> fields) {
+	public ElasticMatchAllQueryBuilder excludeSources(List<String> fields) {
 		String[] sources = fields.stream().toArray(String[]::new);
 		this.excludeSource = sources;
 		return this;
 	}
 	
-	public ElasticMatchPhraseQueryBuilder refresh(boolean refresh) {
+	/**
+	 * 脚本字段查询
+	 * <p>
+	 * doc['email'].value 表示获取_source.email字段的值
+	 *
+	 * @param fieldName
+	 * @param script
+	 * @return ElasticMatchQueryBuilder
+	 */
+	@Override
+	public ElasticMatchAllQueryBuilder scriptField(String fieldName, String script) {
+		super.scriptField(fieldName, script);
+		return this;
+	}
+	
+	public ElasticMatchAllQueryBuilder refresh(boolean refresh) {
 		this.refresh = refresh;
 		return this;
 	}
 	
 	@Override
 	protected QueryBuilder builder() {
-		MatchPhraseQueryBuilder matchPhraseQueryBuilder = new MatchPhraseQueryBuilder(field, value);
-		if (slop != null) {
-			matchPhraseQueryBuilder.slop(slop);
+		MatchAllQueryBuilder matchAllQueryBuilder = new MatchAllQueryBuilder();
+		if (constantScore) {
+			return QueryBuilders.constantScoreQuery(matchAllQueryBuilder);
 		}
-		return matchPhraseQueryBuilder;
+		return matchAllQueryBuilder;
 	}
 }

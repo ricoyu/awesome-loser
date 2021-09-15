@@ -131,7 +131,7 @@ local logout = function(token)
     if (not username) then
         return false
     end
-
+    local loginInfo = redis.call("HGET", AUTH_TOKEN_LOGIN_INFO_HASH, token)
     -- 执行登出清理操作
     doLogout(token)
 
@@ -139,6 +139,7 @@ local logout = function(token)
     message["username"] = username
     message["token"] = token
     message["timestamp"] = currentTimestamp()
+    message["loginInfo"] = loginInfo
     --publish一条消息, 方便后端程序记录用户的离线状态
     redis.call("PUBLISH", AUTH_LOGOUT_CHANNEL, cjson.encode(message))
 

@@ -1,6 +1,8 @@
 package com.loserico.search.builder.query;
 
 import com.loserico.search.enums.Direction;
+import com.loserico.search.enums.SortOrder;
+import com.loserico.search.support.SortSupport;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.common.lucene.search.function.CombineFunction;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -205,10 +207,15 @@ public final class ElasticTermQueryBuilder extends BaseQueryBuilder {
 	 * @return ElasticTermQueryBuilder
 	 */
 	public ElasticTermQueryBuilder sort(String sort) {
-		super.sort(sort);
+		List<SortOrder> sortOrders = SortSupport.sort(sort);
+		this.sortOrders.addAll(sortOrders);
 		return this;
 	}
 	
+	public ElasticTermQueryBuilder refresh(boolean refresh) {
+		this.refresh = refresh;
+		return this;
+	}
 	
 	@Override
 	protected QueryBuilder builder() {

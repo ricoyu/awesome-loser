@@ -1,12 +1,15 @@
 package com.loserico.search.builder.query;
 
 import com.loserico.search.enums.Direction;
+import com.loserico.search.enums.SortOrder;
+import com.loserico.search.support.SortSupport;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.common.lucene.search.function.CombineFunction;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.TermsQueryBuilder;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -40,6 +43,19 @@ public final class ElasticTermsQueryBuilder extends BaseQueryBuilder {
 	public ElasticTermsQueryBuilder query(String field, Object... values) {
 		this.field = field;
 		this.values = values;
+		return this;
+	}
+	
+	/**
+	 * 设置查询字段, 值
+	 * @param field
+	 * @param values
+	 * @return ElasticTermsQueryBuilder
+	 */
+	public ElasticTermsQueryBuilder query(String field, Collection values) {
+		notNull(values, "values cannot be null!");
+		this.field = field;
+		this.values = values.stream().toArray();
 		return this;
 	}
 	
@@ -207,7 +223,13 @@ public final class ElasticTermsQueryBuilder extends BaseQueryBuilder {
 	 * @return ElasticTermsQueryBuilder
 	 */
 	public ElasticTermsQueryBuilder sort(String sort) {
-		super.sort(sort);
+		List<SortOrder> sortOrders = SortSupport.sort(sort);
+		this.sortOrders.addAll(sortOrders);
+		return this;
+	}
+	
+	public ElasticTermsQueryBuilder refresh(boolean refresh) {
+		this.refresh = refresh;
 		return this;
 	}
 	

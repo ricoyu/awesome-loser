@@ -136,7 +136,7 @@ public class IOUtils {
 		String suffix = FilenameUtils.getExtension(fileName);
 		try {
 			Path destPath = tempFile(suffix).toPath();
-			Files.copy(sourcePath, destPath, REPLACE_EXISTING);
+			Files.copy(toByteArrayInputStream(sourcePath.toFile()), destPath, REPLACE_EXISTING);
 			return destPath;
 		} catch (IOException e) {
 			log.error("Failed to copy file {} ", fileName);

@@ -1,8 +1,11 @@
 package com.loserico.common.lang.utils;
 
+import com.loserico.common.lang.enums.SizeUnit;
+import com.loserico.common.lang.exception.FileCopyException;
 import com.loserico.common.lang.exception.IORuntimeException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.core.io.Resource;
@@ -1390,6 +1393,7 @@ public class IOUtils {
 	
 	/**
 	 * 检查文件名是否出现了不允许出现的特殊字符
+	 *
 	 * @param filename
 	 * @return
 	 */
@@ -1399,5 +1403,205 @@ public class IOUtils {
 		}
 		
 		return INVALID_FILENAME_PATTERN.matcher(filename).matches();
+	}
+	
+	/**
+	 * 检查文件大小始否超过阈值
+	 *
+	 * @param data 文件的byte数组
+	 * @param size 限制文件大小不能拆过size
+	 * @param unit 单位, gb, g, mb, m, kb, k,
+	 * @return boolean
+	 */
+	public static boolean isExceedLimitSize(byte[] data, long size, String unit) {
+		requireNonNull(data, "data cannot be null!");
+		SizeUnit sizeUnit = SizeUnit.parse(unit);
+		if (sizeUnit == null) {
+			return false;
+		}
+		
+		long limitBytes = sizeUnit.toBytes(size);
+		return data.length > limitBytes;
+	}
+	
+	/**
+	 * 检查文件大小始否超过阈值
+	 *
+	 * @param file 文件
+	 * @param size 限制文件大小不能拆过size
+	 * @param unit 单位, gb, g, mb, m, kb, k,
+	 * @return boolean
+	 */
+	public static boolean isExceedLimitSize(File file, long size, String unit) {
+		requireNonNull(file, "data cannot be null!");
+		if (!file.exists()) {
+			return false;
+		}
+		
+		byte[] data;
+		try {
+			data = Files.readAllBytes(file.toPath());
+		} catch (IOException e) {
+			log.error("", e);
+			throw new IORuntimeException(e);
+		}
+		SizeUnit sizeUnit = SizeUnit.parse(unit);
+		if (sizeUnit == null) {
+			return false;
+		}
+		
+		long limitBytes = sizeUnit.toBytes(size);
+		return data.length > limitBytes;
+	}
+	
+	/**
+	 * 检查文件大小始否超过阈值
+	 *
+	 * @param fileSize 文件大小(bytes数)
+	 * @param size     限制文件大小不能拆过size
+	 * @param unit     单位, gb, g, mb, m, kb, k,
+	 * @return boolean
+	 */
+	public static boolean isExceedLimitSize(long fileSize, long size, String unit) {
+		SizeUnit sizeUnit = SizeUnit.parse(unit);
+		if (sizeUnit == null) {
+			return false;
+		}
+		
+		long limitBytes = sizeUnit.toBytes(size);
+		return fileSize > limitBytes;
+	}
+	
+	/**
+	 * 检查文件大小在给定的范围内
+	 *
+	 * @param data           文件的byte数组
+	 * @param lowerBound     文件大小下限, 必须>=lowerBound
+	 * @param lowerBoundUnit 单位, k kb m mb g gb
+	 * @param upperBound     文件大小上限, 必须<=lowerBound
+	 * @param upperBoundUnit 单位, k kb m mb g gb
+	 * @return boolean
+	 */
+	public static boolean isBetweenLimitSize(byte[] data, long lowerBound, String lowerBoundUnit, long upperBound, String upperBoundUnit) {
+		requireNonNull(data, "data cannot be null!");
+		return isBetweenLimitSize(data.length, lowerBound, lowerBoundUnit, upperBound, upperBoundUnit);
+	}
+	
+	/**
+	 * 检查文件大小始否超过阈值
+	 *
+	 * @param file           文件
+	 * @param lowerBound     文件大小下限, 必须>=lowerBound
+	 * @param lowerBoundUnit 单位, k kb m mb g gb
+	 * @param upperBound     文件大小上限, 必须<=lowerBound
+	 * @param upperBoundUnit 单位, k kb m mb g gb
+	 * @return boolean
+	 */
+	public static boolean isBetweenLimitSize(File file, long lowerBound, String lowerBoundUnit, long upperBound, String upperBoundUnit) {
+		requireNonNull(file, "data cannot be null!");
+		if (!file.exists()) {
+			return false;
+		}
+		
+		byte[] data;
+		try {
+			data = Files.readAllBytes(file.toPath());
+		} catch (IOException e) {
+			log.error("", e);
+			throw new IORuntimeException(e);
+		}
+		
+		return isBetweenLimitSize(data.length, lowerBound, lowerBoundUnit, upperBound, upperBoundUnit);
+	}
+	
+	/**
+	 * 检查文件大小始否超过阈值
+	 *
+	 * @param fileSize       文件大小(bytes数)
+	 * @param lowerBound     文件大小下限, 必须>=lowerBound
+	 * @param lowerBoundUnit 单位, k kb m mb g gb
+	 * @param upperBound     文件大小上限, 必须<=lowerBound
+	 * @param upperBoundUnit 单位, k kb m mb g gb
+	 * @return boolean
+	 */
+	public static boolean isBetweenLimitSize(long fileSize, long lowerBound, String lowerBoundUnit, long upperBound, String upperBoundUnit) {
+		SizeUnit lowerBoundSizeUnit = SizeUnit.parse(lowerBoundUnit);
+		
+		long lowerBoundBytes = lowerBoundSizeUnit.toBytes(lowerBound);
+		if (fileSize < lowerBoundBytes) {
+			return false;
+		}
+		
+		SizeUnit upperBoundSizeUnit = SizeUnit.parse(upperBoundUnit);
+		long upperBoundBytes = lowerBoundSizeUnit.toBytes(upperBound);
+		if (fileSize > upperBoundBytes) {
+			return false;
+		}
+		
+		return true;
+	}
+	
+	/**
+	 * 拷贝文件到临时目录下, 如果sourceFileName在磁盘上存在, 先读磁盘上; 如果在磁盘上不存在, 尝试读Jar文件中的
+	 * @param sourceFileName
+	 * @return Path 拷贝后得到的文件
+	 */
+	public static Path fileCopy(String sourceFileName) {
+		Objects.requireNonNull(sourceFileName);
+		Path sourcePath = Paths.get(sourceFileName);
+		if (sourcePath.toFile().exists()) {
+			return fileCopy(sourcePath);
+		}
+		
+		InputStream inputStream = readClasspathFileAsInputStream(sourceFileName);
+		return fileCopy(inputStream, FilenameUtils.getExtension(sourceFileName));
+	}
+	
+	/**
+	 * 拷贝一个磁盘上的文件到临时目录下, classpath下的文件本方法不适用
+	 * @param sourcePath
+	 * @return Path
+	 */
+	public static Path fileCopy(Path sourcePath) {
+		Objects.requireNonNull(sourcePath);
+		String fileName = sourcePath.getFileName().toString();
+		String suffix = FilenameUtils.getExtension(fileName);
+		try {
+			Path destPath = tempFile(suffix).toPath();
+			Files.copy(sourcePath, destPath, REPLACE_EXISTING);
+			return destPath;
+		} catch (IOException e) {
+			log.error("Failed to copy file {} ", fileName);
+			throw new FileCopyException(e);
+		}
+	}
+	
+	/**
+	 * 拷贝一个InputStream代表的文件到临时目录下
+	 * @param in
+	 * @param suffix
+	 * @return Path
+	 */
+	public static Path fileCopy(InputStream in, String suffix) {
+		Objects.requireNonNull(in);
+		try {
+			Path destPath = tempFile(suffix).toPath();
+			Files.copy(in, destPath, REPLACE_EXISTING);
+			return destPath;
+		} catch (IOException e) {
+			log.error("Failed to copy file ");
+			throw new FileCopyException(e);
+		}
+	}
+	
+	/**
+	 * 返回文件名后缀 <pre> foo.txt --&gt; "txt" a/b/c.jpg --&gt; "jpg" a/b.txt/c
+	 * --&gt; "" a/b/c --&gt; "" </pre>
+	 *
+	 * @param filename
+	 * @return
+	 */
+	public static String fileExtension(String filename) {
+		return FilenameUtils.getExtension(filename);
 	}
 }

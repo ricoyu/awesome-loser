@@ -1,6 +1,8 @@
 package com.loserico.search.builder.query;
 
 import com.loserico.search.enums.Direction;
+import com.loserico.search.enums.SortOrder;
+import com.loserico.search.support.SortSupport;
 import org.elasticsearch.common.lucene.search.function.CombineFunction;
 import org.elasticsearch.index.query.MatchAllQueryBuilder;
 import org.elasticsearch.index.query.MatchQueryBuilder;
@@ -154,7 +156,8 @@ public class ElasticMatchQueryBuilder extends BaseQueryBuilder implements MatchQ
 	 * @return ElasticMatchQueryBuilder
 	 */
 	public ElasticMatchQueryBuilder sort(String sort) {
-		super.sort(sort);
+		List<SortOrder> sortOrders = SortSupport.sort(sort);
+		this.sortOrders.addAll(sortOrders);
 		return this;
 	}
 	
@@ -302,6 +305,11 @@ public class ElasticMatchQueryBuilder extends BaseQueryBuilder implements MatchQ
 	@Override
 	public ElasticMatchQueryBuilder scriptField(String fieldName, String script) {
 		super.scriptField(fieldName, script);
+		return this;
+	}
+	
+	public ElasticMatchQueryBuilder refresh(boolean refresh) {
+		this.refresh = refresh;
 		return this;
 	}
 	

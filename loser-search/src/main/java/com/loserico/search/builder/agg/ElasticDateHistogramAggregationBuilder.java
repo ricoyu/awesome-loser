@@ -2,6 +2,7 @@ package com.loserico.search.builder.agg;
 
 import com.loserico.common.lang.constants.DateConstants;
 import com.loserico.search.builder.agg.sub.SubAggregation;
+import com.loserico.search.builder.agg.sub.SubAggregationSupport;
 import com.loserico.search.builder.query.BaseQueryBuilder;
 import com.loserico.search.enums.CalendarInterval;
 import com.loserico.search.enums.FixedInterval;
@@ -313,7 +314,7 @@ public class ElasticDateHistogramAggregationBuilder extends AbstractAggregationB
 		} else {
 			aggregationBuilder.timeZone(DateConstants.CHINA.toZoneId());
 		}
-		subAggregations.forEach(subAggregation -> aggregationBuilder.subAggregation(subAggregation.build()));
+		SubAggregationSupport.addSubAggregations(aggregationBuilder, subAggregations);
 		return aggregationBuilder;
 	}
 	

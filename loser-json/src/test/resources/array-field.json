@@ -1,0 +1,26 @@
+{
+  "dns_grouped_A": [
+    "180.101.49.11",
+    "180.101.49.12"
+  ],
+  "dns_answers": [
+    {
+      "rrname": "www.baidu.com",
+      "rrtype": "CNAME",
+      "ttl": 600,
+      "rdata": "www.a.shifen.com"
+    },
+    {
+      "rrname": "www.a.shifen.com",
+      "rrtype": "A",
+      "ttl": 600,
+      "rdata": "180.101.49.11"
+    },
+    {
+      "rrname": "www.a.shifen.com",
+      "rrtype": "A",
+      "ttl": 600,
+      "rdata": "180.101.49.12"
+    }
+  ]
+}

@@ -37,6 +37,7 @@ import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -300,7 +301,8 @@ public class ExcelUtils {
 	 * @on
 	 */
 	public static Path write2Excel(String template, String sheetName, List<?> pojos) {
-		return write2Excel(template, sheetName, null, pojos);
+		Path newFile = com.loserico.common.lang.utils.IOUtils.fileCopy(template);
+		return doWrite2Excel(newFile, sheetName, null, pojos);
 	}
 
 	/**
@@ -335,7 +337,7 @@ public class ExcelUtils {
 	 * @return
 	 */
 	public static Path write2Excel(String template, String sheetName, String targetFileName, List<?> pojos) {
-		Path newFile = IOUtils.fileCopy(template);
+		Path newFile = com.loserico.common.lang.utils.IOUtils.fileCopy(template);
 		return doWrite2Excel(newFile, sheetName, targetFileName, pojos);
 	}
 
@@ -348,9 +350,8 @@ public class ExcelUtils {
 	 * @param pojos
 	 * @return
 	 */
-	public static Path write2Excel(String template, String sheetName, String targetFileName, List<?> pojos,
-	                               String targetDir) {
-		Path newFile = IOUtils.fileCopy(template);
+	public static Path write2Excel(String template, String sheetName, String targetFileName, List<?> pojos, String targetDir) {
+		Path newFile = com.loserico.common.lang.utils.IOUtils.fileCopy(template);
 		Path targetDirPath = Paths.get(targetDir);
 		Path filePath = doWrite2Excel(newFile, sheetName, targetFileName, pojos);
 		if (!targetDirPath.toFile().exists()) {
@@ -407,18 +408,33 @@ public class ExcelUtils {
 	 * @param template
 	 * @param sheetIndex
 	 * @param pojos
+	 * @return
+	 */
+	public static Path write2Excel(String template, int sheetIndex, List<?> pojos) {
+		Path newFile = com.loserico.common.lang.utils.IOUtils.fileCopy(template);
+		Path filePath = doWrite2Excel(newFile, sheetIndex, null, pojos);
+		return filePath;
+	}
+
+	/**
+	 * 写Excel到指定的目录下, 文件名前缀是targetFileName, 后面带上随机字符串
+	 *
+	 * @param template
+	 * @param sheetIndex
+	 * @param pojos
 	 * @param targetDir
 	 * @return
 	 */
 	public static Path write2Excel(String template, int sheetIndex, List<?> pojos, String targetDir) {
-		Path templatePath = Paths.get(template);
+		Path templatePath = com.loserico.common.lang.utils.IOUtils.fileCopy(template);
 		Path targetDirPath = Paths.get(targetDir);
-		Path filePath = write2Excel(templatePath, sheetIndex, pojos, targetDirPath);
+		Path path = doWrite2Excel(templatePath, sheetIndex, null, pojos);
+		
 		if (!targetDirPath.toFile().exists()) {
 			targetDirPath.toFile().mkdirs();
 		}
-		Path realPath = targetDirPath.resolve(filePath.getFileName());
-		IOUtils.copy(filePath, realPath, REPLACE_EXISTING);
+		Path realPath = targetDirPath.resolve(path.getFileName());
+		IOUtils.copy(path, realPath, REPLACE_EXISTING);
 		return realPath;
 	}
 
@@ -1116,6 +1132,13 @@ public class ExcelUtils {
 				return DateUtils.format((LocalDateTime) value, "yyyy-M-d HH:mm:ss");
 			}
 			return DateUtils.format((LocalDateTime) value, dateFormat);
+		}
+
+		if (value instanceof Date) {
+			if (dateFormat == null) {
+				return DateUtils.format((Date) value, "yyyy-M-d HH:mm:ss");
+			}
+			return DateUtils.format((Date) value, dateFormat);
 		}
 
 		return null;

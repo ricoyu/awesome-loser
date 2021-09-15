@@ -35,6 +35,9 @@ import static org.junit.Assert.*;
 @Slf4j
 public class DateUtilsTest {
 	
+	public static void main(String[] args) {
+		System.out.println(new Date(1629885814471L));
+	}
 	@Test
 	public void testDate() {
 		System.out.println(new Date(1629045321942L));

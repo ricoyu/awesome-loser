@@ -1,7 +1,9 @@
 package com.loserico.search;
 
 import com.loserico.common.lang.utils.ReflectionUtils;
+import com.loserico.search.builder.agg.sub.SubAggregations;
 import com.loserico.search.builder.query.ElasticTermQueryBuilder;
+import com.loserico.search.vo.ElasticPage;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -137,17 +139,76 @@ public class AggTest {
 	
 	@Test
 	public void testMultiTerms() {
-		ElasticUtils.Aggs.multiTerms("event_2021-01-27")
-				.of("multi_terms_agg", "name", "age")
+		List<Map<String, Object>> results = ElasticUtils.Aggs.multiTerms("event_*")
+				.of("multi_terms_agg", "src_ip", "src_port")
 				.get();
+		
+		results.forEach(result -> System.out.println(toPrettyJson(result)));
+	}
+	
+	@Test
+	public void testMultiTermsBucketSort() {
+		List<Map<String, Object>> results = ElasticUtils.Aggs.multiTerms("event_*")
+				.of("multi_terms_agg", "src_ip", "src_port")
+				.get();
+		
+		ElasticPage page = ElasticUtils.Aggs.multiTerms("event_*")
+				.of("multi_terms_agg", "src_ip", "src_port")
+				.sort("-count")
+				.subAggregation(SubAggregations.bucketSort("multi_terms_sort")
+						.paging(0, 5))
+				.getPage();
+		page.setTotalCount(results.size());
+		log.info("第{}页, 每页{}条, 总共{}条", page.getCurrentPage(), page.getPageSize(), page.getTotalCount());
+		page.getResults().forEach((result) -> System.out.println(toPrettyJson(result)));
+		
+		
+		
+		page = ElasticUtils.Aggs.multiTerms("event_*")
+				.of("multi_terms_agg", "src_ip", "src_port")
+				.sort("-count")
+				.subAggregation(SubAggregations.bucketSort("multi_terms_sort")
+						.paging(5, 5))
+				.getPage();
+		page.setTotalCount(results.size());
+		log.info("第{}页, 每页{}条, 总共{}条", page.getCurrentPage(), page.getPageSize(), page.getTotalCount());
+		page.getResults().forEach((result) -> System.out.println(toPrettyJson(result)));
 	}
 	
 	@Test
 	public void testTerms() {
-		List<Map<String, Object>> maps = ElasticUtils.Aggs.terms("event_2021-01-27")
-				.of("terms_agg", "killchain_stage")
+		List<Map<String, Object>> maps = ElasticUtils.Aggs.terms("event_*")
+				.of("src_ip_term", "src_ip")
+				.sort("count")
 				.get();
 		
 		System.out.println(toJson(maps));
+	}
+	
+	@Test
+	public void testTermsPage() {
+		ElasticPage page = ElasticUtils.Aggs.terms("event_*")
+				.of("src_ip_term", "src_ip")
+				.sort("count:desc")
+				.subAggregation(SubAggregations.bucketSort("src_ip_term_sort")
+						.paging(0, 4))
+				.getPage();
+		
+		List<Map<String, Object>> results = ElasticUtils.Aggs.terms("netlog_2021-07-16")
+				.of("src_ip_term", "src_ip")
+				.get();
+		page.setTotalCount(results.size());
+		log.info("第{}页, 每页{}条, 总共{}条", page.getCurrentPage(), page.getPageSize(), page.getTotalCount());
+		page.getResults().forEach((result) -> System.out.println(toPrettyJson(result)));
+		
+		page = ElasticUtils.Aggs.terms("event_*")
+				.of("src_ip_term", "src_ip")
+				.sort("count:desc")
+				.subAggregation(SubAggregations.bucketSort("src_ip_term_sort")
+						.paging(4, 4))
+				.getPage();
+		page.setTotalCount(results.size());
+		log.info("第{}页, 每页{}条, 总共{}条", page.getCurrentPage(), page.getPageSize(), page.getTotalCount());
+		page.getResults().forEach((result) -> System.out.println(toPrettyJson(result)));
 	}
 }

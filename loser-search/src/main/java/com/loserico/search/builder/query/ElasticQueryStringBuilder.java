@@ -1,6 +1,8 @@
 package com.loserico.search.builder.query;
 
 import com.loserico.search.enums.Direction;
+import com.loserico.search.enums.SortOrder;
+import com.loserico.search.support.SortSupport;
 import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -23,7 +25,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
-public class ElasticQueryStringBuilder extends BaseQueryBuilder {
+public class ElasticQueryStringBuilder extends BaseQueryBuilder implements BoolQueryStringQuery{
 	
 	/**
 	 * 指定查询的字段
@@ -85,6 +87,9 @@ public class ElasticQueryStringBuilder extends BaseQueryBuilder {
 	 * 如果要提高查询的精准度, 只想查到同时包含"Last Christmas"的title, 可以设置operator为AND
 	 */
 	protected Operator operator;
+	
+	public ElasticQueryStringBuilder() {
+	}
 	
 	public ElasticQueryStringBuilder(String... indices) {
 		notNull(indices, "indices cannot be null!");
@@ -165,7 +170,8 @@ public class ElasticQueryStringBuilder extends BaseQueryBuilder {
 	 * @return QueryStringBuilder
 	 */
 	public ElasticQueryStringBuilder sort(String sort) {
-		super.sort(sort);
+		List<SortOrder> sortOrders = SortSupport.sort(sort);
+		this.sortOrders.addAll(sortOrders);
 		return this;
 	}
 	

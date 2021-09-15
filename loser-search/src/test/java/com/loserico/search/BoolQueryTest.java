@@ -36,11 +36,10 @@ public class BoolQueryTest {
 	@Test
 	public void testBoolMatch() {
 		List<Object> events = ElasticUtils.Query.bool("event")
-				.match("alert_risk_level", "medium").should()
+				.match("alert_risk_level", "medium").mustNot()
 				.range("datetime").gte(1623134434000L).lte(1623134434000L).must()
-				.term("alert_category", "web-attack").filter()
+				.term("alert_category", "web-attack").mustNot()
 				.includeSources("datetime", "alert_risk_level", "src_ip", "dest_ip")
-				//.queryForCount()
 				.queryForList();
 		
 		
@@ -59,5 +58,16 @@ public class BoolQueryTest {
 		log.info("Sort: {}", toPrettyJson(page.getSort()));
 		
 		page.getResults().forEach(System.out::println);
+	}
+	
+	@Test
+	public void testBoolQueryString() {
+		List<Object> results = ElasticUtils.Query.bool("netlog_*")
+				.queryString("dst_port:((NOT 80) OR 10050)").filter()
+				.sort("-dst_port")
+				.includeSources("dst_port")
+				.queryForList();
+		
+		results.forEach(System.out::println);
 	}
 }

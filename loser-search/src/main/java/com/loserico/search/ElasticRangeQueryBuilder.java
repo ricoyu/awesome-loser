@@ -64,6 +64,11 @@ public class ElasticRangeQueryBuilder extends BaseQueryBuilder implements BoolRa
 		return this;
 	}
 	
+	public ElasticRangeQueryBuilder refresh(boolean refresh) {
+		this.refresh = refresh;
+		return this;
+	}
+	
 	@Override
 	protected QueryBuilder builder() {
 		RangeQueryBuilder rangeQueryBuilder = QueryBuilders.rangeQuery(field);

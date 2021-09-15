@@ -11,6 +11,7 @@ import com.loserico.search.builder.ElasticContextSuggestBuilder;
 import com.loserico.search.builder.ElasticMultiGetBuilder;
 import com.loserico.search.builder.ElasticQueryBuilder;
 import com.loserico.search.builder.ElasticSuggestBuilder;
+import com.loserico.search.builder.ElasticUpdateBuilder;
 import com.loserico.search.builder.admin.ClusterSettingBuilder;
 import com.loserico.search.builder.admin.ElasticIndexBuilder;
 import com.loserico.search.builder.admin.ElasticIndexTemplateBuilder;
@@ -30,6 +31,8 @@ import com.loserico.search.builder.agg.ElasticSumAggregationBuilder;
 import com.loserico.search.builder.agg.ElasticTermsAggregationBuilder;
 import com.loserico.search.builder.query.ElasticBoolQueryBuilder;
 import com.loserico.search.builder.query.ElasticExistsQueryBuilder;
+import com.loserico.search.builder.query.ElasticIdsQueryBuilder;
+import com.loserico.search.builder.query.ElasticMatchAllQueryBuilder;
 import com.loserico.search.builder.query.ElasticMatchPhraseQueryBuilder;
 import com.loserico.search.builder.query.ElasticMatchQueryBuilder;
 import com.loserico.search.builder.query.ElasticQueryStringBuilder;
@@ -75,6 +78,7 @@ import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
@@ -237,6 +241,17 @@ public final class ElasticUtils {
 	 * 批量创建文档<p>
 	 * 返回创建结果, 包括成功数量, 失败数量, 失败消息, 成功创建的文档id列表<p>
 	 * 单个bulk请求体的数据量不要太大, 官方建议大于5~15mb
+	 * @param index
+	 * @return ElasticBulkIndexBuilder
+	 */
+	public static ElasticBulkIndexBuilder bulkIndex(String index) {
+		return new ElasticBulkIndexBuilder(index);
+	}
+	
+	/**
+	 * 批量创建文档<p>
+	 * 返回创建结果, 包括成功数量, 失败数量, 失败消息, 成功创建的文档id列表<p>
+	 * 单个bulk请求体的数据量不要太大, 官方建议大于5~15mb
 	 *
 	 * @param index
 	 * @param docs
@@ -389,14 +404,30 @@ public final class ElasticUtils {
 	 * https://www.elastic.co/guide/en/elasticsearch/client/java-rest/7.6/java-rest-high-document-update.html
 	 *
 	 * @param index
+	 * @return ElasticUpdateBuilder
+	 */
+	public static ElasticUpdateBuilder update(String index) {
+		return new ElasticUpdateBuilder(index);
+	}
+	
+	/**
+	 * 更新文档的一部分
+	 * <ol>
+	 * <li/>如果ID对应的文档在ES中还不存在, 那么报错
+	 * <li/>如果docPiece对应的字段在文档中还不存在, 那么在原文档中插入这个字段
+	 * <li/>如果docPiece对应的字段在文档中存在, 并且值不一样, 那么执行更新
+	 * <li/>docPiece对应的字段在文档中存在, 但是值是一样的, 那么不执行更新
+	 * </ol>
+	 * https://www.elastic.co/guide/en/elasticsearch/client/java-rest/7.6/java-rest-high-document-update.html
+	 *
+	 * @param index
 	 * @param id
 	 * @param doc   整篇文档或者文档的一部分
 	 * @return Result 更新结果(更新了? 没更新?)
 	 */
 	public static UpdateResult update(String index, String id, String doc) {
-		UpdateRequestBuilder updateRequestBuilder = client.prepareUpdate(index, ONLY_TYPE, id)
-				.setDoc(doc, XContentType.JSON);
-		logDsl(updateRequestBuilder);
+		UpdateRequestBuilder updateRequestBuilder = client.prepareUpdate(index, ONLY_TYPE, id).setDoc(doc, XContentType.JSON);
+		updateRequestBuilder.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
 		UpdateResponse response = updateRequestBuilder.get();
 		return UpdateResult.from(response);
 	}
@@ -1184,6 +1215,15 @@ public final class ElasticUtils {
 		}
 		
 		/**
+		 * 基于ID列表获取
+		 * @param indices
+		 * @return ElasticIdsQueryBuilder
+		 */
+		public static ElasticIdsQueryBuilder ids(String... indices) {
+			return new ElasticIdsQueryBuilder(indices);
+		}
+		
+		/**
 		 * 指定查询语句, 使用Query String Syntax<p>
 		 * 有多种查询语法
 		 * <ul>
@@ -1227,6 +1267,16 @@ public final class ElasticUtils {
 		 */
 		public static ElasticMatchQueryBuilder matchQuery(String... indices) {
 			return new ElasticMatchQueryBuilder(indices);
+		}
+		
+		/**
+		 * Match All Query
+		 *
+		 * @param indices
+		 * @return ElasticMatchAllQueryBuilder
+		 */
+		public static ElasticMatchAllQueryBuilder matchAllQuery(String... indices) {
+			return new ElasticMatchAllQueryBuilder(indices);
 		}
 		
 		/**

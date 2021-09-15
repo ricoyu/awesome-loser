@@ -15,6 +15,7 @@ public class EnumDeserializer extends JsonDeserializer<Enum> {
 
 	private final Class<? extends Enum> enumType;
 	private Set<String> enumProperties = new HashSet<>();
+	private JsonDeserializer<?> deserializer;
 
 	public EnumDeserializer(Class<? extends Enum> enumType) {
 		this.enumType = enumType;
@@ -23,6 +24,12 @@ public class EnumDeserializer extends JsonDeserializer<Enum> {
 	public EnumDeserializer(Class<? extends Enum> enumType, Set<String> enumProperties) {
 		this.enumType = enumType;
 		this.enumProperties = enumProperties;
+	}
+
+	public EnumDeserializer(Class<? extends Enum> enumType, Set<String> enumProperties, JsonDeserializer<?> deserializer) {
+		this.enumType = enumType;
+		this.enumProperties = enumProperties;
+		this.deserializer = deserializer;
 	}
 
 	/**
@@ -36,12 +43,22 @@ public class EnumDeserializer extends JsonDeserializer<Enum> {
 
 	@Override
 	public Enum deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+		Enum result = toEnum(p);
+		if (result != null) {
+			return result;
+		}
+		
+		return (Enum) deserializer.deserialize(p, ctxt);
+	}
+	
+	private Enum toEnum(JsonParser p) throws IOException {
+		Enum result;
 		JsonToken curr = p.getCurrentToken();
-
+		
 		// Usually should just get string value:
 		if (curr == JsonToken.VALUE_STRING || curr == JsonToken.FIELD_NAME) {
 			final String source = p.getText();
-			Enum result = EnumUtils.lookupEnum(enumType, source);
+			result = EnumUtils.lookupEnum(enumType, source);
 			if (result != null) {
 				return result;
 			}

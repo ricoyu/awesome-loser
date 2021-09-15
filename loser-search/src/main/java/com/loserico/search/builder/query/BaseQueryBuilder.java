@@ -1,11 +1,14 @@
 package com.loserico.search.builder.query;
 
+import com.loserico.common.lang.transformer.Transformers;
 import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.json.jackson.JacksonUtils;
 import com.loserico.search.ElasticUtils;
+import com.loserico.search.cache.ElasticCacheUtils;
 import com.loserico.search.enums.Direction;
 import com.loserico.search.enums.SortOrder;
 import com.loserico.search.enums.SortOrder.SortOrderBuilder;
+import com.loserico.search.exception.DocumentDeleteException;
 import com.loserico.search.support.SearchHitsSupport;
 import com.loserico.search.vo.ElasticPage;
 import lombok.extern.slf4j.Slf4j;
@@ -18,20 +21,20 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilder;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryAction;
+import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.index.reindex.DeleteByQueryRequestBuilder;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.json.JSONObject;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.loserico.common.lang.utils.StringUtils.split;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.elasticsearch.common.lucene.search.function.CombineFunction.MULTIPLY;
 
 /**
@@ -142,6 +145,11 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 	 */
 	protected Object[] searchAfter;
 	
+	/**
+	 * 是否强制刷新
+	 */
+	protected Boolean refresh;
+	
 	public BaseQueryBuilder(String... indices) {
 		notNull(indices, "indices cannot be null!");
 		this.indices = indices;
@@ -172,7 +180,7 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 		return this;
 	}
 	
-	/**
+/*	*//**
 	 * 添加排序规则<p>
 	 * sort格式: 字段1:asc,字段2:desc,字段3<p>
 	 * 其中字段3按升序排(ASC)<p>
@@ -181,15 +189,15 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 	 *
 	 * @param sort
 	 * @return QueryBuilder
-	 */
+	 *//*
 	public BaseQueryBuilder sort(String sort) {
 		if (isBlank(sort)) {
 			return this;
 		}
 		
-		/*
+		*//*
 		 * 先把 name,age:asc,year:desc 这种形式的排序字符串用,拆开
-		 */
+		 *//*
 		String[] sorts = split(sort, ",");
 		for (int i = 0; i < sorts.length; i++) {
 			String s = sorts[i];
@@ -231,7 +239,7 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 		}
 		
 		return this;
-	}
+	}*/
 	
 	/**
 	 * 控制返回自己想要的字段, 而不是整个_source
@@ -420,6 +428,13 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 		}
 		
 		SearchHit hit = hits[0];
+		
+		if (resultType != null && resultType == Map.class) {
+			Map<String, Object> resultMap = hit.getSourceAsMap();
+			resultMap.put("_id", hit.getId());
+			return (T) resultMap;
+		}
+		
 		String source = hit.getSourceAsString();
 		
 		//如果没有source, 就不用管是否要封装成POJO了
@@ -429,7 +444,20 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 		
 		//如果要封装成POJO对象
 		if (ReflectionUtils.isPojo(resultType)) {
-			return (T) JacksonUtils.toObject(source, resultType);
+			//pojo标注了@DocId
+			Field id = ElasticCacheUtils.idField(resultType);
+			boolean hasDocId = id != null;
+			//@DocId标注的字段是String类型
+			boolean isStringId = hasDocId && id.getType() == String.class;
+			T obj = (T) JacksonUtils.toObject(source, resultType);
+			if (hasDocId) {
+				if (isStringId) {
+					ReflectionUtils.setField(id, obj, hit.getId());
+				} else {
+					ReflectionUtils.setField(id, obj, Transformers.convert(hit.getId(), id.getType()));
+				}
+			}
+			return obj;
 		}
 		
 		return (T) source;
@@ -498,11 +526,26 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 	 * @return long 删除的文档数量
 	 */
 	public long delete() {
-		BulkByScrollResponse response = new DeleteByQueryRequestBuilder(ElasticUtils.client, DeleteByQueryAction.INSTANCE)
+		DeleteByQueryRequestBuilder deleteByQueryRequestBuilder = new DeleteByQueryRequestBuilder(ElasticUtils.client, DeleteByQueryAction.INSTANCE)
 				.filter(builder())
-				.source(indices)
-				.get();
-		return response.getDeleted();
+				.source(indices);
+		
+		DeleteByQueryRequest deleteByQueryRequest = new DeleteByQueryRequest(indices);
+		deleteByQueryRequest.setIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN); //要搜索的index不存在时不报错
+		deleteByQueryRequest.setQuery(builder());
+		if (refresh != null && refresh.booleanValue()) {
+			deleteByQueryRequest.setRefresh(true);
+		}
+		
+		BulkByScrollResponse bulkByScrollResponse = null;
+		try {
+			bulkByScrollResponse = ElasticUtils.client.execute(DeleteByQueryAction.INSTANCE, deleteByQueryRequest).get();
+		} catch (Exception e) {
+			log.error("", e);
+			throw new DocumentDeleteException(e);
+		} 
+		
+		return bulkByScrollResponse.getDeleted();
 	}
 	
 	/**

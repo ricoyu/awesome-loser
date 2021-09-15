@@ -70,4 +70,12 @@ public class QueryStringQueryTest {
 		users.forEach(System.out::println);
 	}
 	
+	@Test
+	public void testNotOr() {
+		long count = ElasticUtils.Query.queryString("netlog_*")
+				.query("dst_port:((NOT 80) OR 10050)")
+				.queryForCount();
+		System.out.println(count);
+	}
+	
 }

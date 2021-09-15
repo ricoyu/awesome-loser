@@ -2,6 +2,7 @@ package com.loserico.search;
 
 import org.junit.Test;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -28,5 +29,9 @@ public class DeleteTest {
 				.query("attack_direction", "in_in", "in_out", "out_in")
 				.delete();
 		System.out.println(delete);
+	}
+	
+	public static void main(String[] args) {
+		System.out.println(new Date().getTime());
 	}
 }

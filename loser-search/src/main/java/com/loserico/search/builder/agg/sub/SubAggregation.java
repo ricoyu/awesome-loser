@@ -1,6 +1,6 @@
 package com.loserico.search.builder.agg.sub;
 
-import org.elasticsearch.search.aggregations.AggregationBuilder;
+import org.elasticsearch.search.aggregations.BaseAggregationBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +32,7 @@ public abstract class SubAggregation {
 	 * 真正开始构建Elasticsearch的AggregationBuilder, 子聚合关系都建立起来了
 	 * @return AggregationBuilder
 	 */
-	public abstract AggregationBuilder build();
+	public abstract BaseAggregationBuilder build();
 	
 	/**
 	 * 在子聚合中嵌套子聚合时, API调用可以通过and()返回上一次的子聚合, <br/>

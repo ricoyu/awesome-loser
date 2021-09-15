@@ -155,7 +155,7 @@ public class ElsticHistogramSubAggregation extends SubAggregation implements Avg
 			aggregationBuilder.extendedBounds(minBound, maxBound);
 		}
 		
-		subAggregations.forEach(subAggregation -> aggregationBuilder.subAggregation(subAggregation.build()));
+		SubAggregationSupport.addSubAggregations(aggregationBuilder, subAggregations);
 		
 		return aggregationBuilder;
 	}

@@ -94,7 +94,7 @@ public class ObjectMapperDecorator {
 			                                               final JavaType type,
 			                                               BeanDescription beanDesc,
 			                                               final JsonDeserializer<?> deserializer) {
-				return new EnumDeserializer((Class<Enum<?>>) type.getRawClass(), enumProperties);
+				return new EnumDeserializer((Class<Enum<?>>) type.getRawClass(), enumProperties, deserializer);
 			}
 			
 		});

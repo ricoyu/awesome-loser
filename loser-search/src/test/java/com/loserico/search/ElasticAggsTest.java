@@ -2,7 +2,7 @@ package com.loserico.search;
 
 import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.search.ElasticUtils.Aggs;
-import com.loserico.search.builder.agg.sub.ElasticSubAggregations;
+import com.loserico.search.builder.agg.sub.SubAggregations;
 import com.loserico.search.enums.CalendarInterval;
 import com.loserico.search.enums.FixedInterval;
 import lombok.extern.slf4j.Slf4j;
@@ -22,8 +22,8 @@ import java.util.Map;
 
 import static com.loserico.json.jackson.JacksonUtils.toJson;
 import static com.loserico.json.jackson.JacksonUtils.toPrettyJson;
-import static com.loserico.search.builder.agg.sub.ElasticSubAggregations.avg;
-import static com.loserico.search.builder.agg.sub.ElasticSubAggregations.dateHistogram;
+import static com.loserico.search.builder.agg.sub.SubAggregations.avg;
+import static com.loserico.search.builder.agg.sub.SubAggregations.dateHistogram;
 import static org.elasticsearch.search.aggregations.AggregationBuilders.*;
 
 /**
@@ -78,10 +78,6 @@ public class ElasticAggsTest {
 				.sort("count")
 				.get();
 		System.out.println(toPrettyJson(aggResults1));
-	}
-	
-	public static void main(String[] args) {
-		System.out.println(new Date(1628214321781L));
 	}
 	
 	/**
@@ -189,7 +185,7 @@ public class ElasticAggsTest {
 	public void testSubAgg() {
 		List<Map<String, Object>> resultMap = Aggs.terms("event_2021-08-02")
 				.of("event_engine_agg", "event_engine")
-				.subAggregation(ElasticSubAggregations.histogram("create_time_agg", "create_time")
+				.subAggregation(SubAggregations.histogram("create_time_agg", "create_time")
 						.interval(1000)
 						.minDocCount(0)
 						.extendedBounds(1627874204597L, 1627874204597L))
@@ -250,7 +246,7 @@ public class ElasticAggsTest {
 	public void testElasticTopHitsSubAggregation() {
 		List<Map<String, Object>> resultMap = Aggs.terms("flow_*")
 				.of("agg_data", "tags")
-				.subAggregation(ElasticSubAggregations.topHits("top_hits")
+				.subAggregation(SubAggregations.topHits("top_hits")
 						.sort("-timestamp")
 						.size(2)
 						.includeSources("tags", "status", "in_bytes", "speed", "type"))

@@ -1,9 +1,14 @@
 package com.loserico.search.builder.agg;
 
+import com.loserico.common.lang.vo.Page;
+import com.loserico.search.builder.agg.sub.ElasticBucketSortSubAggregation;
 import com.loserico.search.builder.agg.sub.SubAggregation;
+import com.loserico.search.builder.agg.sub.SubAggregationSupport;
 import com.loserico.search.builder.query.BaseQueryBuilder;
 import com.loserico.search.enums.SortOrder;
 import com.loserico.search.support.AggResultSupport;
+import com.loserico.search.support.SortSupport;
+import com.loserico.search.vo.ElasticPage;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
@@ -12,6 +17,7 @@ import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -43,6 +49,16 @@ public class ElasticTermsAggregationBuilder extends AbstractAggregationBuilder i
 	 * 原理: 每次从Shard上额外多获取数据, 提升准确率
 	 */
 	private Integer shardSize;
+	
+	/**
+	 * 聚合分页的时候计算分页信息
+	 */
+	private Page page;
+	
+	/**
+	 * 要对聚合的KEY或者COUNT排序
+	 */
+	protected List<SortOrder> sortOrders = new ArrayList<>();
 	
 	private ElasticTermsAggregationBuilder(String[] indices) {
 		this.indices = indices;
@@ -114,7 +130,7 @@ public class ElasticTermsAggregationBuilder extends AbstractAggregationBuilder i
 		if (shardSize != null) {
 			aggregationBuilder.shardSize(shardSize);
 		}
-		subAggregations.forEach(subAggregation -> aggregationBuilder.subAggregation(subAggregation.build()));
+		SubAggregationSupport.addSubAggregations(aggregationBuilder, subAggregations);
 		if (!sortOrders.isEmpty()) {
 			if (sortOrders.size() == 1) {
 				aggregationBuilder.order(sortOrders.get(0).toBucketOrder());
@@ -147,15 +163,42 @@ public class ElasticTermsAggregationBuilder extends AbstractAggregationBuilder i
 		return AggResultSupport.termsResult(aggregations);
 	}
 	
+	
+	public ElasticPage getPage() {
+		TermsAggregationBuilder arrregationBuilder = (TermsAggregationBuilder) build();
+		
+		SearchRequestBuilder searchRequestBuilder = searchRequestBuilder();
+		
+		SearchRequestBuilder builder = searchRequestBuilder
+				.addAggregation(arrregationBuilder)
+				.setSize(0);
+		logDsl(builder);
+		SearchResponse searchResponse = builder.get();
+		addTotalHitsToThreadLocal(searchResponse);
+		Aggregations aggregations = searchResponse.getAggregations();
+		
+		List<Map<String, Object>> results = AggResultSupport.termsResult(aggregations);
+		
+		ElasticPage elasticPage = ElasticPage.<Map<String, Object>>builder()
+				.results(results)
+				.build();
+		elasticPage.setPageSize(page.getPageSize());
+		elasticPage.setCurrentPage(page.getCurrentPage());
+		return elasticPage;
+	}
+	
 	@Override
 	public ElasticTermsAggregationBuilder subAggregation(SubAggregation subAggregation) {
+		if (subAggregation instanceof ElasticBucketSortSubAggregation) {
+			this.page = ((ElasticBucketSortSubAggregation)subAggregation).toPage();
+		}
 		subAggregations.add(subAggregation);
 		return this;
 	}
 	
-	@Override
 	public ElasticTermsAggregationBuilder sort(String sort) {
-		super.sort(sort);
+		List<SortOrder> sortOrders = SortSupport.sort(sort);
+		this.sortOrders.addAll(sortOrders);
 		return this;
 	}
 	
