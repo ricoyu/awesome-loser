@@ -121,6 +121,27 @@ public final class AggResultSupport {
 		return aggResults;
 	}
 	
+	/**
+	 * 返回terms聚合总的桶数量
+	 * @param aggregations
+	 * @return Integer
+	 */
+	public static Integer termsTotalBuckets(Aggregations aggregations) {
+		if (aggregations == null) {
+			return 0;
+		}
+		for (Aggregation aggregation : aggregations) {
+			if (aggregation instanceof UnmappedTerms) {
+				log.warn("聚合的字段是一个未映射的字段, 比如enabled=false");
+				continue;
+			}
+			
+			return ((StringTerms) aggregation).getBuckets().size();
+		}
+		
+		return 0;
+	}
+	
 	public static Map<String, Object> histogramResult(Aggregations aggregations) {
 		Map<String, Object> aggResults = new HashMap<>();
 		if (aggregations == null) {

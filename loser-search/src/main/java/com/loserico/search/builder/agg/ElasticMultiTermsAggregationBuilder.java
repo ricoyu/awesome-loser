@@ -1,5 +1,7 @@
 package com.loserico.search.builder.agg;
 
+import com.loserico.common.lang.concurrent.Concurrent;
+import com.loserico.common.lang.concurrent.FutureResult;
 import com.loserico.common.lang.vo.Page;
 import com.loserico.search.builder.agg.sub.ElasticBucketSortSubAggregation;
 import com.loserico.search.builder.agg.sub.SubAggregation;
@@ -142,6 +144,30 @@ public class ElasticMultiTermsAggregationBuilder extends AbstractAggregationBuil
 		return this;
 	}
 	
+	public AggregationBuilder buildWithoutSubAggregations() {
+		TermsAggregationBuilder aggregationBuilder = AggregationBuilders.terms(name);
+		if (size != null) {
+			aggregationBuilder.size(size);
+		}
+		if (shardSize != null) {
+			aggregationBuilder.shardSize(shardSize);
+		}
+		
+		Map<String, Object> params = new HashMap<>();
+		params.put("fields", fields);
+		Script painless = new Script(ScriptType.STORED, null, "multi_fields", params);
+		aggregationBuilder.script(painless);
+		
+		if (!sortOrders.isEmpty()) {
+			if (sortOrders.size() == 1) {
+				aggregationBuilder.order(sortOrders.get(0).toBucketOrder());
+			} else {
+				aggregationBuilder.order(sortOrders.stream().map(SortOrder::toBucketOrder).collect(Collectors.toList()));
+			}
+		}
+		return aggregationBuilder;
+	}
+	
 	@Override
 	public AggregationBuilder build() {
 		TermsAggregationBuilder aggregationBuilder = AggregationBuilders.terms(name);
@@ -192,25 +218,43 @@ public class ElasticMultiTermsAggregationBuilder extends AbstractAggregationBuil
 	}
 	
 	public ElasticPage getPage() {
-		TermsAggregationBuilder arrregationBuilder = (TermsAggregationBuilder) build();
+		FutureResult<Aggregations> totalBucketsResultFuture = Concurrent.submit(() -> {
+			TermsAggregationBuilder arrregationBuilder = (TermsAggregationBuilder) buildWithoutSubAggregations();
+			arrregationBuilder.size(Integer.MAX_VALUE);
+			SearchRequestBuilder searchRequestBuilder = searchRequestBuilder();
+			
+			SearchRequestBuilder builder = searchRequestBuilder
+					.addAggregation(arrregationBuilder)
+					.setSize(0);
+			logDsl(builder);
+			SearchResponse searchResponse = builder.get();
+			return searchResponse.getAggregations();
+		});
 		
-		SearchRequestBuilder searchRequestBuilder = searchRequestBuilder();
+		FutureResult<Aggregations> pagingResultFuture = Concurrent.submit(() -> {
+			TermsAggregationBuilder arrregationBuilder = (TermsAggregationBuilder) build();
+			SearchRequestBuilder searchRequestBuilder = searchRequestBuilder();
+			
+			SearchRequestBuilder builder = searchRequestBuilder
+					.addAggregation(arrregationBuilder)
+					.setSize(0);
+			logDsl(builder);
+			SearchResponse searchResponse = builder.get();
+			return searchResponse.getAggregations();
+		});
+		Concurrent.await();
 		
-		SearchRequestBuilder builder = searchRequestBuilder
-				.addAggregation(arrregationBuilder)
-				.setSize(0);
-		logDsl(builder);
-		SearchResponse searchResponse = builder.get();
-		addTotalHitsToThreadLocal(searchResponse);
-		Aggregations aggregations = searchResponse.getAggregations();
+		Integer totalBucketsCount = AggResultSupport.termsTotalBuckets(totalBucketsResultFuture.get());
 		
-		List<Map<String, Object>> results = AggResultSupport.termsResult(aggregations);
+		List<Map<String, Object>> results = AggResultSupport.termsResult(pagingResultFuture.get());
 		
 		ElasticPage elasticPage = ElasticPage.<Map<String, Object>>builder()
 				.results(results)
 				.build();
+		
 		elasticPage.setPageSize(page.getPageSize());
 		elasticPage.setCurrentPage(page.getCurrentPage());
+		elasticPage.setTotalCount(totalBucketsCount);
 		return elasticPage;
 	}
 	

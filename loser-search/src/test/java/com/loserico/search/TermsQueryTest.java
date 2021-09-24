@@ -24,4 +24,6 @@ public class TermsQueryTest {
 		
 		movies.forEach(System.out::println);
 	}
+	
+	
 }

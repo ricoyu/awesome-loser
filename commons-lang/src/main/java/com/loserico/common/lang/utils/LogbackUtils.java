@@ -38,9 +38,9 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 public final class LogbackUtils {
 	
 	/**
-	 * @param clazz
+	 * @param clazz 这个参数的作用是为了给log产生一个唯一的名字
 	 * @param rsyslogServers ip:port形式指定rsyslog 服务器的IP, 端口
-	 * @return
+	 * @return Logger
 	 */
 	public static Logger addRsyslog(Class clazz, List<String> rsyslogServers) {
 		ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(clazz.getName() + UUID.randomUUID().toString());
@@ -93,8 +93,10 @@ public final class LogbackUtils {
 	
 	private static PatternLayoutEncoder createEncoder(LoggerContext context) {
 		PatternLayoutEncoder encoder = new PatternLayoutEncoder();
-		// 设置上下文，每个logger都关联到logger上下文，默认上下文名称为default。
-		// 但可以使用<scope="context">设置成其他名字，用于区分不同应用程序的记录。一旦设置，不能修改。
+		/*
+		 * 设置上下文, 每个logger都关联到logger上下文, 默认上下文名称为default。
+		 * 但可以使用<scope="context">设置成其他名字, 用于区分不同应用程序的记录, 一旦设置, 不能修改。
+		 */
 		encoder.setContext(context);
 		// 设置格式
 		String pattern = OptionHelper.substVars("${pattern}", context);

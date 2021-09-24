@@ -20,7 +20,7 @@ import static com.loserico.common.lang.concurrent.Policy.ABORT_WITH_REPORT;
  * @version 1.0
  */
 
-public final class Executors {
+public final class LoserExecutors {
 	
 	private static final int NCPUS = Runtime.getRuntime().availableProcessors();
 	
@@ -32,7 +32,7 @@ public final class Executors {
 	/**
 	 * 是否允许idle的核心线程超时, 超时的线程会被中断
 	 */
-	private boolean allowCoreThreadTimeOut = false;
+	private boolean allowCoreThreadTimeout = false;
 	
 	/**
 	 * 是否提前启动所有核心线程
@@ -66,10 +66,10 @@ public final class Executors {
 	 */
 	private Object rejectPolicy = ABORT_WITH_REPORT;
 	
-	private Executors(String poolName, int corePoolSize, boolean allowCoreThreadTimeOut) {
+	private LoserExecutors(String poolName, int corePoolSize, boolean allowCoreThreadTimeOut) {
 		this.poolName = poolName;
 		this.corePoolSize = corePoolSize;
-		this.allowCoreThreadTimeOut = allowCoreThreadTimeOut;
+		this.allowCoreThreadTimeout = allowCoreThreadTimeOut;
 	}
 	
 	/**
@@ -78,19 +78,28 @@ public final class Executors {
 	 *
 	 * @return Executors
 	 */
-	public static Executors newInstance(String poolName) {
-		return new Executors(poolName, NCPUS + 1, false);
+	public static LoserExecutors of(String poolName) {
+		return new LoserExecutors(poolName, NCPUS + 1, false);
 	}
 	
 	/**
-	 * 显式设置核心线程数以及是否允许核心线程超时
-	 *
+	 * 设置核心线程池大小
 	 * @param corePoolSize
-	 * @param allowCoreThreadTimeOut
 	 * @return Executors
 	 */
-	public static Executors newInstance(String poolName, int corePoolSize, boolean allowCoreThreadTimeOut) {
-		return new Executors(poolName, corePoolSize, allowCoreThreadTimeOut);
+	public LoserExecutors corePoolSize(int corePoolSize) {
+		this.corePoolSize = corePoolSize;
+		return this;
+	}
+	
+	/**
+	 * 核心线程是够可以超时
+	 * @param allowCoreThreadTimeout
+	 * @return
+	 */
+	public LoserExecutors allowCoreThreadTimeout(boolean allowCoreThreadTimeout) {
+		this.allowCoreThreadTimeout = allowCoreThreadTimeout;
+		return this;
 	}
 	
 	/**
@@ -100,7 +109,7 @@ public final class Executors {
 	 * @param timeUnit
 	 * @return Executors
 	 */
-	public Executors keepAliveTime(Integer keepAliveTime, TimeUnit timeUnit) {
+	public LoserExecutors keepAliveTime(Integer keepAliveTime, TimeUnit timeUnit) {
 		Objects.requireNonNull(keepAliveTime, "keepAliveTime cannot be null!");
 		Objects.requireNonNull(timeUnit, "timeUnit cannot be null!");
 		this.keepAliveTime = keepAliveTime.longValue();
@@ -114,7 +123,7 @@ public final class Executors {
 	 * @param maximumPoolSize
 	 * @return Executors
 	 */
-	public Executors maximumPoolSize(Integer maximumPoolSize) {
+	public LoserExecutors maximumPoolSize(Integer maximumPoolSize) {
 		this.maximumPoolSize = maximumPoolSize;
 		return this;
 	}
@@ -125,7 +134,7 @@ public final class Executors {
 	 * @param queueSize
 	 * @return Executors
 	 */
-	public Executors queueSize(Integer queueSize) {
+	public LoserExecutors queueSize(Integer queueSize) {
 		Objects.requireNonNull(queueSize, "queueSize cannot be null!");
 		this.queueSize = queueSize;
 		return this;
@@ -137,7 +146,7 @@ public final class Executors {
 	 * @param prestartAllCoreThreads
 	 * @return Executors
 	 */
-	public Executors prestartAllCoreThreads(boolean prestartAllCoreThreads) {
+	public LoserExecutors prestartAllCoreThreads(boolean prestartAllCoreThreads) {
 		this.prestartAllCoreThreads = prestartAllCoreThreads;
 		return this;
 	}
@@ -148,7 +157,7 @@ public final class Executors {
 	 * @param rejectPolicy
 	 * @return Executors
 	 */
-	public Executors rejectPolicy(Policy rejectPolicy) {
+	public LoserExecutors rejectPolicy(Policy rejectPolicy) {
 		Objects.requireNonNull(rejectPolicy, "rejectPolicy cannot be null!");
 		this.rejectPolicy = rejectPolicy;
 		return this;
@@ -160,7 +169,7 @@ public final class Executors {
 	 * @param rejectPolicy
 	 * @return Executors
 	 */
-	public Executors rejectPolicy(RejectedExecutionHandler rejectPolicy) {
+	public LoserExecutors rejectPolicy(RejectedExecutionHandler rejectPolicy) {
 		Objects.requireNonNull(rejectPolicy, "rejectPolicy cannot be null!");
 		this.rejectPolicy = rejectPolicy;
 		return this;
@@ -197,6 +206,7 @@ public final class Executors {
 				new ArrayBlockingQueue<>(queueSize),
 				new LoserThreadFactory(poolName),
 				handler);
+		executor.allowCoreThreadTimeOut(allowCoreThreadTimeout);
 		
 		if (prestartAllCoreThreads) {
 			executor.prestartAllCoreThreads();

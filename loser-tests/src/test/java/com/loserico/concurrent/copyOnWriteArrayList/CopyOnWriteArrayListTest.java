@@ -1,10 +1,19 @@
 package com.loserico.concurrent.copyOnWriteArrayList;
 
+import com.loserico.common.lang.concurrent.LoserExecutors;
+import com.loserico.common.lang.concurrent.Policy;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Test;
+
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+
+import static java.util.concurrent.TimeUnit.*;
 
 /**
  * https://juejin.im/post/5aaa2ba8f265da239530b69e
@@ -20,9 +29,50 @@ import java.util.concurrent.Executors;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
+@Slf4j
 public class CopyOnWriteArrayListTest {
 	
 	private static CopyOnWriteArrayList<String> list = new CopyOnWriteArrayList<>();
+	
+	@SneakyThrows
+	@Test
+	public void test() {
+		list.add("1");
+		list.add("2");
+		list.add("3");
+		
+		ThreadPoolExecutor executor = LoserExecutors.of("copy-on-write-arraylist-")
+				.corePoolSize(2)
+				.maximumPoolSize(100)
+				.keepAliveTime(60, SECONDS)
+				.queueSize(1000)
+				.rejectPolicy(Policy.ABORT_WITH_REPORT)
+				.prestartAllCoreThreads(true)
+				.build();
+		
+		executor.execute(() -> {
+			for (String s : list) {
+				log.info(s);
+				try {
+					SECONDS.sleep(2L);
+				} catch (InterruptedException e) {
+					log.error("", e);
+				}
+			}
+		});
+		
+		executor.execute(() -> {
+			try {
+				SECONDS.sleep(1L);
+				list.clear();
+				log.info("清除所有element");
+			} catch (InterruptedException e) {
+				log.error("", e);
+			}
+		});
+		
+		Thread.currentThread().join();
+	}
 	
 	public static void main(String[] args) {
 		

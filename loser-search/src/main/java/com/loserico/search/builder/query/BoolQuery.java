@@ -12,11 +12,23 @@ package com.loserico.search.builder.query;
  */
 public interface BoolQuery {
 	
+	/**
+	 * 条件必须满足, 且计入算分
+	 * @return ElasticBoolQueryBuilder
+	 */
 	public ElasticBoolQueryBuilder must();
 	
+	/**
+	 * 条件必须不满足, 不计入算分
+	 * @return ElasticBoolQueryBuilder
+	 */
 	public ElasticBoolQueryBuilder mustNot();
 	
 	public ElasticBoolQueryBuilder should();
 	
+	/**
+	 * 条件必须满足, 不计入算分
+	 * @return ElasticBoolQueryBuilder
+	 */
 	public ElasticBoolQueryBuilder filter();
 }

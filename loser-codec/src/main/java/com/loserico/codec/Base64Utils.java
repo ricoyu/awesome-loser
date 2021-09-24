@@ -1,9 +1,9 @@
 package com.loserico.codec;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 
 import java.nio.charset.Charset;
-import java.util.Objects;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -19,21 +19,78 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * @version 1.0
  * @on
  */
+@Slf4j
 public final class Base64Utils {
 	
 	public static String encode(String source) {
-		Objects.requireNonNull(source, "source cannot be null");
+		if (source == null) {
+			return null;
+		}
 		return Base64.encodeBase64String(source.getBytes(UTF_8));
 	}
 	
+	public static String encode(byte[] bytes) {
+		if (bytes == null) {
+			return null;
+		}
+		return Base64.encodeBase64String(bytes);
+	}
+	
+	/**
+	 * 对encoded进行base64解码, 返回UTF-8编码的字符串, 解码失败返回defaultValue
+	 * @param encoded
+	 * @param defaultValue
+	 * @return String
+	 */
+	public static String decode(String encoded, String defaultValue) {
+		try {
+			return decode(encoded);
+		} catch (Throwable e) {
+			log.error("Base64解码失败, {}", encoded, e);
+		}
+		return defaultValue;
+	}
+	
+	/**
+	 * 对encoded进行base64解码, 返回UTF-8编码的字符串
+	 * @param encoded
+	 * @return String
+	 */
 	public static String decode(String encoded) {
-		Objects.requireNonNull(encoded, "encoded cannot be null");
+		if (encoded == null) {
+			return null;
+		}
 		byte[] bytes = Base64.decodeBase64(encoded);
 		return new String(bytes, UTF_8);
 	}
 	
+	/**
+	 * 对encoded进行base64解码, 返回charset编码的字符串, 解码失败返回defaultValue
+	 * @param encoded
+	 * @param charset
+	 * @param defaultValue
+	 * @return String
+	 */
+	public static String decode(String encoded, Charset charset, String defaultValue) {
+		try {
+			return decode(encoded, charset);
+		} catch (Throwable e) {
+			log.error("Base64解码失败, {}", encoded, e);
+		}
+		
+		return defaultValue;
+	}
+	
+	/**
+	 * 对encoded进行base64解码, 返回charset编码的字符串
+	 * @param encoded
+	 * @param charset
+	 * @return String
+	 */
 	public static String decode(String encoded, Charset charset) {
-		Objects.requireNonNull(encoded, "encoded cannot be null");
+		if (encoded == null) {
+			return null;
+		}
 		byte[] bytes = Base64.decodeBase64(encoded);
 		return new String(bytes, charset);
 	}
@@ -45,14 +102,18 @@ public final class Base64Utils {
 	 * @return
 	 */
 	public static String urlEncode(String source) {
-		Objects.requireNonNull(source, "source cannot be null");
+		if (source == null) {
+			return null;
+		}
 		return java.util.Base64.getUrlEncoder()
 				.withoutPadding()
 				.encodeToString(source.getBytes(UTF_8));
 	}
 	
 	public static String urlDecode(String encoded) {
-		Objects.requireNonNull(encoded, "encoded cannot be null");
+		if (encoded == null) {
+			return null;
+		}
 		byte[] bytes = java.util.Base64.getUrlDecoder()
 				.decode(encoded.getBytes(UTF_8));
 		return new String(bytes, UTF_8);

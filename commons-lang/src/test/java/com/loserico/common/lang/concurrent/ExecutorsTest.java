@@ -26,7 +26,7 @@ public class ExecutorsTest {
 	@SneakyThrows
 	@Test
 	public void testCreateThreadPool() {
-		ThreadPoolExecutor executor = Executors.newInstance("Loser-Pool")
+		ThreadPoolExecutor executor = LoserExecutors.of("Loser-Pool")
 				.rejectPolicy(ABORT_WITH_REPORT)
 				.maximumPoolSize(500)
 				.keepAliveTime(1, TimeUnit.MINUTES)
@@ -46,7 +46,9 @@ public class ExecutorsTest {
 	@SneakyThrows
 	@Test
 	public void testTaskCorePoolAndQueue() {
-		ThreadPoolExecutor executor = Executors.newInstance("屌丝Pool", 1, false)
+		ThreadPoolExecutor executor = LoserExecutors.of("屌丝Pool")
+				.corePoolSize(1)
+				.allowCoreThreadTimeout(false)
 				.queueSize(1)
 				.maximumPoolSize(2)
 				.keepAliveTime(4, SECONDS)
@@ -85,7 +87,9 @@ public class ExecutorsTest {
 	@SneakyThrows
 	@Test
 	public void testTaskCorePoolAndQueue2() {
-		ThreadPoolExecutor executor = Executors.newInstance("屌丝Pool", 1, false)
+		ThreadPoolExecutor executor = LoserExecutors.of("屌丝Pool")
+				.corePoolSize(1)
+				.allowCoreThreadTimeout(false)
 				.queueSize(1)
 				.maximumPoolSize(2)
 				.keepAliveTime(4, SECONDS)
