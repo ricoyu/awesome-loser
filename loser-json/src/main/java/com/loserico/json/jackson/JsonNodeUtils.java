@@ -281,4 +281,58 @@ public final class JsonNodeUtils {
 		
 		return null;
 	}
+	
+	/**
+	 * 读取一个List, 数组中的每一个元素又是一个对象类型
+	 * <pre> {@code
+	 * {
+	 *   "dns_answers": [
+	 *     {
+	 *       "rrname": "www.baidu.com",
+	 *       "rrtype": "CNAME",
+	 *       "ttl": 600,
+	 *       "rdata": "www.a.shifen.com"
+	 *     },
+	 *     {
+	 *       "rrname": "www.a.shifen.com",
+	 *       "rrtype": "A",
+	 *       "ttl": 600,
+	 *       "rdata": "180.101.49.11"
+	 *     },
+	 *     {
+	 *       "rrname": "www.a.shifen.com",
+	 *       "rrtype": "A",
+	 *       "ttl": 600,
+	 *       "rdata": "180.101.49.12"
+	 *     }
+	 *   ]
+	 * }
+	 * }</pre>
+	 * @param node
+	 * @param nodeName
+	 * @return T[]
+	 */	
+	public static List<String> readList(JsonNode node, String nodeName) {
+		JsonNode jsonNode = node.get(nodeName);
+		if (jsonNode == null) {
+			return null;
+		}
+		
+		if (jsonNode.isNull()) {
+			return null;
+		}
+		
+		if (jsonNode.isArray()) {
+			List<String> values = new ArrayList<>();
+			Iterator<JsonNode> elements = jsonNode.elements();
+			while (elements.hasNext()) {
+				JsonNode childNode = elements.next();
+				String nodeValue = childNode.toString();
+				values.add(nodeValue);
+			}
+			return values;
+		}
+		
+		return null;
+	}
 }

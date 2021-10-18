@@ -7,6 +7,7 @@ import org.elasticsearch.index.query.QueryBuilder;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * <p>
@@ -27,13 +28,23 @@ public class ElasticIdsQueryBuilder extends BaseQueryBuilder {
 	}
 	
 	public ElasticIdsQueryBuilder ids(String... ids) {
+		Objects.requireNonNull(ids, "ids cannot be null!");
 		this.ids = ids;
+		this.size = ids.length;
 		return this;
 	}
 	
 	public ElasticIdsQueryBuilder ids(List<String> ids) {
 		Objects.requireNonNull(ids, "ids cannot be null!");
 		this.ids = ids.stream().toArray(String[]::new);
+		this.size = ids.size();
+		return this;
+	}
+	
+	public ElasticIdsQueryBuilder ids(Set<String> ids) {
+		Objects.requireNonNull(ids, "ids cannot be null!");
+		this.ids = ids.stream().toArray(String[]::new);
+		this.size = ids.size();
 		return this;
 	}
 	

@@ -107,6 +107,7 @@ import org.json.JSONObject;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -1219,8 +1220,17 @@ public final class ElasticUtils {
 		 * @param indices
 		 * @return ElasticIdsQueryBuilder
 		 */
-		public static ElasticIdsQueryBuilder ids(String... indices) {
+		public static ElasticIdsQueryBuilder idsQuery(String... indices) {
 			return new ElasticIdsQueryBuilder(indices);
+		}
+		
+		/**
+		 * 基于ID列表获取
+		 * @param indices
+		 * @return ElasticIdsQueryBuilder
+		 */
+		public static ElasticIdsQueryBuilder idsQuery(Collection<String> indices) {
+			return new ElasticIdsQueryBuilder(indices.stream().toArray(String[]::new));
 		}
 		
 		/**

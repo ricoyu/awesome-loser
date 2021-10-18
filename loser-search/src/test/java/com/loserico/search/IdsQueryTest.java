@@ -20,7 +20,7 @@ public class IdsQueryTest {
 	
 	@Test
 	public void testIdsQuery() {
-		List<Map> results = ElasticUtils.Query.ids("dga_event_2021-08-30")
+		List<Map> results = ElasticUtils.Query.idsQuery("dga_event_2021-08-30")
 				.ids("-3KMqXsBnQfP0ODXFLu4", "_XKNqXsBnQfP0ODXsrtx")
 				.sort("-create_time,_id")
 				.resultType(Map.class)

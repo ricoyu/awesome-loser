@@ -49,7 +49,12 @@ public final class IpAddressMatcher implements RequestMatcher {
 	}
 
 	public boolean matches(String address) {
-		InetAddress remoteAddress = parseAddress(address);
+		InetAddress remoteAddress = null;
+		try {
+			remoteAddress = parseAddress(address);
+		} catch (IllegalArgumentException e) {
+			return false;
+		}
 
 		if (!requiredAddress.getClass().equals(remoteAddress.getClass())) {
 			return false;
@@ -85,7 +90,7 @@ public final class IpAddressMatcher implements RequestMatcher {
 			return InetAddress.getByName(address);
 		}
 		catch (UnknownHostException e) {
-			throw new IllegalArgumentException("Failed to parse address" + address, e);
+			throw new IllegalArgumentException("Failed to parse address " + address, e);
 		}
 	}
 }

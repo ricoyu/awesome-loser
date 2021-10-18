@@ -85,6 +85,12 @@
             <artifactId>commons-net</artifactId>
             <version>3.6</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.graylog2</groupId>
+            <artifactId>syslog4j</artifactId>
+            <version>0.9.60</version>
+        </dependency>
         
         <dependency>
             <groupId>org.projectlombok</groupId>

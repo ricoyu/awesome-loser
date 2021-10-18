@@ -7,10 +7,13 @@ import ch.qos.logback.classic.filter.LevelFilter;
 import ch.qos.logback.classic.net.SyslogAppender;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
+import ch.qos.logback.core.AppenderBase;
 import ch.qos.logback.core.filter.Filter;
 import ch.qos.logback.core.spi.FilterReply;
 import ch.qos.logback.core.util.OptionHelper;
+import com.papertrailapp.logback.Syslog4jAppender;
 import lombok.extern.slf4j.Slf4j;
+import org.productivity.java.syslog4j.impl.net.tcp.TCPNetSyslogConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,12 +40,12 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 @Slf4j
 public final class LogbackUtils {
 	
-	/**
-	 * @param clazz 这个参数的作用是为了给log产生一个唯一的名字
-	 * @param rsyslogServers ip:port形式指定rsyslog 服务器的IP, 端口
-	 * @return Logger
-	 */
-	public static Logger addRsyslog(Class clazz, List<String> rsyslogServers) {
+	public static enum Protocol {
+		UDP, 
+		TCP;
+	}
+	
+	public static Logger addRsyslog(Class clazz, List<String> rsyslogServers, Protocol protocol, Charset charset) {
 		ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(clazz.getName() + UUID.randomUUID().toString());
 		LoggerContext loggerContext = logger.getLoggerContext();
 		
@@ -69,7 +72,12 @@ public final class LogbackUtils {
 							return;
 						}
 						int port = Integer.parseInt(ipPortArr[1]);
-						SyslogAppender syslogAppender = createSyslogAppender(ip, port, Level.INFO, loggerContext);
+						AppenderBase syslogAppender = null;
+						if (protocol == Protocol.TCP) {
+							syslogAppender = createTcpSyslogAppender(ip, port, charset, Level.INFO, loggerContext);
+						} else {
+							syslogAppender = createSyslogAppender(ip, port, charset, Level.INFO, loggerContext);
+						}
 						logger.addAppender(syslogAppender);
 					} catch (Exception e) {
 						log.error("Rsyslog 服务器格式不正确, 应该是 ip:port 形式, 当前提供的格式: " + ipPortArr, e);
@@ -80,13 +88,54 @@ public final class LogbackUtils {
 		return logger;
 	}
 	
-	private static SyslogAppender createSyslogAppender(String ip, int port, Level level, LoggerContext loggerContext) {
+	/**
+	 * @param clazz 这个参数的作用是为了给log产生一个唯一的名字
+	 * @param rsyslogServers ip:port形式指定rsyslog 服务器的IP, 端口
+	 * @return Logger
+	 */
+	public static Logger addRsyslog(Class clazz, List<String> rsyslogServers) {
+		return addRsyslog(clazz, rsyslogServers, Protocol.UDP, Charset.forName("UTF-8"));
+	}
+	
+	/**
+	 * 默认是UDP
+	 * @param ip
+	 * @param port
+	 * @param level
+	 * @param loggerContext
+	 * @return AppenderBase
+	 */
+	private static AppenderBase createSyslogAppender(String ip, int port, Charset charset, Level level, LoggerContext loggerContext) {
 		SyslogAppender syslogAppender = new SyslogAppender();
 		syslogAppender.setContext(loggerContext);
 		syslogAppender.addFilter(createLevelFilter(Level.INFO));
 		syslogAppender.setSyslogHost(ip);
 		syslogAppender.setPort(port);
 		syslogAppender.setFacility("SYSLOG");
+		syslogAppender.setCharset(charset);
+		syslogAppender.start();
+		return syslogAppender;
+	}
+	
+	/**
+	 * 通过TCP发送
+	 * @param ip
+	 * @param port
+	 * @param level
+	 * @param loggerContext
+	 * @return AppenderBase
+	 */
+	private static AppenderBase createTcpSyslogAppender(String ip, int port, Charset charset, Level level, LoggerContext loggerContext) {
+		Syslog4jAppender syslogAppender = new Syslog4jAppender();
+		syslogAppender.setContext(loggerContext);
+		syslogAppender.addFilter(createLevelFilter(Level.INFO));
+		
+		TCPNetSyslogConfig config = new TCPNetSyslogConfig();
+		config.setCharSet(charset.name());
+		config.setHost(ip);
+		config.setPort(port);
+		config.setKeepAlive(true);
+		syslogAppender.setSyslogConfig(config);
 		syslogAppender.start();
 		return syslogAppender;
 	}

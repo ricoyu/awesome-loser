@@ -1,5 +1,6 @@
 package com.loserico.search.builder.admin;
 
+import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.search.enums.cluster.AllocationEnable;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.settings.Settings.Builder;
@@ -24,8 +25,11 @@ public class ClusterPersistentSettingBuilder {
 	 */
 	private AllocationEnable allocationEnable;
 	
+	private Integer searchMaxBuckets = 10000;
+	
 	public ClusterPersistentSettingBuilder(ClusterSettingBuilder clusterSettingBuilder) {
 		this.clusterSettingBuilder = clusterSettingBuilder;
+		ReflectionUtils.setField("persistentSettingBuilder", clusterSettingBuilder, this);
 	}
 	
 	public ClusterPersistentSettingBuilder routingAllocationEnable(AllocationEnable allocationEnable) {
@@ -33,10 +37,18 @@ public class ClusterPersistentSettingBuilder {
 		return this;
 	}
 	
+	public ClusterPersistentSettingBuilder searchMaxBuckets(Integer searchMaxBuckets) {
+		this.searchMaxBuckets = searchMaxBuckets;
+		return this;
+	}
+	
 	private Settings build() {
 		Builder builder = Settings.builder();
 		if (allocationEnable != null) {
 			builder.put("cluster.routing.allocation.enable", allocationEnable);
+		}
+		if (searchMaxBuckets != null) {
+			builder.put("search.max_buckets", searchMaxBuckets);
 		}
 		return builder.build();
 	}

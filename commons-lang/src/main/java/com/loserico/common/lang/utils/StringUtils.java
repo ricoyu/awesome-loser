@@ -104,7 +104,7 @@ public abstract class StringUtils {
 	 */
 	public static String joinWith(final String separator, final List<?> objects) {
 		if (objects == null) {
-			throw new IllegalArgumentException("Object varargs must not be null");
+			return null;
 		}
 		
 		final String sanitizedSeparator = defaultString(separator, EMPTY_STRING);

@@ -46,7 +46,7 @@ public final class Base64Utils {
 		try {
 			return decode(encoded);
 		} catch (Throwable e) {
-			log.error("Base64解码失败, {}", encoded, e);
+			//log.error("Base64解码失败, {}", encoded, e);
 		}
 		return defaultValue;
 	}
@@ -75,7 +75,7 @@ public final class Base64Utils {
 		try {
 			return decode(encoded, charset);
 		} catch (Throwable e) {
-			log.error("Base64解码失败, {}", encoded, e);
+			//log.error("Base64解码失败, {}", encoded, e);
 		}
 		
 		return defaultValue;

@@ -7,6 +7,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import static com.loserico.common.lang.concurrent.Policy.ABORT_WITH_REPORT;
+import static java.util.concurrent.TimeUnit.*;
 
 /**
  * 线程池工具类
@@ -54,7 +55,7 @@ public final class LoserExecutors {
 	 */
 	private long keepAliveTime;
 	
-	private TimeUnit timeUnit;
+	private TimeUnit timeUnit = SECONDS;
 	
 	/**
 	 * 阻塞队列长度, 提交的任务会在这里排队等待被执行

@@ -2,6 +2,7 @@ package com.loserico.json.jackson;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import com.loserico.json.ObjectMapperDecorator;
@@ -181,7 +182,7 @@ public final class JacksonUtils {
 			return null;
 		}
 		if (object instanceof String) {
-			return ((String)object).getBytes(UTF_8);
+			return ((String) object).getBytes(UTF_8);
 		}
 		try {
 			return objectMapper.writeValueAsBytes(object);
@@ -197,7 +198,7 @@ public final class JacksonUtils {
 		}
 		
 		if (object instanceof String) {
-			return new JSONObject((String)object).toString(2);
+			return new JSONObject((String) object).toString(2);
 		}
 		try {
 			return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(object);
@@ -210,6 +211,20 @@ public final class JacksonUtils {
 	public static void writeValue(Writer writer, Object value) {
 		try {
 			objectMapper.writeValue(writer, value);
+		} catch (IOException e) {
+			logger.error(e.getMessage(), e);
+			throw new JacksonException(e);
+		}
+	}
+	
+	/**
+	 * 将JSON对象读取成一个JsonNode对象
+	 * @param json
+	 * @return JsonNode
+	 */
+	public static JsonNode readTree(String json) {
+		try {
+			return objectMapper.readTree(json);
 		} catch (IOException e) {
 			logger.error(e.getMessage(), e);
 			throw new JacksonException(e);
