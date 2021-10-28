@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static com.loserico.json.jackson.JacksonUtils.toJson;
 
@@ -56,7 +57,7 @@ public class KafkaUtilsTest {
 		
 		List<User> messages = new ArrayList<>();
 		for (int i = 0; i < 10001; i++) {
-			messages.add(new User("俞雪华", i+1));
+			messages.add(new User("俞雪华", i + 1));
 		}
 		List<Future<RecordMetadata>> futures = producer.send("custom-event", messages);
 		
@@ -167,6 +168,7 @@ public class KafkaUtilsTest {
 			messages.forEach(System.out::println);
 		});
 	}
+	
 	@Data
 	private static class User {
 		
@@ -178,5 +180,48 @@ public class KafkaUtilsTest {
 		private String name;
 		
 		private int age;
+	}
+	
+	@Test
+	public void testSendPerformance() {
+		AtomicLong countAtomicLong = new AtomicLong();
+		Producer<String, String> producer = KafkaUtils.newProducer("192.168.100.101:9092").build();
+		while (true) {
+			long num = countAtomicLong.incrementAndGet();
+			producer.send("test-topic", "message-" + num);
+			//System.out.println("发送第" + num + "条消息");
+		}
+	}
+	
+	@Test
+	public void testConsumePerformance() {
+		Consumer<String, String> consumer = KafkaUtils.newConsumer("192.168.100.101:9092")
+				.groupId("perf-group")
+				.pollTimeout(5000)
+				//.autoOffsetReset(OffsetReset.EARLIEST)
+				.maxPollRecords(5000)
+				.fetchMinBytes(1024)
+				.autoCommit(true)
+				.build();
+		consumer.subscribe("test-topic", (messages) -> {
+			System.out.println("==================== 拉取到" + messages.size() +" 条=================================");
+		});
+	}
+	
+	@Test
+	public void testDuplicateConsume() {
+		Consumer<String, String> consumer = KafkaUtils.newConsumer("192.168.100.101:9092")
+				.groupId("dup-group")
+				.pollTimeout(3000)
+				.maxPollRecords(5000)
+				.fetchMinBytes(1024)
+				.autoCommit(true)
+				.build();
+		
+		consumer.subscribe("dup-topic", (messages) -> {
+			for (Object message : messages) {
+				throw new RuntimeException((String) message);
+			}
+		});
 	}
 }

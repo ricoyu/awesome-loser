@@ -143,6 +143,11 @@ public class ConsumerBuilder extends BaseBuilder {
 	 */
 	private Class messageClass;
 	
+	/**
+	 * 记录每次拉取消息的统计信息, 如一次拉取到多少条, 总共占多少字节
+	 */
+	private Boolean enableStatistic;
+	
 	@Override
 	public ConsumerBuilder bootstrapServers(String bootstrapServers) {
 		super.bootstrapServers(bootstrapServers);
@@ -357,6 +362,15 @@ public class ConsumerBuilder extends BaseBuilder {
 		return this;
 	}
 	
+	/**
+	 * 记录每次拉取消息的统计信息, 如一次拉取到多少条, 总共占多少字节
+	 * @param enableStatistic
+	 * @return ConsumerBuilder
+	 */
+	public ConsumerBuilder enableStatistic(Boolean enableStatistic) {
+		this.enableStatistic = enableStatistic;
+		return this;
+	}
 	
 	/**
 	 * 添加一些其他的通用属性
@@ -378,6 +392,9 @@ public class ConsumerBuilder extends BaseBuilder {
 		Map<String, Object> properties = new HashMap<>();
 		properties.put(BOOTSTRAP_SERVERS_CONFIG, bootstrapServers());
 		
+		if (enableStatistic != null) {
+			properties.put("enableStatistic", enableStatistic);
+		}
 		if (autoOffsetReset != null) {
 			properties.put(AUTO_OFFSET_RESET_CONFIG, autoOffsetReset.toString());
 		}

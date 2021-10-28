@@ -19,9 +19,6 @@
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
             <version>2.6.2</version>
-            <!--<version>1.0.1</version>-->
-            <!--<version>2.1.0</version>-->
-            <!--<version>1.1.0</version>-->
         </dependency>
         <dependency>
             <groupId>com.loserico</groupId>
@@ -32,6 +29,10 @@
             <groupId>com.loserico</groupId>
             <artifactId>loser-json</artifactId>
             <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
