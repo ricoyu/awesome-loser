@@ -625,6 +625,17 @@ public final class JedisUtils {
 		}
 		
 		/**
+		 * lpush 向指定的列表左侧(头部)插入元素, 返回插入后列表的长度
+		 *
+		 * @param key
+		 * @param values
+		 * @return long
+		 */
+		public static long lpush(String key, List values) {
+			return jedisOperations.lpush(toBytes(key), toBytes(values));
+		}
+		
+		/**
 		 * 往list里面lpush元素, 现在list最多limit个元素, 超过的话就不插入
 		 *
 		 * @param key
@@ -1040,8 +1051,9 @@ public final class JedisUtils {
 		}
 		
 		/**
-		 * lrange 返回指定列表中指定范围的元素值
-		 * index从0开始,  -1表示最后一个元素
+		 * lrange 返回指定列表中指定范围的元素值 <br/>
+		 * index从0开始,  -1表示最后一个元素 <br/>
+		 * 即便指定0~10000, 如果实际只有10个, 实际返回的List.size()就是10, 不会有null元素填充
 		 *
 		 * @param key
 		 * @param start
@@ -1058,8 +1070,8 @@ public final class JedisUtils {
 		 * index从0开始,  -1表示最后一个元素
 		 *
 		 * @param key
-		 * @param start
-		 * @param end
+		 * @param start 从0开始
+		 * @param end   包含end
 		 * @return List<String>
 		 * @on
 		 */

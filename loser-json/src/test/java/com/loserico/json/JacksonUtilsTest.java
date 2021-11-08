@@ -25,7 +25,7 @@ import java.util.Map;
 
 import static com.loserico.json.jackson.JacksonUtils.toJson;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 
 /**
@@ -224,6 +224,25 @@ public class JacksonUtilsTest {
 		Event event = JacksonUtils.toObject(json, Event.class);
 		System.out.println(toJson(event));
 		assertThat(event.getSrc_ip()).isEqualTo("192.168.43.65");
+	}
+	
+	@Test
+	public void testToMapPerf() {
+		String json = IOUtils.readFileAsString("D:\\Work\\观安信息上海有限公司\\NTA资料\\NTA测试数据\\ids-metadata-http.json");
+		
+		long begin = System.currentTimeMillis();
+		for (int i = 0; i < 3000; i++) {
+			JacksonUtils.toMap(json);
+		}
+		long end = System.currentTimeMillis();
+		System.out.println((end- begin));
+		
+		begin = System.currentTimeMillis();
+		for (int i = 0; i < 3000; i++) {
+			JacksonUtils.toObject(json, NetLog.class);
+		}
+		end = System.currentTimeMillis();
+		System.out.println((end- begin));
 	}
 	
 	

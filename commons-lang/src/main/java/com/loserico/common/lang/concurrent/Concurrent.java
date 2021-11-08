@@ -130,7 +130,7 @@ public final class Concurrent {
 		}
 		try {
 			int taskCount = set.size();
-			log.info("等待所有{}个任务执行完毕", taskCount);
+			log.debug("等待所有{}个任务执行完毕", taskCount);
 			CompletableFuture[] completableFutures = set.toArray(new CompletableFuture[taskCount]);
 			CompletableFuture.allOf(completableFutures).join();
 		} finally {
@@ -144,7 +144,7 @@ public final class Concurrent {
 			set = new HashSet<>();
 			COMPLETABLE_FUTURE_THREAD_LOCAL.set(set);
 		}
-		log.info("提交第{}个任务", set.size() + 1);
+		log.debug("提交第{}个任务", set.size() + 1);
 		set.add(completableFuture);
 	}
 

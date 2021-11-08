@@ -19,6 +19,7 @@ import static org.apache.kafka.clients.producer.ProducerConfig.BOOTSTRAP_SERVERS
 import static org.apache.kafka.clients.producer.ProducerConfig.BUFFER_MEMORY_CONFIG;
 import static org.apache.kafka.clients.producer.ProducerConfig.COMPRESSION_TYPE_CONFIG;
 import static org.apache.kafka.clients.producer.ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG;
+import static org.apache.kafka.clients.producer.ProducerConfig.LINGER_MS_CONFIG;
 import static org.apache.kafka.clients.producer.ProducerConfig.MAX_BLOCK_MS_CONFIG;
 import static org.apache.kafka.clients.producer.ProducerConfig.RETRIES_CONFIG;
 import static org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG;
@@ -67,6 +68,7 @@ public class ProducerBuilder extends BaseBuilder {
 	private Acks acks = Acks.LEADER;
 	
 	/**
+	 * batch.size <br/>
 	 * 默认 16384 16K 0禁用batch操作<br/>
 	 * <p>
 	 * batch size太小会降低吞吐率, 太大浪费内存<br/>
@@ -81,14 +83,22 @@ public class ProducerBuilder extends BaseBuilder {
 	 * This helps performance on both the client and the server.
 	 * This configuration controls the default batch size in bytes.
 	 */
-	private Integer batchSize = 100000; //TODO 滴滴示例上是100000
+	private Integer batchSize = 102400; //TODO 滴滴示例上是100000
 	
 	/**
+	 * linger.ms 默认0
+	 * <p/>
+	 * 0 表示消息必须立即发送出去, 但这样会影响性能 <br/>
+	 * 一般设置10毫秒左右, 就是说这个消息发送完后会进入本地的一个batch, 如果10毫秒内, 这个batch满了16KB就发送出去 <br/>
+	 * 如果10毫秒内batch没有满, 那么也必须把消息发送出去, 不能让消息发送延迟时间太长
+	 */
+	private Integer lingerMs;
+	
+	/**
+	 * buffer.memory <br/>
 	 * Total memory size the producer can use to buffer records waiting to be sent to the server.<p>
 	 * 默认 33554432 32M<p>
-	 * 该参数用来设置生产者内存缓冲区的大小, 生产者用它缓冲要发送到服务器的消息。<p>
-	 * 如果应用程序发送消息的速度超过发送到服务器的速度, 会导致生产者空间不足。<p>
-	 * 这个时候 send() 方法调用要么被阻塞, 要么抛出异常, 取决于如何设置max.block.ms 参数(表示在抛出异常之前可以阻塞一段时间)。
+	 * 发送消息的本地缓冲区, 如果设置了该缓冲区, 消息会先发送到本地缓冲区, 可以提高消息发送性能, 默认32M
 	 */
 	private Integer bufferMemory;
 	
@@ -113,12 +123,13 @@ public class ProducerBuilder extends BaseBuilder {
 	private Compression compression = Compression.LZ4;
 	
 	/**
-	 * When greater than zero, enables retrying of failed sends.<p>
-	 * 默认 2147483647<p>
+	 * Setting a value greater than zero will cause the client to resend any record whose send fails with a potentially transient error. 
+	 * Note that this retry is no different than if the client resent the record upon receiving the error. <p>
+	 * 默认 2147483647(文档上真是这么说的)<p>
 	 * 生产者从服务器收到的错误有可能是临时性的错误(比如分区找不到Leader)。<p>
 	 * 在这种情况下, retries 参数的值决定了生产者可以重发消息的次数, 如果达到这个次数, 生产者会放弃重试并返回错误。
 	 */
-	private Integer retries = 99;
+	private Integer retries = 3;
 	
 	/**
 	 * Serializer class for keys.
@@ -174,7 +185,7 @@ public class ProducerBuilder extends BaseBuilder {
 	 * </ul>
 	 *
 	 * @param acks
-	 * @return
+	 * @return ProducerBuilder
 	 */
 	public ProducerBuilder acks(Acks acks) {
 		notNull(acks, "acks cannot be null!");
@@ -183,15 +194,11 @@ public class ProducerBuilder extends BaseBuilder {
 	}
 	
 	/**
-	 * 默认 16384 16K 0禁用batch操作<br/>
+	 * batch.size <br/>
+	 * 官方默认 16384 16K, 我这里设为100K,  0表示禁用batch操作<br/>
 	 * <p>
-	 * batch size太小会降低吞吐率, 太大浪费内存<br/>
-	 * <p>
-	 * 精确说是"待发送消息的缓存大小", 注意跟buffer.memory的区别<br/>
-	 * <p>
-	 * 当有多个消息需要被发送到同一个分区时, 生产者会把它们放在同一个批次里。该参数指定了一个批次可以使用的内存大小, 按照字节数计算（而不是消息个数）。
-	 * 当批次被填满, 批次里的所有消息会被发送出去。不过生产者并不一定都会等到批次被填满才发送, 半满的批次, 甚至只包含一个消息的批次也有可能被发送。
-	 * 所以就算把批次大小设置得很大, 也不会造成延迟, 只是会占用更多的内存而已。但如果设置得太小, 因为生产者需要更频繁地发送消息, 会增加一些额外的开销。<br/>
+	 * Kafka本地线程会从缓冲区取数据, 批量发送到Broker <br/>
+	 * 本参数设置批量发送消息的大小, 默认值16384, 即16K, 就是说一个batch满了16KB就发送出去
 	 * <p>
 	 * The producer will attempt to batch records together into fewer requests whenever multiple records are being sent to the same partition.
 	 * This helps performance on both the client and the server.
@@ -209,11 +216,25 @@ public class ProducerBuilder extends BaseBuilder {
 	}
 	
 	/**
+	 * linger.ms 默认0
+	 * <p/>
+	 * 0 表示消息必须立即发送出去, 但这样会影响性能 <br/>
+	 * 一般设置10毫秒左右, 就是说这个消息发送完后会进入本地的一个batch, 如果10毫秒内, 这个batch满了16KB就发送出去 <br/>
+	 * 如果10毫秒内batch没有满, 那么也必须把消息发送出去, 不能让消息发送延迟时间太长(公交车到点发车;)
+	 * 
+	 * @param lingerMs
+	 * @return ProducerBuilder
+	 */
+	public ProducerBuilder lingerMs(Integer lingerMs) {
+		this.lingerMs = lingerMs;
+		return this;
+	}
+	
+	/**
+	 * buffer.memory <br/>
 	 * Total memory size the producer can use to buffer records waiting to be sent to the server.<p>
 	 * 默认 33554432 32M<p>
-	 * 该参数用来设置生产者内存缓冲区的大小, 生产者用它缓冲要发送到服务器的消息。<p>
-	 * 如果应用程序发送消息的速度超过发送到服务器的速度, 会导致生产者空间不足。<p>
-	 * 这个时候 send() 方法调用要么被阻塞, 要么抛出异常, 取决于如何设置max.block.ms 参数(表示在抛出异常之前可以阻塞一段时间)。
+	 * 发送消息的本地缓冲区, 如果设置了该缓冲区, 消息会先发送到本地缓冲区, 可以提高消息发送性能, 默认32M
 	 *
 	 * @param bufferMemory
 	 * @param sizeUnit
@@ -246,12 +267,13 @@ public class ProducerBuilder extends BaseBuilder {
 	}
 	
 	/**
-	 * When greater than zero, enables retrying of failed sends.<p>
-	 * 默认 2147483647<p>
+	 * Setting a value greater than zero will cause the client to resend any record whose send fails with a potentially transient error. 
+	 * Note that this retry is no different than if the client resent the record upon receiving the error. <p>
+	 * 默认 2147483647(文档上真是这么说的)<p>
 	 * 生产者从服务器收到的错误有可能是临时性的错误(比如分区找不到Leader)。<p>
 	 * 在这种情况下, retries 参数的值决定了生产者可以重发消息的次数, 如果达到这个次数, 生产者会放弃重试并返回错误。
 	 *
-	 * @param retries
+	 * @param retries 默认3
 	 * @return ProducerBuilder
 	 */
 	public ProducerBuilder retries(Integer retries) {
@@ -304,9 +326,9 @@ public class ProducerBuilder extends BaseBuilder {
 	 *
 	 * @return KafkaProducer
 	 */
-	public Producer<String, String> build() {
+	public <T> Producer<String, T> build() {
 		Map<String, Object> properties = buildProperties();
-		return new Producer<String, String>(properties);
+		return new Producer<String, T>(properties);
 	}
 	
 	private Map<String, Object> buildProperties() {
@@ -317,6 +339,9 @@ public class ProducerBuilder extends BaseBuilder {
 			properties.put(ACKS_CONFIG, acks.toString());
 		}
 		
+		if (lingerMs != null) {
+			properties.put(LINGER_MS_CONFIG, lingerMs);
+		}
 		if (batchSize != null) {
 			properties.put(BATCH_SIZE_CONFIG, batchSize);
 		}

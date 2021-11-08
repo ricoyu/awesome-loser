@@ -1,14 +1,26 @@
 package com.loserico.search;
 
+import com.loserico.common.lang.utils.IOUtils;
+import com.loserico.json.jackson.JacksonUtils;
 import com.loserico.search.ElasticUtils.Admin;
 import com.loserico.search.enums.Analyzer;
 import com.loserico.search.enums.Dynamic;
 import com.loserico.search.enums.FieldType;
 import com.loserico.search.pojo.Movie;
+import com.loserico.search.pojo.NetLog;
 import com.loserico.search.support.FieldDef;
+import org.elasticsearch.action.bulk.BulkItemResponse;
+import org.elasticsearch.action.bulk.BulkRequestBuilder;
+import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.client.transport.TransportClient;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import static org.junit.Assert.*;
 
@@ -104,5 +116,64 @@ public class ElasticUtilsIndexTest {
 				.field("title", FieldType.TEXT)
 				.fields(FieldDef.builder("std", FieldType.TEXT).analyzer(Analyzer.STANDARD))
 				.thenCreate();
+	}
+	
+	@Test
+	public void testBulkIndexVSIndex() {
+		String metadata = IOUtils.readFileAsString("D:\\Work\\观安信息上海有限公司\\NTA资料\\NTA测试数据\\ids-metadata-http.json");
+		List<NetLog> netLogs = new ArrayList<>();
+		for (int i = 0; i < 3000; i++) {
+			NetLog netLog = JacksonUtils.toObject(metadata, NetLog.class);
+			netLogs.add(netLog);
+		}
+		
+		ElasticUtils.ping();
+		
+		long begin = System.currentTimeMillis();
+		for (int i = 0; i < 10; i++) {
+			ElasticUtils.bulkIndex("test-bulk-perf", netLogs);
+		}
+		long end = System.currentTimeMillis();
+		System.out.println("Bulk耗费" + (end - begin));
+		
+		begin = System.currentTimeMillis();
+		for (int i = 0; i < 30000; i++) {
+			ElasticUtils.index("test-single-perf", metadata);
+		}
+		end = System.currentTimeMillis();
+		System.out.println("Single耗费" + (end - begin));
+	}
+	
+	@Test
+	public void testBulkUpdate() {
+		TransportClient client = ElasticUtils.client;
+		Map<String, Object> doc = new HashMap<>();
+		doc.put("src_country", "中国");
+		doc.put("src_city", "苏州");
+		doc.put("hobby", "苏州");
+		doc.put("lovers", "苏州");
+		
+		
+		BulkRequestBuilder bulkRequestBuilder = client.prepareBulk()
+				.add(new UpdateRequest("test-single-perf", "qNgT6XwBRSj7f1nTb7Cq").doc(doc))
+				.add(new UpdateRequest("test-single-perf", "qdgT6XwBRSj7f1nTb7Cv").doc("my_name", "三少爷"))
+				.add(new UpdateRequest("test-bulk-perf", "ONcT6XwBRSj7f1nTCuzQ").doc(doc))
+				.add(new UpdateRequest("test-bulk-perf", "PNcT6XwBRSj7f1nTCuzQ").doc(doc));
+		try {
+			BulkResponse responses = bulkRequestBuilder.execute().get();
+			boolean hasFailures = responses.hasFailures();
+			System.out.println("hasFailures " + hasFailures);
+			BulkItemResponse[] items = responses.getItems();
+			for (BulkItemResponse item : items) {
+				boolean failed = item.isFailed();
+				System.out.println("failed " + failed);
+			}
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+		}
+		
+		
 	}
 }

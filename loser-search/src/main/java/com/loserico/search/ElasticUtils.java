@@ -148,6 +148,13 @@ public final class ElasticUtils {
 	public static final TransportClient client = TransportClientFactory.create();
 	
 	/**
+	 * 只是初始化一下ES客户端连接
+	 */
+	public static void ping() {
+		Admin.existsIndex("ricoyu");
+	}
+	
+	/**
 	 * 创建一个新的文档, 返回新创建文档的ID
 	 * 对应REST API POST 方式
 	 *
@@ -320,6 +327,14 @@ public final class ElasticUtils {
 		}
 		
 		return bulkResult;
+	}
+	
+	/**
+	 * 批量更新
+	 * @return ElasticBulkUpdateBuilder
+	 */
+	public static ElasticBulkUpdateBuilder bulkUpdate() {
+		return new ElasticBulkUpdateBuilder();
 	}
 	
 	/**

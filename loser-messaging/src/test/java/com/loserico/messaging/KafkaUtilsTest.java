@@ -1,10 +1,10 @@
 package com.loserico.messaging;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.loserico.common.lang.constants.Units;
 import com.loserico.common.lang.enums.SizeUnit;
 import com.loserico.common.lang.utils.IOUtils;
 import com.loserico.messaging.consumer.Consumer;
-import com.loserico.messaging.deserialzier.JsonDeserializer;
 import com.loserico.messaging.enums.Acks;
 import com.loserico.messaging.enums.Compression;
 import com.loserico.messaging.enums.OffsetReset;
@@ -14,7 +14,6 @@ import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.RecordMetadata;
-import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.Test;
 
@@ -27,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.loserico.json.jackson.JacksonUtils.toJson;
+import static java.util.concurrent.TimeUnit.*;
 
 /**
  * <p>
@@ -78,11 +78,9 @@ public class KafkaUtilsTest {
 				.maxPartitionFetchBytes(50 * Units.MB)
 				.maxPollRecords(30000)
 				.heartbeatInterval(3000)
-				.keyDeserializer(StringDeserializer.class)
-				.valueDeserializer(JsonDeserializer.class)
 				.build();
 		
-		Producer<String, String> producer = KafkaUtils.newProducer("10.10.17.31:9092")
+		Producer<String, Object> producer = KafkaUtils.newProducer("10.10.17.31:9092")
 				.acks(Acks.LEADER)
 				.batchSize(1001, SizeUnit.KB)
 				.bufferMemory(32, SizeUnit.MB)
@@ -98,24 +96,34 @@ public class KafkaUtilsTest {
 		});
 	}
 	
+	@SneakyThrows
 	@Test
 	public void testConsumer() {
-		Consumer consumer = KafkaUtils.newConsumer("172.23.12.65:9092")
-				.groupId("group-kkk222")
-				.autoOffsetReset(OffsetReset.EARLIEST)
+		/*Consumer<String, String> consumer = KafkaUtils.newConsumer("172.23.12.65:9092")
+				.groupId("group-kkk333")
+				.autoOffsetReset(OffsetReset.LATEST)
 				.autoCommit(false)
 				.fetchMaxWait(500)
 				.fetchMaxBytes(50 * Units.MB)
 				.maxPartitionFetchBytes(50 * Units.MB)
 				.maxPollRecords(1)
 				.heartbeatInterval(3000)
-				.keyDeserializer(StringDeserializer.class)
-				.valueDeserializer(JsonDeserializer.class)
+				.build();*/
+		
+		Consumer consumer = KafkaUtils.newConsumer("192.168.100.105:9092")
+				.groupId("metadata-group")
+				.autoCommit(false)
+				.fetchMaxWait(500)
+				.fetchMaxBytes(500 * Units.KB)
+				.maxPollRecords(3000)
+				.heartbeatInterval(3000)
+				.sessionTimeout(5, MINUTES)
 				.build();
 		
-		consumer.subscribe("ids-event", (messages) -> {
+		consumer.subscribe("ids-metadata", (messages) -> {
 			messages.forEach(System.out::println);
 		});
+		Thread.currentThread().join();
 	}
 	
 	@Test
@@ -185,17 +193,18 @@ public class KafkaUtilsTest {
 	@Test
 	public void testSendPerformance() {
 		AtomicLong countAtomicLong = new AtomicLong();
-		Producer<String, String> producer = KafkaUtils.newProducer("192.168.100.101:9092").build();
+		Producer<String, String> producer = KafkaUtils.newProducer("192.168.100.105:9092").build();
+		String message = IOUtils.readFileAsString("D:\\Work\\观安信息上海有限公司\\NTA资料\\NTA测试数据\\ids-metadata-http.json");
 		while (true) {
 			long num = countAtomicLong.incrementAndGet();
-			producer.send("test-topic", "message-" + num);
-			//System.out.println("发送第" + num + "条消息");
+			producer.send("ids-metadata", message);
+			System.out.println("发送第" + num + "条消息");
 		}
 	}
 	
 	@Test
 	public void testConsumePerformance() {
-		Consumer<String, String> consumer = KafkaUtils.newConsumer("192.168.100.101:9092")
+		Consumer<String, String> consumer = KafkaUtils.newConsumer("192.168.100.105:9092")
 				.groupId("perf-group")
 				.pollTimeout(5000)
 				//.autoOffsetReset(OffsetReset.EARLIEST)
@@ -223,5 +232,72 @@ public class KafkaUtilsTest {
 				throw new RuntimeException((String) message);
 			}
 		});
+	}
+	
+	@SneakyThrows
+	@Test
+	public void test() {
+		Consumer<String, String> consumer = KafkaUtils.newConsumer("172.23.12.65:9092")
+				.groupId("metadata-group")
+				.autoCommit(false)
+				.fetchMaxWait(500)
+				.fetchMaxBytes(50 * Units.MB)
+				.maxPartitionFetchBytes(50 * Units.MB)
+				.maxPollRecords(3000)
+				//.workerThreads(500)
+				//.queueSize(6000)
+				.heartbeatInterval(3000)
+				.sessionTimeout(1, TimeUnit.MINUTES)
+				.messageClass(NetLog.class)
+				.build();
+		
+		consumer.subscribe("ids-metadata", (messages) -> {
+			log.info("消费{}条消息", messages.size());
+		});
+		
+		Thread.currentThread().join();
+	}
+	
+	@Data
+	static class NetLog {
+		/**
+		 * 日志编号
+		 */
+		private String id;
+		
+		/**
+		 * 探针唯一id
+		 */
+		@JsonProperty("dev_id")
+		private String devId;
+		
+		/**
+		 * 事件发生时间, 时间戳形式
+		 */
+		@JsonProperty("create_time")
+		private Long createTime;
+		
+	}
+	
+	@SneakyThrows
+	@Test
+	public void test111() {
+		Consumer consumer = KafkaUtils.newConsumer("192.168.100.105:9092")
+				.groupId("metadata-index-group")
+				.fetchMaxBytes(2 * Units.MB)
+				.maxPartitionFetchBytes(2 * Units.MB)
+				.maxPollRecords(1000)
+				.build();
+		
+		consumer.subscribe("metadata-index", (messages) -> {
+			log.info("收到{}条消息", messages.size());
+			try {
+				Thread.sleep(1000L);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		});
+		
+		Thread.currentThread().join();
 	}
 }

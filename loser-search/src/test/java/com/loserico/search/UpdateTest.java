@@ -55,6 +55,5 @@ public class UpdateTest {
 		String event = ElasticUtils.get("event_2021-07-28", "kXH-6noBQ0ivCZkfdVFW");
 		Object value = JsonPathUtils.readNode(event, "$.focus_status");
 		assertEquals(0, value);
-		
 	}
 }

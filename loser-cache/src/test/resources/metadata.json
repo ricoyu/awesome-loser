@@ -1,0 +1,41 @@
+{
+  "timestamp": "2021-11-08 15:27:49",
+  "flow_id": 414880169055888,
+  "event_type": "flow",
+  "dev_id": 1,
+  "create_time": 1636356469080,
+  "src_ip": "48.0.20.142",
+  "src_port": 554,
+  "dest_ip": "16.0.1.196",
+  "dest_port": 35388,
+  "proto": "TCP",
+  "app_proto": "other",
+  "proto_type": "flow",
+  "flow_pkts_toserver": 5,
+  "flow_pkts_toclient": 0,
+  "flow_bytes_toserver": 547,
+  "flow_bytes_toclient": 0,
+  "flow_start": "2021-11-08 15:26:17",
+  "flow_end": "2021-11-08 15:26:48",
+  "flow_age": 31,
+  "flow_speed": 17,
+  "flow_up_payload": "ACqEgAABAAEAAAAAA3d3dwVjaXNjbwNjb20AAAEAAcAMAAEAAQAAAAAABGRkZGQAKoSAAAEAAQAAAAADd3d3BWNpc2NvA2NvbQAAAQABwAwAAQABAAAAAAAEZGRkZAAqhIAAAQ\u003d\u003d",
+  "flow_down_payload": "SFRUUC8xLjEgMjAwIE9LDQpTZXJ2ZXI6IE1pY3Jvc29mdC1JSVMvNi4wDQpDb250ZW50LVR5cGU6IHRleHQvaHRtbA0KQ29udGVudC1MZW5ndGg6IDMyMDAwDQoNCjxodG1sPg\u003d\u003d",
+  "flow_ndpi_name": "Unknown",
+  "flow_state": "established",
+  "flow_reason": "timeout",
+  "flow_alerted": false,
+  "ether_dest_macs": [
+    "00:e0:ed:5d:84:64"
+  ],
+  "ether_src_macs": [
+    "00:e0:ed:5d:84:65"
+  ],
+  "tcp_tcp_flags": "19",
+  "tcp_tcp_flags_ts": "19",
+  "tcp_tcp_flags_tc": "10",
+  "tcp_fin": true,
+  "tcp_psh": true,
+  "tcp_ack": true,
+  "tcp_state": "established"
+}

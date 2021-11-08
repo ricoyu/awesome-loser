@@ -1,5 +1,11 @@
 package com.loserico;
 
+import org.junit.Test;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+
 public class RandomTest2 {
 
 	public static void main(String[] args) {
@@ -41,5 +47,13 @@ public class RandomTest2 {
             }
         }
         return result;
+    }
+    
+    @Test
+    public void test() {
+    	Map<String, String> usermap = new HashMap<>();
+	    for(Entry<String, String> entry : usermap.entrySet()) {
+	            
+	    }
     }
 }

@@ -14,7 +14,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @version 1.0
  */
 public class LoserThreadFactory implements ThreadFactory {
-	private static final AtomicInteger poolNumber = new AtomicInteger(1);
 	private final ThreadGroup group;
 	private final AtomicInteger threadNumber = new AtomicInteger(1);
 	/**
@@ -25,13 +24,13 @@ public class LoserThreadFactory implements ThreadFactory {
 	public LoserThreadFactory() {
 		SecurityManager s = System.getSecurityManager();
 		group = (s != null) ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
-		poolNamePrefix = "loser-pool-" + poolNumber.getAndIncrement() + "-thread-";
+		poolNamePrefix = "loser-pool-T";
 	}
 	
 	public LoserThreadFactory(String namePrefix) {
 		SecurityManager s = System.getSecurityManager();
 		group = (s != null) ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
-		this.poolNamePrefix  = namePrefix + "-" + poolNumber.getAndIncrement() + "-thread-";
+		this.poolNamePrefix  = namePrefix + "-T";
 	}
 	
 	public Thread newThread(Runnable r) {

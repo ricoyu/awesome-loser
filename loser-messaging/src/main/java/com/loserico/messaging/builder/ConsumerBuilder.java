@@ -1,6 +1,7 @@
 package com.loserico.messaging.builder;
 
 import com.loserico.messaging.consumer.Consumer;
+import com.loserico.messaging.deserialzier.JsonDeserializer;
 import com.loserico.messaging.enums.OffsetReset;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -11,6 +12,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static com.loserico.common.lang.utils.Assert.notNull;
+import static com.loserico.messaging.enums.OffsetReset.LATEST;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.AUTO_OFFSET_RESET_CONFIG;
@@ -23,7 +25,9 @@ import static org.apache.kafka.clients.consumer.ConsumerConfig.GROUP_ID_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.MAX_PARTITION_FETCH_BYTES_CONFIG;
+import static org.apache.kafka.clients.consumer.ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.MAX_POLL_RECORDS_CONFIG;
+import static org.apache.kafka.clients.consumer.ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG;
 
 /**
@@ -63,7 +67,7 @@ public class ConsumerBuilder extends BaseBuilder {
 	 * <li>anything else</li>  throw exception to the consumer.
 	 * </ul>
 	 */
-	private OffsetReset autoOffsetReset;
+	private OffsetReset autoOffsetReset = LATEST;
 	
 	/**
 	 * Unique string that identifies the consumer group to which this consumer belongs.
@@ -81,7 +85,7 @@ public class ConsumerBuilder extends BaseBuilder {
 	/**
 	 * 默认57671680 55M
 	 * The maximum number of bytes we will return for a fetch request. Must be at least 1024.
-	 * 
+	 * <p>
 	 * fetch.max.bytes
 	 */
 	private Integer fetchMaxBytes;
@@ -92,15 +96,15 @@ public class ConsumerBuilder extends BaseBuilder {
 	private Integer fetchMinBytes;
 	
 	/**
-	 *  默认 1048576 1M
-	 *  
-	 *  The maximum amount of data per-partition the server will return. Records are fetched in batches by the consumer. 
-	 *  If the first record batch in the first non-empty partition of the fetch is larger than this limit, 
-	 *  the batch will still be returned to ensure that the consumer can make progress. 
-	 *  The maximum record batch size accepted by the broker is defined via message.max.bytes (broker config) or max.message.bytes (topic config). 
-	 *  See fetch.max.bytes for limiting the consumer request size.
-	 *  
-	 *  max.partition.fetch.bytes
+	 * 默认 1048576 1M
+	 * <p>
+	 * The maximum amount of data per-partition the server will return. Records are fetched in batches by the consumer.
+	 * If the first record batch in the first non-empty partition of the fetch is larger than this limit,
+	 * the batch will still be returned to ensure that the consumer can make progress.
+	 * The maximum record batch size accepted by the broker is defined via message.max.bytes (broker config) or max.message.bytes (topic config).
+	 * See fetch.max.bytes for limiting the consumer request size.
+	 * <p>
+	 * max.partition.fetch.bytes
 	 */
 	private Integer maxPartitionFetchBytes;
 	
@@ -123,21 +127,44 @@ public class ConsumerBuilder extends BaseBuilder {
 	private Integer heartbeatInterval;
 	
 	/**
-	 * Consumer poll的超时时间, Spring Kafka也是默认5000 ms<p>
+	 * session.timeout.ms 默认 10000
+	 * <p/>
+	 * The timeout used to detect consumer failures when using Kafka's group management facility. The consumer sends periodic heartbeats
+	 * to indicate its liveness to the broker. If no heartbeats are received by the broker before the expiration of this session timeout,
+	 * then the broker will remove this consumer from the group and initiate a rebalance. Note that the value must be in the allowable
+	 * range as configured in the broker configuration by group.min.session.timeout.ms and group.max.session.timeout.ms.
+	 * <p/>
+	 * 简言之就是consumer客户端的session超时时间 <br/>
+	 * 该属性指定了消费者在被认为死亡之前可以与服务器断开连接的时间，默认是 3s。 <br/>
+	 * 如果消费者没有在 session.timeout.ms 指定的时间内发送心跳给群组协调器, 就被认为已经死亡, 协调器就会触发再均衡, 把它的分区分配给群组里的其他消费者。
+	 * <p/>
+	 * 该属性与 heartbeat.interval.ms 紧密相关。heartbeat.interval.ms 指定了 poll() 方法向协调器发送心跳的频率, session.timeout.ms 则指定了消费者可以多久不发送心跳。
+	 * <p/>
+	 * 所以, 一般需要同时修改这两个属性, heartbeat.interval.ms 必须比 session.timeout.ms 小, 一般是 session.timeout.ms 的三分之一。
+	 * 如果session.timeout.ms 是 3s, 那么 heartbeat.interval.ms 应该是 1s。
+	 * <p/>
+	 * 把 session.timeout.ms 值设得比默认值小，可以更快地检测和恢复崩溃的节点, 不过长时间的轮询或垃圾收集可能导致非预期的再均衡。
+	 * 把该属性的值设置得大一些, 可以减少意外的再均衡, 不过检测节点崩溃需要更长的时间。
+	 */
+	private Integer sessionTimeout;
+	
+	/**
+	 * Consumer 调用poll(long)的超时时间, Spring Kafka也是默认5000 ms<p>
 	 * Set the max time to block in the consumer waiting for records.
 	 */
 	private Integer pollTimeout = 5000;
 	
 	/**
-	 * Deserializer class for keys.
+	 * max.poll.interval.ms 300000 5m
+	 * <p>
+	 * The maximum delay between invocations of poll() when using consumer group management. 
+	 * This places an upper bound on the amount of time that the consumer can be idle before fetching more records. 
+	 * If poll() is not called before expiration of this timeout, then the consumer is considered failed and the 
+	 * group will rebalance in order to reassign the partitions to another member.
+	 * <p>
+	 * Consumer两次调用poll的间隔, 如果超过这个值仍没有调用poll, 会发生rebalance
 	 */
-	private Class<? extends Deserializer> keyDeserializer = StringDeserializer.class;
-	
-	/**
-	 * Deserializer class for values.
-	 */
-	private Class<? extends Deserializer> valueDeserializer = StringDeserializer.class;
-	
+	private Integer maxPollInterval = 300000;
 	/**
 	 * message 类型, 如果指定, 自动帮你反序列化成该对象
 	 */
@@ -147,6 +174,17 @@ public class ConsumerBuilder extends BaseBuilder {
 	 * 记录每次拉取消息的统计信息, 如一次拉取到多少条, 总共占多少字节
 	 */
 	private Boolean enableStatistic;
+	
+	/**
+	 * Consumer拉取消息后直接丢到一个BlockingQueue里面, 然后直接拉取下一批消息
+	 * 工作线程从BlockingQueue拉取消息进行处理
+	 */
+	private Integer queueSize;
+	
+	/**
+	 * 工作线程的核心线程数, 默认CPU核数+1
+	 */
+	private Integer workerThreads;
 	
 	@Override
 	public ConsumerBuilder bootstrapServers(String bootstrapServers) {
@@ -237,8 +275,9 @@ public class ConsumerBuilder extends BaseBuilder {
 	/**
 	 * 默认57671680 55M
 	 * The maximum number of bytes we will return for a fetch request. Must be at least 1024.
-	 *
+	 * <p>
 	 * fetch.max.bytes
+	 *
 	 * @param fetchMaxBytes
 	 * @return ConsumerBuilder
 	 */
@@ -268,18 +307,18 @@ public class ConsumerBuilder extends BaseBuilder {
 	}
 	
 	/**
-	 *  默认 1048576 1M
-	 *  
-	 *  从一个Partition上一次拉取消息的bytes上限, 如果消息都在一个Partition上, 那么限制了一次拉取消息的大小
+	 * 默认 1048576 1M
+	 * <br/>
+	 * 从一个Partition上一次拉取消息的bytes上限, 如果消息都在一个Partition上, 那么限制了一次拉取消息的大小
+	 * <p/>
+	 * The maximum amount of data per-partition the server will return. Records are fetched in batches by the consumer.
+	 * If the first record batch in the first non-empty partition of the fetch is larger than this limit,
+	 * the batch will still be returned to ensure that the consumer can make progress.
+	 * The maximum record batch size accepted by the broker is defined via message.max.bytes (broker config) or max.message.bytes (topic config).
+	 * See fetch.max.bytes for limiting the consumer request size.
+	 * <p>
+	 * max.partition.fetch.bytes
 	 *
-	 *  The maximum amount of data per-partition the server will return. Records are fetched in batches by the consumer. 
-	 *  If the first record batch in the first non-empty partition of the fetch is larger than this limit, 
-	 *  the batch will still be returned to ensure that the consumer can make progress. 
-	 *  The maximum record batch size accepted by the broker is defined via message.max.bytes (broker config) or max.message.bytes (topic config). 
-	 *  See fetch.max.bytes for limiting the consumer request size.
-	 *
-	 *  max.partition.fetch.bytes
-	 *  
 	 * @param maxPartitionFetchBytes
 	 * @return ConsumerBuilder
 	 */
@@ -304,37 +343,61 @@ public class ConsumerBuilder extends BaseBuilder {
 	}
 	
 	/**
+	 * session.timeout.ms 默认 10000 <br/>
+	 * 如果在这个期间内没有发送心跳, 就会发生Rebalance
+	 * <p/>
+	 * 绝对要注意: 这个参数如果调大了, 比如调成5分钟, 那么你的客户端关掉后重开, 可能会一时半会收不到消息 <p/>
+	 * 然后你后一脸懵逼, 会抓狂 <p/>
+	 * 原因是前一个客户端关掉后, 因为你设置了比较大的session超时时间, Broker会认为前一个客户端连接还在, 不一定会马上把消息发给新客户端 <p/>
+	 * The timeout used to detect consumer failures when using Kafka's group management facility. The consumer sends periodic heartbeats
+	 * to indicate its liveness to the broker. If no heartbeats are received by the broker before the expiration of this session timeout,
+	 * then the broker will remove this consumer from the group and initiate a rebalance. Note that the value must be in the allowable
+	 * range as configured in the broker configuration by group.min.session.timeout.ms and group.max.session.timeout.ms.
+	 * <p/>
+	 * 简言之就是consumer客户端的session超时时间 <br/>
+	 * 该属性指定了消费者在被认为死亡之前可以与服务器断开连接的时间，默认是 3s。 <br/>
+	 * 如果消费者没有在 session.timeout.ms 指定的时间内发送心跳给群组协调器, 就被认为已经死亡, 协调器就会触发再均衡, 把它的分区分配给群组里的其他消费者。
+	 * <p/>
+	 * 该属性与 heartbeat.interval.ms 紧密相关。heartbeat.interval.ms 指定了 poll() 方法向协调器发送心跳的频率, session.timeout.ms 则指定了消费者可以多久不发送心跳。
+	 * <p/>
+	 * 所以, 一般需要同时修改这两个属性, heartbeat.interval.ms 必须比 session.timeout.ms 小, 一般是 session.timeout.ms 的三分之一。
+	 * 如果session.timeout.ms 是 3s, 那么 heartbeat.interval.ms 应该是 1s。
+	 * <p/>
+	 * 把 session.timeout.ms 值设得比默认值小，可以更快地检测和恢复崩溃的节点, 不过长时间的轮询或垃圾收集可能导致非预期的再均衡。
+	 * 把该属性的值设置得大一些, 可以减少意外的再均衡, 不过检测节点崩溃需要更长的时间。
+	 */
+	public ConsumerBuilder sessionTimeout(Integer sessionTimeout, TimeUnit timeUnit) {
+		this.sessionTimeout = (int) timeUnit.toMillis(sessionTimeout.longValue());
+		return this;
+	}
+	
+	/**
 	 * Consumer poll的超时时间, Spring Kafka也是默认5000 ms<p>
 	 * Set the max time to block in the consumer waiting for records.
-	 * 
+	 *
 	 * @param pollTimeout
 	 * @return ConsumerBuilder
 	 */
 	public ConsumerBuilder pollTimeout(Integer pollTimeout) {
-		this.pollTimeout= pollTimeout;
+		this.pollTimeout = pollTimeout;
 		return this;
 	}
 	
 	/**
-	 * 默认 StringDeserializer
-	 *
-	 * @param keyDeserializer
+	 * max.poll.interval.ms 300000 5m
+	 * <p>
+	 * The maximum delay between invocations of poll() when using consumer group management. 
+	 * This places an upper bound on the amount of time that the consumer can be idle before fetching more records. 
+	 * If poll() is not called before expiration of this timeout, then the consumer is considered failed and the 
+	 * group will rebalance in order to reassign the partitions to another member.
+	 * <p>
+	 * Consumer两次调用poll的间隔, 如果超过这个值仍没有调用poll, 会发生rebalance
+	 * 
+	 * @param maxPollInterval
 	 * @return ConsumerBuilder
 	 */
-	public ConsumerBuilder keyDeserializer(Class<? extends Deserializer> keyDeserializer) {
-		notNull(keyDeserializer, "keyDeserializer cannot null!");
-		this.keyDeserializer = keyDeserializer;
-		return this;
-	}
-	
-	/**
-	 * StringDeserializer
-	 *
-	 * @param valueDeserializer
-	 * @return ConsumerBuilder
-	 */
-	public ConsumerBuilder valueDeserializer(Class<? extends Deserializer> valueDeserializer) {
-		this.valueDeserializer = valueDeserializer;
+	public ConsumerBuilder maxPollInterval(Integer maxPollInterval) {
+		this.maxPollInterval = maxPollInterval;
 		return this;
 	}
 	
@@ -353,7 +416,8 @@ public class ConsumerBuilder extends BaseBuilder {
 	}
 	
 	/**
-	 * 拉取到消息后是否要反序列化成对象
+	 * message 类型, 如果指定, 拉取到消息后自动帮你反序列化成该对象
+	 *
 	 * @param messageClass
 	 * @return ConsumerBuilder
 	 */
@@ -364,11 +428,34 @@ public class ConsumerBuilder extends BaseBuilder {
 	
 	/**
 	 * 记录每次拉取消息的统计信息, 如一次拉取到多少条, 总共占多少字节
-	 * @param enableStatistic
+	 *
 	 * @return ConsumerBuilder
 	 */
-	public ConsumerBuilder enableStatistic(Boolean enableStatistic) {
-		this.enableStatistic = enableStatistic;
+	public ConsumerBuilder enableStatistic() {
+		this.enableStatistic = true;
+		return this;
+	}
+	
+	/**
+	 * 工作线程的核心线程数, 默认CPU核数+1
+	 *
+	 * @param workerThreads
+	 * @return ConsumerBuilder
+	 */
+	public ConsumerBuilder workerThreads(Integer workerThreads) {
+		this.workerThreads = workerThreads;
+		return this;
+	}
+	
+	/**
+	 * Consumer拉取消息后直接丢到一个BlockingQueue里面, 然后直接拉取下一批消息
+	 * 工作线程从BlockingQueue拉取消息进行处理
+	 *
+	 * @param queueSize
+	 * @return ConsumerBuilder
+	 */
+	public ConsumerBuilder queueSize(Integer queueSize) {
+		this.queueSize = queueSize;
 		return this;
 	}
 	
@@ -384,13 +471,18 @@ public class ConsumerBuilder extends BaseBuilder {
 	}
 	
 	public Consumer<String, String> build() {
-		Map<String, Object> properties = buildProperties();
-		return new Consumer(properties);
+		Map<String, Object> configs = buildProperties();
+		Deserializer keyDeserializer = new StringDeserializer();
+		Deserializer valueDeserializer = new JsonDeserializer();
+		valueDeserializer.configure(configs, false);
+		return new Consumer(configs, keyDeserializer, valueDeserializer);
 	}
 	
 	private Map<String, Object> buildProperties() {
 		Map<String, Object> properties = new HashMap<>();
 		properties.put(BOOTSTRAP_SERVERS_CONFIG, bootstrapServers());
+		properties.put(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+		properties.put(VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
 		
 		if (enableStatistic != null) {
 			properties.put("enableStatistic", enableStatistic);
@@ -425,11 +517,8 @@ public class ConsumerBuilder extends BaseBuilder {
 		if (heartbeatInterval != null) {
 			properties.put(HEARTBEAT_INTERVAL_MS_CONFIG, heartbeatInterval);
 		}
-		if (keyDeserializer != null) {
-			properties.put(KEY_DESERIALIZER_CLASS_CONFIG, keyDeserializer);
-		}
-		if (valueDeserializer != null) {
-			properties.put(VALUE_DESERIALIZER_CLASS_CONFIG, valueDeserializer);
+		if (sessionTimeout != null) {
+			properties.put(SESSION_TIMEOUT_MS_CONFIG, sessionTimeout);
 		}
 		if (messageClass != null) {
 			properties.put("message.class", messageClass);
@@ -437,6 +526,16 @@ public class ConsumerBuilder extends BaseBuilder {
 		
 		if (pollTimeout != null) {
 			properties.put("poll.timeout", pollTimeout);
+		}
+		if (maxPollInterval != null) {
+			properties.put(MAX_POLL_INTERVAL_MS_CONFIG, maxPollInterval);
+		}
+		
+		if (workerThreads != null) {
+			properties.put("workerThreads", workerThreads);
+		}
+		if (queueSize != null) {
+			properties.put("queueSize", queueSize);
 		}
 		
 		properties.putAll(this.properties);

@@ -3,10 +3,9 @@ package com.loserico.messaging.consumer;
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
 import com.loserico.common.lang.concurrent.LoserExecutors;
-import com.loserico.common.lang.concurrent.LoserThreadExecutor;
+import com.loserico.common.lang.concurrent.Policy;
 import com.loserico.common.lang.constants.Units;
-import com.loserico.common.lang.transformer.Transformers;
-import com.loserico.common.lang.utils.DateUtils;
+import com.loserico.json.jackson.JacksonUtils;
 import com.loserico.messaging.listener.ConsumerListener;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -16,14 +15,14 @@ import org.apache.kafka.common.serialization.Deserializer;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 import static java.util.Arrays.asList;
@@ -43,7 +42,7 @@ import static java.util.stream.Collectors.toList;
 public class Consumer<K, V> extends KafkaConsumer {
 	
 	/**
-	 * Consumer poll的超时时间, Spring Kafka也是默认5000 ms<p>
+	 * Consumer 调用poll(long)的超时时间, Spring Kafka也是默认5000 ms<p>
 	 * Set the max time to block in the consumer waiting for records.
 	 */
 	private Integer pollTimeout = 5000;
@@ -52,52 +51,52 @@ public class Consumer<K, V> extends KafkaConsumer {
 	
 	private Boolean enableStatistic;
 	
+	private BlockingQueue<List> queue;
+	
+	private int workerThreads = LoserExecutors.NCPUS + 1;
+	
 	/**
 	 * 用来消息去重的布隆过滤器
 	 */
 	private BloomFilter<Long> filter = BloomFilter.create(Funnels.longFunnel(), 10000, 0.01);
 	
-	private LoserThreadExecutor POOL = new LoserThreadExecutor(Runtime.getRuntime().availableProcessors() + 1,
-			20,
-			100, TimeUnit.SECONDS);
-	private ThreadPoolExecutor executor = LoserExecutors.of("loser-kafka-consumer")
-			.queueSize(3000)
-			.build();
+	private ThreadPoolExecutor executor = null;
 	
-	public Consumer(Map<String, Object> configs) {
-		super(configs, null, null);
+	public Consumer(Map<String, Object> configs, Deserializer<String> keyDeserializer, Deserializer valueDeserializer) {
+		super(configs, keyDeserializer, valueDeserializer);
 		this.enableStatistic = (Boolean) configs.get("enableStatistic");
 		pollTimeout(configs);
+		if (configs.get("queueSize") == null) {
+			queue = new ArrayBlockingQueue(1000);
+		} else {
+			Integer size = (Integer) configs.get("queueSize");
+			queue = new ArrayBlockingQueue(size);
+		}
+		
+		Integer workerThreads = (Integer) configs.get("workerThreads");
+		if (workerThreads != null) {
+			this.workerThreads = workerThreads;
+		}
+		
+		buildWorkingPool(configs);
 	}
 	
-	public Consumer(Map<String, Object> configs,
-	                Deserializer<K> keyDeserializer,
-	                Deserializer<V> valueDeserializer) {
-		super(configs, keyDeserializer, valueDeserializer);
-		pollTimeout(configs);
-	}
-	
-	public Consumer(Properties properties) {
-		this(properties, null, null);
-		pollTimeout(properties);
-	}
-	
-	public Consumer(Properties properties,
-	                Deserializer<K> keyDeserializer,
-	                Deserializer<V> valueDeserializer) {
-		super(properties, keyDeserializer, valueDeserializer);
-		pollTimeout(properties);
+	private void buildWorkingPool(Map<String, Object> configs) {
+		LoserExecutors loserExecutors = LoserExecutors.of("loser-consumer-worker").rejectPolicy(Policy.CALLER_RUNS);
+		Integer corePoolSize = LoserExecutors.NCPUS + 1;
+		loserExecutors.corePoolSize(corePoolSize);
+		Integer maxPoolSize = (Integer) configs.get("workerThreads");
+		if (maxPoolSize == null) {
+			maxPoolSize = corePoolSize * 3;
+		} else if (maxPoolSize < corePoolSize) {
+			maxPoolSize = corePoolSize * 3;
+		}
+		loserExecutors.maximumPoolSize(maxPoolSize);
+		executor = loserExecutors.build();
 	}
 	
 	private void pollTimeout(Map<String, Object> configs) {
 		pollTimeout = (Integer) configs.get("poll.timeout");
-		pollDuration = Duration.ofMillis(pollTimeout.longValue());
-	}
-	
-	private void pollTimeout(Properties properties) {
-		String timeout = (String) properties.get("poll.timeout");
-		Integer timeoutMs = Transformers.convert(timeout, Integer.class);
-		pollTimeout = (timeoutMs == null ? 5000 : timeoutMs);
 		pollDuration = Duration.ofMillis(pollTimeout.longValue());
 	}
 	
@@ -109,7 +108,8 @@ public class Consumer<K, V> extends KafkaConsumer {
 	 */
 	public void subscribe(String topic, ConsumerListener listener) {
 		subscribe(asList(topic));
-		messageProcess(listener);
+		startPolling();
+		starWorker(listener);
 	}
 	
 	/**
@@ -120,60 +120,78 @@ public class Consumer<K, V> extends KafkaConsumer {
 	 */
 	public void subscribePattern(String topicPattern, ConsumerListener listener) {
 		subscribe(Pattern.compile(topicPattern));
-		messageProcess(listener);
+		startPolling();
+		starWorker(listener);
 	}
 	
-	private void messageProcess(ConsumerListener listener) {
-		try {
+	/**
+	 * 异步拉取消息
+	 */
+	private void startPolling() {
+		new Thread(() -> {
 			while (true) {
-				ConsumerRecords<String, String> consumerRecords = poll(pollDuration);
-				int count = consumerRecords.count();
-				if (count == 0) {
-					continue;
-				}
-				
-				List messages = new ArrayList(count);
-				Set<Long> offsets = new HashSet<>();
-				for (ConsumerRecord record : consumerRecords) {
-					/*
-					 * 这个offset位置的还没有消费过的话才会消费
-					 */
-					if (!filter.mightContain(record.offset())) {
-						messages.add(record.value());
-						offsets.add(record.offset());
-					} else {
-						log.info("过滤掉重复消息, Offset: {}", record.offset());
-					}
-				}
-				
-				if (isStatistic()) {
-					List<Long> sortedOffsets = offsets.stream().sorted().collect(toList());
-					log.info("本次拉取到Offset范围: {} ~ {}", sortedOffsets.get(0), sortedOffsets.get(sortedOffsets.size() - 1));
-					
-					StringBuilder sb = new StringBuilder();
-					messages.forEach(msg -> sb.append(msg));
-					byte[] bytes = sb.toString().getBytes();
-					int messageInKB = bytes.length / Units.KB;
-					log.info("拉取到消息大小{}KB", messageInKB);
-					log.info("拉取到{}条消息", messages.size());
-				}
-				
-				if (messages.isEmpty()) {
-					continue;
-				}
-				
 				try {
-					executor.execute(() -> listener.onMessage(messages));
+					//poll() 方法只能由单个线程调用, 不能多线程去poll
+					ConsumerRecords<String, String> consumerRecords = poll(pollDuration);
+					int count = consumerRecords.count();
+					if (count == 0) {
+						continue;
+					}
+					
+					List messages = new ArrayList(count);
+					Set<Long> offsets = new HashSet<>();
+					for (ConsumerRecord record : consumerRecords) {
+						messages.add(record.value());
+					}
+					
+					//提高性能?
+					//commitAsync();
 					commitSync();
-					//将已消费的偏移量加入布隆过滤器
-					offsets.forEach(offset -> filter.put(offset));
+					
+					if (messages.isEmpty()) {
+						continue;
+					}
+					
+					queue.put(messages);
+					
+					if (isStatistic()) {
+						List<Long> sortedOffsets = offsets.stream().sorted().collect(toList());
+						if (!sortedOffsets.isEmpty()) {
+							log.info("本次拉取到Offset范围: {} ~ {}", sortedOffsets.get(0), sortedOffsets.get(sortedOffsets.size() - 1));
+						}
+						
+						AtomicInteger totalBytes = new AtomicInteger();
+						messages.forEach(msg -> totalBytes.addAndGet(JacksonUtils.toBytes(msg).length));
+						int messageInKB = totalBytes.get() / Units.KB;
+						log.info("拉取到消息大小{}KB", messageInKB);
+						log.info("拉取到{}条消息", messages.size());
+						log.info("当前队列消息数量: {}", queue.size());
+					}
 				} catch (Exception e) {
-					log.info("消费消息失败, 不提交", e);
+					log.error("", e);
 				}
 			}
-		} finally {
-			log.warn("Consumer 停止 {}", DateUtils.format(new Date()));
-			close();
+		}, "loser-consumer-main").start();
+		
+	}
+	
+	/**
+	 * 异步处理拉取到的消息
+	 *
+	 * @param listener
+	 */
+	private void starWorker(ConsumerListener listener) {
+		for (int i = 0; i < workerThreads; i++) {
+			executor.execute(() -> {
+				while (true) {
+					try {
+						List messages = queue.take();
+						listener.onMessage(messages);
+					} catch (Exception e) {
+						log.error("", e);
+					}
+				}
+			});
 		}
 	}
 	

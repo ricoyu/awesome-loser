@@ -23,7 +23,7 @@ import static java.util.concurrent.TimeUnit.*;
 
 public final class LoserExecutors {
 	
-	private static final int NCPUS = Runtime.getRuntime().availableProcessors();
+	public static final int NCPUS = Runtime.getRuntime().availableProcessors();
 	
 	/**
 	 * 核心线程数
@@ -41,9 +41,10 @@ public final class LoserExecutors {
 	private boolean prestartAllCoreThreads = false;
 	
 	/**
-	 * 线程池最大线程数, 默认200
+	 * 线程池最大线程数, 默认CPU核心数的3倍
+	 * 太大了可能会把应用压垮, 如果不够, 可以自行调高
 	 */
-	private Integer maximumPoolSize = 200;
+	private Integer maximumPoolSize = NCPUS * 3;
 	
 	/**
 	 * 给线程池起个名字
@@ -119,12 +120,23 @@ public final class LoserExecutors {
 	}
 	
 	/**
-	 * 线程池最大线程数, 默认200
+	 * 线程池最大线程数, 默认CPU核心数的3倍
+	 * 太大了可能会把应用压垮, 如果不够, 可以自行调高
 	 *
 	 * @param maximumPoolSize
 	 * @return Executors
 	 */
 	public LoserExecutors maximumPoolSize(Integer maximumPoolSize) {
+		this.maximumPoolSize = maximumPoolSize;
+		return this;
+	}
+	
+	/**
+	 * 将线程池最大线程数设为和核心线程数一样
+	 * 使用CPU密集型任务, 有几个核心就开几个线程
+	 * @return LoserExecutors
+	 */
+	public LoserExecutors maximumPoolSizeToCorePoolSize() {
 		this.maximumPoolSize = maximumPoolSize;
 		return this;
 	}
