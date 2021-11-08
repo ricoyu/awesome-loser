@@ -57,6 +57,7 @@ import static com.loserico.json.jackson.JacksonUtils.toJson;
 import static java.lang.String.join;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.*;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -244,6 +245,7 @@ public final class JedisUtils {
 	 *     <li/>如果mode<0, value要比原来的的值小才会set
 	 *     <li/>如果mode>0, value要比原来的值大才会set
 	 * </ul>
+	 *
 	 * @param key
 	 * @param value
 	 * @param mode
@@ -688,6 +690,17 @@ public final class JedisUtils {
 		}
 		
 		/**
+		 * lpush 向指定的列表左侧(头部)插入元素, 返回插入后列表的长度
+		 *
+		 * @param key
+		 * @param values
+		 * @return long
+		 */
+		public static long rpush(String key, List values) {
+			return jedisOperations.rpush(toBytes(key), toBytes(values));
+		}
+		
+		/**
 		 * 从左侧(头部)弹出一个元素
 		 *
 		 * @param key
@@ -1031,6 +1044,10 @@ public final class JedisUtils {
 			return jedisOperations.rpop(key);
 		}
 		
+		public static List<String> rpop(String key, Integer count) {
+			return jedisOperations.rpop(key, count);
+		}
+		
 		public static <T> T rpop(String key, Class<T> clazz) {
 			String value = jedisOperations.rpop(key);
 			if (isBlank(value)) {
@@ -1038,6 +1055,17 @@ public final class JedisUtils {
 			}
 			
 			return JacksonUtils.toObject(value, clazz);
+		}
+		
+		public static <T> List<T> rpop(String key, Integer count, Class<T> clazz) {
+			List<String> values = jedisOperations.rpop(key, count);
+			if (isEmpty(values)) {
+				return Collections.emptyList();
+			}
+			
+			return values.stream()
+					.map(json -> JacksonUtils.toObject(json, clazz))
+					.collect(toList());
 		}
 		
 		/**
@@ -1747,7 +1775,7 @@ public final class JedisUtils {
 			List<String> values = jedisOperations.hvals(key);
 			return values.stream()
 					.map((value) -> JacksonUtils.toObject(value, clazz))
-					.collect(Collectors.toList());
+					.collect(toList());
 		}
 		
 		/**

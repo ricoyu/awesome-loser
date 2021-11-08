@@ -135,6 +135,13 @@ public interface JedisOperations {
 	public String rpop(String key);
 	
 	/**
+	 * 从list右侧弹出一个元素
+	 * @param key
+	 * @return String
+	 */
+	public List<String> rpop(String key, Integer count);
+	
+	/**
 	 * Returns the length of the list stored at key.
 	 * <p>
 	 * If key does not exist, it is interpreted as an empty list and 0 is returned.

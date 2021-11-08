@@ -30,7 +30,7 @@ public class JedisUtilsListTest {
 	}
 	
 	@Test
-	public void testRPop() {
+	public void testLRange() {
 		List<String> metadatas = JedisUtils.LIST.lrange("metadata-list", 0, 10010);
 		System.out.println(metadatas.size());
 		for (String metadata : metadatas) {
@@ -38,5 +38,11 @@ public class JedisUtilsListTest {
 				System.out.println("超过返回返回了null值");
 			}
 		}
+	}
+	
+	@Test
+	public void testRpopCount() {
+		List<String> metadatas = JedisUtils.LIST.rpop("metadata-list", 1000);
+		System.out.println(metadatas.size());
 	}
 }

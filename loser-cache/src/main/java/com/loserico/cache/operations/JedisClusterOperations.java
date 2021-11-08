@@ -162,6 +162,11 @@ public class JedisClusterOperations implements JedisOperations {
 	}
 	
 	@Override
+	public List<String> rpop(String key, Integer count) {
+		return jedisCluster.rpop(key, count);
+	}
+	
+	@Override
 	public Long llen(String key) {
 		return jedisCluster.llen(key);
 	}

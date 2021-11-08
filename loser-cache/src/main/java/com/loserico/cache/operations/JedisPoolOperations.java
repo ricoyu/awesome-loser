@@ -18,6 +18,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static java.util.Collections.emptyList;
+
 /**
  * <p>
  * Copyright: (C), 2019/10/24 7:39
@@ -178,6 +180,15 @@ public class JedisPoolOperations implements JedisOperations {
 	@Override
 	public String rpop(String key) {
 		return operate(jedis -> jedis.rpop(key));
+	}
+	
+	@Override
+	public List<String> rpop(String key, Integer count) {
+		List<String> list = operate(jedis -> jedis.rpop(key, count));
+		if (list == null) {
+			return emptyList();
+		}
+		return list;
 	}
 	
 	@Override
