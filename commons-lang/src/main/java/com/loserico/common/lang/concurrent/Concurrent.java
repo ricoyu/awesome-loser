@@ -69,7 +69,7 @@ public final class Concurrent {
 	public static ExecutorService ncoreFixedThreadPool() {
 		ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(NCPUS + 1, NCPUS + 1,
 				0L, TimeUnit.MILLISECONDS,
-				new LinkedBlockingQueue<Runnable>(2600),
+				new LinkedBlockingQueue<Runnable>(),
 				defaultThreadFactory);
 		threadPoolExecutor.prestartAllCoreThreads();
 		return threadPoolExecutor;
@@ -85,7 +85,7 @@ public final class Concurrent {
 	public static ExecutorService ioConcentratedFixedThreadPool() {
 		ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(2 * NCPUS + 1, 2 * NCPUS + 1,
 				0L, TimeUnit.MILLISECONDS,
-				new LinkedBlockingQueue<Runnable>(2600),
+				new LinkedBlockingQueue<Runnable>(),
 				defaultThreadFactory);
 		threadPoolExecutor.prestartAllCoreThreads();
 		return threadPoolExecutor;

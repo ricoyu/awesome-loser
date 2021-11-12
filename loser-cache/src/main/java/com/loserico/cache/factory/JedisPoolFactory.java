@@ -3,6 +3,7 @@ package com.loserico.cache.factory;
 
 import com.loserico.cache.config.RedisProperties;
 import com.loserico.common.lang.resource.PropertyReader;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import redis.clients.jedis.JedisPool;
 
@@ -18,6 +19,7 @@ import redis.clients.jedis.JedisPool;
  * @author Rico Yu  ricoyu520@gmail.com
  * @version 1.0
  */
+@Slf4j
 public class JedisPoolFactory implements PoolFactory {
 	
 	@Override
@@ -64,6 +66,15 @@ public class JedisPoolFactory implements PoolFactory {
 		//执行redis命令默认1秒超时
 		int socketTimeout = propertyReader.getInt("redis.socketTimeout", 1000);
 		int db = propertyReader.getInt("redis.db", 0);
+		
+		boolean isDebug = propertyReader.getBoolean("redis.debug", false);
+		if (isDebug) {
+			log.info("host: {}", host);
+			log.info("port: {}", port);
+			log.info("connectionTimeout: {}", connectionTimeout);
+			log.info("socketTimeout: {}", socketTimeout);
+			log.info("db: {}", db);
+		}
 		
 		if (StringUtils.isNotBlank(password)) {
 			return new JedisPool(

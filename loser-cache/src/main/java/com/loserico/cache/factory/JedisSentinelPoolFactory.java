@@ -41,6 +41,13 @@ public class JedisSentinelPoolFactory implements PoolFactory {
 		int db = propertyReader.getInt("redis.db", 0);
 
 		String masterName = propertyReader.getString("redis.maserName", "mymaster");
+		
+		boolean isDebug = propertyReader.getBoolean("redis.debug", false);
+		if (isDebug) {
+			log.info("sentinels: {}", sentinels);
+			log.info("timeout: {}", timeout);
+			log.info("db: {}", db);
+		}
 		JedisSentinelPool sentinelPool;
 		if (StringUtils.isNotBlank(password)) {
 			sentinelPool = new JedisSentinelPool(masterName,

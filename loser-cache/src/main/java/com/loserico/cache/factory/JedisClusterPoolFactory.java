@@ -2,6 +2,7 @@ package com.loserico.cache.factory;
 
 import com.loserico.cache.config.RedisProperties;
 import com.loserico.common.lang.resource.PropertyReader;
+import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisCluster;
@@ -23,6 +24,7 @@ import static java.util.stream.Collectors.toSet;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
+@Slf4j
 public class JedisClusterPoolFactory implements PoolFactory {
 	
 	@Override
@@ -44,6 +46,15 @@ public class JedisClusterPoolFactory implements PoolFactory {
 		int socketTimeout = propertyReader.getInt("redis.socketTimeout", 1000);
 		//出现异常最大重试次数
 		int maxAttempts = propertyReader.getInt("redis.cluster.maxAttempts", 3);
+		
+		boolean isDebug = propertyReader.getBoolean("redis.debug", false);
+		if (isDebug) {
+			log.info("clusters: {}", clusters);
+			log.info("connectionTimeout: {}", connectionTimeout);
+			log.info("socketTimeout: {}", socketTimeout);
+			log.info("maxAttempts: {}", maxAttempts);
+		}
+		
 		return new JedisCluster(nodes, connectionTimeout, socketTimeout, maxAttempts, password, poolConfig);
 	}
 	
