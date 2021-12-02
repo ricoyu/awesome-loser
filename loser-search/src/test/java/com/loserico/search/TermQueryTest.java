@@ -3,7 +3,6 @@ package com.loserico.search;
 import com.loserico.search.ElasticUtilsTest.Product;
 import com.loserico.search.enums.FieldType;
 import com.loserico.search.enums.SortOrder;
-import com.loserico.search.support.BulkResult;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.Test;
 
@@ -38,9 +37,9 @@ public class TermQueryTest {
 		List<Product> products = asList(new Product("1", "XHDK-A-1293-#fJ3", "iPhone"),
 				new Product("2", "KDKE-B-9947-#kL5", "iPad"),
 				new Product("3", "JODL-X-1937-#pV7", "MBP"));
-		BulkResult bulkResult = ElasticUtils.bulkIndex("products", products);
-		
-		assertThat(bulkResult.getSuccessCount() == 3);
+		//BulkResult bulkResult = ElasticUtils.bulkIndex("products", products);
+		//
+		//assertThat(bulkResult.getSuccessCount() == 3);
 		
 		List<Object> iphones = ElasticUtils.Query.termQuery("products")
 				.query("desc", "iPhone")
@@ -55,9 +54,9 @@ public class TermQueryTest {
 				"{\"productID\": \"XHDK-A-1293-#fJ3\", \"desc\": \"iPhone\"}",
 				"{\"productID\": \"KDKE-B-9947-#kL5\", \"desc\": \"iPad\"}",
 				"{\"productID\": \"JODL-X-1937-#pV7\", \"desc\": \"MBP\"}");
-		BulkResult bulkResult = ElasticUtils.bulkIndex("products", products);
+		/*BulkResult bulkResult = ElasticUtils.bulkIndex("products", products);
 		bulkResult.getIds().forEach(System.out::println);
-		System.out.println(bulkResult.getSuccessCount());
+		System.out.println(bulkResult.getSuccessCount());*/
 		
 		List<Object> iphones = ElasticUtils.Query.termQuery("products")
 				.query("desc", "iPhone")

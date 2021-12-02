@@ -81,7 +81,7 @@ public class IndexTemplateTest {
 	
 	@Test
 	public void testListIndexTemplate() {
-		GetIndexTemplatesResponse response = ElasticUtils.client.admin().indices().prepareGetTemplates().get();
+		GetIndexTemplatesResponse response = ElasticUtils.CLIENT.admin().indices().prepareGetTemplates().get();
 		List<IndexTemplateMetaData> indexTemplates = response.getIndexTemplates();
 		indexTemplates.forEach((template) -> {
 			System.out.println(template.name());

@@ -114,7 +114,7 @@ public class ElasticTemplateQueryBuilder {
 	 * @return
 	 */
 	private SearchHit[] searchHits() {
-		SearchResponse response = new SearchTemplateRequestBuilder(ElasticUtils.client)
+		SearchResponse response = new SearchTemplateRequestBuilder(ElasticUtils.CLIENT)
 				.setScript(templateName)
 				.setScriptType(ScriptType.STORED)
 				.setScriptParams(params)

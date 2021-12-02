@@ -5,7 +5,7 @@
     <groupId>com.loserico</groupId>
     <artifactId>awesome-loser</artifactId>
     <packaging>pom</packaging>
-    <version>4.12</version>
+    <version>4.12.1</version>
     <name>Awesome Loser</name>
     <url>http://maven.apache.org</url>
 
@@ -32,8 +32,10 @@
     </modules>
 
     <properties>
+        <loser.version>4.12.1</loser.version>
         <encoding>UTF-8</encoding>
         <jdk.version>1.8</jdk.version>
+        <!--<jdk.version>17</jdk.version>-->
 
         <springframework.version>5.1.18.RELEASE</springframework.version>
 
@@ -90,7 +92,7 @@
 
         <maven-resources-plugin.version>2.7</maven-resources-plugin.version>
         <maven-source-plugin.version>2.4</maven-source-plugin.version>
-        <maven-compiler-plugin.version>3.2</maven-compiler-plugin.version>
+        <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <maven-war-plugin.version>2.6</maven-war-plugin.version>
         <maven-checkstyle-plugin.version>2.17</maven-checkstyle-plugin.version>
     </properties>
@@ -670,7 +672,7 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-    
+
     <dependencies>
         <dependency>
             <groupId>com.github.javafaker</groupId>
@@ -724,7 +726,7 @@
                 <enabled>true</enabled>
             </snapshots>
         </pluginRepository>
-    </pluginRepositories> 
+    </pluginRepositories>
 
     <build>
         <resources>

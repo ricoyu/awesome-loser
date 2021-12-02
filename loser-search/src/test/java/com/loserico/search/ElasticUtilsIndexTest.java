@@ -146,7 +146,7 @@ public class ElasticUtilsIndexTest {
 	
 	@Test
 	public void testBulkUpdate() {
-		TransportClient client = ElasticUtils.client;
+		TransportClient client = ElasticUtils.CLIENT;
 		Map<String, Object> doc = new HashMap<>();
 		doc.put("src_country", "中国");
 		doc.put("src_city", "苏州");

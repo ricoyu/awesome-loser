@@ -112,6 +112,22 @@ public class RedixUtils {
 	}
 	
 	/**
+	 * 判断val是不是2的n次幂, 如 2, 4, 8, 16...
+	 * 
+	 * <pre> {@code
+	 * 16  0001 0000
+	 * -16 1111 0000
+	 * }</pre>
+	 * 位与后还是0001 0000, 所以2的n次幂就有这个特性 <p/>
+	 * 
+	 * @param val
+	 * @return boolean
+	 */
+	public static boolean isPowerOfTwo(int val) {
+		return (val & -val) == val;
+	}
+	
+	/**
 	 * 对hex预处理, null检查, 空字符串检查, 两边trim, 去掉开头的0x
 	 * @param hex
 	 * @return String

@@ -101,7 +101,7 @@ public class ElasticUpdateBuilder {
 		} else {
 			document = toJson(doc);
 		}
-		UpdateRequestBuilder updateRequestBuilder = ElasticUtils.client.prepareUpdate(index, ONLY_TYPE, id).setDoc(document, XContentType.JSON);
+		UpdateRequestBuilder updateRequestBuilder = ElasticUtils.CLIENT.prepareUpdate(index, ONLY_TYPE, id).setDoc(document, XContentType.JSON);
 		if (refresh != null && refresh.booleanValue()) {
 			updateRequestBuilder.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
 		}

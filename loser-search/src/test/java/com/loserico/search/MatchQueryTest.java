@@ -59,7 +59,7 @@ public class MatchQueryTest {
 	
 	@Test
 	public void testPainless() {
-		SearchRequestBuilder req = ElasticUtils.client.prepareSearch("kibana_sample_data_ecommerce");
+		SearchRequestBuilder req = ElasticUtils.CLIENT.prepareSearch("kibana_sample_data_ecommerce");
 		req.setQuery(QueryBuilders.matchAllQuery());
 		req.addScriptField("my_field", new Script("doc['email'].value"));
 		

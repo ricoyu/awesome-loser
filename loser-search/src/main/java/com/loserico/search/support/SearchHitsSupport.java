@@ -58,7 +58,11 @@ public final class SearchHitsSupport {
 				.filter(Objects::nonNull)
 				.map((hit) -> {
 					if (resultType != null && resultType == Map.class) {
+						//如果文档禁用了_source, 这里会是null
 						Map<String, Object> resultMap = hit.getSourceAsMap();
+						if (resultMap == null) {
+							resultMap = new HashMap<>();
+						}
 						resultMap.put("_id", hit.getId());
 						return (T) resultMap;
 					}

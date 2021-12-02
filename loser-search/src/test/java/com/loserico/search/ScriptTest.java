@@ -62,7 +62,7 @@ public class ScriptTest {
 				"}}" +
 				"return fieldName;\" }}";
 		
-		AcknowledgedResponse response = ElasticUtils.client.admin().cluster().preparePutStoredScript()
+		AcknowledgedResponse response = ElasticUtils.CLIENT.admin().cluster().preparePutStoredScript()
 				.setId("multi_field_agg")
 				.setContent(new BytesArray(script), XContentType.JSON)
 				.get();
@@ -72,9 +72,9 @@ public class ScriptTest {
 	
 	@Test
 	public void testCreateStoredScriptFromFile() {
-		AcknowledgedResponse deleteResponse = ElasticUtils.client.admin().cluster().prepareDeleteStoredScript("multi_field_agg").get();
+		AcknowledgedResponse deleteResponse = ElasticUtils.CLIENT.admin().cluster().prepareDeleteStoredScript("multi_field_agg").get();
 		System.out.println(deleteResponse.isAcknowledged());
-		AcknowledgedResponse response = ElasticUtils.client.admin().cluster().preparePutStoredScript()
+		AcknowledgedResponse response = ElasticUtils.CLIENT.admin().cluster().preparePutStoredScript()
 				.setId("multi_field_agg")
 				.setContent(new BytesArray(IOUtils.readClassPathFileAsString("scripts/multi_field.painless")), XContentType.JSON)
 				.get();
@@ -98,7 +98,7 @@ public class ScriptTest {
 				"}\n" +
 				"return fieldName;";
 		Script painless = new Script(ScriptType.INLINE, "painless", script, params);
-		SearchResponse response = ElasticUtils.client.prepareSearch("events")
+		SearchResponse response = ElasticUtils.CLIENT.prepareSearch("events")
 				.addAggregation(AggregationBuilders.terms("script_agg").script(painless))
 				.get();
 		Aggregations aggregations = response.getAggregations();
@@ -111,7 +111,7 @@ public class ScriptTest {
 		Map<String, Object> params = new HashMap<>();
 		params.put("fields", new String[]{"src_ip", "src_port"});
 		Script painless = new Script(ScriptType.STORED, null, "multi_field_agg", params);
-		SearchResponse response = ElasticUtils.client.prepareSearch("events")
+		SearchResponse response = ElasticUtils.CLIENT.prepareSearch("events")
 				.addAggregation(AggregationBuilders.terms("script_agg").script(painless))
 				.get();
 		Aggregations aggregations = response.getAggregations();

@@ -46,7 +46,7 @@ public class ElasticAggsTest {
 	public void testAggRaw() {
 		TermsAggregationBuilder arrregationBuilder = AggregationBuilders.terms("popular_colors")
 				.field("color.keyword");
-		SearchResponse searchResponse = ElasticUtils.client.prepareSearch("cars")
+		SearchResponse searchResponse = ElasticUtils.CLIENT.prepareSearch("cars")
 				.addAggregation(arrregationBuilder)
 				.get();
 		Aggregations aggregations = searchResponse.getAggregations();
@@ -90,7 +90,7 @@ public class ElasticAggsTest {
 				.subAggregation(max("max_price").field("AvgTicketPrice"))
 				.subAggregation(min("min_price").field("AvgTicketPrice"));
 		
-		SearchResponse response = ElasticUtils.client.prepareSearch("kibana_sample_data_flights")
+		SearchResponse response = ElasticUtils.CLIENT.prepareSearch("kibana_sample_data_flights")
 				.setSize(0)
 				.addAggregation(termsAggregationBuilder)
 				.get();

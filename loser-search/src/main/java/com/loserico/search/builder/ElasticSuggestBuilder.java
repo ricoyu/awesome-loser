@@ -103,7 +103,7 @@ public final class ElasticSuggestBuilder {
 		if (log.isDebugEnabled()) {
 			log.debug("Suggest DSL:\n {}", suggestBuilder.toString());
 		}
-		SearchResponse searchResponse = ElasticUtils.client
+		SearchResponse searchResponse = ElasticUtils.CLIENT
 				.prepareSearch(indices)
 				.suggest(suggestBuilder)
 				.get();

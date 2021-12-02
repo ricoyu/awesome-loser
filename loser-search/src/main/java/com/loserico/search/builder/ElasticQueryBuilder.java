@@ -469,7 +469,7 @@ public final class ElasticQueryBuilder {
 			throw new ElasticQueryException("请先设置QueryBuilder");
 		}
 		
-		SearchRequestBuilder builder = ElasticUtils.client.prepareSearch(indices)
+		SearchRequestBuilder builder = ElasticUtils.CLIENT.prepareSearch(indices)
 				.setQuery(this.builder)
 				.setSize(0) //count 不需要真正返回数据
 				.setFetchSource(false);
@@ -507,7 +507,7 @@ public final class ElasticQueryBuilder {
 			this.builder = QueryBuilders.functionScoreQuery(this.builder, scoreFunctionBuilder).boostMode(boostMode);
 		}
 		
-		SearchRequestBuilder searchRequestBuilder = ElasticUtils.client.prepareSearch(indices)
+		SearchRequestBuilder searchRequestBuilder = ElasticUtils.CLIENT.prepareSearch(indices)
 				.setQuery(this.builder);
 		
 		setFetchSource(searchRequestBuilder);

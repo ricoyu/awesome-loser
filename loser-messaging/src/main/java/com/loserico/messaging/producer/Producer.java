@@ -62,7 +62,7 @@ public class Producer<K, V> extends KafkaProducer {
 	}
 	
 	/**
-	 * 发送一条消息
+	 * 发送一批消息, 会将List中每一条消息挨个取出发送
 	 *
 	 * @param topic
 	 * @param values

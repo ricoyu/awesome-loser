@@ -85,7 +85,7 @@ public class ElasticUtilsTest {
 	@BeforeClass
 	public static void testInitialize() {
 		Class<ElasticUtils> elasticUtilsClass = ElasticUtils.class;
-		assertThat(ElasticUtils.client != null);
+		assertThat(ElasticUtils.CLIENT != null);
 	}
 	
 	@Test
@@ -161,8 +161,8 @@ public class ElasticUtilsTest {
 		persons.add(new Person(2, "Icon Man", "this is Stark"));
 		persons.add(new Person(3, "Sea King", "this is 海王"));
 		
-		BulkResult bulkResult = ElasticUtils.bulkIndex("rico", persons);
-		System.out.println(toJson(bulkResult));
+		//BulkResult bulkResult = ElasticUtils.bulkIndex("rico", persons);
+		//System.out.println(toJson(bulkResult));
 	}
 	
 	@Test
@@ -170,8 +170,8 @@ public class ElasticUtilsTest {
 		List<Product> products = asList(new Product("1", "XHDK-A-1293-#fJ3", "iPhone"),
 				new Product("2", "KDKE-B-9947-#kL5", "iPad"),
 				new Product("3", "JODL-X-1937-#pV7", "MBP"));
-		BulkResult bulkResult = ElasticUtils.bulkIndex("products", products);
-		System.out.println(toJson(bulkResult));
+		//BulkResult bulkResult = ElasticUtils.bulkIndex("products", products);
+		//System.out.println(toJson(bulkResult));
 	}
 	
 	@Test
@@ -895,7 +895,7 @@ public class ElasticUtilsTest {
 	
 	@Test
 	public void testSetReadOnly() {
-		AcknowledgedResponse response = ElasticUtils.client.admin().indices()
+		AcknowledgedResponse response = ElasticUtils.CLIENT.admin().indices()
 				.prepareUpdateSettings("test_index")
 				.setSettings(Settings.builder().put("blocks.read_only", true))
 				.get();
@@ -906,7 +906,7 @@ public class ElasticUtilsTest {
 	@SneakyThrows
 	@Test
 	public void testFormceMerge() {
-		ActionFuture<ForceMergeResponse> future = ElasticUtils.client.admin().indices().prepareForceMerge("my_movies").setMaxNumSegments(1).execute();
+		ActionFuture<ForceMergeResponse> future = ElasticUtils.CLIENT.admin().indices().prepareForceMerge("my_movies").setMaxNumSegments(1).execute();
 		ForceMergeResponse mergeResponse = future.get();
 		RestStatus status = mergeResponse.getStatus();
 		System.out.println(status);

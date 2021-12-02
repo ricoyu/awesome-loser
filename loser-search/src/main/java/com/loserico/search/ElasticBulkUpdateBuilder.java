@@ -12,7 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import static com.loserico.search.ElasticUtils.client;
+import static com.loserico.search.ElasticUtils.CLIENT;
 
 /**
  * 批量更新
@@ -72,7 +72,7 @@ public class ElasticBulkUpdateBuilder {
 	}
 	
 	public BulkResult execute() {
-		BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
+		BulkRequestBuilder bulkRequestBuilder = CLIENT.prepareBulk();
 		if (refresh != null && refresh.booleanValue()) {
 			bulkRequestBuilder.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
 		}

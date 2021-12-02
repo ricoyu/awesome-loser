@@ -29,6 +29,7 @@ import com.loserico.search.builder.agg.ElasticMinAggregationBuilder;
 import com.loserico.search.builder.agg.ElasticMultiTermsAggregationBuilder;
 import com.loserico.search.builder.agg.ElasticSumAggregationBuilder;
 import com.loserico.search.builder.agg.ElasticTermsAggregationBuilder;
+import com.loserico.search.builder.bulk.ESBulkProcessor;
 import com.loserico.search.builder.query.ElasticBoolQueryBuilder;
 import com.loserico.search.builder.query.ElasticExistsQueryBuilder;
 import com.loserico.search.builder.query.ElasticIdsQueryBuilder;
@@ -72,10 +73,12 @@ import org.elasticsearch.action.admin.indices.stats.IndicesStatsRequest;
 import org.elasticsearch.action.admin.indices.stats.IndicesStatsResponse;
 import org.elasticsearch.action.admin.indices.template.get.GetIndexTemplatesResponse;
 import org.elasticsearch.action.bulk.BulkItemResponse;
+import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.support.WriteRequest;
@@ -116,6 +119,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import static com.loserico.common.lang.utils.Assert.notNull;
 import static com.loserico.json.jackson.JacksonUtils.toJson;
@@ -145,7 +149,9 @@ public final class ElasticUtils {
 	 */
 	public static final String ONLY_TYPE = "_doc";
 	
-	public static final TransportClient client = TransportClientFactory.create();
+	public static final TransportClient CLIENT = TransportClientFactory.create();
+	
+	private static final ESBulkProcessor BULK_PROCESSOR = new ESBulkProcessor();
 	
 	/**
 	 * 只是初始化一下ES客户端连接
@@ -196,7 +202,7 @@ public final class ElasticUtils {
 		if (doc == null) {
 			return null;
 		}
-		IndexResponse response = client.prepareIndex(index, ONLY_TYPE, id)
+		IndexResponse response = CLIENT.prepareIndex(index, ONLY_TYPE, id)
 				.setSource(doc, XContentType.JSON)
 				.get();
 		return response.getId();
@@ -239,7 +245,7 @@ public final class ElasticUtils {
 		if (doc == null) {
 			return null;
 		}
-		IndexResponse response = client.prepareIndex(index, ONLY_TYPE, id)
+		IndexResponse response = CLIENT.prepareIndex(index, ONLY_TYPE, id)
 				.setSource(toJson(doc), XContentType.JSON)
 				.get();
 		return response.getId();
@@ -267,9 +273,9 @@ public final class ElasticUtils {
 	 */
 	public static BulkResult bulkIndex(String index, String... docs) {
 		//配置全局index和type
-		BulkRequestBuilder bulkRequest = client.prepareBulk(index, ONLY_TYPE);
+		BulkRequestBuilder bulkRequest = CLIENT.prepareBulk(index, ONLY_TYPE);
 		asList(docs).forEach((doc) -> {
-			bulkRequest.add(client.prepareIndex().setSource(doc, XContentType.JSON));
+			bulkRequest.add(CLIENT.prepareIndex().setSource(doc, XContentType.JSON));
 		});
 		
 		BulkResponse responses = bulkRequest.get();
@@ -293,6 +299,27 @@ public final class ElasticUtils {
 	}
 	
 	/**
+	 * 基于BulkProcessor批量创建文档, 该方式本身已经集成了多线程<p>
+	 *
+	 * @param index
+	 * @param docs
+	 * @return void
+	 */
+	public static void bulkIndexConcurrent(String index, List<?> docs) {
+		BulkProcessor bulkProcessor = BULK_PROCESSOR.bulkProcessor();
+		for (Object doc : docs) {
+			IndexRequest indexRequest = new IndexRequest(index).source(doc, XContentType.JSON);
+			bulkProcessor.add(indexRequest);
+		}
+		bulkProcessor.flush();
+		try {
+			bulkProcessor.awaitClose(30, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			log.error("", e);
+		}
+	}
+	
+	/**
 	 * 批量创建文档<p>
 	 * 返回创建结果, 包括成功数量, 失败数量, 失败消息, 成功创建的文档id列表<p>
 	 *
@@ -301,12 +328,12 @@ public final class ElasticUtils {
 	 * @return BulkResult
 	 */
 	public static BulkResult bulkIndex(String index, List<?> docs) {
-		BulkRequestBuilder bulkRequestBuilder = client.prepareBulk(index, ONLY_TYPE);
+		BulkRequestBuilder bulkRequestBuilder = CLIENT.prepareBulk(index, ONLY_TYPE);
 		docs.stream()
 				.filter(Objects::nonNull)
 				.map((doc) -> {
 					String id = ElasticCacheUtils.getIdValue(doc);
-					return client.prepareIndex()
+					return CLIENT.prepareIndex()
 							.setSource(toJson(doc), XContentType.JSON)
 							.setId(id);
 				}).forEach(builder -> bulkRequestBuilder.add(builder));
@@ -348,7 +375,7 @@ public final class ElasticUtils {
 		Objects.requireNonNull(index, "索引名不能为null");
 		Objects.requireNonNull(id, "id 不能为null");
 		
-		GetResponse response = client.prepareGet(index, ONLY_TYPE, id).get();
+		GetResponse response = CLIENT.prepareGet(index, ONLY_TYPE, id).get();
 		return response.getSourceAsString();
 	}
 	
@@ -366,7 +393,7 @@ public final class ElasticUtils {
 		Objects.requireNonNull(id, "id 不能为null");
 		Objects.requireNonNull(clazz, "clazz不能为null");
 		
-		GetResponse response = client.prepareGet(index, ONLY_TYPE, id).get();
+		GetResponse response = CLIENT.prepareGet(index, ONLY_TYPE, id).get();
 		String source = response.getSourceAsString();
 		return toObject(source, clazz);
 	}
@@ -377,7 +404,7 @@ public final class ElasticUtils {
 	 * @return
 	 */
 	public static ElasticMultiGetBuilder mget() {
-		return new ElasticMultiGetBuilder(client);
+		return new ElasticMultiGetBuilder(CLIENT);
 	}
 	
 	/**
@@ -388,7 +415,7 @@ public final class ElasticUtils {
 	 * @return Result
 	 */
 	public static boolean delete(String index, String id) {
-		DeleteResponse response = client.prepareDelete(index, ONLY_TYPE, id).get();
+		DeleteResponse response = CLIENT.prepareDelete(index, ONLY_TYPE, id).get();
 		return response.getResult() == DocWriteResponse.Result.DELETED;
 	}
 	
@@ -402,7 +429,7 @@ public final class ElasticUtils {
 	 * @return long
 	 */
 	public static long deleteBy(String index, String field, String value) {
-		BulkByScrollResponse response = new DeleteByQueryRequestBuilder(client, DeleteByQueryAction.INSTANCE)
+		BulkByScrollResponse response = new DeleteByQueryRequestBuilder(CLIENT, DeleteByQueryAction.INSTANCE)
 				.filter(QueryBuilders.termQuery(field, value))
 				.source(index)
 				.get();
@@ -442,7 +469,7 @@ public final class ElasticUtils {
 	 * @return Result 更新结果(更新了? 没更新?)
 	 */
 	public static UpdateResult update(String index, String id, String doc) {
-		UpdateRequestBuilder updateRequestBuilder = client.prepareUpdate(index, ONLY_TYPE, id).setDoc(doc, XContentType.JSON);
+		UpdateRequestBuilder updateRequestBuilder = CLIENT.prepareUpdate(index, ONLY_TYPE, id).setDoc(doc, XContentType.JSON);
 		updateRequestBuilder.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
 		UpdateResponse response = updateRequestBuilder.get();
 		return UpdateResult.from(response);
@@ -483,7 +510,7 @@ public final class ElasticUtils {
 	 * @return Result 创建? 更新? 没更新?
 	 */
 	public static UpdateResult upsert(String index, String id, String doc) {
-		UpdateRequestBuilder updateRequestBuilder = client.prepareUpdate(index, ONLY_TYPE, id);
+		UpdateRequestBuilder updateRequestBuilder = CLIENT.prepareUpdate(index, ONLY_TYPE, id);
 		UpdateResponse updateResponse = updateRequestBuilder.setDoc(doc, XContentType.JSON)
 				.setDocAsUpsert(true)
 				.get();
@@ -498,7 +525,7 @@ public final class ElasticUtils {
 	 * @return boolean
 	 */
 	public static boolean exists(String index, String id) {
-		GetResponse response = client.prepareGet(index, ONLY_TYPE, id)
+		GetResponse response = CLIENT.prepareGet(index, ONLY_TYPE, id)
 				.setFetchSource(false)
 				.get();
 		return response.isExists();
@@ -670,7 +697,7 @@ public final class ElasticUtils {
 			throw new IllegalArgumentException("analyzer cannot be null");
 		}
 		
-		AnalyzeRequestBuilder analyzeRequestBuilder = new AnalyzeRequestBuilder(client, AnalyzeAction.INSTANCE)
+		AnalyzeRequestBuilder analyzeRequestBuilder = new AnalyzeRequestBuilder(CLIENT, AnalyzeAction.INSTANCE)
 				.setText(texts)
 				.setAnalyzer(analyzer.toString());
 		Response response = analyzeRequestBuilder.get();
@@ -690,7 +717,7 @@ public final class ElasticUtils {
 	 * @return BulkByScrollResponse
 	 */
 	public static BulkByScrollResponse updateByQuery(String... indices) {
-		UpdateByQueryRequestBuilder updateByQuery = new UpdateByQueryRequestBuilder(client, UpdateByQueryAction.INSTANCE);
+		UpdateByQueryRequestBuilder updateByQuery = new UpdateByQueryRequestBuilder(CLIENT, UpdateByQueryAction.INSTANCE);
 		updateByQuery.source(indices).abortOnVersionConflict(false);
 		BulkByScrollResponse bulkByScrollResponse = updateByQuery.get();
 		log.info(bulkByScrollResponse.toString());
@@ -730,7 +757,7 @@ public final class ElasticUtils {
 				index = IndexSupport.indexName(entityClass);
 			}
 			
-			IndicesAdminClient indicesAdminClient = client.admin().indices();
+			IndicesAdminClient indicesAdminClient = CLIENT.admin().indices();
 			CreateIndexRequestBuilder createIndexRequestBuilder = indicesAdminClient.prepareCreate(index);
 			ElasticIndexBuilder indexBuilder = new ElasticIndexBuilder(createIndexRequestBuilder);
 			boolean created = indexBuilder.settings(settingsBuilder)
@@ -747,7 +774,7 @@ public final class ElasticUtils {
 		 * @return boolean 创建成功失败标识
 		 */
 		public static ElasticIndexBuilder createIndex(String index) {
-			IndicesAdminClient indicesAdminClient = client.admin().indices();
+			IndicesAdminClient indicesAdminClient = CLIENT.admin().indices();
 			CreateIndexRequestBuilder createIndexRequestBuilder = indicesAdminClient.prepareCreate(index);
 			return new ElasticIndexBuilder(createIndexRequestBuilder);
 		}
@@ -759,7 +786,7 @@ public final class ElasticUtils {
 		 * @return boolean
 		 */
 		public static boolean existsIndex(String... indices) {
-			IndicesExistsResponse response = client.admin().indices().prepareExists(indices).get();
+			IndicesExistsResponse response = CLIENT.admin().indices().prepareExists(indices).get();
 			return response.isExists();
 		}
 		
@@ -774,7 +801,7 @@ public final class ElasticUtils {
 				log.info("索引{}不存在", indices);
 				return false;
 			}
-			AcknowledgedResponse response = client.admin()
+			AcknowledgedResponse response = CLIENT.admin()
 					.indices()
 					.prepareDelete(indices)
 					.get();
@@ -787,7 +814,7 @@ public final class ElasticUtils {
 		 * @return List<String>
 		 */
 		public static List<String> listIndices() {
-			IndicesStatsResponse response = client.admin()
+			IndicesStatsResponse response = CLIENT.admin()
 					.indices()
 					.stats(new IndicesStatsRequest().all())
 					.actionGet();
@@ -804,7 +831,7 @@ public final class ElasticUtils {
 		 * @return 创建成功与否
 		 */
 		public static boolean createIndexAlias(String index, String alias) {
-			IndicesAliasesRequestBuilder builder = client.admin().indices().prepareAliases().addAlias(index, alias);
+			IndicesAliasesRequestBuilder builder = CLIENT.admin().indices().prepareAliases().addAlias(index, alias);
 			AcknowledgedResponse response = builder.get();
 			return response.isAcknowledged();
 		}
@@ -818,7 +845,7 @@ public final class ElasticUtils {
 		 * @return
 		 */
 		public static boolean createIndexAlias(String[] indices, String alias, QueryBuilder queryBuilder) {
-			IndicesAliasesRequestBuilder builder = client.admin()
+			IndicesAliasesRequestBuilder builder = CLIENT.admin()
 					.indices()
 					.prepareAliases()
 					.addAlias(indices, alias, queryBuilder);
@@ -834,7 +861,7 @@ public final class ElasticUtils {
 		 * @return 删除成功与否
 		 */
 		public static boolean deleteIndexAlias(String index, String alias) {
-			AcknowledgedResponse response = client.admin()
+			AcknowledgedResponse response = CLIENT.admin()
 					.indices()
 					.prepareAliases()
 					.removeAlias(index, alias)
@@ -849,7 +876,7 @@ public final class ElasticUtils {
 		 * @param templateName
 		 */
 		public static ElasticIndexTemplateBuilder putIndexTemplateByFile(String templateName) {
-			return ElasticIndexTemplateBuilder.newInstance(client, templateName);
+			return ElasticIndexTemplateBuilder.newInstance(CLIENT, templateName);
 		}
 		
 		/**
@@ -895,7 +922,7 @@ public final class ElasticUtils {
 		 * @return IndexTemplateMetaData
 		 */
 		public static Map<String, IndexTemplateMetaData> getIndexTemplate(String templateName) {
-			GetIndexTemplatesResponse response = client.admin().indices().prepareGetTemplates(templateName).get();
+			GetIndexTemplatesResponse response = CLIENT.admin().indices().prepareGetTemplates(templateName).get();
 			List<IndexTemplateMetaData> indexTemplates = response.getIndexTemplates();
 			return indexTemplates.stream()
 					.collect(toMap(IndexTemplateMetaData::getName, identity()));
@@ -909,7 +936,7 @@ public final class ElasticUtils {
 		 */
 		public static boolean deleteIndexTemplate(String templateName) {
 			try {
-				AcknowledgedResponse response = client.admin().indices().prepareDeleteTemplate(templateName).get();
+				AcknowledgedResponse response = CLIENT.admin().indices().prepareDeleteTemplate(templateName).get();
 				return response.isAcknowledged();
 			} catch (IndexTemplateMissingException e) {
 				log.info("Index Template [{}] 不存在", templateName);
@@ -945,7 +972,7 @@ public final class ElasticUtils {
 			scriptNode.put("lang", "mustache");
 			scriptNode.put("source", templateContent);
 			
-			AcknowledgedResponse response = client.admin().cluster().preparePutStoredScript()
+			AcknowledgedResponse response = CLIENT.admin().cluster().preparePutStoredScript()
 					.setId(templateName)
 					.setContent(new BytesArray(toJson(rootNode)), XContentType.JSON)
 					.get();
@@ -959,7 +986,7 @@ public final class ElasticUtils {
 		 * @return boolean
 		 */
 		public static boolean deleteSearchTemplate(String templateName) {
-			AcknowledgedResponse response = client.admin().cluster().prepareDeleteStoredScript(templateName).get();
+			AcknowledgedResponse response = CLIENT.admin().cluster().prepareDeleteStoredScript(templateName).get();
 			return response.isAcknowledged();
 		}
 		
@@ -970,7 +997,7 @@ public final class ElasticUtils {
 		 * @return boolean
 		 */
 		public boolean setReadOnly(String... indices) {
-			AcknowledgedResponse response = ElasticUtils.client.admin().indices()
+			AcknowledgedResponse response = ElasticUtils.CLIENT.admin().indices()
 					.prepareUpdateSettings(indices)
 					.setSettings(org.elasticsearch.common.settings.Settings.builder().put("blocks.read_only", true))
 					.get();
@@ -984,7 +1011,7 @@ public final class ElasticUtils {
 		 * @return ActionFuture<ForceMergeResponse>
 		 */
 		public ActionFuture<ForceMergeResponse> forceMerge(String indices) {
-			return ElasticUtils.client.admin().indices()
+			return ElasticUtils.CLIENT.admin().indices()
 					.prepareForceMerge(indices)
 					.setMaxNumSegments(1)
 					.execute();
@@ -1022,7 +1049,7 @@ public final class ElasticUtils {
 		 * @return
 		 */
 		public static Map<String, Object> getMapping(String index) {
-			GetMappingsResponse response = client.admin()
+			GetMappingsResponse response = CLIENT.admin()
 					.indices()
 					.prepareGetMappings(index)
 					.get();
@@ -1064,7 +1091,7 @@ public final class ElasticUtils {
 		 * @return Map<String, Object>
 		 */
 		public static Map<String, Map<String, Object>> getMapping(String index, String... fields) {
-			GetFieldMappingsRequestBuilder builder = new GetFieldMappingsRequestBuilder(client, GetFieldMappingsAction.INSTANCE, index);
+			GetFieldMappingsRequestBuilder builder = new GetFieldMappingsRequestBuilder(CLIENT, GetFieldMappingsAction.INSTANCE, index);
 			GetFieldMappingsResponse response = builder.setFields(fields).get();
 			
 			Map<String, GetFieldMappingsResponse.FieldMappingMetaData> map = response.mappings().get(index).get(ONLY_TYPE);
@@ -1122,7 +1149,7 @@ public final class ElasticUtils {
 		 * @return String
 		 */
 		public static String health(String index) {
-			ClusterHealthResponse response = client.admin().cluster().prepareHealth().get();
+			ClusterHealthResponse response = CLIENT.admin().cluster().prepareHealth().get();
 			ClusterHealthStatus status = response.getStatus();
 			return status.toString();
 		}
@@ -1175,7 +1202,7 @@ public final class ElasticUtils {
 					"}" +
 					"return fieldName;\" }}";
 			
-			AcknowledgedResponse response = client.admin().cluster().preparePutStoredScript()
+			AcknowledgedResponse response = CLIENT.admin().cluster().preparePutStoredScript()
 					.setId("multi_fields")
 					.setContent(new BytesArray(script), XContentType.JSON)
 					.get();
@@ -1206,7 +1233,7 @@ public final class ElasticUtils {
 		public static String byId(String index, Object id) {
 			Objects.requireNonNull(index, "index cannot be null!");
 			Objects.requireNonNull(id, "id cannot be null!");
-			GetResponse response = client.prepareGet(index, ONLY_TYPE, id.toString()).get();
+			GetResponse response = CLIENT.prepareGet(index, ONLY_TYPE, id.toString()).get();
 			return response.getSourceAsString();
 		}
 		
@@ -1221,7 +1248,7 @@ public final class ElasticUtils {
 			Objects.requireNonNull(index, "index cannot be null!");
 			Objects.requireNonNull(id, "id cannot be null!");
 			Objects.requireNonNull(resultType, "clazz cannot be null!");
-			GetResponse response = client.prepareGet(index, ONLY_TYPE, id.toString()).get();
+			GetResponse response = CLIENT.prepareGet(index, ONLY_TYPE, id.toString()).get();
 			String source = response.getSourceAsString();
 			T obj = toObject(source, resultType);
 			Field idField = ElasticCacheUtils.idField(resultType);

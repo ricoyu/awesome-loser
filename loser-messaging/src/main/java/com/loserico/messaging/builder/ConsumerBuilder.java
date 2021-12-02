@@ -157,9 +157,9 @@ public class ConsumerBuilder extends BaseBuilder {
 	/**
 	 * max.poll.interval.ms 300000 5m
 	 * <p>
-	 * The maximum delay between invocations of poll() when using consumer group management. 
-	 * This places an upper bound on the amount of time that the consumer can be idle before fetching more records. 
-	 * If poll() is not called before expiration of this timeout, then the consumer is considered failed and the 
+	 * The maximum delay between invocations of poll() when using consumer group management.
+	 * This places an upper bound on the amount of time that the consumer can be idle before fetching more records.
+	 * If poll() is not called before expiration of this timeout, then the consumer is considered failed and the
 	 * group will rebalance in order to reassign the partitions to another member.
 	 * <p>
 	 * Consumer两次调用poll的间隔, 如果超过这个值仍没有调用poll, 会发生rebalance
@@ -174,6 +174,16 @@ public class ConsumerBuilder extends BaseBuilder {
 	 * 记录每次拉取消息的统计信息, 如一次拉取到多少条, 总共占多少字节
 	 */
 	private Boolean enableStatistic;
+	
+	/**
+	 * 同步还是异步提交offset
+	 * <ul>
+	 *     <li/>The commitSync is a blocking method. Calling it will block your thread until it either succeeds or fails.
+	 *     <li/>The commitAsync is a non-blocking method. Calling it will not block your thread.
+	 *     Instead, it will continue processing the following instructions, no matter whether it will succeed or fail eventually.
+	 * </ul>
+	 */
+	private boolean commitAsync = false;
 	
 	/**
 	 * Consumer拉取消息后直接丢到一个BlockingQueue里面, 然后直接拉取下一批消息
@@ -225,6 +235,22 @@ public class ConsumerBuilder extends BaseBuilder {
 		notNull(timeUnit, "timeUnit cannot be null!");
 		this.enableAutoCommit = enableAutoCommit;
 		this.autoCommitInterval = Duration.ofMillis(timeUnit.toMillis(autoCommitInterval));
+		return this;
+	}
+	
+	/**
+	 * 同步还是异步提交offset
+	 * <ul>
+	 *     <li/>The commitSync is a blocking method. Calling it will block your thread until it either succeeds or fails.
+	 *     <li/>The commitAsync is a non-blocking method. Calling it will not block your thread.
+	 *     Instead, it will continue processing the following instructions, no matter whether it will succeed or fail eventually.
+	 * </ul>
+	 *
+	 * @param commitAsync
+	 * @return ConsumerBuilder
+	 */
+	public ConsumerBuilder commitAsync(boolean commitAsync) {
+		this.commitAsync = commitAsync;
 		return this;
 	}
 	
@@ -386,13 +412,13 @@ public class ConsumerBuilder extends BaseBuilder {
 	/**
 	 * max.poll.interval.ms 300000 5m
 	 * <p>
-	 * The maximum delay between invocations of poll() when using consumer group management. 
-	 * This places an upper bound on the amount of time that the consumer can be idle before fetching more records. 
-	 * If poll() is not called before expiration of this timeout, then the consumer is considered failed and the 
+	 * The maximum delay between invocations of poll() when using consumer group management.
+	 * This places an upper bound on the amount of time that the consumer can be idle before fetching more records.
+	 * If poll() is not called before expiration of this timeout, then the consumer is considered failed and the
 	 * group will rebalance in order to reassign the partitions to another member.
 	 * <p>
 	 * Consumer两次调用poll的间隔, 如果超过这个值仍没有调用poll, 会发生rebalance
-	 * 
+	 *
 	 * @param maxPollInterval
 	 * @return ConsumerBuilder
 	 */
@@ -483,10 +509,12 @@ public class ConsumerBuilder extends BaseBuilder {
 		properties.put(BOOTSTRAP_SERVERS_CONFIG, bootstrapServers());
 		properties.put(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
 		properties.put(VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+		properties.put("commitAsync", commitAsync);
 		
 		if (enableStatistic != null) {
 			properties.put("enableStatistic", enableStatistic);
 		}
+		
 		if (autoOffsetReset != null) {
 			properties.put(AUTO_OFFSET_RESET_CONFIG, autoOffsetReset.toString());
 		}

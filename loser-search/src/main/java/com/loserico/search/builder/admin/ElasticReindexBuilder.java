@@ -93,7 +93,7 @@ public final class ElasticReindexBuilder {
 		notNull(srcIndex, "srcIndex 不能为null");
 		notNull(destIndex, "destIndex 不能为null");
 		
-		ReindexRequestBuilder builder = new ReindexRequestBuilder(ElasticUtils.client, ReindexAction.INSTANCE)
+		ReindexRequestBuilder builder = new ReindexRequestBuilder(ElasticUtils.CLIENT, ReindexAction.INSTANCE)
 				.source(srcIndex)
 				.destination(destIndex);
 		if (filter != null) {

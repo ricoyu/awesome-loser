@@ -2,12 +2,9 @@ package com.loserico.search;
 
 import com.loserico.common.lang.utils.IOUtils;
 import com.loserico.json.jsonpath.JsonPathUtils;
-import com.loserico.search.support.BulkResult;
 import org.junit.Test;
 
 import java.util.List;
-
-import static org.assertj.core.api.Assertions.*;
 
 /**
  * <p>
@@ -31,8 +28,8 @@ public class PerformanceTest {
 		System.out.println(sources.size());
 		System.out.println(sources.get(0));
 		
-		BulkResult bulkResult = ElasticUtils.bulkIndex("event", sources);
-		System.out.println(bulkResult.getSuccessCount());
-		assertThat(bulkResult.getSuccessCount()).isEqualTo(1000);
+		//BulkResult bulkResult = ElasticUtils.bulkIndex("event", sources);
+		//System.out.println(bulkResult.getSuccessCount());
+		//assertThat(bulkResult.getSuccessCount()).isEqualTo(1000);
 	}
 }

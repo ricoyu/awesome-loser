@@ -37,7 +37,7 @@ public class ElasticPutMappingBuilder extends AbstractMappingBuilder {
 		if (log.isDebugEnabled()) {
 			log.debug("Mapping:\n{}", JacksonUtils.toPrettyJson(source));
 		}
-		PutMappingRequestBuilder putMappingRequestBuilder = ElasticUtils.client.admin().indices().preparePutMapping(index);
+		PutMappingRequestBuilder putMappingRequestBuilder = ElasticUtils.CLIENT.admin().indices().preparePutMapping(index);
 		AcknowledgedResponse acknowledgedResponse = putMappingRequestBuilder.setType(ElasticUtils.ONLY_TYPE)
 				.setSource(source)
 				.get();

@@ -78,7 +78,7 @@ public abstract class AbstractAggregationBuilder{
 	}
 	
 	protected SearchRequestBuilder searchRequestBuilder() {
-		SearchRequestBuilder searchRequestBuilder = ElasticUtils.client.prepareSearch(indices);
+		SearchRequestBuilder searchRequestBuilder = ElasticUtils.CLIENT.prepareSearch(indices);
 		if (baseQueryBuilder != null) {
 			QueryBuilder queryBuilder = ReflectionUtils.invokeMethod(baseQueryBuilder, "builder");
 			searchRequestBuilder.setQuery(queryBuilder);

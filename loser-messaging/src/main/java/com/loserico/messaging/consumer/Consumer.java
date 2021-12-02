@@ -51,6 +51,16 @@ public class Consumer<K, V> extends KafkaConsumer {
 	
 	private Boolean enableStatistic;
 	
+	/**
+	 * 同步还是异步提交offset
+	 * <ul>
+	 *     <li/>The commitSync is a blocking method. Calling it will block your thread until it either succeeds or fails.
+	 *     <li/>The commitAsync is a non-blocking method. Calling it will not block your thread.
+	 *     Instead, it will continue processing the following instructions, no matter whether it will succeed or fail eventually.
+	 * </ul>
+	 */
+	private boolean commitAsync = true;
+	
 	private BlockingQueue<List> queue;
 	
 	private int workerThreads = LoserExecutors.NCPUS + 1;
@@ -65,6 +75,7 @@ public class Consumer<K, V> extends KafkaConsumer {
 	public Consumer(Map<String, Object> configs, Deserializer<String> keyDeserializer, Deserializer valueDeserializer) {
 		super(configs, keyDeserializer, valueDeserializer);
 		this.enableStatistic = (Boolean) configs.get("enableStatistic");
+		this.commitAsync = (Boolean) configs.get("commitAsync");
 		pollTimeout(configs);
 		if (configs.get("queueSize") == null) {
 			queue = new ArrayBlockingQueue(1000);
@@ -145,8 +156,11 @@ public class Consumer<K, V> extends KafkaConsumer {
 					}
 					
 					//提高性能?
-					//commitAsync();
-					commitSync();
+					if (commitAsync) {
+						commitAsync();
+					} else {
+						commitSync();
+					}
 					
 					if (messages.isEmpty()) {
 						continue;

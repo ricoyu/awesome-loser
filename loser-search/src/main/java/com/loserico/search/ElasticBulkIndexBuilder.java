@@ -16,7 +16,7 @@ import java.util.Objects;
 import static com.loserico.common.lang.utils.Assert.notNull;
 import static com.loserico.json.jackson.JacksonUtils.toJson;
 import static com.loserico.search.ElasticUtils.ONLY_TYPE;
-import static com.loserico.search.ElasticUtils.client;
+import static com.loserico.search.ElasticUtils.CLIENT;
 
 /**
  * <p>
@@ -82,7 +82,7 @@ public class ElasticBulkIndexBuilder {
 	}
 	
 	public BulkResult execute() {
-		BulkRequestBuilder bulkRequestBuilder = client.prepareBulk(index, ONLY_TYPE);
+		BulkRequestBuilder bulkRequestBuilder = CLIENT.prepareBulk(index, ONLY_TYPE);
 		if (refresh != null && refresh.booleanValue()) {
 			bulkRequestBuilder.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
 		}
@@ -90,7 +90,7 @@ public class ElasticBulkIndexBuilder {
 				.filter(Objects::nonNull)
 				.map((doc) -> {
 					String id = ElasticCacheUtils.getIdValue(doc);
-					return client.prepareIndex()
+					return CLIENT.prepareIndex()
 							.setSource(toJson(doc), XContentType.JSON)
 							.setId(id);
 				}).forEach(builder -> bulkRequestBuilder.add(builder));

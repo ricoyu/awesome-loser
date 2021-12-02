@@ -1,16 +1,12 @@
 package com.loserico.search;
 
-import com.loserico.search.enums.FieldType;
 import lombok.SneakyThrows;
 import org.junit.Test;
 
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 /**
  * <p>
@@ -49,7 +45,7 @@ public class RangeQueryTest {
 	@SneakyThrows
 	@Test
 	public void testDateMillisThenRange() {
-		ElasticUtils.Admin.deleteIndex("products2");
+		/*ElasticUtils.Admin.deleteIndex("products2");
 		boolean created = ElasticUtils.Admin.createIndex("products2")
 				.mapping()
 				.field("price", FieldType.LONG)
@@ -75,7 +71,7 @@ public class RangeQueryTest {
 				.gte("now-1d")
 				.queryForList();
 		products.forEach(System.out::println);
-		assertThat(products).size().isEqualTo(1);
+		assertThat(products).size().isEqualTo(1);*/
 	}
 	
 	public static void main(String[] args) {

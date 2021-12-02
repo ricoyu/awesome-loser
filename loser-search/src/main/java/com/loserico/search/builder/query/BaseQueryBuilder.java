@@ -505,7 +505,7 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 	 * @return
 	 */
 	public long queryForCount() {
-		SearchRequestBuilder builder = ElasticUtils.client.prepareSearch(indices)
+		SearchRequestBuilder builder = ElasticUtils.CLIENT.prepareSearch(indices)
 				.setIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN) //要搜索的index不存在时不报错
 				.setTrackTotalHits(true) //查询返回的totalHits默认最大值是10000, 如果查到的数据超过10000, 那么拿到的totalHits就不准了, 加上这个配置解决这个问题
 				.setQuery(builder())
@@ -526,7 +526,7 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 	 * @return long 删除的文档数量
 	 */
 	public long delete() {
-		DeleteByQueryRequestBuilder deleteByQueryRequestBuilder = new DeleteByQueryRequestBuilder(ElasticUtils.client, DeleteByQueryAction.INSTANCE)
+		DeleteByQueryRequestBuilder deleteByQueryRequestBuilder = new DeleteByQueryRequestBuilder(ElasticUtils.CLIENT, DeleteByQueryAction.INSTANCE)
 				.filter(builder())
 				.source(indices);
 		
@@ -539,7 +539,7 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 		
 		BulkByScrollResponse bulkByScrollResponse = null;
 		try {
-			bulkByScrollResponse = ElasticUtils.client.execute(DeleteByQueryAction.INSTANCE, deleteByQueryRequest).get();
+			bulkByScrollResponse = ElasticUtils.CLIENT.execute(DeleteByQueryAction.INSTANCE, deleteByQueryRequest).get();
 		} catch (Exception e) {
 			log.error("", e);
 			throw new DocumentDeleteException(e);
@@ -560,7 +560,7 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 	}
 	
 	private SearchResponse searchResponse() {
-		SearchRequestBuilder searchRequestBuilder = ElasticUtils.client.prepareSearch(indices)
+		SearchRequestBuilder searchRequestBuilder = ElasticUtils.CLIENT.prepareSearch(indices)
 				.setIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN) //要搜索的index不存在时不报错
 				.setTrackTotalHits(true) //查询返回的totalHits默认最大值是10000, 如果查到的数据超过10000, 那么拿到的totalHits就不准了, 加上这个配置解决这个问题
 				.setQuery(builder());
