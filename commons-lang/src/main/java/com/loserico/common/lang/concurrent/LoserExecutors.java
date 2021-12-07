@@ -41,10 +41,10 @@ public final class LoserExecutors {
 	private boolean prestartAllCoreThreads = false;
 	
 	/**
-	 * 线程池最大线程数, 默认CPU核心数的3倍
+	 * 线程池最大线程数, 默认CPU核心数的2倍
 	 * 太大了可能会把应用压垮, 如果不够, 可以自行调高
 	 */
-	private Integer maximumPoolSize = NCPUS * 3;
+	private Integer maximumPoolSize = NCPUS * 2;
 	
 	/**
 	 * 给线程池起个名字
@@ -61,7 +61,7 @@ public final class LoserExecutors {
 	/**
 	 * 阻塞队列长度, 提交的任务会在这里排队等待被执行
 	 */
-	private Integer queueSize = 10000;
+	private Integer queueSize = 100;
 	
 	/**
 	 * 线程池饱和策略

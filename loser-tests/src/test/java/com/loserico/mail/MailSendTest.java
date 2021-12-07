@@ -54,14 +54,14 @@ public class MailSendTest {
 		//1.5认证信息
 		Session session = Session.getInstance(props, new Authenticator() {
 			protected PasswordAuthentication getPasswordAuthentication() {
-				return new PasswordAuthentication("yuxh@idss-cn.com", "Yuxuehua20131120");
+				return new PasswordAuthentication("xxx@gamil.com", "123456");
 			}
 		});
 		
 		// 2、创建邮件对象
 		Message message = new MimeMessage(session);
 		//2.1设置发件人
-		message.setFrom(new InternetAddress("yuxh@idss-cn.com"));
+		message.setFrom(new InternetAddress("xxx@gamil.com"));
 		//2.2设置收件人 TO-发送    CC-抄送   BCC-密送
 		message.setRecipients(MimeMessage.RecipientType.TO, tos);
 		//2.4设置邮件的主题

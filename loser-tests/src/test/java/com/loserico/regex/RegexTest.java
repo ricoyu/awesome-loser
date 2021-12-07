@@ -41,7 +41,7 @@ public class RegexTest {
 		System.out.println("h@example.example-example.com".matches(regex_v1));
 		System.out.println("12345@xxx.ccc.yy".matches(regex_v1));
 		System.out.println("ricoyu520@gmail.com".matches(regex_v1));
-		System.out.println("yuxh@idss-cn.com".matches(regex_v1));
+		System.out.println("xxxx@gmail.com".matches(regex_v1));
 	}
 	
 	@Test
