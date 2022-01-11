@@ -1,7 +1,11 @@
 package com.loserico.networking.builder;
 
 import com.loserico.networking.constants.Proto;
+import lombok.extern.slf4j.Slf4j;
+import org.graylog2.syslog4j.SyslogConfigIF;
 import org.graylog2.syslog4j.SyslogIF;
+import org.graylog2.syslog4j.impl.net.tcp.TCPNetSyslogConfig;
+import org.graylog2.syslog4j.impl.net.udp.UDPNetSyslogConfig;
 
 import java.nio.charset.Charset;
 
@@ -15,6 +19,7 @@ import java.nio.charset.Charset;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
+@Slf4j
 public class SyslogBuilder {
 	
 	private Proto proto;
@@ -58,16 +63,35 @@ public class SyslogBuilder {
 		return this;
 	}
 	
+	/**
+	 * 每次都重新创建一个SyslogIF实例
+	 *
+	 * @return
+	 */
 	public SyslogIF build() {
-		SyslogIF syslog = org.graylog2.syslog4j.Syslog.getInstance(proto.name());
-		syslog.getConfig().setHost(host);
-		syslog.getConfig().setPort(port);
+		SyslogConfigIF config = null;
+		if (proto == Proto.UDP) {
+			config = new UDPNetSyslogConfig(host, port);
+		} else {
+			config = new TCPNetSyslogConfig(host, port);
+		}
 		if (maxMessageLength != null) {
-			syslog.getConfig().setMaxMessageLength(50000);
+			config.setMaxMessageLength(50000);
 		}
 		if (charset != null) {
-			syslog.getConfig().setCharSet(charset.name());
+			config.setCharSet(charset.name());
 		}
+		
+		Class syslogClass = config.getSyslogClass();
+		
+		SyslogIF syslog = null;
+		try {
+			syslog = (SyslogIF) syslogClass.newInstance();
+		} catch (InstantiationException | IllegalAccessException e) {
+			log.error("", e);
+			throw new RuntimeException("创建SyslogIF实例失败! Host: " + host + ", Poer: " + port, e);
+		}
+		syslog.initialize(proto.name().toLowerCase(), config);
 		return syslog;
 	}
 }

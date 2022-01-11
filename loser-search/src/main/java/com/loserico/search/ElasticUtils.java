@@ -255,6 +255,7 @@ public final class ElasticUtils {
 	 * 批量创建文档<p>
 	 * 返回创建结果, 包括成功数量, 失败数量, 失败消息, 成功创建的文档id列表<p>
 	 * 单个bulk请求体的数据量不要太大, 官方建议大于5~15mb
+	 *
 	 * @param index
 	 * @return ElasticBulkIndexBuilder
 	 */
@@ -358,6 +359,7 @@ public final class ElasticUtils {
 	
 	/**
 	 * 批量更新
+	 *
 	 * @return ElasticBulkUpdateBuilder
 	 */
 	public static ElasticBulkUpdateBuilder bulkUpdate() {
@@ -469,7 +471,8 @@ public final class ElasticUtils {
 	 * @return Result 更新结果(更新了? 没更新?)
 	 */
 	public static UpdateResult update(String index, String id, String doc) {
-		UpdateRequestBuilder updateRequestBuilder = CLIENT.prepareUpdate(index, ONLY_TYPE, id).setDoc(doc, XContentType.JSON);
+		UpdateRequestBuilder updateRequestBuilder =
+				CLIENT.prepareUpdate(index, ONLY_TYPE, id).setDoc(doc, XContentType.JSON);
 		updateRequestBuilder.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
 		UpdateResponse response = updateRequestBuilder.get();
 		return UpdateResult.from(response);
@@ -717,7 +720,8 @@ public final class ElasticUtils {
 	 * @return BulkByScrollResponse
 	 */
 	public static BulkByScrollResponse updateByQuery(String... indices) {
-		UpdateByQueryRequestBuilder updateByQuery = new UpdateByQueryRequestBuilder(CLIENT, UpdateByQueryAction.INSTANCE);
+		UpdateByQueryRequestBuilder updateByQuery =
+				new UpdateByQueryRequestBuilder(CLIENT, UpdateByQueryAction.INSTANCE);
 		updateByQuery.source(indices).abortOnVersionConflict(false);
 		BulkByScrollResponse bulkByScrollResponse = updateByQuery.get();
 		log.info(bulkByScrollResponse.toString());
@@ -730,7 +734,7 @@ public final class ElasticUtils {
 	public static class Admin {
 		
 		/**
-		 * 基于Entity上的注解信息创建索引    
+		 * 基于Entity上的注解信息创建索引
 		 *
 		 * @param entityClass 标注了@Index注解的POJO
 		 * @return boolean 索引是否创建成功
@@ -898,21 +902,36 @@ public final class ElasticUtils {
 		 * @return boolean
 		 */
 		public static boolean putIndexTemplate(String templateName, String templateContent) {
-			String result = HttpUtils.post(RestSupport.HOST + "/_template/" + templateName)
-					.body(templateContent)
-					.method(HttpMethod.PUT)
-					.request();
-			
-			boolean hasError = JsonPathUtils.ifExists(result, "$.error");
-			if (hasError) {
-				String errors = JsonPathUtils.readNode(result, "$.error.caused_by.reason");
-				log.error("PUT index template failed, [{}]", errors);
-				throw new IndexTemplateCreateException(errors);
+			int tryCount = 0;
+			for (String host : RestSupport.HOSTS) {
+				String result = "";
+				try {
+					result = HttpUtils.post(host + "/_template/" + templateName)
+							.body(templateContent)
+							.method(HttpMethod.PUT)
+							.request();
+				} catch (Exception e) {
+					log.error("", e);
+					if (++tryCount == RestSupport.HOSTS.size()) {
+						throw new IndexTemplateCreateException(e.getMessage());
+					}
+					continue;
+				}
+				boolean hasError = JsonPathUtils.ifExists(result, "$.error");
+				if (hasError) {
+					String errors = JsonPathUtils.readNode(result, "$.error.caused_by.reason");
+					log.error("PUT index template failed, host {}, [{}]", host, errors);
+					if (++tryCount == RestSupport.HOSTS.size()) {
+						throw new IndexTemplateCreateException(errors);
+					}
+				}
+				
+				Boolean acknowledged = JsonPathUtils.readNode(result, "$.acknowledged");
+				log.info("acknowledged: {}", acknowledged);
+				return acknowledged;
 			}
 			
-			Boolean acknowledged = JsonPathUtils.readNode(result, "$.acknowledged");
-			log.info("acknowledged: {}", acknowledged);
-			return acknowledged;
+			return false;
 		}
 		
 		/**
@@ -1091,11 +1110,14 @@ public final class ElasticUtils {
 		 * @return Map<String, Object>
 		 */
 		public static Map<String, Map<String, Object>> getMapping(String index, String... fields) {
-			GetFieldMappingsRequestBuilder builder = new GetFieldMappingsRequestBuilder(CLIENT, GetFieldMappingsAction.INSTANCE, index);
+			GetFieldMappingsRequestBuilder builder =
+					new GetFieldMappingsRequestBuilder(CLIENT, GetFieldMappingsAction.INSTANCE, index);
 			GetFieldMappingsResponse response = builder.setFields(fields).get();
 			
-			Map<String, GetFieldMappingsResponse.FieldMappingMetaData> map = response.mappings().get(index).get(ONLY_TYPE);
-			List<Map> mapList = map.values().stream().map(GetFieldMappingsResponse.FieldMappingMetaData::sourceAsMap).collect(toList());
+			Map<String, GetFieldMappingsResponse.FieldMappingMetaData> map =
+					response.mappings().get(index).get(ONLY_TYPE);
+			List<Map> mapList =
+					map.values().stream().map(GetFieldMappingsResponse.FieldMappingMetaData::sourceAsMap).collect(toList());
 			Map fieldMappingMap = new HashMap<>(mapList.size());
 			for (Map<String, ?> fieldMap : mapList) {
 				for (String key : fieldMap.keySet()) {
@@ -1164,7 +1186,7 @@ public final class ElasticUtils {
 		 * <pre> {@code
 		 * Map<String, Object> params = new HashMap<>();
 		 * params.put("fields", new String[]{"src_ip", "src_port"});
-		 * 
+		 *
 		 * Script painless = new Script(ScriptType.STORED, null, "multi_field_agg", params);
 		 * SearchResponse response = ElasticUtils.client.prepareSearch("events")
 		 * 		.addAggregation(AggregationBuilders.terms("script_agg").script(painless))
@@ -1173,7 +1195,7 @@ public final class ElasticUtils {
 		 * Aggregation scriptAgg = aggregations.get("script_agg");
 		 * System.out.println(JacksonUtils.toPrettyJson(scriptAgg.toString()));
 		 * }</pre>
-		 * 
+		 *
 		 * @return
 		 */
 		public static boolean createMultiFieldAgg() {
@@ -1182,23 +1204,23 @@ public final class ElasticUtils {
 					"\"source\": " +
 					"\"String fieldName = ''; " +
 					"for(int i=0; i<params.fields.length; i++) {" +
-						"String field = params.fields[i];" +
-						"if(!''.equals(fieldName) && (doc.containsKey(field+'.keyword') || doc.containsKey(field))) {" +
-							"fieldName +='|';" +
-						"}" +
-						"if(doc.containsKey(field+'.keyword')) {" +
-							"if(doc[field+'.keyword'].size() != 0) {" +
-								"fieldName += doc[field+'.keyword'].value;" +
-							"} else {" +
-								"fieldName += 'null';" +
-							"}" +
-						"} else if(doc.containsKey(field)){" +
-							"if(doc[field].size() != 0) {" +
-								"fieldName += doc[field].value;" +
-							"} else {" +
-								"fieldName += 'null';"+
-							"}" +
-						"}" +
+					"String field = params.fields[i];" +
+					"if(!''.equals(fieldName) && (doc.containsKey(field+'.keyword') || doc.containsKey(field))) {" +
+					"fieldName +='|';" +
+					"}" +
+					"if(doc.containsKey(field+'.keyword')) {" +
+					"if(doc[field+'.keyword'].size() != 0) {" +
+					"fieldName += doc[field+'.keyword'].value;" +
+					"} else {" +
+					"fieldName += 'null';" +
+					"}" +
+					"} else if(doc.containsKey(field)){" +
+					"if(doc[field].size() != 0) {" +
+					"fieldName += doc[field].value;" +
+					"} else {" +
+					"fieldName += 'null';" +
+					"}" +
+					"}" +
 					"}" +
 					"return fieldName;\" }}";
 			
@@ -1259,6 +1281,7 @@ public final class ElasticUtils {
 		
 		/**
 		 * 基于ID列表获取
+		 *
 		 * @param indices
 		 * @return ElasticIdsQueryBuilder
 		 */
@@ -1268,6 +1291,7 @@ public final class ElasticUtils {
 		
 		/**
 		 * 基于ID列表获取
+		 *
 		 * @param indices
 		 * @return ElasticIdsQueryBuilder
 		 */
@@ -1492,6 +1516,7 @@ public final class ElasticUtils {
 		
 		/**
 		 * 返回总命中数
+		 *
 		 * @return Long
 		 */
 		public static Long totalHits() {

@@ -450,6 +450,13 @@ public interface JedisOperations {
 		throw new UnsupportedOperationException();
 	}
 	
+	/**
+	 * 
+	 * @param sha1      lua脚本的sha1值
+	 * @param keyCount  key个数
+	 * @param params    参数列表
+	 * @return
+	 */
 	public Object evalsha(final String sha1, final int keyCount, final String... params);
 	
 	public Object evalsha(final byte[] sha1, final int keyCount, final byte[]... params);

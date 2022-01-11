@@ -330,7 +330,7 @@ public class ElasticUriQueryBuilder {
 	 */
 	private String buildQueryString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append(RestSupport.HOST)
+		sb.append(RestSupport.HOSTS.get(0))
 				.append("/").append(index)
 				.append("/").append("_search")
 				.append("?").append(q);

@@ -36,7 +36,7 @@ public class ScriptTest {
 	public void testCreateStoredScriptHttp() {
 		String script = "{\"script\": {\"lang\": \"painless\",  \"source\": \"String fieldName = \"\"; for(int i=0; i<params.fields.length; i++) { String field = params.fields[i]; if(!\"\".equals(fieldName)) {        fieldName +=\"|\";} if(doc.containsKey(field+\".keyword\")) {fieldName += doc[field+\".keyword\"].value;} else {fieldName += doc[field].value;}} return fieldName;\"  }}";
 		
-		Object response = HttpUtils.post(RestSupport.HOST+"/_scripts/multi_field_agg")
+		Object response = HttpUtils.post(RestSupport.HOSTS.get(0)+"/_scripts/multi_field_agg")
 				.body(script)
 				.request();
 		

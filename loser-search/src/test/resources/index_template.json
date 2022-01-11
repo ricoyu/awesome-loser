@@ -1,0 +1,19 @@
+{
+  "index_patterns": ["event_*"],
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 1
+  },
+  "mappings": {
+    "dynamic": false,
+    "properties": {
+      "timestamp": {
+        "type": "long",
+        "index": true
+      },
+      "url": {
+        "type": "keyword"
+      }
+    }
+  }
+}

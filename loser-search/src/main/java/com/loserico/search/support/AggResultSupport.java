@@ -100,7 +100,7 @@ public final class AggResultSupport {
 				log.warn("聚合的字段是一个未映射的字段, 比如enabled=false");
 				continue;
 			}
-			
+			//TODO 直接强转((StringTerms) aggregation)是有问题的, 有些可能是LongTerms等
 			List<StringTerms.Bucket> buckets = ((StringTerms) aggregation).getBuckets();
 			
 			for (StringTerms.Bucket bucket : buckets) {

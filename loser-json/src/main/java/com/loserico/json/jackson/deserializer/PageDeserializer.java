@@ -25,6 +25,11 @@ import java.util.Iterator;
  */
 public class PageDeserializer extends StdDeserializer<Page> {
 	
+	/**
+	 * 分页时传入的SQL排序字段名, 需要防止SQL注入, 去掉一些特殊字符 
+	 */
+	private static String[] SQL_TRIM_STR = new String[]{" ", "\\(", "\\)", "\\*", "\\\\", "/"};
+	
 	public PageDeserializer() {
 		this(null);
 	}
@@ -105,13 +110,13 @@ public class PageDeserializer extends StdDeserializer<Page> {
 			while (it.hasNext()) {
 				JsonNode next = it.next();
 				String orderBy = next.textValue().trim();
-				addOrder(page, orderBy);
+				addOrder(page, StringUtils.trimAll(orderBy, SQL_TRIM_STR));
 			}
 			return page;
 		}
 		
 		String orderBy = sortsNode.textValue();
-		addOrder(page, orderBy);
+		addOrder(page, StringUtils.trimAll(orderBy, SQL_TRIM_STR));
 		return page;
 	}
 	

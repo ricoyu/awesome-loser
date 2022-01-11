@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.loserico.json.jackson.JacksonUtils.toJson;
-import static java.util.concurrent.TimeUnit.*;
+import static java.util.concurrent.TimeUnit.MINUTES;
 
 /**
  * <p>
@@ -44,7 +44,7 @@ public class KafkaUtilsTest {
 	@SneakyThrows
 	@Test
 	public void testNewProducer() {
-		Producer<String, String> producer = KafkaUtils.newProducer("10.10.17.31:9092")
+		Producer<String, String> producer = KafkaUtils.newProducer("192.168.100.104:9092")
 				.acks(Acks.LEADER)
 				.batchSize(1001, SizeUnit.KB)
 				.bufferMemory(32, SizeUnit.MB)
@@ -56,7 +56,7 @@ public class KafkaUtilsTest {
 				.build();
 		
 		List<User> messages = new ArrayList<>();
-		for (int i = 0; i < 10001; i++) {
+		for (int i = 0; i < 100010; i++) {
 			messages.add(new User("俞雪华", i + 1));
 		}
 		List<Future<RecordMetadata>> futures = producer.send("custom-event", messages);
@@ -296,6 +296,34 @@ public class KafkaUtilsTest {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
+		});
+		
+		Thread.currentThread().join();
+	}
+	
+	@SneakyThrows
+	@Test
+	public void testMetadataSharing() {
+		Consumer<String, String> consumer = KafkaUtils.newConsumer("10.10.26.240:9092")
+				.groupId("loser-group")
+				.build();
+		
+		consumer.subscribe("index-metadata", (messages) -> {
+			messages.forEach(System.out::println);
+		});
+		
+		Thread.currentThread().join();
+	}
+	
+	@SneakyThrows
+	@Test
+	public void testqgwt() {
+		Consumer<String, String> consumer = KafkaUtils.newConsumer("10.20.26.240:9092")
+				.groupId("loser-group")
+				.build();
+		
+		consumer.subscribe("index-metadata", (messages) -> {
+			messages.forEach(System.out::println);
 		});
 		
 		Thread.currentThread().join();

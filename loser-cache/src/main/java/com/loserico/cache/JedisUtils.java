@@ -56,7 +56,7 @@ import static com.loserico.cache.utils.UnMarshaller.toSeconds;
 import static com.loserico.json.jackson.JacksonUtils.toJson;
 import static java.lang.String.join;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.concurrent.TimeUnit.*;
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
@@ -88,9 +88,10 @@ public final class JedisUtils {
 	
 	private static JedisOperations jedisOperations = JedisOperationFactory.create();
 	
-	private static final LoserThreadExecutor EXECUTOR = new LoserThreadExecutor(Runtime.getRuntime().availableProcessors() + 1,
-			500,
-			10, MINUTES);
+	private static final LoserThreadExecutor EXECUTOR =
+			new LoserThreadExecutor(Runtime.getRuntime().availableProcessors() + 1,
+					500,
+					10, MINUTES);
 	
 	/**
 	 * key/value 都是字符串的版本
@@ -1399,6 +1400,21 @@ public final class JedisUtils {
 		 * @param key
 		 * @param min score最小值, 包含, -inf 表示负无穷大
 		 * @param max score最大值, 包含, +inf 表示正无穷大
+		 * @return Set<String>
+		 */
+		public static Set<String> zrangeByScore(String key, long min, long max) {
+			return jedisOperations.zrangeByScore(key, min + "", max + "");
+		}
+		
+		/**
+		 * 默认min, max都是包含的, 可以通过 (1 5 设置不包含最小值,
+		 * 如:
+		 * ZRANGEBYSCORE zset (1 5    返回 1 < score <= 5
+		 * ZRANGEBYSCORE zset (5 (10  返回 5 < score < 10
+		 *
+		 * @param key
+		 * @param min score最小值, 包含, -inf 表示负无穷大
+		 * @param max score最大值, 包含, +inf 表示正无穷大
 		 * @return Set<T>
 		 */
 		public static <T> Set<T> zrangeByScore(String key, String min, String max, Class<T> clazz) {
@@ -2090,6 +2106,47 @@ public final class JedisUtils {
 	 * 一些比较我特色的功能
 	 */
 	public static final class AFFLUENT {
+		
+		
+		/**
+		 * 滑动时间窗口限流算法
+		 * <p>
+		 * name        给这个zset起一个有业务意义的名字, 最终的key值是 KEY_PREFIX+key
+		 * member     随机数, 没有什么意义, 就是要唯一
+		 * score      客户端请求的时间戳
+		 * windowSize 时间窗口大小
+		 * limitCount 时间窗口内允许通过多少个请求
+		 *
+		 * @param key
+		 * @param member
+		 * @param score
+		 * @param windowSize
+		 * @param limitCount
+		 * @return boolean
+		 */
+		public static boolean slidingWindows(String key, String member, long score, long windowSize, long limitCount) {
+			String hashSha = shaHashs.computeIfAbsent("slidingWindow.lua", x -> {
+				log.debug("Load script {}", "slidingWindow.lua");
+				if (jedisOperations instanceof JedisClusterOperations) {
+					return jedisOperations.scriptLoad(IOUtils.readClassPathFileAsString("/lua-scripts/slidingWindow.lua"), key);
+				} else {
+					return jedisOperations.scriptLoad(IOUtils.readClassPathFileAsString("/lua-scripts/slidingWindow.lua"));
+				}
+			});
+			
+			Long result = (Long) jedisOperations.evalsha(toBytes(hashSha),
+					1,
+					toBytes(key),
+					toBytes(member),
+					toBytes(score),
+					toBytes(windowSize),
+					toBytes(limitCount));
+			//搞不明白为何false的时候这边就返回null了 TODO
+			if (result == null) {
+				return false;
+			}
+			return result.intValue() == 0 ? false : true;
+		}
 		
 		/**
 		 * 对给定时间内(expire 秒数)访问次数不超过 count 次

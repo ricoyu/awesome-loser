@@ -547,7 +547,8 @@ public class IOUtils {
 	
 	
 	/**
-	 * 读取classpath下某个文件，返回File
+	 * 读取classpath下某个文件, 返回File <p/>
+	 * 会先读classpath root, 找不到继续从classpath下的jar里面找, 可能会比较慢
 	 *
 	 * @param fileName
 	 * @return File

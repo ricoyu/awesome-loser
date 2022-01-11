@@ -21,6 +21,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.nio.file.Paths;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -105,12 +106,12 @@ public final class RsaUtils {
 	/**
 	 * 自动生成密钥对时, 写入到磁盘的位置
 	 */
-	public static final String AUTO_GENERATE_PRIVATE_KEY_FILE = System.getProperty("user.home") + "/private.key";
+	//public static final String AUTO_GENERATE_PRIVATE_KEY_FILE = System.getProperty("user.home") + "/private.key";
 	
 	/**
 	 * 自动生成密钥对时, 写入到磁盘的位置
 	 */
-	public static final String AUTO_GENERATE_PUBLIC_KEY_FILE = System.getProperty("user.home") + "/public.key";
+	//public static final String AUTO_GENERATE_PUBLIC_KEY_FILE = System.getProperty("user.home") + "/public.key";
 	
 	
 	/**
@@ -213,7 +214,8 @@ public final class RsaUtils {
 				if (".pem".equalsIgnoreCase(publicKeySuffix)) {
 					publicKey = loadPublicKeyFromPemFile(publicKeyBytes);
 				} else {
-					ObjectInputStream publicInputStream = new ObjectInputStream(new ByteArrayInputStream(publicKeyBytes));
+					ObjectInputStream publicInputStream =
+							new ObjectInputStream(new ByteArrayInputStream(publicKeyBytes));
 					publicKey = (RSAPublicKey) publicInputStream.readObject();
 					publicInputStream.close();
 				}
@@ -221,7 +223,8 @@ public final class RsaUtils {
 				if (".pem".equals(privateKeySuffix)) {
 					privateKey = loadPrivateKeyFromPemFile(privateKeyBytes);
 				} else {
-					ObjectInputStream privateInputStream = new ObjectInputStream(new ByteArrayInputStream(privateKeyBytes));
+					ObjectInputStream privateInputStream =
+							new ObjectInputStream(new ByteArrayInputStream(privateKeyBytes));
 					privateKey = (RSAPrivateKey) privateInputStream.readObject();
 					privateInputStream.close();
 				}
@@ -823,7 +826,7 @@ public final class RsaUtils {
 		 * 没有再读user.home下
 		 */
 		if (isBlank(location)) {
-			// 读classpath root
+			// 先读classpath root, 没有的话还会读classpath下jar里面有没有
 			for (int i = 0; i < keySuffixes.length; i++) {
 				String suffix = keySuffixes[i];
 				File publicKeyFile = IOUtils.readClasspathFileAsFile(publicKeyName + suffix);
@@ -832,7 +835,7 @@ public final class RsaUtils {
 				//读取jar文件中的public/private key, 能读到, 但是调用exists()时false, 所以这里不做exists()判断
 				boolean exists = publicKeyFile != null && privateKeyFile != null;
 				
-				//classpath root找到
+				//classpath 下找到
 				if (exists) {
 					//读取公私钥文件字节
 					publicKeyBytes = IOUtils.readClassPathFileAsBytes(publicKeyName + suffix);
@@ -853,8 +856,9 @@ public final class RsaUtils {
 				String suffix = keySuffixes[i];
 				File publicKeyFile = IOUtils.readFile(homeDir, publicKeyName + suffix);
 				File privateKeyFile = IOUtils.readFile(homeDir, privateKeyName + suffix);
-				boolean exists = publicKeyFile != null && privateKeyFile != null && publicKeyFile.exists() && privateKeyFile.exists();
-				//classpath root找到
+				boolean exists =
+						publicKeyFile != null && privateKeyFile != null && publicKeyFile.exists() && privateKeyFile.exists();
+				//user home 下找到
 				if (exists) {
 					//读取公私钥文件字节
 					publicKeyBytes = IOUtils.readFileAsBytes(publicKeyFile);
@@ -874,7 +878,9 @@ public final class RsaUtils {
 				String suffix = keySuffixes[i];
 				File publicKeyFile = IOUtils.readFile(location, publicKeyName, suffix);
 				File privateKeyFile = IOUtils.readFile(location, privateKeyName, suffix);
-				boolean exists = publicKeyFile != null && privateKeyFile != null && publicKeyFile.exists() && privateKeyFile.exists();
+				boolean exists = publicKeyFile != null && privateKeyFile != null
+						&& publicKeyFile.exists()
+						&& privateKeyFile.exists();
 				
 				//classpath root找到
 				if (exists) {
@@ -896,8 +902,16 @@ public final class RsaUtils {
 	}
 	
 	private static void write2Disk(PublicKey publicKey, PrivateKey privateKey) throws IOException {
-		File privateKeyFile = new File(AUTO_GENERATE_PRIVATE_KEY_FILE);
-		File publicKeyFile = new File(AUTO_GENERATE_PUBLIC_KEY_FILE);
+		String keyLocation = READER.getString("key.location", System.getProperty("user.home"));
+		String publicKeyName = READER.getString("key.public", "public");
+		String privateKeyName = READER.getString("key.private", "private");
+		String keySuffix = READER.getString("key.suffix", ".key");
+		//如果codec.properties指定了key.suffix, 但是没有加., 那么添加一个.号
+		if (!keySuffix.startsWith(".")) {
+			keySuffix = "." + keySuffix;
+		}
+		File privateKeyFile = Paths.get(keyLocation, privateKeyName + keySuffix).toFile();
+		File publicKeyFile = Paths.get(keyLocation, publicKeyName + keySuffix).toFile();
 		
 		if (publicKeyFile.getParentFile() != null) {
 			publicKeyFile.getParentFile().mkdirs();

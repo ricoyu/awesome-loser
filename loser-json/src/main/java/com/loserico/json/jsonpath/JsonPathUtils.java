@@ -116,6 +116,13 @@ public final class JsonPathUtils {
 		return getDocumentContext(json).read(path);
 	}
 	
+	/**
+	 * FIXME 实测在高并发下有问题? 线程都被hang住了
+	 * @param json
+	 * @param path
+	 * @param <T>
+	 * @return
+	 */
 	public static <T> T readNodeIfExists(String json, String path) {
 		if (isBlank(json)) {
 			return null;
