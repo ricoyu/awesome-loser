@@ -42,4 +42,11 @@ public class IOUtilsTest {
 		String content = com.loserico.common.lang.utils.IOUtils.readFileAsString("D:\\Learning\\awesome-loser\\commons-lang\\application.yml");
 		System.out.println(content);
 	}
+	
+	@Test
+	public void testFileSeparator() {
+		System.out.println(com.loserico.common.lang.utils.IOUtils.DIR_SEPARATOR);
+		System.out.println(com.loserico.common.lang.utils.IOUtils.readClassPathFileAsString("application.yml"));;
+		System.out.println(com.loserico.common.lang.utils.IOUtils.readFileAsString("D:\\Dropbox\\doc\\bw.txt"));;
+	}
 }

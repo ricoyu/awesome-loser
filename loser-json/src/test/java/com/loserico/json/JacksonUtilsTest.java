@@ -3,6 +3,7 @@ package com.loserico.json;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.loserico.common.lang.utils.DateUtils;
@@ -243,6 +244,12 @@ public class JacksonUtilsTest {
 		}
 		end = System.currentTimeMillis();
 		System.out.println((end- begin));
+	}
+	
+	@Test
+	public void testToJsonNode() {
+		String json = IOUtils.readFileAsString("C:\\Users\\ricoy\\Documents\\ids-event-mqtt.json");
+		JsonNode jsonNode = JacksonUtils.readTree(json);
 	}
 	
 	

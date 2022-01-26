@@ -85,13 +85,25 @@ public class IOUtils {
 	
 	/**
 	 * The Unix directory separator character.
+	 * 这个不要随便改, jar中的路径是以/分隔的
 	 */
-	public static final String DIR_SEPARATOR_UNIX = "/";
+	public static final String DIR_SEPARATOR = "/";
+	/**
+	 * unix    /
+	 * windows \
+	 */
+	//public static final String DIR_SEPARATOR = File.separator;
+	// unix / , windows \ 这种方式可以用-Dfile.separator覆盖默认值
+	//String separator = System.getProperty("file.separator");
+	// unix / , windows \
+	//String separator = FileSystems.getDefault().getSeparator();
+	// unix / , windows \
+	//String separator = File.separator;
 	
 	/**
 	 * The Windows directory separator character.
 	 */
-	public static final char DIR_SEPARATOR_WINDOWS = '\\';
+	//public static final char DIR_SEPARATOR_WINDOWS = '\\';
 	
 	public static final String CLASSPATH_PREFIX = "classpath*:";
 	
@@ -132,7 +144,7 @@ public class IOUtils {
 			}
 			scanner.close();
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			log.warn(e.getMessage());
 		}
 		return result.toString();
 	}
@@ -159,7 +171,7 @@ public class IOUtils {
 			}
 			scanner.close();
 		} catch (IOException e) {
-			log.error(e.getMessage(), e);
+			log.warn(e.getMessage());
 		}
 		return result.toString();
 	}
@@ -188,7 +200,7 @@ public class IOUtils {
 			}
 			scanner.close();
 		} catch (IOException e) {
-			log.error(e.getMessage(), e);
+			log.warn(e.getMessage());
 		}
 		return result.toString();
 	}
@@ -306,7 +318,7 @@ public class IOUtils {
 		try {
 			return Files.readAllBytes(path);
 		} catch (IOException e) {
-			log.error("Read file as bytes failed!", e);
+			log.warn(e.getMessage());
 		}
 		return new byte[0];
 	}
@@ -316,7 +328,7 @@ public class IOUtils {
 		try {
 			return Files.readAllBytes(path);
 		} catch (IOException e) {
-			log.error("Read file as bytes failed!", e);
+			log.warn(e.getMessage());
 		}
 		return new byte[0];
 	}
@@ -326,7 +338,7 @@ public class IOUtils {
 		try {
 			return Files.readAllBytes(file.toPath());
 		} catch (IOException e) {
-			log.error("Read file as bytes failed!", e);
+			log.warn(e.getMessage());
 		}
 		return new byte[0];
 	}
@@ -376,15 +388,15 @@ public class IOUtils {
 		
 		ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
 		try {
-			if (!fileName.startsWith(DIR_SEPARATOR_UNIX)) {
-				fileName = CLASSPATH_PREFIX + DIR_SEPARATOR_UNIX + dir + DIR_SEPARATOR_UNIX + "**" + DIR_SEPARATOR_UNIX + fileName;
+			if (!fileName.startsWith(DIR_SEPARATOR)) {
+				fileName = CLASSPATH_PREFIX + DIR_SEPARATOR + dir + DIR_SEPARATOR + "**" + DIR_SEPARATOR + fileName;
 			}
 			Resource[] resources = resolver.getResources(fileName);
 			if (resources.length > 0) {
 				return resources[0].getInputStream();
 			}
 		} catch (IOException e) {
-			log.error("", e);
+			log.warn(e.getMessage());
 			return null;
 		}
 		
@@ -409,7 +421,7 @@ public class IOUtils {
 				try {
 					return resource.getInputStream();
 				} catch (IOException e) {
-					log.error("", e);
+					log.warn(e.getMessage());
 					return null;
 				}
 			}
@@ -423,14 +435,14 @@ public class IOUtils {
 			try {
 				return new FileInputStream(files.get(0));
 			} catch (FileNotFoundException e) {
-				log.error("", e);
+				log.warn(e.getMessage());
 				return null;
 			}
 		}
 		
 		ClassLoader classLoader = firstNonNull(currentThread().getContextClassLoader(), IOUtils.class.getClassLoader());
 		URL url = classLoader.getResource(fileName);
-		if (url == null && !fileName.startsWith(DIR_SEPARATOR_UNIX)) {
+		if (url == null && !fileName.startsWith(DIR_SEPARATOR)) {
 			log.debug("Cannot find file {} under classpath", fileName);
 			url = classLoader.getResource("/" + fileName);
 		}
@@ -438,21 +450,21 @@ public class IOUtils {
 			try {
 				return url.openStream();
 			} catch (IOException e) {
-				log.error(e.getMessage(), e);
+				log.warn(e.getMessage());
 				return null;
 			}
 		}
 		
 		try {
-			if (!fileName.startsWith(DIR_SEPARATOR_UNIX)) {
-				fileName = CLASSPATH_PREFIX + DIR_SEPARATOR_UNIX + "**" + DIR_SEPARATOR_UNIX + fileName;
+			if (!fileName.startsWith(DIR_SEPARATOR)) {
+				fileName = CLASSPATH_PREFIX + DIR_SEPARATOR + "**" + DIR_SEPARATOR + fileName;
 			}
 			Resource[] resources = resolver.getResources(fileName);
 			if (resources.length > 0) {
 				return resources[0].getInputStream();
 			}
 		} catch (IOException e) {
-			log.error("", e);
+			log.warn(e.getMessage());
 			return null;
 		}
 		
@@ -469,7 +481,7 @@ public class IOUtils {
 			}
 			scanner.close();
 		} catch (IOException e) {
-			log.error(e.getMessage(), e);
+			log.warn(e.getMessage());
 		}
 		return lines;
 	}
@@ -484,7 +496,7 @@ public class IOUtils {
 			}
 			scanner.close();
 		} catch (IOException e) {
-			log.error(e.getMessage(), e);
+			log.warn(e.getMessage());
 		}
 		return lines;
 	}
@@ -540,7 +552,7 @@ public class IOUtils {
 				in.close();
 			}
 		} catch (IOException e) {
-			log.error(e.getMessage(), e);
+			log.warn(e.getMessage());
 		}
 		return join(lines, System.lineSeparator());
 	}
@@ -564,7 +576,7 @@ public class IOUtils {
 		
 		ClassLoader classLoader = firstNonNull(currentThread().getContextClassLoader(), IOUtils.class.getClassLoader());
 		URL url = classLoader.getResource(fileName);
-		if (url == null && !fileName.startsWith(DIR_SEPARATOR_UNIX)) {
+		if (url == null && !fileName.startsWith(DIR_SEPARATOR)) {
 			log.debug("Cannot find file {} under classpath", fileName);
 			url = classLoader.getResource("/" + fileName);
 		}
@@ -579,14 +591,14 @@ public class IOUtils {
 			try {
 				return resource.getFile();
 			} catch (IOException e) {
-				log.error("", e);
+				log.warn(e.getMessage());
 				return null;
 			}
 		}
 		
 		try {
-			if (!fileName.startsWith(DIR_SEPARATOR_UNIX)) {
-				fileName = CLASSPATH_PREFIX + DIR_SEPARATOR_UNIX + "**" + DIR_SEPARATOR_UNIX + fileName;
+			if (!fileName.startsWith(DIR_SEPARATOR)) {
+				fileName = CLASSPATH_PREFIX + DIR_SEPARATOR + "**" + DIR_SEPARATOR + fileName;
 			}
 			Resource[] resources = resolver.getResources(fileName);
 			if (resources.length > 0) {
@@ -594,7 +606,7 @@ public class IOUtils {
 			}
 			return null;
 		} catch (IOException e) {
-			log.error("", e);
+			log.warn(e.getMessage());
 			return null;
 		}
 		
@@ -671,7 +683,7 @@ public class IOUtils {
 			Files.write(path, data, options);
 			return true;
 		} catch (IOException e) {
-			log.error(format("Write data [{0}] to path [{1}] failed!", data, path), e);
+			log.warn(format("Write data [{0}] to path [{1}] failed!", data, path), e);
 		}
 		return false;
 	}
@@ -708,7 +720,7 @@ public class IOUtils {
 						try {
 							Files.createDirectories(parent);
 						} catch (IOException e) {
-							log.error(format("create parent directory [{0}] failed", parent), e);
+							log.warn(format("create parent directory [{0}] failed", parent), e);
 						}
 					}
 				});
@@ -722,7 +734,7 @@ public class IOUtils {
 						try {
 							Files.createDirectories(dir);
 						} catch (IOException e) {
-							log.error(format("create directory [{0}] failed", dir), e);
+							log.warn(format("create directory [{0}] failed", dir), e);
 						}
 					}
 				});
@@ -740,7 +752,7 @@ public class IOUtils {
 		try {
 			Files.deleteIfExists(path);
 		} catch (IOException e) {
-			log.error(format("Delete file {0} failed", path), e);
+			log.warn(format("Delete file {0} failed", path), e);
 		}
 		return true;
 	}
@@ -788,7 +800,7 @@ public class IOUtils {
 			});
 			return true;
 		} catch (IOException e) {
-			log.error("Delete path " + path + " failed", e);
+			log.warn("Delete path " + path + " failed", e);
 			return false;
 		}
 	}
@@ -894,7 +906,7 @@ public class IOUtils {
 				Files.copy(is, copyTo, options);
 				return true;
 			} catch (IOException e) {
-				log.error(format("copy from [{0}] to [{1}] failed!", copyFrom, copyTo), e);
+				log.warn(format("copy from [{0}] to [{1}] failed!", copyFrom, copyTo), e);
 			}
 		}
 		return false;
@@ -987,7 +999,7 @@ public class IOUtils {
 				closeable.close();
 			}
 		} catch (IOException e) {
-			log.error(e.getMessage(), e);
+			log.warn(e.getMessage());
 		}
 	}
 	
@@ -1065,7 +1077,7 @@ public class IOUtils {
 		try {
 			read = input.read(initialBuffer);
 		} catch (IOException e) {
-			log.error("", e);
+			log.warn(e.getMessage());
 			throw new IORuntimeException(e);
 		}
 		
@@ -1085,7 +1097,7 @@ public class IOUtils {
 			copy(input, output);
 			return output.toByteArray();
 		} catch (IOException e) {
-			log.error("", e);
+			log.warn(e.getMessage());
 			throw new IORuntimeException(e);
 		}
 	}
@@ -1239,7 +1251,7 @@ public class IOUtils {
 				}
 			}
 		} catch (IOException e) {
-			log.error("", e);
+			log.warn(e.getMessage());
 			throw new RuntimeException(e);
 		}
 		return fileList;
@@ -1260,7 +1272,7 @@ public class IOUtils {
 				}
 			}
 		} catch (IOException e) {
-			log.error("", e);
+			log.warn(e.getMessage());
 			throw new RuntimeException(e);
 		}
 		return fileList;
@@ -1314,10 +1326,10 @@ public class IOUtils {
 	 */
 	public static List<String> listClasspathFileNames(String classpathDir) {
 		ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-		if (!classpathDir.startsWith(DIR_SEPARATOR_UNIX)) {
-			classpathDir = CLASSPATH_PREFIX + DIR_SEPARATOR_UNIX + classpathDir + DIR_SEPARATOR_UNIX + "**" + DIR_SEPARATOR_UNIX + "*.*";
+		if (!classpathDir.startsWith(DIR_SEPARATOR)) {
+			classpathDir = CLASSPATH_PREFIX + DIR_SEPARATOR + classpathDir + DIR_SEPARATOR + "**" + DIR_SEPARATOR + "*.*";
 		} else {
-			classpathDir = CLASSPATH_PREFIX + classpathDir + DIR_SEPARATOR_UNIX + "**" + DIR_SEPARATOR_UNIX + "*.*";
+			classpathDir = CLASSPATH_PREFIX + classpathDir + DIR_SEPARATOR + "**" + DIR_SEPARATOR + "*.*";
 		}
 		try {
 			Resource[] resources = resolver.getResources(classpathDir);
@@ -1341,10 +1353,10 @@ public class IOUtils {
 	public static List<String> listClasspathFileNames(String classpathDir, String filePattern) {
 		filePattern = (isBlank(filePattern) ? "*.*" : filePattern);
 		ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-		if (!classpathDir.startsWith(DIR_SEPARATOR_UNIX)) {
-			classpathDir = CLASSPATH_PREFIX + DIR_SEPARATOR_UNIX + classpathDir + DIR_SEPARATOR_UNIX + "**" + DIR_SEPARATOR_UNIX + filePattern;
+		if (!classpathDir.startsWith(DIR_SEPARATOR)) {
+			classpathDir = CLASSPATH_PREFIX + DIR_SEPARATOR + classpathDir + DIR_SEPARATOR + "**" + DIR_SEPARATOR + filePattern;
 		} else {
-			classpathDir = CLASSPATH_PREFIX + classpathDir + DIR_SEPARATOR_UNIX + "**" + DIR_SEPARATOR_UNIX + filePattern;
+			classpathDir = CLASSPATH_PREFIX + classpathDir + DIR_SEPARATOR + "**" + DIR_SEPARATOR + filePattern;
 		}
 		try {
 			Resource[] resources = resolver.getResources(classpathDir);

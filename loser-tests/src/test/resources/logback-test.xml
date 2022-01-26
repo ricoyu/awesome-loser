@@ -12,13 +12,13 @@
 
     <!-- 控制Mybatis的日志级别为DEBUG, 并且只输出到控制台 -->
     <logger name="org.elasticsearch" level="DEBUG">
-        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="CONSOLE"/>
     </logger>
     <logger name="ch.qos.logback" level="ERROR">
-        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="CONSOLE"/>
     </logger>
 
-    <!--<root level="info">
-        <appender-ref ref="STDOUT"/>
-    </root>-->
+    <root level="info">
+        <appender-ref ref="CONSOLE"/>
+    </root>
 </configuration>

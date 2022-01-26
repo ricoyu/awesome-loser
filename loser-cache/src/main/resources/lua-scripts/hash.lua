@@ -46,10 +46,7 @@ local zadd = function(key, score, member)
 end
 
 --[[
-   根据auth:token:ttl:zset的score，与当前timestamp比较，score<timestamp表示过期了, 超过有效时间范围执行登出操作清理数据,返回expiredTokenLoginInfo
-   返回一个数组[token, loginInfo, token2, loginInfo2...]
-   
- PUBLISH 消息
+   清除zset和hash中过期的member, field
  ]]
 local clearExpired = function(key, zsetKey)
   local currentTimestamp = redis.call("TIME")[1] -- 得到当前时间,单位是秒
@@ -64,6 +61,8 @@ local clearExpired = function(key, zsetKey)
       redis.call("HDEL", key, field)
     end
   end
+  
+  return expiredFields
 end
 
 local hset = function(key, zsetKey, field, value, ttl)
@@ -98,6 +97,18 @@ end
 删除hash的field
 ]]
 local hdel = function(key, zsetKey, field)
+  local expiredFields = clearExpired(key, zsetKey) -- 先清除过期的key
+
+  --[[
+    判断一下, 要删除的哈希field是不是已经过期了, 如果过期了, 那么返回0
+    否则返回实际删除的数量, 实际就是0或1, 因为这里只支持删单个field
+  ]]
+  for index, value in ipairs(expiredFields) do
+    if value == field then
+      return 0
+    end
+  end
+
   redis.call("ZREM", zsetKey, field)
   return redis.call("HDEL", key, field)
 end
@@ -106,6 +117,7 @@ end
 删除hash的field并返回该field对应的值
 ]]
 local hdelGet = function(key, zsetKey, field)
+  clearExpired(key, zsetKey) -- 先清除过期的key
   redis.call("ZREM", zsetKey, field)
   local value = redis.call("HGET", key, field)
   redis.call("HDEL", key, field)

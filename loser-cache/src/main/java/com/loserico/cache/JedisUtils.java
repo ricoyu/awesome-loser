@@ -1533,7 +1533,7 @@ public final class JedisUtils {
 				}
 			});
 			
-			String zsetKey = joinKey(HASH_EXPIRE_ZSET_PREFIX, key);
+			String zsetKey = joinKey(HASH_EXPIRE_ZSET_PREFIX, new String(key, UTF_8));
 			Long result = (Long) jedisOperations.evalsha(toBytes(hashSha),
 					2,
 					key, // hash key
@@ -1865,7 +1865,7 @@ public final class JedisUtils {
 		 *
 		 * @param key
 		 * @param field
-		 * @return int 删除的field数量
+		 * @return int 删除的field数量(Redis原生API是可以一次删多个field, 所以返回的是删除field的数量)
 		 */
 		public static Long hdel(String key, Object field) {
 			String hashSha = shaHashs.computeIfAbsent("hash.lua", x -> {

@@ -50,7 +50,7 @@
         <jackson.version>2.11.0</jackson.version>
         <jaxb-api.versioin>2.2.12</jaxb-api.versioin>
         <json.version>20170516</json.version>
-        <jsonpath.version>2.4.0</jsonpath.version>
+        <jsonpath.version>2.6.0</jsonpath.version>
         <!-- 这个是Redis 6的客户端-->
         <jedis.version>3.6.0</jedis.version>
 
