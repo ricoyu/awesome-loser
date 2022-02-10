@@ -39,7 +39,7 @@
 
         <springframework.version>5.1.18.RELEASE</springframework.version>
 
-        <hibernate.version>5.4.8.Final</hibernate.version>
+        <hibernate.version>5.4.24.Final</hibernate.version>
 
         <mysql-connector-java.version>5.1.48</mysql-connector-java.version>
 
