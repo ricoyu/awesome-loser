@@ -310,6 +310,14 @@ public interface SQLOperations {
 	public void execute(String sql);
 	
 	/**
+	 * 非命名的SQL查询，不带参数, 不封装到对象
+	 *
+	 * @param sql
+	 * @return List<T>
+	 */
+	public <T> List<T> sqlQuery(String sql);
+	
+	/**
 	 * 非命名的SQL查询，不带参数
 	 *
 	 * @param sql

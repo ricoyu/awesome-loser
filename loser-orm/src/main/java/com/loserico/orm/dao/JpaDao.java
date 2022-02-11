@@ -1445,8 +1445,10 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	public <T> List<T> sqlQuery(String sql, Map<String, Object> params, Class<T> clazz) {
 		org.hibernate.query.Query<T> query = entityManager.createNativeQuery(sql)
 				.unwrap(org.hibernate.query.Query.class);
-		query.setResultTransformer(
+		if (clazz != null) {
+			query.setResultTransformer(
 				ResultTransformerFactory.getResultTransformer(sql, clazz, hibernateQueryMode, enumLookupProperties));
+		}
 		if (isNotEmpty(params)) {
 			query.setProperties(params);
 		}
@@ -1509,6 +1511,11 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 					sql, JacksonUtils.toJson(params), JacksonUtils.toJson(page), clazz.getName());
 			throw new SQLQueryException(msg, e);
 		}
+	}
+	
+	@Override
+	public <T> List<T> sqlQuery(String sql) {
+		return sqlQuery(sql, null, null);
 	}
 	
 	@Override
