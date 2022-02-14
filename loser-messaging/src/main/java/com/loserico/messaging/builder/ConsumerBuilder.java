@@ -176,14 +176,14 @@ public class ConsumerBuilder extends BaseBuilder {
 	private Boolean enableStatistic;
 	
 	/**
-	 * 同步还是异步提交offset
+	 * 同步还是异步提交offset, 默认异步
 	 * <ul>
-	 *     <li/>The commitSync is a blocking method. Calling it will block your thread until it either succeeds or fails.
-	 *     <li/>The commitAsync is a non-blocking method. Calling it will not block your thread.
+	 *     <li/>The commitSync is a blocking method. Calling it will block your thread until it either succeeds or fails. 阻塞方法, 高并发下延迟会高, 但是保证数据一致性
+	 *     <li/>The commitAsync is a non-blocking method. Calling it will not block your thread. 异步方法, 低延迟, 但是不保证数据一致性 <p/>
 	 *     Instead, it will continue processing the following instructions, no matter whether it will succeed or fail eventually.
 	 * </ul>
 	 */
-	private boolean commitAsync = false;
+	private boolean commitAsync = true;
 	
 	/**
 	 * Consumer拉取消息后直接丢到一个BlockingQueue里面, 然后直接拉取下一批消息
@@ -239,10 +239,10 @@ public class ConsumerBuilder extends BaseBuilder {
 	}
 	
 	/**
-	 * 同步还是异步提交offset
+	 * 同步还是异步提交offset, 默认异步
 	 * <ul>
-	 *     <li/>The commitSync is a blocking method. Calling it will block your thread until it either succeeds or fails.
-	 *     <li/>The commitAsync is a non-blocking method. Calling it will not block your thread.
+	 *     <li/>The commitSync is a blocking method. Calling it will block your thread until it either succeeds or fails. 阻塞方法, 高并发下延迟会高, 但是保证数据一致性
+	 *     <li/>The commitAsync is a non-blocking method. Calling it will not block your thread. 异步方法, 低延迟, 但是不保证数据一致性
 	 *     Instead, it will continue processing the following instructions, no matter whether it will succeed or fail eventually.
 	 * </ul>
 	 *
