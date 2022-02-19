@@ -58,7 +58,7 @@ public class ProducerBuilder extends BaseBuilder {
 	 *  the producer will receive an error response and can retry sending the message, avoiding potential loss of data.
 	 *
 	 *  <li>acks=all acks=-1</li>
-	 *  等待所有副本都收到消息后, producer才会收到success response, 消息没有丢失的风险. 吞吐量比acks=1的情况更低, 因为要等到所有的副本都收到消息. acks=all 和acks=-1等价<br/>
+	 *  需要等待 min.insync.replicas(默认1)指定的副本数写入成功才算成功, 消息没有丢失的风险. 吞吐量比acks=1的情况更低, 因为要等到所有的副本都收到消息. acks=all 和acks=-1等价<br/>
 	 *  If acks=all, the producer will receive a success response from the broker once all in-sync replicas received the message.
 	 *  This is the safest mode since you can make sure more than one broker has the message and that the message will survive
 	 *  even in the case of crash. However, the latency we discussed in the acks=1 case will be even higher, since we will be
@@ -86,19 +86,19 @@ public class ProducerBuilder extends BaseBuilder {
 	private Integer batchSize = 102400; //TODO 滴滴示例上是100000
 	
 	/**
-	 * linger.ms 默认0
+	 * linger.ms 官方默认0, 这边设置默认10, 以提高性能
 	 * <p/>
 	 * 0 表示消息必须立即发送出去, 但这样会影响性能 <br/>
 	 * 一般设置10毫秒左右, 就是说这个消息发送完后会进入本地的一个batch, 如果10毫秒内, 这个batch满了16KB就发送出去 <br/>
 	 * 如果10毫秒内batch没有满, 那么也必须把消息发送出去, 不能让消息发送延迟时间太长
 	 */
-	private Integer lingerMs;
+	private Integer lingerMs = 10;
 	
 	/**
 	 * buffer.memory <br/>
 	 * Total memory size the producer can use to buffer records waiting to be sent to the server.<p>
 	 * 默认 33554432 32M<p>
-	 * 发送消息的本地缓冲区, 如果设置了该缓冲区, 消息会先发送到本地缓冲区, 可以提高消息发送性能, 默认32M
+	 * 发送消息的本地缓冲区, 如果设置了该缓冲区, 消息会先发送到本地缓冲区, 然后再一可以提高消息发送性能, 默认32M
 	 */
 	private Integer bufferMemory;
 	
@@ -216,7 +216,7 @@ public class ProducerBuilder extends BaseBuilder {
 	}
 	
 	/**
-	 * linger.ms 默认0
+	 * linger.ms 官方默认0, 这边默认10毫秒, 以提高发送性能
 	 * <p/>
 	 * 0 表示消息必须立即发送出去, 但这样会影响性能 <br/>
 	 * 一般设置10毫秒左右, 就是说这个消息发送完后会进入本地的一个batch, 如果10毫秒内, 这个batch满了16KB就发送出去 <br/>

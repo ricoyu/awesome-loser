@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.Deserializer;
 
 import java.time.Duration;
@@ -97,6 +98,23 @@ public class Consumer<K, V> extends KafkaConsumer {
 	 * @param listener
 	 */
 	public void subscribe(String topic, ConsumerListener listener) {
+		subscribe(topic, null, listener);
+	}
+	
+	/**
+	 * 订阅Topic, 消息来了之后处理
+	 *
+	 * @param topic
+	 * @param partition 消费指定的分区
+	 * @param listener
+	 */
+	public void subscribe(String topic, Integer partition, ConsumerListener listener) {
+		/*
+		 * 如果显式指定了消费某个分区的数据, 消费组的rebalance机制是不生效的
+		 */
+		if (partition != null) {
+			assign(asList(new TopicPartition(topic, partition)));
+		}
 		subscribe(asList(topic));
 		startPolling(listener);
 	}
@@ -131,13 +149,6 @@ public class Consumer<K, V> extends KafkaConsumer {
 						messages.add(record.value());
 					}
 					
-					//提高性能?
-					if (commitAsync) {
-						commitAsync();
-					} else {
-						commitSync();
-					}
-					
 					if (messages.isEmpty()) {
 						continue;
 					}
@@ -155,7 +166,7 @@ public class Consumer<K, V> extends KafkaConsumer {
 					log.error("", e);
 				}
 			}
-		}, "loser-main").start();
+		}, "kafka-main").start();
 		
 	}
 	

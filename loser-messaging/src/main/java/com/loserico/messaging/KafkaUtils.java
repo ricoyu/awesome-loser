@@ -1,5 +1,7 @@
 package com.loserico.messaging;
 
+import com.loserico.messaging.admin.KafkaAdmin;
+import com.loserico.messaging.builder.AdminClientBuilder;
 import com.loserico.messaging.builder.ConsumerBuilder;
 import com.loserico.messaging.builder.ProducerBuilder;
 
@@ -15,6 +17,17 @@ import com.loserico.messaging.builder.ProducerBuilder;
  * @version 1.0
  */
 public final class KafkaUtils {
+	
+	
+	/**
+	 * 创建一个KafkaAdminClient, bootstrapServers是 ip:port,ip:port这种形式
+	 * @return
+	 */
+	public static KafkaAdmin admin(String bootstrapServers) {
+		org.apache.kafka.clients.admin.Admin admin =
+				new AdminClientBuilder().bootstrapServers(bootstrapServers).build();
+		return new KafkaAdmin(admin);
+	}
 	
 	/**
 	 * 创建一个新的Kafka Producer, bootstrapServers是 ip:port,ip:port这种形式
@@ -62,4 +75,5 @@ public final class KafkaUtils {
 		builder.bootstrapServer(ip, port);
 		return builder;
 	}
+
 }

@@ -209,7 +209,7 @@ public class ConsumerBuilder extends BaseBuilder {
 	}
 	
 	/**
-	 * 开启消费端自动提交<p>
+	 * 开启消费端自动提交, 默认true<p>
 	 * 如果消费端是自动提交, 万一消费的数据还没处理完, 就自动提交offset了, 如果此时Consumer直接宕机, 未处理完的数据就丢失了, 而且下次也消费不到了
 	 *
 	 * @param enableAutoCommit

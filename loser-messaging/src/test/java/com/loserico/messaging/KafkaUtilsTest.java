@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.loserico.common.lang.constants.Units;
 import com.loserico.common.lang.enums.SizeUnit;
 import com.loserico.common.lang.utils.IOUtils;
+import com.loserico.messaging.admin.KafkaAdmin;
 import com.loserico.messaging.consumer.Consumer;
 import com.loserico.messaging.enums.Acks;
 import com.loserico.messaging.enums.Compression;
@@ -13,6 +14,7 @@ import com.loserico.messaging.serializer.JsonSerializer;
 import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.Test;
@@ -27,6 +29,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static com.loserico.json.jackson.JacksonUtils.toJson;
 import static java.util.concurrent.TimeUnit.MINUTES;
+import static org.junit.Assert.assertTrue;
 
 /**
  * <p>
@@ -190,16 +193,47 @@ public class KafkaUtilsTest {
 		private int age;
 	}
 	
+	@SneakyThrows
 	@Test
 	public void testSendPerformance() {
 		AtomicLong countAtomicLong = new AtomicLong();
-		Producer<String, String> producer = KafkaUtils.newProducer("192.168.100.105:9092").build();
+		Producer<String, String> producer = KafkaUtils.newProducer("192.168.100.101:9092").build();
 		String message = IOUtils.readFileAsString("D:\\Work\\观安信息上海有限公司\\NTA资料\\NTA测试数据\\ids-metadata-http.json");
 		while (true) {
 			long num = countAtomicLong.incrementAndGet();
 			producer.send("ids-metadata", message);
 			System.out.println("发送第" + num + "条消息");
+			if (num == 3) {
+				break;
+			}
 		}
+		Thread.currentThread().join();
+	}
+	
+	@SneakyThrows
+	@Test
+	public void test() {
+		Consumer<String, String> consumer = KafkaUtils.newConsumer("192.168.100.101:9092")
+				.groupId("metadata-group")
+				.autoCommit(false)
+				.fetchMaxWait(500)
+				.fetchMaxBytes(50 * Units.MB)
+				.maxPartitionFetchBytes(50 * Units.MB)
+				.maxPollRecords(10000)
+				//.workerThreads(500)
+				//.queueSize(6000)
+				.autoOffsetReset(OffsetReset.EARLIEST)
+				.commitAsync(true)
+				.heartbeatInterval(3000)
+				.sessionTimeout(1, TimeUnit.MINUTES)
+				.messageClass(NetLog.class)
+				.build();
+		
+		consumer.subscribe("ids-metadata", (messages) -> {
+			log.info("消费{}条消息", messages.size());
+		});
+		
+		Thread.currentThread().join();
 	}
 	
 	@Test
@@ -232,30 +266,6 @@ public class KafkaUtilsTest {
 				throw new RuntimeException((String) message);
 			}
 		});
-	}
-	
-	@SneakyThrows
-	@Test
-	public void test() {
-		Consumer<String, String> consumer = KafkaUtils.newConsumer("172.23.12.65:9092")
-				.groupId("metadata-group")
-				.autoCommit(false)
-				.fetchMaxWait(500)
-				.fetchMaxBytes(50 * Units.MB)
-				.maxPartitionFetchBytes(50 * Units.MB)
-				.maxPollRecords(3000)
-				//.workerThreads(500)
-				//.queueSize(6000)
-				.heartbeatInterval(3000)
-				.sessionTimeout(1, TimeUnit.MINUTES)
-				.messageClass(NetLog.class)
-				.build();
-		
-		consumer.subscribe("ids-metadata", (messages) -> {
-			log.info("消费{}条消息", messages.size());
-		});
-		
-		Thread.currentThread().join();
 	}
 	
 	@Data
@@ -317,7 +327,7 @@ public class KafkaUtilsTest {
 	
 	@SneakyThrows
 	@Test
-	public void testqgwt() {
+	public void testConsuming() {
 		Consumer<String, String> consumer = KafkaUtils.newConsumer("10.20.26.240:9092")
 				.groupId("loser-group")
 				.build();
@@ -327,5 +337,45 @@ public class KafkaUtilsTest {
 		});
 		
 		Thread.currentThread().join();
+	}
+	
+	@SneakyThrows
+	@Test
+	public void testCreateTopic() {
+		KafkaAdmin admin = KafkaUtils.admin("192.168.100.101:9092, 192.168.100.102:9092,192.168.100.103:9092");
+		admin.createTopic("java-topic")
+				.minInsyncReplicas(2)
+				.partitions(3)
+				.replications(2)
+				.callback((e, topicName) -> {
+					if (e == null) {
+						log.info("{} 创建成功!", topicName);
+					} else {
+						log.info("{} 创建失败!", topicName);
+					}
+				})
+				.create();
+	}
+	
+	@SneakyThrows
+	@Test
+	public void testDescribeTopic() {
+		KafkaAdmin admin = KafkaUtils.admin("192.168.100.101:9092, 192.168.100.102:9092,192.168.100.103:9092");
+		TopicDescription topicDescription = admin.describeTopic("java-topic");
+		log.info(toJson(topicDescription));
+	}
+	
+	@Test
+	public void testDeleteTopic() {
+		KafkaAdmin admin = KafkaUtils.admin("192.168.100.101:9092, 192.168.100.102:9092,192.168.100.103:9092");
+		boolean deleted = admin.deleteTopic("java-topic");
+		assertTrue(deleted);
+	}
+	
+	@Test
+	public void testListTopics() {
+		KafkaAdmin admin = KafkaUtils.admin("192.168.100.101:9092, 192.168.100.102:9092,192.168.100.103:9092");
+		List<String> topics = admin.listTopics();
+		topics.forEach(System.out::println);
 	}
 }

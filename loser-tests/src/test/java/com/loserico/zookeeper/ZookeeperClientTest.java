@@ -9,7 +9,7 @@ public class ZookeeperClientTest {
 	
 	@Before
 	public void setup() {
-		zookeeperClient = ZookeeperClient.initialize("192.168.102.104:2181,192.168.102.106:2181,192.168.102.107:2181", 4000);
+		zookeeperClient = ZookeeperClient.initialize("localhost:2181", 4000);
 	}
 	
 	@Test
