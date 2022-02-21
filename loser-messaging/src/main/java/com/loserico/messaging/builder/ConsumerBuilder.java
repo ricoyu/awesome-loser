@@ -59,6 +59,7 @@ public class ConsumerBuilder extends BaseBuilder {
 	
 	/**
 	 * 默认 latest<p>
+	 * 当这个消费组之前没有消费过, 还没有记录过offset时起作用; 如果之前已经记录过offset, 那么下次消费还是从下一个offset开始消费
 	 * What to do when there is no initial offset in Kafka or if the current offset does not exist any more on the server:
 	 * <ul>
 	 * <li>earliest</li>       automatically reset the offset to the earliest offset
@@ -183,7 +184,7 @@ public class ConsumerBuilder extends BaseBuilder {
 	 *     Instead, it will continue processing the following instructions, no matter whether it will succeed or fail eventually.
 	 * </ul>
 	 */
-	private boolean commitAsync = true;
+	//private boolean commitAsync = true;
 	
 	/**
 	 * Consumer拉取消息后直接丢到一个BlockingQueue里面, 然后直接拉取下一批消息
@@ -210,7 +211,15 @@ public class ConsumerBuilder extends BaseBuilder {
 	
 	/**
 	 * 开启消费端自动提交, 默认true<p>
-	 * 如果消费端是自动提交, 万一消费的数据还没处理完, 就自动提交offset了, 如果此时Consumer直接宕机, 未处理完的数据就丢失了, 而且下次也消费不到了
+	 * 如果消费端是自动提交, 万一消费的数据还没处理完, 就自动提交offset了, 如果此时Consumer直接宕机, 未处理完的数据就丢失了, 而且下次也消费不到了<p>
+	 *     
+	 * 假设生产者持续往topic-test发1000条消息, 消费者每次拉取1条消息, enable.auto.commit=false
+	 * <ol>
+	 *     <li/>这个消费者运行中, 每次拉取一条新消息, 直到这1000条消费完
+	 *     <li/>如果这个消费者重启, 那么将从第一条消息开始重新消费
+	 * </ol>
+	 * 
+	 * 注意: 开启自动提交后, 消费者并不是每次拉取消息就提交一次的, 是由 auto.commit.interval.ms 这个参数控制的, 默认5000(5s)
 	 *
 	 * @param enableAutoCommit
 	 * @return ConsumerBuilder
@@ -249,13 +258,14 @@ public class ConsumerBuilder extends BaseBuilder {
 	 * @param commitAsync
 	 * @return ConsumerBuilder
 	 */
-	public ConsumerBuilder commitAsync(boolean commitAsync) {
+/*	public ConsumerBuilder commitAsync(boolean commitAsync) {
 		this.commitAsync = commitAsync;
 		return this;
-	}
+	}*/
 	
 	/**
 	 * 默认 latest<p>
+	 * 当这个消费组之前没有消费过, 还没有记录过offset时起作用; 如果之前已经记录过offset, 那么下次消费还是从下一个offset开始消费
 	 * What to do when there is no initial offset in Kafka or if the current offset does not exist any more on the server:
 	 * <ul>
 	 * <li>earliest</li>       automatically reset the offset to the earliest offset
@@ -509,7 +519,7 @@ public class ConsumerBuilder extends BaseBuilder {
 		properties.put(BOOTSTRAP_SERVERS_CONFIG, bootstrapServers());
 		properties.put(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
 		properties.put(VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-		properties.put("commitAsync", commitAsync);
+		//properties.put("commitAsync", commitAsync);
 		
 		if (enableStatistic != null) {
 			properties.put("enableStatistic", enableStatistic);

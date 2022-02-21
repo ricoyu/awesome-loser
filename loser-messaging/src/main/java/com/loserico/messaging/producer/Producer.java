@@ -126,7 +126,7 @@ public class Producer<K, V> extends KafkaProducer {
 	 * @return Future<RecordMetadata>
 	 */
 	public Future<RecordMetadata> send(String topic, Integer partition, Object value) {
-		return send(new ProducerRecord(topic, partition, value));
+		return send(new ProducerRecord(topic, partition, null, value));
 	}
 	
 	/**
@@ -138,7 +138,7 @@ public class Producer<K, V> extends KafkaProducer {
 	 * @return Future<RecordMetadata>
 	 */
 	public Future<RecordMetadata> send(String topic, Integer partition, Object value, Callback callback) {
-		return send(new ProducerRecord(topic, partition, value), callback);
+		return send(new ProducerRecord(topic, partition, null, value), callback);
 	}
 	
 	/**

@@ -77,6 +77,24 @@ public class KafkaAdmin {
 	}
 	
 	/**
+	 * 检查topics是否都存在, 只要有一个不存在就返回false, 都存在返回true
+	 * @param topicNames
+	 * @return boolean
+	 */
+	public boolean existsTopic(String... topicNames) {
+		ListTopicsOptions listTopicsOptions = new ListTopicsOptions();
+		listTopicsOptions.listInternal(false);
+		ListTopicsResult listTopicsResult = admin.listTopics(listTopicsOptions);
+		try {
+			Set<String> topics = listTopicsResult.names().get(3, SECONDS);
+			return topics.containsAll(asList(topicNames));
+		} catch (Exception e) {
+			log.error("", e);
+			throw new RuntimeException(e);
+		}
+	}
+	
+	/**
 	 * @param topicName
 	 * @return
 	 */

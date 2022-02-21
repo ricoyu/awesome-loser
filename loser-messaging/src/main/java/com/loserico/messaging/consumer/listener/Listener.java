@@ -1,6 +1,4 @@
-package com.loserico.messaging.listener;
-
-import java.util.List;
+package com.loserico.messaging.consumer.listener;
 
 /**
  * <p>
@@ -12,7 +10,6 @@ import java.util.List;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
-public interface ConsumerListener {
+public interface Listener {
 	
-	public void onMessage(List messages);
 }

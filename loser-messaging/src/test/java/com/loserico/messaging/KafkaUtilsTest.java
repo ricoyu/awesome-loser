@@ -223,7 +223,6 @@ public class KafkaUtilsTest {
 				//.workerThreads(500)
 				//.queueSize(6000)
 				.autoOffsetReset(OffsetReset.EARLIEST)
-				.commitAsync(true)
 				.heartbeatInterval(3000)
 				.sessionTimeout(1, TimeUnit.MINUTES)
 				.messageClass(NetLog.class)
