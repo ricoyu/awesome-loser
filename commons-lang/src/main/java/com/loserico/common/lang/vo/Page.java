@@ -11,7 +11,7 @@ import java.util.Objects;
 import static java.util.Objects.requireNonNull;
 
 /**
- * 分页支持
+ * 分页支持, pageNum, pageSize这两个参数是必传的, 否则读取RequestBody报错
  * 
  * @author xuehyu
  * @since 2014-10-13

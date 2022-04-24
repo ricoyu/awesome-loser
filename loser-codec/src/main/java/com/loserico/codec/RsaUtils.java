@@ -35,7 +35,6 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.text.MessageFormat;
-import java.util.Objects;
 import java.util.function.Consumer;
 
 import static com.loserico.common.lang.utils.Assert.notNull;
@@ -450,7 +449,6 @@ public final class RsaUtils {
 	 * @return String
 	 */
 	public static String privateDecrypt(String data, Consumer consumer) {
-		Objects.requireNonNull(consumer, "consumer cannot be null!");
 		if (isBlank(data)) {
 			return data;
 		}
@@ -459,7 +457,11 @@ public final class RsaUtils {
 			cipher.init(Cipher.DECRYPT_MODE, privateKey);
 			return new String(rsaSplitCodec(cipher, Cipher.DECRYPT_MODE, base64Decode(data)), CHARSET);
 		} catch (Exception e) {
-			consumer.accept(data);
+			if (consumer != null) {
+				consumer.accept(data);
+			} else {
+				log.error("", e);
+			}
 		}
 		return null;
 	}

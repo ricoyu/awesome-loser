@@ -75,7 +75,7 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	@ResponseBody
 	protected ResponseEntity<Object> handleTypeMismatch(TypeMismatchException ex, HttpHeaders headers,
 	                                                    HttpStatus status, WebRequest request) {
-		logger.debug("Rest API ERROR happen", ex);
+		logger.info("Rest API ERROR happen", ex);
 		return super.handleTypeMismatch(ex, headers, status, request);
 	}
 	
@@ -86,7 +86,7 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	@Override
 	protected ResponseEntity<Object> handleBindException(BindException ex, HttpHeaders headers, HttpStatus status,
 	                                                     WebRequest request) {
-		logger.debug("Rest API ERROR happen", ex);
+		logger.info("Rest API ERROR happen", ex);
 		headers.add("Content-Type", "application/json");
 		ErrorMessage errorMessage = ValidationUtils.getErrorMessage(ex.getBindingResult());
 		
@@ -105,7 +105,7 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	@ResponseStatus(value = HttpStatus.OK)
 	@ResponseBody
 	protected ResponseEntity<Object> handleValidationException(ValidationException e) {
-		logger.debug("Rest API ERROR happen", e);
+		logger.info("Rest API ERROR happen", e);
 		Throwable cause = e.getCause();
 		if (cause != null && cause instanceof BindException) {
 			BindException bindException = (BindException) cause;
@@ -123,7 +123,7 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	@Override
 	protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex,
 	                                                              HttpHeaders headers, HttpStatus status, WebRequest request) {
-		logger.debug("Rest API ERROR happen", ex);
+		logger.info("Rest API ERROR happen", ex);
 		headers.add("Content-Type", "application/json");
 		Result result = Results.status(BAD_REQUEST).build();
 		return new ResponseEntity(result, headers, HttpStatus.OK);
@@ -132,7 +132,7 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	@Override
 	protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
 	                                                              HttpHeaders headers, HttpStatus status, WebRequest request) {
-		logger.debug("Rest API ERROR happen", ex);
+		logger.info("Rest API ERROR happen", ex);
 		ErrorMessage errorMessage = ValidationUtils.getErrorMessage(ex.getBindingResult());
 		List<String[]> msgs = errorMessage.getErrors()
 				.stream()
@@ -158,7 +158,7 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	@ResponseStatus(value = HttpStatus.OK)
 	@ResponseBody
 	protected ResponseEntity<Object> handleMethodArgumentNotValid(GeneralValidationException e) {
-		logger.debug("Rest API ERROR happen", e);
+		logger.info("Rest API ERROR happen", e);
 		ErrorMessage errorMessage = e.getErrorMessage();
 		List<String[]> msgs = errorMessage.getErrors()
 				.stream()
@@ -193,6 +193,7 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	@Override
 	protected ResponseEntity<Object> handleHttpRequestMethodNotSupported(HttpRequestMethodNotSupportedException ex, HttpHeaders headers, HttpStatus status,
 	                                                                     WebRequest request) {
+		log.info("", ex);
 		headers.add("Content-Type", "application/json");
 		Result result = Results.status(METHOD_NOT_ALLOWED).build();
 		return new ResponseEntity(result, headers, HttpStatus.METHOD_NOT_ALLOWED);
