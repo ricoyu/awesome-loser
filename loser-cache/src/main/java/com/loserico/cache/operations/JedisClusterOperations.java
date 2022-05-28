@@ -247,6 +247,11 @@ public class JedisClusterOperations implements JedisOperations {
 	}
 	
 	@Override
+	public long hincrby(String key, String field, long value) {
+		return jedisCluster.hincrBy(key, field, value);
+	}
+	
+	@Override
 	public List<byte[]> hmget(byte[] key, byte[]... fields) {
 		return jedisCluster.hmget(key, fields);
 	}

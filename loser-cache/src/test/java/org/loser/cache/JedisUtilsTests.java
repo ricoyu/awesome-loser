@@ -4,7 +4,6 @@ import com.loserico.cache.JedisUtils;
 import com.loserico.common.lang.utils.IOUtils;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Date;
@@ -13,7 +12,9 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * <p>
@@ -95,7 +96,7 @@ public class JedisUtilsTests {
 	@Test
 	public void testSet() {
 		JedisUtils.set("k1", "aaa");
-		Assert.assertEquals("aaa", JedisUtils.get("k1"));
+		assertEquals("aaa", JedisUtils.get("k1"));
 		System.out.println(JedisUtils.get("k1"));
 	}
 	
@@ -286,5 +287,14 @@ public class JedisUtilsTests {
 		JedisUtils.set("k1", true);
 		Boolean v1 = JedisUtils.get("k1", Boolean.class);
 		assertTrue(v1.booleanValue());
+	}
+	
+	@Test
+	public void testHIncrBY() {
+		JedisUtils.del("cart");
+		long currentCount = JedisUtils.HASH.hincrby("cart", "close:1", 10);
+		assertEquals(10, currentCount);
+		currentCount = JedisUtils.HASH.hincrby("cart", "close:1", -10);
+		assertEquals(0, currentCount);
 	}
 }

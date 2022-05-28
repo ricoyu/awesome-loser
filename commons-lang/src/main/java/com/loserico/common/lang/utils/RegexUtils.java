@@ -71,9 +71,17 @@ public final class RegexUtils {
 		}
 		
 		UrlParts urlParts = new UrlParts();
-		urlParts.setScheme(matcher.group(2));
+		String scheme = matcher.group(2);
+		urlParts.setScheme(scheme);
 		urlParts.setHost(matcher.group(4));
-		urlParts.setPort(Transformers.convert(matcher.group(6), Integer.class));
+		String port = matcher.group(6);
+		if ("https".equalsIgnoreCase(scheme) && isBlank(port)) {
+			port = "443";
+		}
+		if ("http".equalsIgnoreCase(scheme) && isBlank(port)) {
+			port = "80";
+		}
+		urlParts.setPort(Transformers.convert(port, Integer.class));
 		urlParts.setPath(matcher.group(7));
 		urlParts.setParams(matcher.group(9));
 		

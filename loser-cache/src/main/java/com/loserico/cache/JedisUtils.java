@@ -1885,6 +1885,10 @@ public final class JedisUtils {
 					toBytes(field));
 		}
 		
+		public static long hincrby (String key, String field, int num) {
+			return jedisOperations.hincrby(key, field, (long)num);
+		}
+		
 		/**
 		 * 删除Hash的某个field, 并返回该字段的值
 		 *

@@ -366,4 +366,9 @@ public class HttpUtilsTest {
 				.request();
 	}
 	
+	@Test
+	public void testHttpsPost() {
+		HttpUtils.post("https://10.10.17.31/api/login").request();
+	}
+	
 }

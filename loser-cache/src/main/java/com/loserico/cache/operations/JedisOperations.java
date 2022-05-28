@@ -292,6 +292,8 @@ public interface JedisOperations {
 	
 	public Map<String, String> hgetAll(final String key);
 	
+	public long hincrby(String key, String field, long value);
+	
 	public List<String> hvals(String key);
 	
 	/**

@@ -272,6 +272,11 @@ public class JedisPoolOperations implements JedisOperations {
 	}
 	
 	@Override
+	public long hincrby(String key, String field, long value) {
+		return operate((jedis) -> jedis.hincrBy(key, field, value));
+	}
+	
+	@Override
 	public List<byte[]> hmget(byte[] key, byte[]... fields) {
 		return operate((jedis) -> jedis.hmget(key, fields));
 	}
