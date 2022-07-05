@@ -34,6 +34,8 @@ import java.util.Map;
 @Slf4j
 public final class AggResultSupport {
 	
+	private static final int PRINT_LOG_LIMIT = 100;
+	
 	public static Map<String, Object> compositeResult(Aggregations aggregations) {
 		Map<String, Object> resultMap = new HashMap<>();
 		
@@ -63,11 +65,15 @@ public final class AggResultSupport {
 			if (aggregation instanceof LongTerms) {
 				String name = aggregation.getName();
 				List<LongTerms.Bucket> buckets = ((LongTerms) aggregation).getBuckets();
+				boolean printDebugLog = buckets.size() < PRINT_LOG_LIMIT;
 				Map<Object, Long> value = new HashMap<>(buckets.size());
 				for (LongTerms.Bucket bucket : buckets) {
 					Object key = bucket.getKey();
 					long docCount = bucket.getDocCount();
-					log.debug("Bucket: {}, Doc Count: {}", key, docCount);
+					//优化, 防止聚合后桶太多, 打印日志会很耗时
+					if (printDebugLog) {
+						log.debug("Bucket: {}, Doc Count: {}", key, docCount);
+					}
 					value.put(key, docCount);
 				}
 				resultMap.put(name, value);

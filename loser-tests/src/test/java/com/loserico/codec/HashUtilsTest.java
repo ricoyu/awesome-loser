@@ -122,4 +122,10 @@ public class HashUtilsTest {
 		System.out.println(fileHash1);
 		System.out.println(fileHash3);
 	}
+	
+	@Test
+	public void testRedisCrc16() {
+		String src = "name1";
+		System.out.println(HashUtils.crc16Hash(src) % 16284);
+	}
 }

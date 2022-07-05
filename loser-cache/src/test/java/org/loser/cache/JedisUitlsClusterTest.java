@@ -3,6 +3,7 @@ package org.loser.cache;
 import com.loserico.cache.JedisUtils;
 import org.junit.Test;
 
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
@@ -42,5 +43,19 @@ public class JedisUitlsClusterTest {
 		System.out.println(JedisUtils.expire("年好吗奥术大师多", 10, TimeUnit.SECONDS));
 		System.out.println(JedisUtils.expire("123123年好吗asdsaddasd师多", 10, TimeUnit.SECONDS));
 		System.out.println(JedisUtils.expire("aaaa年好sadsdf吗奥术dsfg大师多", 10, TimeUnit.SECONDS));
+	}
+	
+	@Test
+	public void testSinter() {
+		JedisUtils.SET.sadd("key1", "a");
+		JedisUtils.SET.sadd("key1", "b");
+		JedisUtils.SET.sadd("key1", "c");
+		JedisUtils.SET.sadd("key1", "d");
+		JedisUtils.SET.sadd("key2", "c");
+		JedisUtils.SET.sadd("key2", "d");
+		JedisUtils.SET.sadd("key2", "e");
+		JedisUtils.SET.sadd("key2", "f");
+		Set<String> sinters = JedisUtils.SET.sinter("key1", "key2");
+		sinters.forEach(System.out::println);
 	}
 }

@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
@@ -296,5 +297,24 @@ public class JedisUtilsTests {
 		assertEquals(10, currentCount);
 		currentCount = JedisUtils.HASH.hincrby("cart", "close:1", -10);
 		assertEquals(0, currentCount);
+	}
+	
+	@Test
+	public void testBRpop() {
+		System.out.println("开始阻塞获取");
+		String value = JedisUtils.LIST.brpop(20, "tuling");
+		System.out.println(value);
+	}
+	
+	@Test
+	public void testSrandMember() {
+		List members = JedisUtils.SET.srandmember("act:1001", 1);
+		members.forEach(System.out::println);
+	}
+	
+	@Test
+	public void testSpop() {
+		Set<String> members = JedisUtils.SET.spop("act:1001", 1);
+		members.forEach(System.out::println);
 	}
 }

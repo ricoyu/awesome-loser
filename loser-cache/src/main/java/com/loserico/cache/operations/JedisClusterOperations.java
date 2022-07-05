@@ -97,6 +97,16 @@ public class JedisClusterOperations implements JedisOperations {
 	}
 	
 	@Override
+	public double zincrby(String key, String member, int increment) {
+		return jedisCluster.zincrby(key, (double)increment, member);
+	}
+	
+	@Override
+	public Set<String> zrevrange(String key, int start, int end) {
+		return jedisCluster.zrevrange(key, (long)start, (long)end);
+	}
+	
+	@Override
 	public Long zcard(String key) {
 		return jedisCluster.zcard(key);
 	}
@@ -219,6 +229,21 @@ public class JedisClusterOperations implements JedisOperations {
 	@Override
 	public Set<String> smembers(String key) {
 		return jedisCluster.smembers(key);
+	}
+	
+	@Override
+	public List<String> sirandmember(String key, int count) {
+		return jedisCluster.srandmember(key, count);
+	}
+	
+	@Override
+	public Set<String> spop(String key, int count) {
+		return jedisCluster.spop(key, (long)count);
+	}
+	
+	@Override
+	public Set<String> sinter(String key1, String key2) {
+		return jedisCluster.sinter(key1, key2);
 	}
 	
 	@Override

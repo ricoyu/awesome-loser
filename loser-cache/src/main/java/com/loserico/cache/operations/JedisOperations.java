@@ -504,4 +504,34 @@ public interface JedisOperations {
 	 * @return
 	 */
 	public Jedis jedis();
+	
+	/**
+	 * 从Set中随机返回指定个数的元素
+	 * @param key
+	 * @param count
+	 * @return List
+	 */
+	List<String> sirandmember(String key, int count);
+	
+	Set<String> spop(String key, int count);
+	
+	Set<String> sinter(String key1, String key2);
+	
+	/**
+	 * Increment the score of memer in the sorted set stored at key by increment
+	 * @param key
+	 * @param member
+	 * @param increment
+	 * @return double the new score
+	 */
+	double zincrby(String key, String member, int increment);
+	
+	/**
+	 * return a range of members in a sorted set , by index, with scores ordered from high to low
+	 * @param key
+	 * @param start
+	 * @param end
+	 * @return
+	 */
+	Set<String> zrevrange(String key, int start, int end);
 }

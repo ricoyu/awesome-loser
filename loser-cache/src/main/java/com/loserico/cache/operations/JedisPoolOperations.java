@@ -103,6 +103,16 @@ public class JedisPoolOperations implements JedisOperations {
 	}
 	
 	@Override
+	public double zincrby(String key, String member, int increment) {
+		return operate((jedis) -> jedis.zincrby(key, (double)increment, member));
+	}
+	
+	@Override
+	public Set<String> zrevrange(String key, int start, int end) {
+		return operate((jedis) -> jedis.zrevrange(key, (long)start, (long)end));
+	}
+	
+	@Override
 	public Long zremByRank(String key, long start, long end) {
 		return operate((jedis) -> jedis.zremrangeByRank(key, start, end));
 	}
@@ -244,6 +254,21 @@ public class JedisPoolOperations implements JedisOperations {
 	@Override
 	public Set<String> smembers(String key) {
 		return operate((jedis) -> jedis.smembers(key));
+	}
+	
+	@Override
+	public List<String> sirandmember(String key, int count) {
+		return operate((jedis) -> jedis.srandmember(key, count));
+	}
+	
+	@Override
+	public Set<String> spop(String key, int count) {
+		return operate((jedis) -> jedis.spop(key, (long)count));
+	}
+	
+	@Override
+	public Set<String> sinter(String key1, String key2) {
+		return operate((jedis) -> jedis.sinter(key1, key2));
 	}
 	
 	@Override

@@ -933,8 +933,9 @@ public final class JedisUtils {
 		 * 假设 list1不存在,  list2有一个元素 a
 		 * 那么返回的List包含两个元素,  第一个表示从哪个key返回的, 这里是 list2; 第二个元素表示返回的元素本身 a
 		 * </pre>
-		 *
-		 * @on
+		 * @param timeout 单位秒
+		 * @param key
+		 * @return
 		 */
 		public static String brpop(int timeout, String key) {
 			List<String> list = jedisOperations.brpop(timeout, key);
@@ -1249,6 +1250,16 @@ public final class JedisUtils {
 		}
 		
 		/**
+		 * 从Set中随机选出指定个数的元素, 元素不会从Set中删除
+		 * @param key
+		 * @param count
+		 * @return
+		 */
+		public static List<String> srandmember(String key, int count) {
+			return jedisOperations.sirandmember(key, count);
+		}
+		
+		/**
 		 * 返回Set中元素个数
 		 *
 		 * @param key
@@ -1269,6 +1280,25 @@ public final class JedisUtils {
 			return jedisOperations.srem(toBytes(key), toBytes(elements));
 		}
 		
+		/**
+		 * 从Set中随机弹出指定个数元素
+		 * @param key
+		 * @param count
+		 * @return Set<String>
+		 */
+		public static Set<String> spop(String key, int count) {
+			return jedisOperations.spop(key, count);
+		}
+		
+		/**
+		 * 返回两个Set的交集, 注意Redis集群环境可能不支持, 因为两个key可能在不同的slot里面
+		 * @param key1
+		 * @param key2
+		 * @return
+		 */
+		public static Set<String> sinter(String key1, String key2) {
+			return jedisOperations.sinter(key1, key2);
+		}
 	}
 	
 	/**
@@ -1364,6 +1394,13 @@ public final class JedisUtils {
 			return jedisOperations.zremRangeByScore(key, min, max);
 		}
 		
+		/**
+		 * 根据index下标返回
+		 * @param key
+		 * @param start
+		 * @param end
+		 * @return
+		 */
 		public static Set<String> zrange(String key, long start, long end) {
 			return jedisOperations.zrange(key, start, end);
 		}
@@ -1373,7 +1410,28 @@ public final class JedisUtils {
 					.stream()
 					.map(json -> JacksonUtils.toObject(json, clazz))
 					.collect(toSet());
-			
+		}
+		
+		/**
+		 * return a range of members in a sorted set, by index, with scores ordered from hign to low
+		 * @param key
+		 * @param start
+		 * @param end
+		 * @return
+		 */
+		public static Set<String> zrevrange(String key, int start, int end) {
+			return jedisOperations.zrevrange(key, start, end);
+		}
+		
+		/**
+		 * 将member的score+上increment
+		 * @param key
+		 * @param member
+		 * @param increment
+		 * @return 新的score
+		 */
+		public static double zincrby(String key, String member, int increment) {
+			return jedisOperations.zincrby(key, member, increment);
 		}
 		
 		/**
