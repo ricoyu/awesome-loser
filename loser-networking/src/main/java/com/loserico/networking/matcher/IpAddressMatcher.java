@@ -40,8 +40,7 @@ public final class IpAddressMatcher implements RequestMatcher {
 		}
 		requiredAddress = parseAddress(ipAddress);
 		Assert.isTrue(requiredAddress.getAddress().length * 8 >= nMaskBits,
-				String.format("IP address %s is too short for bitmask of length %d",
-						ipAddress, nMaskBits));
+				"IP 地址长度太短");
 	}
 
 	public boolean matches(HttpServletRequest request) {
