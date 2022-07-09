@@ -13,7 +13,6 @@ import com.loserico.cache.operations.JedisClusterOperations;
 import com.loserico.cache.operations.JedisOperations;
 import com.loserico.cache.status.HSet;
 import com.loserico.cache.status.TTL;
-import com.loserico.cache.utils.KeyUtils;
 import com.loserico.cache.utils.UnMarshaller;
 import com.loserico.common.lang.concurrent.LoserThreadExecutor;
 import com.loserico.common.lang.utils.IOUtils;
@@ -48,7 +47,6 @@ import static com.loserico.cache.status.HSet.INSERTED;
 import static com.loserico.cache.status.HSet.UPDATED;
 import static com.loserico.cache.utils.ByteUtils.toBytes;
 import static com.loserico.cache.utils.KeyUtils.joinKey;
-import static com.loserico.cache.utils.StringUtils.requireNonEmpty;
 import static com.loserico.cache.utils.UnMarshaller.toList;
 import static com.loserico.cache.utils.UnMarshaller.toLong;
 import static com.loserico.cache.utils.UnMarshaller.toObject;
@@ -2569,11 +2567,11 @@ public final class JedisUtils {
 	 * @param key
 	 * @return Lock
 	 */
-	public static boolean lock(String key, String requestId) {
+/*	public static boolean lock(String key, String requestId) {
 		KeyUtils.requireNonBlank(key);
 		requireNonEmpty(requestId);
 		return setnx(key, requestId);
-	}
+	}*/
 	
 	/**
 	 * <pre>

@@ -5,7 +5,7 @@
     <groupId>com.loserico</groupId>
     <artifactId>awesome-loser</artifactId>
     <packaging>pom</packaging>
-    <version>4.12.2</version>
+    <version>4.12.3</version>
     <name>Awesome Loser</name>
     <url>http://maven.apache.org</url>
 
@@ -32,7 +32,7 @@
     </modules>
 
     <properties>
-        <loser.version>4.12.1</loser.version>
+        <loser.version>4.12.3</loser.version>
         <encoding>UTF-8</encoding>
         <jdk.version>1.8</jdk.version>
         <!--<jdk.version>17</jdk.version>-->
