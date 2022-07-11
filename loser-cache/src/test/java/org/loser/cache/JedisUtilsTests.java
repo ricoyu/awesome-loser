@@ -1,6 +1,7 @@
 package org.loser.cache;
 
 import com.loserico.cache.JedisUtils;
+import com.loserico.cache.concurrent.Lock;
 import com.loserico.common.lang.utils.IOUtils;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +13,7 @@ import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -118,7 +120,7 @@ public class JedisUtilsTests {
 	public void testIncrWithExpire() {
 		Long value = JedisUtils.incr("retryCount", 1, TimeUnit.MINUTES);
 		System.out.println(value);
-		TimeUnit.SECONDS.sleep(20);
+		SECONDS.sleep(20);
 		System.out.println(JedisUtils.incr("retryCount", 1, TimeUnit.MINUTES));
 	}
 	
@@ -138,7 +140,7 @@ public class JedisUtilsTests {
 			});
 			users.forEach(System.out::println);
 			try {
-				TimeUnit.SECONDS.sleep(3);
+				SECONDS.sleep(3);
 			} catch (Throwable e) {
 				e.printStackTrace();
 			}
@@ -316,5 +318,42 @@ public class JedisUtilsTests {
 	public void testSpop() {
 		Set<String> members = JedisUtils.SET.spop("act:1001", 1);
 		members.forEach(System.out::println);
+	}
+	
+	@SneakyThrows
+	@Test
+	public void testNonblockingLock() {
+		new Thread(() -> {
+			Lock lock = JedisUtils.nonBlockingLock("stock");
+			lock.lock();
+			if (lock.locked()) {
+				log.info("线程{}加锁成功", Thread.currentThread().getName());
+			} else {
+				log.info("线程{}加锁失败", Thread.currentThread().getName());
+			}
+		}, "线程1").start();
+		new Thread(() -> {
+			Lock lock = JedisUtils.nonBlockingLock("stock");
+			lock.lock();
+			if (lock.locked()) {
+				log.info("线程{}加锁成功", Thread.currentThread().getName());
+			} else {
+				log.info("线程{}加锁失败", Thread.currentThread().getName());
+			}
+		}, "线程2").start();
+		Thread.currentThread().join();
+	}
+	
+	@SneakyThrows
+	@Test
+	public void testGetAndSetExpire() {
+		JedisUtils.set("product:101:stock", 100, 3, SECONDS);
+		Integer count = JedisUtils.get("product:101:stock", Integer.class);
+		while (count != null) {
+			Thread.sleep(1000);
+			count = JedisUtils.get("product:101:stock", Integer.class, 3, SECONDS);
+			System.out.println(count);
+		}
+		System.out.println("key过期了");
 	}
 }

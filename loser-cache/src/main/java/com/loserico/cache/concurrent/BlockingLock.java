@@ -251,7 +251,7 @@ public class BlockingLock implements Lock {
 			} else {
 				log.debug("Watch dog refresh lock {} timeout to default {} seconds", key, defaultTimeout);
 			}
-		}, 0, 200, TimeUnit.MILLISECONDS);
+		}, 0, 1, TimeUnit.SECONDS);
 	}
 	
 	private void stopWatchDog() {

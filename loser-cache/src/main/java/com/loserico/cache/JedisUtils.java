@@ -229,9 +229,12 @@ public final class JedisUtils {
 		String setExpireSha1 = shaHashs.computeIfAbsent(sampleKey, (x) -> {
 			log.debug("Load script {}", sampleKey);
 			if (jedisOperations instanceof JedisClusterOperations) {
-				jedisOperations.scriptLoad(IOUtils.readClassPathFileAsBytes("/lua-scripts/setExpire.lua"), key);
+				byte[] scripts =
+						jedisOperations.scriptLoad(IOUtils.readClassPathFileAsBytes("/lua-scripts/setExpire.lua"), key);
+				return new String(scripts, UTF_8);
+			} else {
+				return jedisOperations.scriptLoad(IOUtils.readClassPathFileAsString("/lua-scripts/setExpire.lua"));
 			}
-			return jedisOperations.scriptLoad(IOUtils.readClassPathFileAsString("/lua-scripts/setExpire.lua"));
 		});
 		long result = (long) jedisOperations.evalsha(toBytes(setExpireSha1), 1, key, value, expires);
 		return result == 1;
@@ -346,6 +349,31 @@ public final class JedisUtils {
 	 */
 	public static String get(String key) {
 		return get(toBytes(key));
+	}
+	
+	/**
+	 * 从缓存中获取同时更新其过期时间, 使得热点key可以常驻内存
+	 *
+	 * @param key
+	 * @param expires
+	 * @param timeUnit
+	 * @return
+	 */
+	public static <T> T get(String key, Class<T> clazz, long expires, TimeUnit timeUnit) {
+		String sampleKey = "getAndSetExpire.lua";
+		String getSetExpireSha1 = shaHashs.computeIfAbsent("getAndSetExpire.lua", x -> {
+			log.debug("Load script {}", "getAndSetExpire.lua");
+			if (jedisOperations instanceof JedisClusterOperations) {
+				return jedisOperations.scriptLoad(IOUtils.readClassPathFileAsString("/lua-scripts/getAndSetExpire.lua"), key);
+			}
+			return jedisOperations.scriptLoad(IOUtils.readClassPathFileAsString("/lua-scripts/getAndSetExpire.lua"));
+		});
+		long expireInSeconds = timeUnit.toSeconds(expires);
+		byte[] value = (byte[]) jedisOperations.evalsha(toBytes(getSetExpireSha1),
+				1,
+				toBytes(key),
+				toBytes(expireInSeconds));
+		return toObject(value, clazz);
 	}
 	
 	/**
@@ -931,6 +959,7 @@ public final class JedisUtils {
 		 * 假设 list1不存在,  list2有一个元素 a
 		 * 那么返回的List包含两个元素,  第一个表示从哪个key返回的, 这里是 list2; 第二个元素表示返回的元素本身 a
 		 * </pre>
+		 *
 		 * @param timeout 单位秒
 		 * @param key
 		 * @return
@@ -1249,6 +1278,7 @@ public final class JedisUtils {
 		
 		/**
 		 * 从Set中随机选出指定个数的元素, 元素不会从Set中删除
+		 *
 		 * @param key
 		 * @param count
 		 * @return
@@ -1280,6 +1310,7 @@ public final class JedisUtils {
 		
 		/**
 		 * 从Set中随机弹出指定个数元素
+		 *
 		 * @param key
 		 * @param count
 		 * @return Set<String>
@@ -1290,6 +1321,7 @@ public final class JedisUtils {
 		
 		/**
 		 * 返回两个Set的交集, 注意Redis集群环境可能不支持, 因为两个key可能在不同的slot里面
+		 *
 		 * @param key1
 		 * @param key2
 		 * @return
@@ -1394,6 +1426,7 @@ public final class JedisUtils {
 		
 		/**
 		 * 根据index下标返回
+		 *
 		 * @param key
 		 * @param start
 		 * @param end
@@ -1412,6 +1445,7 @@ public final class JedisUtils {
 		
 		/**
 		 * return a range of members in a sorted set, by index, with scores ordered from hign to low
+		 *
 		 * @param key
 		 * @param start
 		 * @param end
@@ -1423,6 +1457,7 @@ public final class JedisUtils {
 		
 		/**
 		 * 将member的score+上increment
+		 *
 		 * @param key
 		 * @param member
 		 * @param increment
@@ -1941,8 +1976,8 @@ public final class JedisUtils {
 					toBytes(field));
 		}
 		
-		public static long hincrby (String key, String field, int num) {
-			return jedisOperations.hincrby(key, field, (long)num);
+		public static long hincrby(String key, String field, int num) {
+			return jedisOperations.hincrby(key, field, (long) num);
 		}
 		
 		/**
