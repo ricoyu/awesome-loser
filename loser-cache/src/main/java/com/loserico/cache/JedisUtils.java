@@ -352,7 +352,7 @@ public final class JedisUtils {
 	}
 	
 	/**
-	 * 从缓存中获取同时更新其过期时间, 使得热点key可以常驻内存
+	 * 从缓存中获取key对应的值同时更新其过期时间, 使得热点key可以常驻内存
 	 *
 	 * @param key
 	 * @param expires

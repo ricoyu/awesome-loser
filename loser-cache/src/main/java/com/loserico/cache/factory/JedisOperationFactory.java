@@ -13,9 +13,6 @@ import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.util.Pool;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 /**
@@ -127,13 +124,13 @@ public final class JedisOperationFactory {
 	public static void warmUp(Pool<Jedis> pool, int minIdle) {
 		// 不卡住, 不影响Spring的启动
 		new Thread(() -> {
-			List<Jedis> minIdleJedisList = new ArrayList<Jedis>(minIdle);
+			//List<Jedis> minIdleJedisList = new ArrayList<Jedis>(minIdle);
 			
 			for (int i = 0; i < minIdle; i++) {
 				Jedis jedis = null;
 				try {
 					jedis = pool.getResource();
-					minIdleJedisList.add(jedis);
+					//minIdleJedisList.add(jedis);
 					jedis.ping();
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);
@@ -141,7 +138,7 @@ public final class JedisOperationFactory {
 				}
 			}
 			
-			for (int i = 0; i < minIdle; i++) {
+			/*for (int i = 0; i < minIdle; i++) {
 				Jedis jedis = null;
 				try {
 					jedis = minIdleJedisList.get(i);
@@ -150,7 +147,7 @@ public final class JedisOperationFactory {
 					log.error(e.getMessage(), e);
 					throw new RuntimeException(e);
 				}
-			}
+			}*/
 			
 		}, "<<<< JedisPool warmup thread >>>>").start();
 	}

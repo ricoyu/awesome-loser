@@ -52,9 +52,17 @@ public interface PoolFactory {
 		
 		/*
 		 * 最大最小资源数
+		 * 应用的实例数 * maxTotal不能超过redis最大连接数maxclients(默认10000)
+		 * 如果一次命令时间(borrow/return resource + Jedis执行命令(包括网络))的平均耗时为1ms, 那么一个连接的QPS大约是1000
+		 * 那么maxTotal设为50理论上QPS可以达到50000
 		 */
 		config.setMaxTotal(propertyReader.getInt("redis.maxTotal", 50));
+		/*
+		 * 连接池里的连接都是空闲时, 最多保留多少个连接
+		 * 连接池的最佳性能是maxIdle == maxTotal, 这样可以避免连接池伸缩带来呃性能干扰
+		 */
 		config.setMaxIdle(propertyReader.getInt("redis.maxIdle", 50));
+		//连接池里最少放几个连接
 		config.setMinIdle(propertyReader.getInt("redis.minIdle", 8));
 		
 		/*
