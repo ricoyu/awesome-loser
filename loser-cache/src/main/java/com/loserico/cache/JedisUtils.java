@@ -2182,6 +2182,75 @@ public final class JedisUtils {
 		}
 	}
 	
+	public static final class Bitmap {
+		
+		/**
+		 * 将offset上的bit为设置为0或1, 返回该位置原来的值
+		 *
+		 * @param key
+		 * @param offset
+		 * @param value  值应该是0或1
+		 * @return Boolean 原来该offset上的bit值, true表示该位置上原来是1, false 0
+		 */
+		public static Boolean setbit(String key, long offset, int value) {
+			if (value > 1) {
+				value = 1;
+			} else if (value < 0) {
+				value = 0;
+			}
+			return jedisOperations.setbit(key, offset, value);
+		}
+		
+		/**
+		 * 将offset上的bit为设置为0或1, 返回该位置原来的值
+		 * @param key
+		 * @param offset 0~2^32-1
+		 * @param value
+		 * @return 原来该offset上的bit值, true表示该位置上原来是1, false 0
+		 */
+		public static Boolean setbit(String key, long offset, Boolean value) {
+			return jedisOperations.setbit(key, offset, value);
+		}
+		
+		public static Boolean getbit(String key, long offset) {
+			return jedisOperations.getbit(key, offset);
+		}
+		
+		/**
+		 * 将srcKeys之间位与, 结果存储在destKey
+		 * @param destKey
+		 * @param srcKeys
+		 * @return destKey底层字符串存储的长度
+		 */
+		public static Long bitAnd(String destKey, String... srcKeys) {
+			return jedisOperations.bitAnd(destKey, srcKeys);
+		}
+		
+		/**
+		 * 将srcKeys之间位或, 结果存储在destKey
+		 * @param destKey
+		 * @param srcKeys
+		 * @return destKey底层字符串存储的长度
+		 */
+		public static Long bitOr(String destKey, String... srcKeys) {
+			return jedisOperations.bitOr(destKey, srcKeys);
+		}
+		
+		/**
+		 * 反转srcKey各位上的值然后存储到destKey
+		 * @param destKey
+		 * @param srcKey
+		 * @return destKey底层字符串存储的长度
+		 */
+		public static Long bitNot(String destKey, String srcKey) {
+			return jedisOperations.bitNot(destKey, srcKey);
+		}
+		
+		public static long bitCount(String key, int start, int end) {
+			return jedisOperations.bitCount(key, start, end);
+		}
+	}
+	
 	/**
 	 * 地理位置信息查询
 	 * <p>

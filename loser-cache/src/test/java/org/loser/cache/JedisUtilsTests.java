@@ -356,4 +356,38 @@ public class JedisUtilsTests {
 		}
 		System.out.println("key过期了");
 	}
+	
+	/**
+	 * foobar 对应的ASCII码如下
+	 * 	    二进制	    bit=1个数
+	 * f	01100110	4
+	 * o	01101111	6
+	 * o	01101111	6
+	 * b	01100010	3
+	 * a	01100001	3
+	 * r	01110010	4
+	 *  	 	        26
+	 *  BITCOUNT mykey 0 0，0 0 代表开始和结束的Byte位置数。0 0 取的是f，所以结果是4。
+	 *  BITCOUNT mykey 1 1，1 1指从第一个Byte开始到下标为1结束，即o，结果为6。
+	 *  BITCOUNT mykey 1 3, 指取下标1到3，即oob，结果为15。
+	 */
+	@Test
+	public void testBitCount() {
+		JedisUtils.set("mykey", "foobar");
+		long count = JedisUtils.Bitmap.bitCount("mykey", 0, -1);
+		System.out.println(count);
+		long count1 = JedisUtils.Bitmap.bitCount("mykey", 0, 0);
+		System.out.println("0 0: "+count1);
+		long count2 = JedisUtils.Bitmap.bitCount("mykey", 1, 1);
+		System.out.println("1 1: "+count2);
+	}
+	
+	@Test
+	public void testBitOP() {
+		JedisUtils.Bitmap.setbit("rico", 9, 1);
+		JedisUtils.Bitmap.setbit("rico", 0, 1);
+		JedisUtils.Bitmap.bitOr("{rico}dest", "rico");
+		long count = JedisUtils.Bitmap.bitCount("{rico}dest", 0, 9);
+		assertEquals(count, 2);
+	}
 }

@@ -6,6 +6,7 @@ import com.loserico.cache.utils.ByteUtils;
 import com.loserico.json.jackson.JacksonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import redis.clients.jedis.BitOP;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
 import redis.clients.jedis.Pipeline;
@@ -479,4 +480,52 @@ public class JedisPoolOperations implements JedisOperations {
 		}
 	}
 	
+	@Override
+	public Boolean setbit(String key, long offset, int value) {
+		return operate((jedis) -> {
+			return jedis.setbit(key, offset, value+"");
+		});
+	}
+	
+	@Override
+	public Boolean setbit(String key, long offset, Boolean value) {
+		return operate((jedis) -> {
+			return jedis.setbit(key, offset, value);
+		});
+	}
+	
+	@Override
+	public Boolean getbit(String key, long offset) {
+		return operate((jedis) -> {
+			return jedis.getbit(key, offset);
+		});
+	}
+	
+	@Override
+	public Long bitAnd(String destKey, String[] srcKeys) {
+		return operate((jedis) -> {
+			return jedis.bitop(BitOP.AND, destKey, srcKeys);
+		});
+	}
+	
+	@Override
+	public Long bitOr(String destKey, String[] srcKeys) {
+		return operate((jedis) -> {
+			return jedis.bitop(BitOP.OR, destKey, srcKeys);
+		});
+	}
+	
+	@Override
+	public Long bitNot(String destKey, String srcKey) {
+		return operate((jedis) -> {
+			return jedis.bitop(BitOP.NOT, destKey, srcKey);
+		});
+	}
+	
+	@Override
+	public long bitCount(String key, int start, int end) {
+		return operate((jedis) -> {
+			return jedis.bitcount(key, start, end);
+		});
+	}
 }

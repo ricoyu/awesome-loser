@@ -1,3 +1,303 @@
+## 配置
+
+### Maven依赖
+
+```xml
+<dependency>
+    <groupId>com.loserico</groupId>
+    <artifactId>loser-orm</artifactId>
+    <version>4.10</version>
+</dependency>
+<dependency>
+    <groupId>org.hibernate</groupId>
+    <artifactId>hibernate-entitymanager</artifactId>
+    <version>5.2.7.Final</version>
+</dependency>
+<dependency>
+    <groupId>org.hibernate</groupId>
+    <artifactId>hibernate-core</artifactId>
+    <version>5.2.7.Final</version>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-jpa</artifactId>
+    <version>2.3.2.RELEASE</version>
+</dependency>
+```
+
+引入spring-boot-starter-data-jpa是为了让SpringBoot自动装配EntityManager
+
+### application.yml
+
+```yaml
+management.endpoints.web.exposure.include: "*"
+server:
+  port: 8080
+
+spring:
+  application:
+    name: avengers-jpa
+  datasource:
+    url: jdbc:mysql://localhost:3306/avengers?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useLegacyDatetimeCode=false&rewriteBatchedStatements=true&useCompression=true&useUnicode=true&autoReconnect=true&autoReconnectForPools=true&failOverReadOnly=false
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      auto-commit: true
+      minimum-idle: 5
+      idle-timeout: 60000
+      connection-timeout: 30000
+      max-lifetime: 1800000
+      pool-name: AccountHikariCP
+      maximum-pool-size: 30
+      username: rico
+      password: 123456
+      driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        archive:
+          scanner: org.hibernate.boot.archive.scan.internal.StandardScanner #解决新版Hibernate找不到hbm.xml文件问题
+        show_sql: true
+        format_sql: true
+        ddl-auto: none
+        jdbc.batch_size: 100
+        order_inserts: true
+        order_updates: true
+        jdbc.time_zone: Asia/Shanghai
+        generate_statistics: true
+        entitymanager:
+          class: org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean
+          mappingDirectoryLocations: classpath:named-sql
+        packagesToScan: com.loserico.cloud.account.entity
+
+        cache:
+          use_second_level_cache: false
+          use_query_cache: false
+
+hibernate.query.mode: loose
+hibernate.query.cache: true
+hibernate.jdbc.batch_size: 100
+```
+
+### named-sql目录
+
+在 src/main/resources下新建named-sql目录, 里面放Hibernate映射文件xxx.hbm.xml, 比如Semester.hbm.xml
+
+```xml
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+    
+    <sql-query name="semesters">
+        <![CDATA[
+            SELECT 
+              s.semester,
+              s.CENTRE_ID,
+              s.desc,
+              s.begin_date, s.end_date
+            FROM
+              semester s 
+            WHERE s.deleted = 0
+            #if($centreId)
+                AND s.CENTRE_ID =:centreId
+            #end
+            ORDER BY s.begin_date desc 
+		]]>
+    </sql-query>
+</hibernate-mapping>
+```
+
+
+
+### Java Config
+
+```java
+@Configuration
+public class PersistentConfig {
+	
+	@Bean
+	public JpaDao jpadao() {
+		return new JpaDao();
+	}
+}
+```
+
+**解释一下:**
+
+* 通过`@PersistenceContext`自动将系统中自动配置的EntityManager注入到了JpaDao里面
+
+  ```java
+  @PersistenceContext
+  protected EntityManager entityManager;
+  ```
+
+
+
+# SQL中动态语法介绍
+
+检查为null可以简化成这样(检查params里面没有塞这个参数)
+
+```
+#if (!$variable)
+
+#end
+```
+
+形成动态SQL经常会用到类似下面这种语法
+
+```
+#if(判断条件)
+  .........
+#elseif(判断条件)
+  .........
+#else
+  .........
+#end
+```
+
+如:
+
+```
+#if($centreId)
+    AND s.CENTRE_ID =:centreId
+#end
+```
+
+1. `$usedInclude == true`  表示传了这个参数并且值是true
+2. `$usedInclude == false` 表示传了这个参数并且值是false
+
+### SQL中集合类型参数介绍
+
+### Demo 1
+
+userIds是List
+
+```
+#if(!$userIds.isEmpty())
+	WHERE u.id IN (:userIds)
+#end
+```
+
+### Demo 2
+
+params(Map类型)包含key: roleId, role
+
+检查为null可以简化成这样(检查params里面有没有塞这个参数)
+
+```
+#if (!$variable)
+
+#end
+```
+
+也可以这样
+
+```
+SELECT 1 FROM ROLE WHERE deleted=0 and role=:role
+#if($null.isNotNull($roleId))
+	and id != :roleId
+#end
+```
+
+还可以这样
+
+```
+#if($null.isNull($beginDate) && $null.isNull($endDate))
+```
+
+
+
+### SQL 中自定义的命令
+
+1. ifNull ifNotNull
+
+   ```sql
+   #ifNotNull($privilegeId)
+   	and id != :privilegeId
+   #end
+   #ifNull($privilegeId)
+   	and id != :privilegeId
+   #end
+   ```
+
+2. ifPresent
+
+   判断值不为null则输出指定的值, #if #else语句的简化版本
+
+   ```sql
+   SELECT
+       #count()
+           #ifPresent($purchaser, "DISTINCT") 
+           r.ID, r.RETURN_ID, 
+           ......
+           r.SETTLED,
+           r.OWNER
+       #end
+   FROM
+       purchase_return r
+       #ifPresent($purchaser, "join return_item i on r.RETURN_ID = i.RETURN_ID and i.deleted = 0 and r.deleted = 0")
+   WHERE r.deleted = 0
+       #if($state)
+           AND r.STATE = :state 
+       #end
+       #if($returnIds)
+           AND r.RETURN_ID in (:returnIds) 
+       #end
+       #ifPresent($purchaser, "AND i.PURCHASER LIKE :purchaser")
+       #between("date(r.BILLING_DATE)", $billingDateBegin, $billingDateEnd)
+       #omitForCount()
+       GROUP BY r.id
+       #end
+   ```
+
+### SQL 中的分页
+
+```
+SELECT 
+	#count()
+		p.id privilege_id, p.`create_time`, p.`creator`, p.`deleted`,
+		p.`modifier`, p.`modify_time`, p.`privilege`, p.`remark`, p.`version`
+	#end
+FROM privilege p
+WHERE p.`deleted` = '0'
+
+#omitForCount()
+	group by ld.id
+#end
+```
+
+### SQL 中的BETWEEN
+
+```
+#between("CLOSE_MONTH", $beginDate, $endDate)       生成 AND CLOSE_MONTH BETWEEN :beginDate AND :endDate 
+#between("CLOSE_MONTH", $beginDate, $endDate, "OR") 生成 OR CLOSE_MONTH BETWEEN :beginDate AND :endDate 
+```
+
+注意 #between 要小写
+
+### SQL 中的LIKE用法
+
+```sql
+#if($creatorName)
+	and i.creator_name like :creatorName
+#end
+```
+
+Java 代码
+
+```java
+params.put("approverName", ifNotNull(invoiceSearchVO.getApproverName(), name -> concat("%", name, "%")));
+```
+
+
+
+
+
+
+
 # 核心接口
 
 根据接口隔离原则, 结合使用场景划分为如下几个接口
@@ -233,90 +533,6 @@ public class MessageContent {
 * 骚操作太多, 不一一列举
 
   ......
-
-# 配置
-
-## Maven依赖
-
-```xml
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-data-jpa</artifactId>
-</dependency>
-<dependency>
-    <groupId>com.loserico</groupId>
-    <artifactId>commons-lang</artifactId>
-</dependency>
-<dependency>
-    <groupId>com.loserico</groupId>
-    <artifactId>loser-orm</artifactId>
-</dependency>               
-```
-
-## application.yaml配置
-
-配置DataSource和JPA相关属性
-
-```yaml
-spring:
-  datasource:
-    url: jdbc:mysql://192.168.2.101:3306/sexy-mall?useSSL=false&allowPublicKeyRetrieval=true&useLegacyDatetimeCode=false&useCompression=true&useUnicode=true&autoReconnect=true&autoReconnectForPools=true&failOverReadOnly=false
-    username: rico
-    password: 123456
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    hikari:
-      connection-timeout: 5000
-      idle-timeout: 30000
-      maximum-pool-size: 15
-      minimum-idle: 5
-      poolName: HikariAccountServicePool
-      data-source-properties:
-        cachePrepStmts: true
-        cacheResultSetMetadata: true
-        elideSetAutoCommits: true
-        maintainTimeStats: false
-        prepStmtCacheSize: 250
-        prepStmtCacheSqlLimit: 2048
-        rewriteBatchedStatements: true
-        useLocalSessionState: true
-        useServerPrepStmts: true
-  jpa:
-    database-platform: org.hibernate.dialect.MySQL57Dialect
-    hibernate:
-      naming:
-        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
-        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
-    properties:
-      hibernate:
-        ddl-auto: none
-        format_sql: true
-    show-sql: true
-```
-
-## Java Config
-
-loser-orm只需要配一个bean, 就是这么简单。
-
-```java
-@Configuration
-@Slf4j
-public class AppConfig {
-  
-    @Bean
-    public JpaDao jpaDao() {
-      return new JpaDao();
-    }
-}
-```
-
-**解释一下:**
-
-* 通过`@PersistenceContext`自动将系统中自动配置的EntityManager注入到了JpaDao里面
-
-  ```java
-  @PersistenceContext
-  protected EntityManager entityManager;
-  ```
 
 
 # 示例

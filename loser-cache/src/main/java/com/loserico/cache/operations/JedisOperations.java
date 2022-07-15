@@ -534,4 +534,18 @@ public interface JedisOperations {
 	 * @return
 	 */
 	Set<String> zrevrange(String key, int start, int end);
+	
+	Boolean setbit(String key, long offset, int value);
+	
+	Boolean setbit(String key, long offset, Boolean value);
+	
+	Boolean getbit(String key, long offset);
+	
+	Long bitAnd(String destKey, String[] srcKeys);
+	
+	Long bitOr(String destKey, String[] srcKeys);
+	
+	Long bitNot(String destKey, String srcKey);
+	
+	long bitCount(String key, int start, int end);
 }

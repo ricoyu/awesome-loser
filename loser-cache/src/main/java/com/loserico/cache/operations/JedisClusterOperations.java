@@ -2,6 +2,7 @@ package com.loserico.cache.operations;
 
 import com.loserico.json.jackson.JacksonUtils;
 import lombok.extern.slf4j.Slf4j;
+import redis.clients.jedis.BitOP;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPubSub;
@@ -414,6 +415,41 @@ public class JedisClusterOperations implements JedisOperations {
 	@Override
 	public void psubscribe(JedisPubSub jedisPubSub, String... patterns) {
 		log.info("Not implemented yet!");
+	}
+	
+	@Override
+	public Boolean setbit(String key, long offset, int value) {
+		return jedisCluster.setbit(key, offset, value+"");
+	}
+	
+	@Override
+	public Boolean setbit(String key, long offset, Boolean value) {
+		return jedisCluster.setbit(key, offset, value);
+	}
+	
+	@Override
+	public Boolean getbit(String key, long offset) {
+		return jedisCluster.getbit(key, offset);
+	}
+	
+	@Override
+	public Long bitAnd(String destKey, String[] srcKeys) {
+		return jedisCluster.bitop(BitOP.AND, destKey, srcKeys);
+	}
+	
+	@Override
+	public Long bitOr(String destKey, String[] srcKeys) {
+		return jedisCluster.bitop(BitOP.OR, destKey, srcKeys);
+	}
+	
+	@Override
+	public Long bitNot(String destKey, String srcKey) {
+		return jedisCluster.bitop(BitOP.NOT, destKey, srcKey);
+	}
+	
+	@Override
+	public long bitCount(String key, int start, int end) {
+		return jedisCluster.bitcount(key, start, end);
 	}
 	
 	@Override

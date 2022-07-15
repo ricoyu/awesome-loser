@@ -13,6 +13,9 @@ import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.util.Pool;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 /**
@@ -124,30 +127,35 @@ public final class JedisOperationFactory {
 	public static void warmUp(Pool<Jedis> pool, int minIdle) {
 		// 不卡住, 不影响Spring的启动
 		new Thread(() -> {
-			//List<Jedis> minIdleJedisList = new ArrayList<Jedis>(minIdle);
+			List<Jedis> minIdleJedisList = new ArrayList<Jedis>(minIdle);
 			
 			for (int i = 0; i < minIdle; i++) {
 				Jedis jedis = null;
 				try {
 					jedis = pool.getResource();
-					//minIdleJedisList.add(jedis);
+					minIdleJedisList.add(jedis);
 					jedis.ping();
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);
 					throw new RuntimeException(e);
+				} finally {
+					//注意, 这里不能马上close将连接还回连接池, 否则最后连接池里只会建立1个 连接
+					//因为close是把连接还回连接池, 所以下次取出的还是这个连接, 即只会建立1个连接
+					//jedis.close();
 				}
 			}
 			
-			/*for (int i = 0; i < minIdle; i++) {
+			for (int i = 0; i < minIdle; i++) {
 				Jedis jedis = null;
 				try {
 					jedis = minIdleJedisList.get(i);
+					//将连接还回连接池
 					jedis.close();
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);
 					throw new RuntimeException(e);
 				}
-			}*/
+			}
 			
 		}, "<<<< JedisPool warmup thread >>>>").start();
 	}
