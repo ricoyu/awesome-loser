@@ -3,6 +3,9 @@ package com.loserico.cache.operations;
 import com.loserico.json.jackson.JacksonUtils;
 import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.BitOP;
+import redis.clients.jedis.GeoCoordinate;
+import redis.clients.jedis.GeoRadiusResponse;
+import redis.clients.jedis.GeoUnit;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPubSub;
@@ -450,6 +453,51 @@ public class JedisClusterOperations implements JedisOperations {
 	@Override
 	public long bitCount(String key, int start, int end) {
 		return jedisCluster.bitcount(key, start, end);
+	}
+	
+	@Override
+	public Long pfadd(String key, String... elements) {
+		return jedisCluster.pfadd(key, elements);
+	}
+	
+	@Override
+	public Long pfcount(String... keys) {
+		return jedisCluster.pfcount(keys);
+	}
+	
+	@Override
+	public String pfmerge(String destKey, String[] sourceKeys) {
+		return jedisCluster.pfmerge(destKey, sourceKeys);
+	}
+	
+	@Override
+	public Long geoadd(String key, double longitude, double latitude, String member) {
+		return jedisCluster.geoadd(key, longitude, latitude, member);
+	}
+	
+	@Override
+	public Long geoadd(String key, Map<String, GeoCoordinate> geoCoordinateMap) {
+		return jedisCluster.geoadd(key, geoCoordinateMap);
+	}
+	
+	@Override
+	public Double geoDist(String key, String member1, String member2) {
+		return jedisCluster.geodist(key, member1, member2);
+	}
+	
+	@Override
+	public Double geoDist(String key, String member1, String member2, GeoUnit unit) {
+		return jedisCluster.geodist(key, member1, member2, unit);
+	}
+	
+	@Override
+	public List<GeoRadiusResponse> georadiusByMember(String key, String member, double radius, GeoUnit unit) {
+		return jedisCluster.georadiusByMember(key, member, radius, unit);
+	}
+	
+	@Override
+	public List<GeoRadiusResponse> georadius(String key, double longitude, double latitude, double radius, GeoUnit unit) {
+		return jedisCluster.georadius(key, longitude, latitude, radius, unit);
 	}
 	
 	@Override

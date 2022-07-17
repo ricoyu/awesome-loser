@@ -19,6 +19,9 @@ import com.loserico.common.lang.utils.IOUtils;
 import com.loserico.common.lang.utils.PrimitiveUtils;
 import com.loserico.json.jackson.JacksonUtils;
 import lombok.extern.slf4j.Slf4j;
+import redis.clients.jedis.GeoCoordinate;
+import redis.clients.jedis.GeoRadiusResponse;
+import redis.clients.jedis.GeoUnit;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
 import redis.clients.jedis.Pipeline;
@@ -2203,6 +2206,7 @@ public final class JedisUtils {
 		
 		/**
 		 * 将offset上的bit为设置为0或1, 返回该位置原来的值
+		 *
 		 * @param key
 		 * @param offset 0~2^32-1
 		 * @param value
@@ -2218,6 +2222,7 @@ public final class JedisUtils {
 		
 		/**
 		 * 将srcKeys之间位与, 结果存储在destKey
+		 *
 		 * @param destKey
 		 * @param srcKeys
 		 * @return destKey底层字符串存储的长度
@@ -2228,6 +2233,7 @@ public final class JedisUtils {
 		
 		/**
 		 * 将srcKeys之间位或, 结果存储在destKey
+		 *
 		 * @param destKey
 		 * @param srcKeys
 		 * @return destKey底层字符串存储的长度
@@ -2238,6 +2244,7 @@ public final class JedisUtils {
 		
 		/**
 		 * 反转srcKey各位上的值然后存储到destKey
+		 *
 		 * @param destKey
 		 * @param srcKey
 		 * @return destKey底层字符串存储的长度
@@ -2250,6 +2257,42 @@ public final class JedisUtils {
 			return jedisOperations.bitCount(key, start, end);
 		}
 	}
+	
+	public static final class HyperLogLog {
+		
+		/**
+		 * 将制定的elements添加进HyperLogLog, 会对元素去重
+		 *
+		 * @param key
+		 * @param elements
+		 * @return 如果添加改变了HyperLogLog返回1, 没有实质改变返回0
+		 */
+		public static Long pfadd(String key, String... elements) {
+			return jedisOperations.pfadd(key, elements);
+		}
+		
+		/**
+		 * 统计制定key下元素数量, 如果指定了多个key, 先做合并, 然后统计合并后的key中元素数量
+		 *
+		 * @param keys
+		 * @return
+		 */
+		public static Long pfcount(String... keys) {
+			return jedisOperations.pfcount(keys);
+		}
+		
+		/**
+		 * 合并去重后存储结果到destKey
+		 *
+		 * @param destKey
+		 * @param sourceKeys
+		 * @return
+		 */
+		public static String pfmerge(String destKey, String... sourceKeys) {
+			return jedisOperations.pfmerge(destKey, sourceKeys);
+		}
+	}
+	
 	
 	/**
 	 * 地理位置信息查询
@@ -2264,6 +2307,73 @@ public final class JedisUtils {
 	 */
 	public static final class GEO {
 		
+		/**
+		 * @param key
+		 * @param longitude 经度
+		 * @param latitude  维度
+		 * @param member
+		 * @return 添加的元素个数
+		 */
+		public static Long geoadd(String key, double longitude, double latitude, String member) {
+			return jedisOperations.geoadd(key, longitude, latitude, member);
+		}
+		
+		public static Long geoadd(String key, Map<String, GeoCoordinate> geoCoordinateMap) {
+			return jedisOperations.geoadd(key, geoCoordinateMap);
+		}
+		
+		/**
+		 * 返回两个member之间的距离, 单位默认是米
+		 *
+		 * @param key
+		 * @param member1
+		 * @param member2
+		 * @return 两点之间的距离, 单位米
+		 */
+		public static Double geoDist(String key, String member1, String member2) {
+			return jedisOperations.geoDist(key, member1, member2);
+		}
+		
+		/**
+		 * 返回两个member之间的距离, 用指定的单位返回
+		 *
+		 * @param key
+		 * @param member1
+		 * @param member2
+		 * @return 两点之间的距离
+		 */
+		public static Double geoDist(String key, String member1, String member2, GeoUnit unit) {
+			return jedisOperations.geoDist(key, member1, member2, unit);
+		}
+		
+		/**
+		 * 返回距离指定用户指定半径范围内的元素
+		 *
+		 * @param key
+		 * @param member geo member名字
+		 * @param radius 半径
+		 * @param unit   半径单位
+		 * @return List<GeoRadiusResponse>
+		 */
+		public static List<GeoRadiusResponse> georadiusByMember(final String key, final String member,
+		                                                        final double radius, final GeoUnit unit) {
+			return jedisOperations.georadiusByMember(key, member, radius, unit);
+		}
+		
+		/**
+		 * 返回指定经纬度指定半径范围内的member
+		 * @param key
+		 * @param longitude 经度
+		 * @param latitude  维度
+		 * @param radius    半径
+		 * @param unit      半径单位
+		 * @return
+		 */
+		public static List<GeoRadiusResponse> georadius(final String key, final double longitude,
+		                                                final double latitude, final double radius,
+		                                                final GeoUnit unit) {
+			return jedisOperations.georadius(key, longitude, latitude, radius, unit);
+		}
 	}
 	
 	/**

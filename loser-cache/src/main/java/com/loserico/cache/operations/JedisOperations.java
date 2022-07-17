@@ -1,6 +1,9 @@
 package com.loserico.cache.operations;
 
 import com.loserico.cache.exception.OperationNotSupportedException;
+import redis.clients.jedis.GeoCoordinate;
+import redis.clients.jedis.GeoRadiusResponse;
+import redis.clients.jedis.GeoUnit;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
 import redis.clients.jedis.Pipeline;
@@ -548,4 +551,22 @@ public interface JedisOperations {
 	Long bitNot(String destKey, String srcKey);
 	
 	long bitCount(String key, int start, int end);
+	
+	Long pfadd(String key, String[] elements);
+	
+	Long pfcount(String... keys);
+	
+	String pfmerge(String destKey, String[] sourceKeys);
+	
+	Long geoadd(String key, double longitude, double latitude, String member);
+	
+	Long geoadd(String key, Map<String, GeoCoordinate> geoCoordinateMap);
+	
+	Double geoDist(String key, String member1, String member2);
+	
+	Double geoDist(String key, String member1, String member2, GeoUnit unit);
+	
+	List<GeoRadiusResponse>  georadiusByMember(String key, String member, double radius, GeoUnit unit);
+	
+	List<GeoRadiusResponse> georadius(String key, double longitude, double latitude, double radius, GeoUnit unit);
 }

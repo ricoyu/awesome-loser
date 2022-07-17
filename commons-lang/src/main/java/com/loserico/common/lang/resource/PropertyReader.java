@@ -61,7 +61,7 @@ public class PropertyReader {
 			//默认读resource.properties
 			this.resourceBundle = ResourceBundle.getBundle(resource);
 		} catch (Throwable e) {
-			logger.debug("找不到{}", resource);
+			logger.debug("找不到{}", resource+".properties");
 		}
 		try {
 			this.resourceBundle2 = new PropertyResourceBundle(new FileInputStream(WORKING_DIR + FILE_SEPRATOR + resource + RESOURCE_SUFFIX));

@@ -7,6 +7,9 @@ import com.loserico.json.jackson.JacksonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.BitOP;
+import redis.clients.jedis.GeoCoordinate;
+import redis.clients.jedis.GeoRadiusResponse;
+import redis.clients.jedis.GeoUnit;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
 import redis.clients.jedis.Pipeline;
@@ -526,6 +529,69 @@ public class JedisPoolOperations implements JedisOperations {
 	public long bitCount(String key, int start, int end) {
 		return operate((jedis) -> {
 			return jedis.bitcount(key, start, end);
+		});
+	}
+	
+	@Override
+	public Long pfadd(String key, String... elements) {
+		return operate((jedis) -> {
+			return jedis.pfadd(key, elements);
+		});
+	}
+	
+	@Override
+	public Long pfcount(String... keys) {
+		return operate((jedis) -> {
+			return jedis.pfcount(keys);
+		});
+	}
+	
+	@Override
+	public String pfmerge(String destKey, String[] sourceKeys) {
+		return operate((jedis) -> {
+			return jedis.pfmerge(destKey, sourceKeys);
+		});
+	}
+	
+	@Override
+	public Long geoadd(String key, Map<String, GeoCoordinate> geoCoordinateMap) {
+		return operate((jedis) -> {
+			return jedis.geoadd(key, geoCoordinateMap);
+		});
+	}
+	
+	@Override
+	public Long geoadd(String key, double longitude, double latitude, String member) {
+		return operate((jedis) -> {
+			return jedis.geoadd(key, longitude, latitude, member);
+		});
+	}
+	
+	@Override
+	public Double geoDist(String key, String member1, String member2) {
+		return operate((jedis) -> {
+			return jedis.geodist(key, member1, member2);
+		});
+	}
+	
+	@Override
+	public Double geoDist(String key, String member1, String member2, GeoUnit unit) {
+		return operate((jedis) -> {
+			return jedis.geodist(key, member1, member2, unit);
+		});
+	}
+	
+	@Override
+	public List<GeoRadiusResponse>  georadiusByMember(String key, String member, double radius, GeoUnit unit) {
+		return operate((jedis) -> {
+			return jedis.georadiusByMember(key, member, radius, unit);
+		});
+	}
+	
+	@Override
+	public List<GeoRadiusResponse> georadius(String key, double longitude, double latitude, double radius, GeoUnit unit) {
+		return operate((jedis) -> {
+			return jedis.georadius(key, longitude, latitude, radius, unit);
 		});
 	}
 }
