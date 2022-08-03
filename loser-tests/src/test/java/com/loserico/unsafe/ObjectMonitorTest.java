@@ -19,8 +19,8 @@ public class ObjectMonitorTest {
 	
 	public static void main(String[] args) {
 		Unsafe unsafe = UnsafeInstance.get();
-		unsafe.monitorEnter(object);
+		//unsafe.monitorEnter(object);
 		System.out.println("这里写业务逻辑");
-		unsafe.monitorExit(object);
+		//unsafe.monitorExit(object);
 	}
 }

@@ -35,7 +35,6 @@
 
 package com.loserico.map;
 
-import sun.misc.VM;
 
 import java.io.ObjectStreamField;
 import java.util.Random;
@@ -137,7 +136,8 @@ public class ThreadLocalRandom extends Random {
     private static final AtomicLong seeder = new AtomicLong(initialSeed());
 
     private static long initialSeed() {
-        String sec = VM.getSavedProperty("java.util.secureRandomSeed");
+        String sec = "true";
+        //String sec = VM.getSavedProperty("java.util.secureRandomSeed");
         if (Boolean.parseBoolean(sec)) {
             byte[] seedBytes = java.security.SecureRandom.getSeed(8);
             long s = (long)(seedBytes[0]) & 0xffL;

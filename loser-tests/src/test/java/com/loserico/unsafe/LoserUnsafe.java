@@ -45,7 +45,7 @@ import java.security.ProtectionDomain;
 	
 	   static {
 		   registerNatives();
-		   sun.reflect.Reflection.registerMethodsToFilter(LoserUnsafe.class, "getUnsafe");
+		   //sun.reflect.Reflection.registerMethodsToFilter(LoserUnsafe.class, "getUnsafe");
 	   }
 	
 	   private LoserUnsafe() {

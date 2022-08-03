@@ -5,7 +5,7 @@
     <groupId>com.loserico</groupId>
     <artifactId>awesome-loser</artifactId>
     <packaging>pom</packaging>
-    <version>4.12.3</version>
+    <version>4.13.3</version>
     <name>Awesome Loser</name>
     <url>http://maven.apache.org</url>
 
@@ -34,8 +34,8 @@
     <properties>
         <loser.version>4.12.3</loser.version>
         <encoding>UTF-8</encoding>
-        <jdk.version>1.8</jdk.version>
-        <!--<jdk.version>17</jdk.version>-->
+        <!--<jdk.version>1.8</jdk.version>-->
+        <jdk.version>17</jdk.version>
 
         <springframework.version>5.1.18.RELEASE</springframework.version>
 
@@ -626,7 +626,7 @@
             <dependency>
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
-                <version>1.18.10</version>
+                <version>1.18.22</version>
             </dependency>
 
             <dependency>
@@ -777,8 +777,21 @@
                     <encoding>${encoding}</encoding>
                     <source>${jdk.version}</source>
                     <target>${jdk.version}</target>
-                    <compilerArgument>-parameters</compilerArgument>
                     <compilerVersion>${jdk.version}</compilerVersion>
+                    <compilerArgs>
+                        <arg>--add-exports</arg><arg>java.base/sun.security.ssl=ALL-UNNAMED</arg>
+                        <arg>--add-exports</arg><arg>java.base/sun.security.util=ALL-UNNAMED</arg>
+                        <arg>--add-exports</arg><arg>java.base/com.sun.net.ssl.internal.ssl=ALL-UNNAMED</arg>
+                        <arg>--add-exports</arg><arg>java.base/sun.security.jca=ALL-UNNAMED</arg>
+                        <arg>--add-exports</arg><arg>java.base/sun.net.util=ALL-UNNAMED</arg>
+                        <arg>--add-exports</arg><arg>java.base/jdk.internal.misc=ALL-UNNAMED</arg>
+                        <arg>--add-exports</arg><arg>java.base/sun.security.internal.interfaces=ALL-UNNAMED</arg>
+                        <arg>--add-exports</arg><arg>java.base/sun.security.provider.certpath=ALL-UNNAMED</arg>
+                        <arg>--add-exports</arg><arg>java.base/sun.security.internal.spec=ALL-UNNAMED</arg>
+                        <arg>--add-exports</arg><arg>java.base/sun.security.validator=ALL-UNNAMED</arg>
+                        <arg>--add-exports</arg><arg>java.base/sun.security.action=ALL-UNNAMED</arg>
+                        <arg>--add-exports</arg><arg>java.base/sun.security.x509=ALL-UNNAMED</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
         </plugins>
