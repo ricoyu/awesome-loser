@@ -56,6 +56,10 @@ public enum ErrorTypes implements ErrorType {
     
     INVALID_URI_ACCESS("4030001", "template.invalid.uri.access", "访问的URI不合法"),
     ACCESS_DENIED("4030002", "template.access.denied", "你无权访问该资源"),
+    FLOW_EXCEPTION("4030003", "template.flow.control", "被流控啦"),
+    DEGRADE_EXCEPTION("4030004", "template.flow.degrade", "被熔断啦"),
+    HOT_PARAM_EXCEPTION("4030005", "template.hot.param", "被热点参数限流啦"),
+    SYSTEM_BLOCK_EXCEPTION("4030006", "template.system.control", "被系统规则限流啦"),
     
     NOT_FOUND("4040000", "template.not.found", "Not Found"),
     

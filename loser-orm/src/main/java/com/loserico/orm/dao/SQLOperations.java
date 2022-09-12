@@ -131,6 +131,8 @@ public interface SQLOperations {
 	
 	/**
 	 * 跟namedSqlQuery的差别就是结果集不封装到Bean里面
+	 * RawSqlQuery跟sqlQuery的差别是结果不封装进POJO, 
+	 * 而是转成Integer, Long, Float, BigDecimal, String, Boolean, Short等相对基本类型或者是LocalDateTime, Date, LocalDate, LocalTime类型
 	 *
 	 * @param queryName
 	 * @return List<?>
@@ -138,7 +140,9 @@ public interface SQLOperations {
 	public List<?> namedRawSqlQuery(String queryName, Map<String, Object> params);
 	
 	/**
-	 * 跟namedSqlQuery的差别就是结果集不封装到Bean里面
+	 * 跟namedSqlQuery的差别就是结果集不封装到Bean里面<p/>
+	 * RawSqlQuery跟sqlQuery的差别是结果不封装进POJO, 
+	 * 而是转成Integer, Long, Float, BigDecimal, String, Boolean, Short等相对基本类型或者是LocalDateTime, Date, LocalDate, LocalTime类型
 	 *
 	 * @param queryName
 	 * @return Object
@@ -154,7 +158,9 @@ public interface SQLOperations {
 	public Object namedRawSqlQuerySingleResult(String queryName, String paramName, Object paramValue);
 	
 	/**
-	 * 根据SQL查询返回单个结果，并自动转换成期望对象类型
+	 * 根据SQL查询返回单个结果，并自动转换成期望对象类型<p/>
+	 * RawSqlQuery跟sqlQuery的差别是结果不封装进POJO, 
+	 * 而是转成Integer, Long, Float, BigDecimal, String, Boolean, Short等相对基本类型或者是LocalDateTime, Date, LocalDate, LocalTime类型
 	 *
 	 * @param queryName
 	 * @param paramName
@@ -166,6 +172,8 @@ public interface SQLOperations {
 	
 	/**
 	 * 据SQL查询返回单个结果, JDBC返回的是什么类型这里也返回什么类型
+	 * RawSqlQuery跟sqlQuery的差别是结果不封装进POJO, 
+	 * 而是转成Integer, Long, Float, BigDecimal, String, Boolean, Short等相对基本类型或者是LocalDateTime, Date, LocalDate, LocalTime类型
 	 * 
 	 * @param queryName
 	 * @return Object
@@ -174,6 +182,8 @@ public interface SQLOperations {
 	
 	/**
 	 * 返回单个值的查询 比如type是BigDecimal.class, 那么这个查询返回的是BigDecimal
+	 * RawSqlQuery跟sqlQuery的差别是结果不封装进POJO, 
+	 * 而是转成Integer, Long, Float, BigDecimal, String, Boolean, Short等相对基本类型或者是LocalDateTime, Date, LocalDate, LocalTime类型
 	 *
 	 * @param queryName
 	 * @param params

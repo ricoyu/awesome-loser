@@ -1,7 +1,5 @@
 package com.loserico.concurrent.threadpool;
 
-import com.loserico.concurrent.aqs.LoserAbstractQueuedSynchronizer;
-
 import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -19,6 +17,7 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.AbstractQueuedSynchronizer;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -234,11 +233,11 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	 * s 线程池状态, 调用的地方传入的是 RUNNING, SHUTDOWN, STOP, TIDYING 等几个状态
 	 *
 	 * <ul>高三位代表线程池状态, 我们来看看高3位分别是什么值
-	 *     <li/>RUNNING    111
-	 *     <li/>SHUTDOWN   000
-	 *     <li/>STOP       001
-	 *     <li/>TIDYING    010
 	 *     <li/>TERMINATED 011
+	 *     <li/>TIDYING    010
+	 *     <li/>STOP       001
+	 *     <li/>SHUTDOWN   000
+	 *     <li/>RUNNING    111  负数, 最小
 	 * </ul>
 	 * <p>
 	 * 所以这个方法就是判断一下, 线程池当前的状态是否小于给定的状态
@@ -254,11 +253,11 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	/**
 	 * 参考上面的方法, 看方法名就知道了, 判断当前状态是否大于等于指定状态
 	 * <ul>高三位代表线程池状态
-	 *     <li/>RUNNING    111
-	 *     <li/>SHUTDOWN   000
-	 *     <li/>STOP       001
-	 *     <li/>TIDYING    010
 	 *     <li/>TERMINATED 011
+	 *     <li/>TIDYING    010
+	 *     <li/>STOP       001
+	 *     <li/>SHUTDOWN   000
+	 *     <li/>RUNNING    111
 	 * </ul>
 	 * 如 runStateAtLeast(ctl.get(), TIDYING) 满足条件的就是 TIDYING TERMINATED
 	 *
@@ -276,11 +275,11 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	 * 所以判断线程池是否处在RUNNING状态时, 直接判断 ctl < SHUTDOWN 就可以了
 	 *
 	 * <ul>
-	 *     <li/>RUNNING    111
-	 *     <li/>SHUTDOWN   000
-	 *     <li/>STOP       001
-	 *     <li/>TIDYING    010
 	 *     <li/>TERMINATED 011
+	 *     <li/>TIDYING    010
+	 *     <li/>STOP       001
+	 *     <li/>SHUTDOWN   000
+	 *     <li/>RUNNING    111
 	 * </ul>
 	 * <p>
 	 * 注意RUNNING是负数, 所以RUNNING是最小的
@@ -530,7 +529,7 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	 * <p>
 	 * 所以, Worker继承自AQS, 用于判断线程是否空闲以及是否可以被中断
 	 */
-	private final class Worker extends LoserAbstractQueuedSynchronizer implements Runnable {
+	private final class Worker extends AbstractQueuedSynchronizer implements Runnable {
 		/**
 		 * This class will never be serialized, but we provide a
 		 * serialVersionUID to suppress a javac warning.
@@ -729,11 +728,11 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 			 * </ul>
 			 *
 			 * <ul>线程池状态从从低到高为:
-			 *     <li/>RUNNING    111
 			 *     <li/>SHUTDOWN   000
 			 *     <li/>STOP       001
 			 *     <li/>TIDYING    010
 			 *     <li/>TERMINATED 011
+			 *     <li/>RUNNING    111
 			 * </ul>
 			 */
 			if (isRunning(c) ||
@@ -965,11 +964,11 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 			/*
 			 * 拿到ctl高3位的值, 表示线程池的状态 <br/>
 			 * <ul>高三位代表线程池状态, 分别有
-			 *     <li/>RUNNING    111
-			 *     <li/>SHUTDOWN   000
-			 *     <li/>STOP       001
-			 *     <li/>TIDYING    010
 			 *     <li/>TERMINATED 011
+			 *     <li/>TIDYING    010
+			 *     <li/>STOP       001
+			 *     <li/>SHUTDOWN   000
+			 *     <li/>RUNNING    111
 			 * </ul>
 			 */
 			int rs = runStateOf(c);

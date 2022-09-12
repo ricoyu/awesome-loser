@@ -17,7 +17,7 @@ public class NioClient {
 	private static NioClientHandle nioClientHandle;
 	
 	public static void start() {
-		nioClientHandle = new NioClientHandle("localhost", 12345);
+		nioClientHandle = new NioClientHandle("192.168.2.3", 12345);
 		new Thread(nioClientHandle, "client").start();
 	}
 	
