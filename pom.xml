@@ -5,37 +5,32 @@
     <groupId>com.loserico</groupId>
     <artifactId>awesome-loser</artifactId>
     <packaging>pom</packaging>
-    <version>4.12.3</version>
+    <version>6.0.0</version>
     <name>Awesome Loser</name>
     <url>http://maven.apache.org</url>
 
     <modules>
         <module>commons-lang</module>
         <module>commons-spring</module>
-        <module>loser-codec</module>
-        <module>loser-cache</module>
         <module>loser-json</module>
+        <module>loser-cache</module>
+        <module>loser-codec</module>
+        <module>loser-networking</module>
         <module>loser-orm</module>
-        <module>loser-sharding</module>
-        <module>loser-tests</module>
+        <module>loser-search</module>
+        <module>loser-messaging</module>
+        <module>loser-security</module>
+        <module>loser-token-parser</module>
         <module>loser-validation</module>
         <module>loser-web</module>
         <module>loser-workbook</module>
-        <module>loser-networking</module>
-        <module>loser-security</module>
-        <module>loser-mongo</module>
-        <module>loser-token-parser</module>
-        <module>loser-netty</module>
-        <module>loser-search</module>
-        <module>loser-messaging</module>
-        <module>loser-mybatis</module>
+        <module>loser-tests</module>
     </modules>
 
     <properties>
-        <loser.version>4.12.3</loser.version>
+        <loser.version>6.0</loser.version>
         <encoding>UTF-8</encoding>
-        <jdk.version>1.8</jdk.version>
-        <!--<jdk.version>17</jdk.version>-->
+        <jdk.version>17</jdk.version>
 
         <springframework.version>5.1.18.RELEASE</springframework.version>
 
@@ -185,11 +180,6 @@
                 <groupId>org.springframework.security</groupId>
                 <artifactId>spring-security-web</artifactId>
                 <version>5.1.8.RELEASE</version>
-            </dependency>
-            <dependency>
-                <groupId>javax.annotation</groupId>
-                <artifactId>javax.annotation-api</artifactId>
-                <version>1.3.2</version>
             </dependency>
             <dependency>
                 <groupId>org.hibernate</groupId>
@@ -626,7 +616,7 @@
             <dependency>
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
-                <version>1.18.10</version>
+                <version>1.18.22</version>
             </dependency>
 
             <dependency>
@@ -686,26 +676,7 @@
         </dependency>
     </dependencies>
 
-    <distributionManagement>
-        <repository>
-            <id>phantom-maven2</id>
-            <name>phantom-maven2</name>
-            <url>http://172.23.12.66:8081/repository/phantom-maven2/</url>
-        </repository>
-    </distributionManagement>
-
     <repositories>
-        <repository>
-            <id>public</id>
-            <name>Public Repositories</name>
-            <url>http://172.23.12.66:8081/repository/maven-public/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
         <repository>
             <id>elasticsearch-releases</id>
             <url>https://artifacts.elastic.co/maven</url>
@@ -719,17 +690,6 @@
     </repositories>
 
     <pluginRepositories>
-        <pluginRepository>
-            <id>public</id>
-            <name>Public Repositories</name>
-            <url>http://172.23.12.66:8081/repository/maven-public</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </pluginRepository>
     </pluginRepositories>
 
     <build>
@@ -779,6 +739,20 @@
                     <target>${jdk.version}</target>
                     <compilerArgument>-parameters</compilerArgument>
                     <compilerVersion>${jdk.version}</compilerVersion>
+                    <compilerArgs>
+                        <arg>--add-exports</arg><arg>java.base/sun.security.ssl=ALL-UNNAMED</arg>
+                        <arg>--add-exports</arg><arg>java.base/sun.security.util=ALL-UNNAMED</arg>
+                        <arg>--add-exports</arg><arg>java.base/com.sun.net.ssl.internal.ssl=ALL-UNNAMED</arg>
+                        <arg>--add-exports</arg><arg>java.base/sun.security.jca=ALL-UNNAMED</arg>
+                        <arg>--add-exports</arg><arg>java.base/sun.net.util=ALL-UNNAMED</arg>
+                        <arg>--add-exports</arg><arg>java.base/jdk.internal.misc=ALL-UNNAMED</arg>
+                        <arg>--add-exports</arg><arg>java.base/sun.security.internal.interfaces=ALL-UNNAMED</arg>
+                        <arg>--add-exports</arg><arg>java.base/sun.security.provider.certpath=ALL-UNNAMED</arg>
+                        <arg>--add-exports</arg><arg>java.base/sun.security.internal.spec=ALL-UNNAMED</arg>
+                        <arg>--add-exports</arg><arg>java.base/sun.security.validator=ALL-UNNAMED</arg>
+                        <arg>--add-exports</arg><arg>java.base/sun.security.action=ALL-UNNAMED</arg>
+                        <arg>--add-exports</arg><arg>java.base/sun.security.x509=ALL-UNNAMED</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
         </plugins>
