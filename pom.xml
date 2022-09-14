@@ -12,6 +12,7 @@
     <modules>
         <module>commons-lang</module>
         <module>commons-spring</module>
+        <module>commons-cloud</module>
         <module>loser-json</module>
         <module>loser-cache</module>
         <module>loser-codec</module>
