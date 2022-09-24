@@ -46,6 +46,11 @@ public class Results {
 		private Object message = "OK";
 		
 		/**
+		 * success error
+		 */
+		private String status;
+		
+		/**
 		 * 调试消息
 		 */
 		//private Object debugMessage;
@@ -66,11 +71,21 @@ public class Results {
 		 */
 		public Builder status(String code, Object message) {
 			this.code = code;
+			if (!ErrorTypes.SUCCESS.code().equals(code)) {
+				this.status = "error";
+			} else {
+				this.status = "success";
+			}
 			this.message = message;
 			return this;
 		}
 		
 		public Builder status(ErrorType errorType) {
+			if (errorType == ErrorTypes.SUCCESS) {
+				this.status = "success";
+			} else {
+				this.status = "error";
+			}
 			return status(errorType.code(), i18nMessage(errorType));
 		}
 		
@@ -101,6 +116,7 @@ public class Results {
 			result.setCode(code);
 			result.setData(data);
 			result.setPage(page);
+			result.setStatus(status);
 			return result;
 		}
 	}
