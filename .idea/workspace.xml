@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="ALL" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="02015b17-0639-4cad-817d-27c14b81af38" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="CompilerWorkspaceConfiguration">
+    <option name="MAKE_PROJECT_ON_SAVE" value="true" />
+    <option name="PARALLEL_COMPILATION" value="true" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="mavenHome" value="$PROJECT_DIR$/../../Program Files/Maven" />
+        <option name="useMavenConfig" value="true" />
+        <option name="userSettingsFile" value="D:\Program Files\Maven\conf\settings.xml" />
+      </MavenGeneralSettings>
+    </option>
+    <option name="importingSettings">
+      <MavenImportingSettings>
+        <option name="downloadSourcesAutomatically" value="true" />
+        <option name="jdkForImporter" value="#JAVA_HOME" />
+        <option name="vmOptionsForImporter" value="-Xmx768m" />
+      </MavenImportingSettings>
+    </option>
+  </component>
+  <component name="MavenRunner">
+    <option name="jreName" value="#JAVA_HOME" />
+  </component>
+  <component name="ProjectId" id="2EiLzsU19SqDgnSdaGYLaSlAL3q" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+    <option name="showVisibilityIcons" value="true" />
+    <option name="sortByType" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "SDKs",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2",
+    "settings.editor.selected.configurable": "com.nnthink.aixcoder.config.Config"
+  }
+}]]></component>
+  <component name="ReactorSettings">
+    <option name="notificationShown" value="true" />
+  </component>
+  <component name="RunManager" selected="JUnit.URLEncoderTest.testURLEncoder">
+    <configuration name="AsynchronousChannelGroupsTest.testDefaultAsynChannelGroup" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="loser-tests" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.loserico.aio.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.loserico.aio" />
+      <option name="MAIN_CLASS_NAME" value="com.loserico.aio.AsynchronousChannelGroupsTest" />
+      <option name="METHOD_NAME" value="testDefaultAsynChannelGroup" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Base64Test.testEncodertoString" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="loser-tests" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.loserico.base64.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.loserico.base64" />
+      <option name="MAIN_CLASS_NAME" value="com.loserico.base64.Base64Test" />
+      <option name="METHOD_NAME" value="testEncodertoString" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="URLEncoderTest.testURLEncoder" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="loser-tests" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.loserico.base64.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.loserico.base64" />
+      <option name="MAIN_CLASS_NAME" value="com.loserico.base64.URLEncoderTest" />
+      <option name="METHOD_NAME" value="testURLEncoder" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="WeixinTest.testResult" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="loser-tests" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.loserico.fluent.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.loserico.fluent" />
+      <option name="MAIN_CLASS_NAME" value="com.loserico.fluent.WeixinTest" />
+      <option name="METHOD_NAME" value="testResult" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="ZonedDateTimeTest.testZonedDatetime" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="loser-tests" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.loserico.datetime.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.loserico.datetime" />
+      <option name="MAIN_CLASS_NAME" value="com.loserico.datetime.ZonedDateTimeTest" />
+      <option name="METHOD_NAME" value="testZonedDatetime" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="JUnit.URLEncoderTest.testURLEncoder" />
+        <item itemvalue="JUnit.ZonedDateTimeTest.testZonedDatetime" />
+        <item itemvalue="JUnit.WeixinTest.testResult" />
+        <item itemvalue="JUnit.Base64Test.testEncodertoString" />
+        <item itemvalue="JUnit.AsynchronousChannelGroupsTest.testDefaultAsynChannelGroup" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="SpringGeneralSettings">
+    <option name="allowAutoConfigurationMode" value="true" />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="02015b17-0639-4cad-817d-27c14b81af38" name="Changes" comment="" />
+      <created>1663073724992</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1663073724992</updated>
+      <workItem from="1663073726629" duration="875000" />
+      <workItem from="1663124546187" duration="133000" />
+      <workItem from="1663127849979" duration="76000" />
+      <workItem from="1663402349186" duration="2510000" />
+      <workItem from="1663490878302" duration="1580000" />
+      <workItem from="1664005410691" duration="1729000" />
+      <workItem from="1664014705039" duration="822000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
