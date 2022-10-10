@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/../awesome-loser.iml" filepath="$PROJECT_DIR$/../awesome-loser.iml" />
+      <module fileurl="file://$PROJECT_DIR$/commons-cloud/commons-cloud.iml" filepath="$PROJECT_DIR$/commons-cloud/commons-cloud.iml" />
+      <module fileurl="file://$PROJECT_DIR$/commons-lang/commons-lang.iml" filepath="$PROJECT_DIR$/commons-lang/commons-lang.iml" />
+      <module fileurl="file://$PROJECT_DIR$/commons-spring/commons-spring.iml" filepath="$PROJECT_DIR$/commons-spring/commons-spring.iml" />
+      <module fileurl="file://$PROJECT_DIR$/loser-cache/loser-cache.iml" filepath="$PROJECT_DIR$/loser-cache/loser-cache.iml" />
+      <module fileurl="file://$PROJECT_DIR$/loser-codec/loser-codec.iml" filepath="$PROJECT_DIR$/loser-codec/loser-codec.iml" />
+      <module fileurl="file://$PROJECT_DIR$/loser-json/loser-json.iml" filepath="$PROJECT_DIR$/loser-json/loser-json.iml" />
+      <module fileurl="file://$PROJECT_DIR$/loser-messaging/loser-messaging.iml" filepath="$PROJECT_DIR$/loser-messaging/loser-messaging.iml" />
+      <module fileurl="file://$PROJECT_DIR$/loser-networking/loser-networking.iml" filepath="$PROJECT_DIR$/loser-networking/loser-networking.iml" />
+      <module fileurl="file://$PROJECT_DIR$/loser-orm/loser-orm.iml" filepath="$PROJECT_DIR$/loser-orm/loser-orm.iml" />
+      <module fileurl="file://$PROJECT_DIR$/loser-search/loser-search.iml" filepath="$PROJECT_DIR$/loser-search/loser-search.iml" />
+      <module fileurl="file://$PROJECT_DIR$/loser-security/loser-security.iml" filepath="$PROJECT_DIR$/loser-security/loser-security.iml" />
+      <module fileurl="file://$PROJECT_DIR$/loser-tests/loser-tests.iml" filepath="$PROJECT_DIR$/loser-tests/loser-tests.iml" />
+      <module fileurl="file://$PROJECT_DIR$/loser-token-parser/loser-token-parser.iml" filepath="$PROJECT_DIR$/loser-token-parser/loser-token-parser.iml" />
+      <module fileurl="file://$PROJECT_DIR$/loser-validation/loser-validation.iml" filepath="$PROJECT_DIR$/loser-validation/loser-validation.iml" />
+      <module fileurl="file://$PROJECT_DIR$/loser-web/loser-web.iml" filepath="$PROJECT_DIR$/loser-web/loser-web.iml" />
+      <module fileurl="file://$PROJECT_DIR$/loser-workbook/loser-workbook.iml" filepath="$PROJECT_DIR$/loser-workbook/loser-workbook.iml" />
+    </modules>
+  </component>
+</project>

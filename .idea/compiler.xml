@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="awesome-loser" target="17" />
+      <module name="commons-cloud" target="17" />
+      <module name="commons-lang" target="17" />
+      <module name="commons-spring" target="17" />
+      <module name="loser-cache" target="17" />
+      <module name="loser-codec" target="17" />
+      <module name="loser-json" target="17" />
+      <module name="loser-messaging" target="17" />
+      <module name="loser-networking" target="17" />
+      <module name="loser-orm" target="17" />
+      <module name="loser-search" target="17" />
+      <module name="loser-security" target="17" />
+      <module name="loser-tests" target="17" />
+      <module name="loser-token-parser" target="17" />
+      <module name="loser-validation" target="17" />
+      <module name="loser-web" target="17" />
+      <module name="loser-workbook" target="17" />
+    </bytecodeTargetLevel>
+  </component>
+</project>

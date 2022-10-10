@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: org.graylog2:syslog4j:0.9.60">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../../.m2/org/graylog2/syslog4j/0.9.60/syslog4j-0.9.60.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../../.m2/org/graylog2/syslog4j/0.9.60/syslog4j-0.9.60-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../../.m2/org/graylog2/syslog4j/0.9.60/syslog4j-0.9.60-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

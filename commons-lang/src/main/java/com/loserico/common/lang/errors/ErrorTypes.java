@@ -52,6 +52,7 @@ public enum ErrorTypes implements ErrorType {
     PASSWORD_EXPIRED("4010014", "template.password.expired", "密码已过期"),
     ALREADY_LOGIN("4010015", "template.already.login", "该账号已在别处登录, 不允许再次登录"),
     FIRST_LOGIN("4010016", "template.first.login", "该账号首次登录, 请修改密码!"),
+	MISSING_AUTHORIZATION("4010017", "template.missing.authorization.header", "请提供Authorization请求头"),
     
     
     INVALID_URI_ACCESS("4030001", "template.invalid.uri.access", "访问的URI不合法"),

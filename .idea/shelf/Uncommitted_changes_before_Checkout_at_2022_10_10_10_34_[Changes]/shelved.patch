@@ -1,0 +1,184 @@
+Index: commons-lang/src/test/resources/application.yml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>spring:\r\n  profiles:\r\n    active: prod\r\n  redis:\r\n    host: 172.16.0.63\r\n    port: 6379\r\n    password: ics12345\r\n    database: 0\r\n    timeout: 50000\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/commons-lang/src/test/resources/application.yml b/commons-lang/src/test/resources/application.yml
+--- a/commons-lang/src/test/resources/application.yml	(revision 5858cc9985e9d4fa09a1eb4b5541b6b1c6d02e7f)
++++ b/commons-lang/src/test/resources/application.yml	(date 1665369239590)
+@@ -1,9 +1,31 @@
+-spring:
+-  profiles:
+-    active: prod
+-  redis:
+-    host: 172.16.0.63
+-    port: 6379
+-    password: ics12345
+-    database: 0
+-    timeout: 50000
++feign:
++  sentinel:
++    enabled: true
++  okhttp:
++    enabled: false
++  httpclient:
++    enabled: true
++    #最大连接数
++    max-connections: 200
++    #为每个url请求设置最大连接数
++    max-connections-per-route: 50
++    connection-timeout: 1000
++    time-to-live: 900
++  client:
++    config:
++      default:
++        connectTimeout: 1000
++        readTimeout: 10000
++      order-service:
++        connectTimeout: 5000
++        readTimeout: 10000
++        loggerLevel: FULL
++        requestInterceptors:
++          - com.loserico.cloud.interceptor.RequestHeaderInterceptor
++  compression:
++    request:
++      enabled: true
++      mime-types: text/xml,application/xml,application/json
++      min-request-size: 2048
++    response:
++      enabled: true
+Index: commons-lang/src/main/java/com/loserico/common/lang/errors/ErrorTypes.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.loserico.common.lang.errors;\r\n\r\n/**\r\n * 定义最常用的一些ErrorType \r\n * <p>\r\n * Copyright: Copyright (c) 2020-06-14 11:03\r\n * <p>\r\n * Company: Sexy Uncle Inc.\r\n * <p>\r\n \r\n * @author Rico Yu  ricoyu520@gmail.com\r\n * @version 1.0\r\n */\r\npublic enum ErrorTypes implements ErrorType {\r\n    \r\n    /**\r\n     * 执行成功\r\n     */\r\n    SUCCESS(\"0\",\"template.process.success\", \"Success\"),\r\n    \r\n    /*\r\n     * 提交数据有误, 比如应该是布尔值的, 但是传了个\"on\", Jackson在转换成Boolean报错\r\n     */\r\n    BAD_REQUEST(\"4000000\",\"template.bad.request\", \"请求参数不合法\"),\r\n    \r\n    /**\r\n     * 数据校验失败的时候msg取的是具体的校验失败的msg, 这里的\"数据校验失败\"其实是没有用的, 但是这里定义了error code\r\n     */\r\n    VALIDATION_FAIL(\"4000001\",\"template.bad.request\", \"数据校验失败\"),\r\n    DUPLICATE_SUBMISSION(\"4000002\", \"duplicate.submit\", \"请勿重复提交\"),\r\n    MAX_UPLOAD_SIZE_EXCEEDED(\"4000003\", \"max.uploadsize.exceeded\", \"超出最大上传文件大小限制\"),\r\n    MISSING_IDEMPOTENT_TOKEN(\"4000004\", \"missing.idempotent.token\", \"缺少幂等性Token\"),\r\n    \r\n    /*\r\n     * 安全相关\r\n     */\r\n    RSA_DECRYPT_FAIL(\"4010001\", \"template.rsa.decrypt.fail\", \"RSA解密失败\"),\r\n    \r\n    TIMESTAMP_MISSING(\"4010003\", \"template.missing.timestamp.error\", \"缺少timestamp参数\"),\r\n    TIMESTAMP_MISMATCH(\"4010004\", \"template.timestamp.mismatch.error\", \"timestamp参数不匹配\"),\r\n    TIMESTAMP_INVALID(\"4010005\", \"template.timestamp.invalid.error\", \"timestamp参数必须是UNIX miliseconds\"),\r\n    \r\n    TOKEN_MISSING(\"4010006\", \"template.missing.token.error\", \"请提供Token\"),\r\n    TOKEN_INVALID(\"4010007\", \"template.invalid.token.error\", \"无效的Token\"),\r\n    TOKEN_EXPIRED(\"4010008\", \"template.token.expired.error\", \"您尚未登录或者Token已过期, 请重新登录\"),\r\n    \r\n    USERNAME_PASSWORD_MISMATCH(\"4010009\", \"template.username.password.error\", \"用户名或密码错误\"),\r\n    USERNAME_PASSWORD_MISSING(\"4010010\", \"template.username.password.missing\", \"请提供用户名或密码\"),\r\n    ACCOUNT_LOCKED(\"4010011\", \"template.account.locked\", \"账户已锁定\"),\r\n    ACCOUNT_DISABLED(\"4010012\", \"template.account.disabled\", \"账户已禁用\"),\r\n    ACCOUNT_EXPIRED(\"4010013\", \"template.account.expired\", \"账户已过期\"),\r\n    PASSWORD_EXPIRED(\"4010014\", \"template.password.expired\", \"密码已过期\"),\r\n    ALREADY_LOGIN(\"4010015\", \"template.already.login\", \"该账号已在别处登录, 不允许再次登录\"),\r\n    FIRST_LOGIN(\"4010016\", \"template.first.login\", \"该账号首次登录, 请修改密码!\"),\r\n    \r\n    \r\n    INVALID_URI_ACCESS(\"4030001\", \"template.invalid.uri.access\", \"访问的URI不合法\"),\r\n    ACCESS_DENIED(\"4030002\", \"template.access.denied\", \"你无权访问该资源\"),\r\n    \r\n    NOT_FOUND(\"4040000\", \"template.not.found\", \"Not Found\"),\r\n    \r\n    METHOD_NOT_ALLOWED(\"4050000\", \"template.method.notallowed\", \"Method not Allowed\"),\r\n    \r\n    TOO_MANY_REQUESTS(\"4290000\", \"template.too.many.requests\", \"Too Many Requests\"),\r\n    \r\n    /**\r\n     * 服务器内部错误\r\n     */\r\n    INTERNAL_SERVER_ERROR(\"5000000\",\"template.internal.server.error\", \"服务器内部错误\");\r\n    \r\n    /**\r\n     * 错误类型码\r\n     */\r\n    private String code;\r\n    \r\n    /**\r\n     * 国际化消息模板\r\n     */\r\n    private String msgTemplate;\r\n    \r\n    /**\r\n     * 错误类型描述信息\r\n     */\r\n    private String msg;\r\n\r\n    private ErrorTypes(String code, String msgTemplate, String msg) {\r\n        this.code = code;\r\n        this.msgTemplate = msgTemplate;\r\n        this.msg = msg;\r\n    }\r\n    \r\n    \r\n    @Override\r\n    public String code() {\r\n        return this.code;\r\n    }\r\n    \r\n    @Override\r\n    public String message() {\r\n        return this.msg;\r\n    }\r\n    \r\n    @Override\r\n    public String msgTemplate() {\r\n        return this.msgTemplate;\r\n    }\r\n    \r\n    \r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/commons-lang/src/main/java/com/loserico/common/lang/errors/ErrorTypes.java b/commons-lang/src/main/java/com/loserico/common/lang/errors/ErrorTypes.java
+--- a/commons-lang/src/main/java/com/loserico/common/lang/errors/ErrorTypes.java	(revision 5858cc9985e9d4fa09a1eb4b5541b6b1c6d02e7f)
++++ b/commons-lang/src/main/java/com/loserico/common/lang/errors/ErrorTypes.java	(date 1665369239599)
+@@ -52,6 +52,7 @@
+     PASSWORD_EXPIRED("4010014", "template.password.expired", "密码已过期"),
+     ALREADY_LOGIN("4010015", "template.already.login", "该账号已在别处登录, 不允许再次登录"),
+     FIRST_LOGIN("4010016", "template.first.login", "该账号首次登录, 请修改密码!"),
++    MISSING_AUTHORIZATION("4010017", "template.missing.authorization.header", "请提供Authorization请求头"),
+     
+     
+     INVALID_URI_ACCESS("4030001", "template.invalid.uri.access", "访问的URI不合法"),
+Index: commons-lang/src/test/java/com/loserico/common/lang/resource/YamlReaderTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.loserico.common.lang.resource;\r\n\r\nimport org.junit.Test;\r\n\r\n/**\r\n * <p>\r\n * Copyright: (C), 2021-01-21 11:28\r\n * <p>\r\n * <p>\r\n * Company: Information & Data Security Solutions Co., Ltd.\r\n *\r\n * @author Rico Yu ricoyu520@gmail.com\r\n * @version 1.0\r\n */\r\npublic class YamlReaderTest {\r\n\t\r\n\t@Test\r\n\tpublic void test() {\r\n\t\tYamlReader yamlReader = new YamlReader(\"application\");\r\n\t\tString activeProfile = yamlReader.getString(\"spring.profiles.active\");\r\n\t\tSystem.out.println(activeProfile);\r\n\t\tSystem.out.println(System.getProperty(\"user.dir\"));\r\n\t}\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/commons-lang/src/test/java/com/loserico/common/lang/resource/YamlReaderTest.java b/commons-lang/src/test/java/com/loserico/common/lang/resource/YamlReaderTest.java
+--- a/commons-lang/src/test/java/com/loserico/common/lang/resource/YamlReaderTest.java	(revision 5858cc9985e9d4fa09a1eb4b5541b6b1c6d02e7f)
++++ b/commons-lang/src/test/java/com/loserico/common/lang/resource/YamlReaderTest.java	(date 1665369239607)
+@@ -1,6 +1,13 @@
+ package com.loserico.common.lang.resource;
+ 
++import com.loserico.common.lang.utils.IOUtils;
+ import org.junit.Test;
++import org.yaml.snakeyaml.LoaderOptions;
++import org.yaml.snakeyaml.Yaml;
++import org.yaml.snakeyaml.reader.UnicodeReader;
++
++import java.io.IOException;
++import java.io.Reader;
+ 
+ /**
+  * <p>
+@@ -17,8 +24,24 @@
+ 	@Test
+ 	public void test() {
+ 		YamlReader yamlReader = new YamlReader("application");
+-		String activeProfile = yamlReader.getString("spring.profiles.active");
++		String activeProfile = yamlReader.getString("feign.sentinel.enabled");
+ 		System.out.println(activeProfile);
+ 		System.out.println(System.getProperty("user.dir"));
+ 	}
++	
++	@Test
++	public void testChineseCharacters() throws IOException {
++		Yaml yaml = createYaml();
++		try (Reader reader = new UnicodeReader(IOUtils.readClasspathFileAsInputStream("feign-config.yaml"))) {
++			for (Object object : yaml.loadAll(reader)) {
++			}
++		}
++	}
++	
++	protected Yaml createYaml() {
++		LoaderOptions loaderOptions = new LoaderOptions();
++		loaderOptions.setAllowDuplicateKeys(false);
++		return new Yaml(loaderOptions);
++	}
++
+ }
+Index: loser-tests/src/test/java/com/loserico/security/PasswordEncoderTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.loserico.security;\r\n\r\nimport com.loserico.codec.RsaUtils;\r\nimport org.junit.Test;\r\nimport org.springframework.security.crypto.factory.PasswordEncoderFactories;\r\nimport org.springframework.security.crypto.password.PasswordEncoder;\r\n\r\n/**\r\n * <p>\r\n * Copyright: (C), 2022-03-01 16:22\r\n * <p>\r\n * <p>\r\n * Company: Sexy Uncle Inc.\r\n *\r\n * @author Rico Yu ricoyu520@gmail.com\r\n * @version 1.0\r\n */\r\npublic class PasswordEncoderTest {\r\n\t\r\n\t@Test\r\n\tpublic void test() {\r\n\t\tPasswordEncoder passwordEncoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();\r\n\t\tString encode = passwordEncoder.encode(\"Admin#124\");\r\n\t\tSystem.out.println(encode);\r\n\t}\r\n\t\r\n\t@Test\r\n\tpublic void testRsaEncrypt() {\r\n\t\tString encrypted = RsaUtils.publicEncrypt(\"Admin#124\");\r\n\t\tSystem.out.println(encrypted);\r\n\t}\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/loser-tests/src/test/java/com/loserico/security/PasswordEncoderTest.java b/loser-tests/src/test/java/com/loserico/security/PasswordEncoderTest.java
+--- a/loser-tests/src/test/java/com/loserico/security/PasswordEncoderTest.java	(revision 5858cc9985e9d4fa09a1eb4b5541b6b1c6d02e7f)
++++ b/loser-tests/src/test/java/com/loserico/security/PasswordEncoderTest.java	(date 1665369239613)
+@@ -2,7 +2,7 @@
+ 
+ import com.loserico.codec.RsaUtils;
+ import org.junit.Test;
+-import org.springframework.security.crypto.factory.PasswordEncoderFactories;
++import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+ import org.springframework.security.crypto.password.PasswordEncoder;
+ 
+ /**
+@@ -19,8 +19,11 @@
+ 	
+ 	@Test
+ 	public void test() {
+-		PasswordEncoder passwordEncoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
+-		String encode = passwordEncoder.encode("Admin#124");
++		//PasswordEncoder passwordEncoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
++		PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
++		//String encode = passwordEncoder.encode("Admin#124");
++		//String encode = passwordEncoder.encode("portal_app");
++		String encode = passwordEncoder.encode("123456");
+ 		System.out.println(encode);
+ 	}
+ 	
+Index: commons-lang/src/test/resources/feign-config.yaml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/commons-lang/src/test/resources/feign-config.yaml b/commons-lang/src/test/resources/feign-config.yaml
+new file mode 100644
+--- /dev/null	(date 1665369239618)
++++ b/commons-lang/src/test/resources/feign-config.yaml	(date 1665369239618)
+@@ -0,0 +1,22 @@
++spring:
++  jpa:
++    properties:
++      hibernate:
++        dialect: org.hibernate.dialect.MySQLDialect
++        archive:
++          scanner: org.hibernate.boot.archive.scan.internal.StandardScanner #解决新版Hibernate找不到hbm.xml文件问题
++        show_sql: false
++        format_sql: true
++        ddl-auto: none
++        jdbc.batch_size: 100
++        order_inserts: true
++        order_updates: true
++        jdbc.time_zone: Asia/Shanghai
++        generate_statistics: false
++        cache:
++          use_second_level_cache: false
++          use_query_cache: false
++        entitymanager:
++          class: org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean
++          mappingDirectoryLocations: classpath:named-sql
++        packagesToScan: com.loserico.cloud.entity
