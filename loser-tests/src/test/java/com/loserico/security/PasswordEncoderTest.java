@@ -2,7 +2,7 @@ package com.loserico.security;
 
 import com.loserico.codec.RsaUtils;
 import org.junit.Test;
-import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
@@ -19,8 +19,8 @@ public class PasswordEncoderTest {
 	
 	@Test
 	public void test() {
-		PasswordEncoder passwordEncoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
-		String encode = passwordEncoder.encode("Admin#124");
+		PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+		String encode = passwordEncoder.encode("123456");
 		System.out.println(encode);
 	}
 	

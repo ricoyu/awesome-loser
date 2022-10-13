@@ -1,6 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="Encoding">
+  <component name="Encoding" native2AsciiForPropertiesFiles="true" defaultCharsetForPropertiesFiles="UTF-8">
+    <file url="file://$PROJECT_DIR$/commons-cloud/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/commons-lang/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/commons-spring/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/commons-spring/src/main/resources/named-sql" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/loser-cache/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/loser-cache/src/main/resources/named-sql" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/loser-codec/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/loser-codec/src/main/resources/named-sql" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/loser-json/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/loser-json/src/main/resources/named-sql" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/loser-messaging/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/loser-messaging/src/main/resources/named-sql" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/loser-mongo/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/loser-mongo/src/main/resources/named-sql" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/loser-mybatis/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/loser-netty/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/loser-netty/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/loser-networking/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/loser-networking/src/main/resources/named-sql" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/loser-orm/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/loser-orm/src/main/resources/named-sql" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/loser-search/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/loser-search/src/main/resources/named-sql" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/loser-security/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/loser-security/src/main/resources/named-sql" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/loser-sharding/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/loser-sharding/src/main/resources/named-sql" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/loser-tests/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/loser-tests/src/main/resources/named-sql" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/loser-token-parser/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/loser-validation/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/loser-validation/src/main/resources/named-sql" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/loser-web/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/loser-web/src/main/resources/named-sql" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/loser-workbook/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/loser-workbook/src/main/resources/named-sql" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/named-sql" charset="UTF-8" />
     <file url="PROJECT" charset="UTF-8" />
   </component>
 </project>
