@@ -1,0 +1,83 @@
+{
+  "oauth2Request": {
+    "authorities": [],
+    "clientId": "portal_app",
+    "redirectUri": null,
+    "requestParameters": {
+      "grant_type": "password",
+      "scope": "read",
+      "username": "yuxh"
+    },
+    "resourceIds": [
+      "order-service",
+      "account-service"
+    ],
+    "responseTypes": [],
+    "scope": [
+      "read"
+    ],
+    "approved": true,
+    "extensions": {},
+    "grantType": "password",
+    "refresh": false,
+    "refreshTokenRequest": null
+  },
+  "userAuthentication": {
+    "authenticated": true,
+    "authorities": [
+      {
+        "authority": "/account/**"
+      }
+    ],
+    "credentials": null,
+    "details": {
+      "grant_type": "password",
+      "scope": "read",
+      "username": "yuxh"
+    },
+    "principal": {
+      "accountNonExpired": true,
+      "accountNonLocked": true,
+      "authorities": [
+        {
+          "authority": "/account/**"
+        }
+      ],
+      "credentialsNonExpired": true,
+      "email": "ricoyu520@gmail.com",
+      "enabled": true,
+      "nickname": "三少爷",
+      "password": null,
+      "phone": null,
+      "userId": 1,
+      "username": "yuxh"
+    }
+  },
+  "authenticated": true,
+  "authorities": [
+    {
+      "authority": "/account/**"
+    }
+  ],
+  "clientOnly": false,
+  "credentials": "",
+  "details": null,
+  "name": "yuxh",
+  "principal": {
+    "accountNonExpired": true,
+    "accountNonLocked": true,
+    "authorities": [
+      {
+        "authority": "/account/**"
+      }
+    ],
+    "credentialsNonExpired": true,
+    "email": "ricoyu520@gmail.com",
+    "enabled": true,
+    "nickname": "三少爷",
+    "password": null,
+    "phone": null,
+    "userId": 1,
+    "username": "yuxh"
+  }
+}

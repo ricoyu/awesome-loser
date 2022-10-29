@@ -43,6 +43,7 @@ public enum ErrorTypes implements ErrorType {
     TOKEN_MISSING("4010006", "template.missing.token.error", "请提供Token"),
     TOKEN_INVALID("4010007", "template.invalid.token.error", "无效的Token"),
     GATEWAY_TOKEN_INVALID("4010107", "template.invalid.token.error", "无效的Token"),
+    OAUTH2_GET_TOKENKEY_ERROR("4010201", "template.get.tokenkey.error", "获取token key失败"),
     TOKEN_EXPIRED("4010008", "template.token.expired.error", "您尚未登录或者Token已过期, 请重新登录"),
     
     USERNAME_PASSWORD_MISMATCH("4010009", "template.username.password.error", "用户名或密码错误"),
