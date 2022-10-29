@@ -22,9 +22,11 @@ public class Base64UtilsTest {
 	
 	@Test
 	public void testEncode() {
-		String encode = Base64Utils.encode("{\"code\":0,\"data\":{},\"error\":{},\"extra\":{\"cost\":0.012025283,\"request-id\":\"8fc10a982e575318b4f7cacc2cd7800a@2@infoq\"}}");
-		System.out.println(encode);
-		String source = Base64Utils.decode(encode, encode);
-		System.out.println(source);
+		//String encode = Base64Utils.encode("{\"code\":0,\"data\":{},\"error\":{},\"extra\":{\"cost\":0.012025283,\"request-id\":\"8fc10a982e575318b4f7cacc2cd7800a@2@infoq\"}}");
+		//System.out.println(encode);
+		//String source = Base64Utils.decode(encode, encode);
+		//System.out.println(source);
+		
+		System.out.println(Base64Utils.encode("123456"));
 	}
 }

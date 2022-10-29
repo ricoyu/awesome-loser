@@ -688,15 +688,15 @@
     </dependencies>
 
     <distributionManagement>
-        <repository>
+        <!--<repository>
             <id>phantom-maven2</id>
             <name>phantom-maven2</name>
             <url>http://172.23.12.66:8081/repository/phantom-maven2/</url>
-        </repository>
+        </repository>-->
     </distributionManagement>
 
     <repositories>
-        <repository>
+        <!--<repository>
             <id>public</id>
             <name>Public Repositories</name>
             <url>http://172.23.12.66:8081/repository/maven-public/</url>
@@ -706,7 +706,7 @@
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
-        </repository>
+        </repository>-->
         <repository>
             <id>elasticsearch-releases</id>
             <url>https://artifacts.elastic.co/maven</url>
@@ -720,7 +720,7 @@
     </repositories>
 
     <pluginRepositories>
-        <pluginRepository>
+        <!--<pluginRepository>
             <id>public</id>
             <name>Public Repositories</name>
             <url>http://172.23.12.66:8081/repository/maven-public</url>
@@ -730,7 +730,7 @@
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
-        </pluginRepository>
+        </pluginRepository>-->
     </pluginRepositories>
 
     <build>

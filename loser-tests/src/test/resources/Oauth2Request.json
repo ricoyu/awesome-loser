@@ -1,0 +1,23 @@
+{
+  "authorities": [],
+  "clientId": "portal_app",
+  "redirectUri": null,
+  "requestParameters": {
+    "grant_type": "password",
+    "scope": "read",
+    "username": "yuxh"
+  },
+  "resourceIds": [
+    "order-service",
+    "account-service"
+  ],
+  "responseTypes": [],
+  "scope": [
+    "read"
+  ],
+  "approved": true,
+  "extensions": {},
+  "grantType": "password",
+  "refresh": false,
+  "refreshTokenRequest": null
+}
