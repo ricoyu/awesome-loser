@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="ALL" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="8804fbf1-46dc-4773-89cb-dfd5dd420f23" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/loser-security/src/main/java/com/loserico/security/aspect/TokenEndpointAspect.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/loser-tests/src/test/resources/Oauth2Authentication.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/loser-tests/src/test/resources/Oauth2Request.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/commons-lang/src/main/java/com/loserico/common/lang/errors/ErrorTypes.java" beforeDir="false" afterPath="$PROJECT_DIR$/commons-lang/src/main/java/com/loserico/common/lang/errors/ErrorTypes.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/loser-codec/src/test/java/com/loserico/codec/Base64UtilsTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/loser-codec/src/test/java/com/loserico/codec/Base64UtilsTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="CompilerWorkspaceConfiguration">
+    <option name="MAKE_PROJECT_ON_SAVE" value="true" />
+    <option name="PARALLEL_COMPILATION" value="true" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="jar://C:/Java/jdk1.8/src.zip!/java/util/Arrays.java" root0="FORCE_HIGHLIGHTING" />
+    <setting file="jar://$PROJECT_DIR$/../../.m2/io/jsonwebtoken/jjwt-impl/0.10.8/jjwt-impl-0.10.8-sources.jar!/io/jsonwebtoken/impl/DefaultJwtBuilder.java" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/pom.xml" root0="FORCE_HIGHLIGHTING" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="mavenHome" value="$PROJECT_DIR$/../../Program Files/Maven" />
+        <option name="useMavenConfig" value="true" />
+        <option name="userSettingsFile" value="D:\Program Files\Maven\conf\settings.xml" />
+      </MavenGeneralSettings>
+    </option>
+    <option name="importingSettings">
+      <MavenImportingSettings>
+        <option name="downloadSourcesAutomatically" value="true" />
+        <option name="jdkForImporter" value="#JAVA_HOME" />
+        <option name="vmOptionsForImporter" value="-Xmx768m" />
+      </MavenImportingSettings>
+    </option>
+  </component>
+  <component name="MavenRunner">
+    <option name="jreName" value="#JAVA_HOME" />
+  </component>
+  <component name="ProjectId" id="2G0tBJqjzsWGQQGH6m7nUkQsz1E" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+    <option name="showVisibilityIcons" value="true" />
+    <option name="sortByType" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "last_opened_file_path": "D:/Learning/awesome-loser/loser-tests/src/test/resources",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "editor.reader.mode"
+  }
+}]]></component>
+  <component name="ReactorSettings">
+    <option name="notificationShown" value="true" />
+  </component>
+  <component name="RebelAgentSelection">
+    <selection>jr</selection>
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\Learning\awesome-loser\loser-tests\src\test\resources" />
+    </key>
+    <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="com.loserico.gateway.auth.filter" />
+      <recent name="com.loserico.gateway.auth.common" />
+      <recent name="com.loserico.gateway.exception" />
+    </key>
+  </component>
+  <component name="RunManager" selected="JUnit.Base64UtilsTest.testEncode">
+    <configuration name="Base64UtilsTest.testEncode" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="loser-codec" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.loserico.codec.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.loserico.codec" />
+      <option name="MAIN_CLASS_NAME" value="com.loserico.codec.Base64UtilsTest" />
+      <option name="METHOD_NAME" value="testEncode" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="PasswordEncoderTest.test" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="loser-tests" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.loserico.security.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.loserico.security" />
+      <option name="MAIN_CLASS_NAME" value="com.loserico.security.PasswordEncoderTest" />
+      <option name="METHOD_NAME" value="test" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="JUnit.Base64UtilsTest.testEncode" />
+        <item itemvalue="JUnit.PasswordEncoderTest.test" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="SpringGeneralSettings">
+    <option name="allowAutoConfigurationMode" value="true" />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="8804fbf1-46dc-4773-89cb-dfd5dd420f23" name="Changes" comment="" />
+      <created>1665537195476</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1665537195476</updated>
+      <workItem from="1665537205715" duration="74000" />
+      <workItem from="1665565076840" duration="2118000" />
+      <workItem from="1665578796279" duration="968000" />
+      <workItem from="1665621674706" duration="122000" />
+      <workItem from="1665622091453" duration="1542000" />
+      <workItem from="1665624235075" duration="1990000" />
+      <workItem from="1665656243451" duration="49000" />
+      <workItem from="1665657916074" duration="604000" />
+      <workItem from="1665722173467" duration="606000" />
+      <workItem from="1665797976603" duration="929000" />
+      <workItem from="1665880972962" duration="43000" />
+      <workItem from="1666005286892" duration="420000" />
+      <workItem from="1666008065929" duration="429000" />
+      <workItem from="1666008514896" duration="1018000" />
+      <workItem from="1666079354201" duration="794000" />
+      <workItem from="1666313757670" duration="694000" />
+      <workItem from="1666339288193" duration="869000" />
+      <workItem from="1666602000294" duration="1230000" />
+      <workItem from="1666613365529" duration="1147000" />
+      <workItem from="1666687364649" duration="59000" />
+      <workItem from="1666687659259" duration="162000" />
+      <workItem from="1666745053694" duration="653000" />
+      <workItem from="1666832630240" duration="242000" />
+      <workItem from="1666917787924" duration="705000" />
+      <workItem from="1666920485999" duration="1164000" />
+      <workItem from="1666947004444" duration="1410000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/loser-tests/src/test/java/com/loserico/security/PasswordEncoderTest.java</url>
+          <line>22</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>

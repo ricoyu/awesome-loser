@@ -42,6 +42,8 @@ public enum ErrorTypes implements ErrorType {
     
     TOKEN_MISSING("4010006", "template.missing.token.error", "请提供Token"),
     TOKEN_INVALID("4010007", "template.invalid.token.error", "无效的Token"),
+    GATEWAY_TOKEN_INVALID("4010107", "template.invalid.token.error", "无效的Token"),
+    OAUTH2_GET_TOKENKEY_ERROR("4010201", "template.get.tokenkey.error", "获取token key失败"),
     TOKEN_EXPIRED("4010008", "template.token.expired.error", "您尚未登录或者Token已过期, 请重新登录"),
     
     USERNAME_PASSWORD_MISMATCH("4010009", "template.username.password.error", "用户名或密码错误"),
@@ -52,6 +54,7 @@ public enum ErrorTypes implements ErrorType {
     PASSWORD_EXPIRED("4010014", "template.password.expired", "密码已过期"),
     ALREADY_LOGIN("4010015", "template.already.login", "该账号已在别处登录, 不允许再次登录"),
     FIRST_LOGIN("4010016", "template.first.login", "该账号首次登录, 请修改密码!"),
+	MISSING_AUTHORIZATION("4010117", "template.missing.authorization.header", "请提供Authorization请求头"),
     
     
     INVALID_URI_ACCESS("4030001", "template.invalid.uri.access", "访问的URI不合法"),
@@ -62,6 +65,9 @@ public enum ErrorTypes implements ErrorType {
     SYSTEM_BLOCK_EXCEPTION("4030006", "template.system.control", "被系统规则限流啦"),
     
     NOT_FOUND("4040000", "template.not.found", "Not Found"),
+    
+    //网管层找不对目标service
+    GATEWAY_NOT_FOUND_SERVICE("4040101", "template.service.not.found", "Service Not Found"),
     
     METHOD_NOT_ALLOWED("4050000", "template.method.notallowed", "Method not Allowed"),
     

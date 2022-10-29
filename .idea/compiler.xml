@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="loser-web" />
+        <module name="loser-json" />
+        <module name="loser-netty" />
+        <module name="loser-mybatis" />
+        <module name="commons-spring" />
+        <module name="loser-security" />
+        <module name="loser-mongo" />
+        <module name="loser-search" />
+        <module name="loser-networking" />
+        <module name="loser-cache" />
+        <module name="loser-messaging" />
+        <module name="commons-lang" />
+        <module name="commons-cloud" />
+        <module name="loser-workbook" />
+        <module name="loser-token-parser" />
+        <module name="loser-codec" />
+        <module name="loser-orm" />
+        <module name="loser-tests" />
+        <module name="loser-sharding" />
+        <module name="loser-validation" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel target="8">
+      <module name="loser-gateway" target="1.8" />
+    </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="commons-cloud" options="-parameters" />
+      <module name="commons-lang" options="-parameters" />
+      <module name="commons-spring" options="-parameters" />
+      <module name="loser-cache" options="-parameters" />
+      <module name="loser-codec" options="-parameters" />
+      <module name="loser-gateway" options="-parameters" />
+      <module name="loser-json" options="-parameters" />
+      <module name="loser-messaging" options="-parameters" />
+      <module name="loser-mongo" options="-parameters" />
+      <module name="loser-mybatis" options="-parameters" />
+      <module name="loser-netty" options="-parameters" />
+      <module name="loser-networking" options="-parameters" />
+      <module name="loser-orm" options="-parameters" />
+      <module name="loser-search" options="-parameters" />
+      <module name="loser-security" options="-parameters" />
+      <module name="loser-sharding" options="-parameters" />
+      <module name="loser-tests" options="-parameters" />
+      <module name="loser-token-parser" options="-parameters" />
+      <module name="loser-validation" options="-parameters" />
+      <module name="loser-web" options="-parameters" />
+      <module name="loser-workbook" options="-parameters" />
+    </option>
+  </component>
+</project>
