@@ -41,6 +41,7 @@ public class NioClientHandle implements Runnable {
 			selector = Selector.open();
 			socketChannel = SocketChannel.open();
 			socketChannel.configureBlocking(false);
+			socketChannel.register(selector, SelectionKey.OP_READ);
 			started = true;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -86,13 +87,6 @@ public class NioClientHandle implements Runnable {
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
-			}
-			if (selector != null) {
-				try {
-					selector.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
 			}
 		}
 	}
@@ -146,7 +140,7 @@ public class NioClientHandle implements Runnable {
 	}
 	
 	private void doConnect() throws IOException {
-		if (socketChannel.connect(new InetSocketAddress("localhost", 12345))) {
+		if (socketChannel.connect(new InetSocketAddress(host, 12345))) {
 			socketChannel.register(selector, SelectionKey.OP_READ);
 		} else {
 			socketChannel.register(selector, SelectionKey.OP_CONNECT);

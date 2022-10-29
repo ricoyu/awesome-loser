@@ -105,7 +105,7 @@ public final class LoserExecutors {
 	}
 	
 	/**
-	 * idle 线程等待新任务的超时时间, 如果等了keepAliveTime还没有新任务到来, 线程中断
+	 * idle 线程等待新任务的超时时间, 如果等了keepAliveTime还没有新任务到来, 线程中断; 就是线程空闲的时间
 	 *
 	 * @param keepAliveTime
 	 * @param timeUnit

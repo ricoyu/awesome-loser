@@ -40,7 +40,8 @@ public class NioServerHandleWriteable implements Runnable {
 			this.serverSocketChannel.configureBlocking(false);
 			//绑定端口 backlog设为1024
 			serverSocketChannel.socket()
-					.bind(new InetSocketAddress(port), 1024);
+					.bind(new InetSocketAddress("192.168.2.3", port), 1024);
+			serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
 			started = true;
 			System.out.println("服务器已启动，端口号：" + port);
 		} catch (IOException e) {
@@ -116,6 +117,7 @@ public class NioServerHandleWriteable implements Runnable {
 			if (key.isWritable()) {
 				System.out.println("socket channel 缓冲为空，准备写");
 				SocketChannel sc = (SocketChannel) key.channel();
+				//这个ByteBuffer是doWrite方法里面register时候添加进去的attachment
 				ByteBuffer buffer = (ByteBuffer) key.attachment();
 				if (buffer != null && buffer.hasRemaining()) {
 					int count = sc.write(buffer);

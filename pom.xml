@@ -11,6 +11,7 @@
 
     <modules>
         <module>commons-lang</module>
+        <module>commons-cloud</module>
         <module>commons-spring</module>
         <module>loser-codec</module>
         <module>loser-cache</module>

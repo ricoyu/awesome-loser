@@ -261,7 +261,7 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	@ExceptionHandler(Throwable.class)
 	@ResponseStatus(value = HttpStatus.INTERNAL_SERVER_ERROR)
 	@ResponseBody
-	public ResponseEntity<?> handleThrowable(Throwable e) {
+	public ResponseEntity<?> handleThrowable(Throwable e) throws Exception {
 		logger.error("Rest API ERROR happen", e);
 		Result result = Results.status(ErrorTypes.INTERNAL_SERVER_ERROR).build();
 		return new ResponseEntity(result, HttpStatus.INTERNAL_SERVER_ERROR);
