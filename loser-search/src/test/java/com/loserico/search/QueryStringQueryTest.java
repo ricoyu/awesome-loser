@@ -78,4 +78,10 @@ public class QueryStringQueryTest {
 		System.out.println(count);
 	}
 	
+	@Test
+	public void testListIndices() {
+		List<String> indices = ElasticUtils.Admin.listIndices();
+		indices.forEach(System.out::println);
+	}
+	
 }

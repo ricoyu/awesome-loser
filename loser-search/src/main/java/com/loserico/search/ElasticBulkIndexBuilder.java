@@ -15,8 +15,8 @@ import java.util.Objects;
 
 import static com.loserico.common.lang.utils.Assert.notNull;
 import static com.loserico.json.jackson.JacksonUtils.toJson;
-import static com.loserico.search.ElasticUtils.ONLY_TYPE;
 import static com.loserico.search.ElasticUtils.CLIENT;
+import static com.loserico.search.ElasticUtils.ONLY_TYPE;
 
 /**
  * <p>

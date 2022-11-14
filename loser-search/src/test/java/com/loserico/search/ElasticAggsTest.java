@@ -52,7 +52,7 @@ public class ElasticAggsTest {
 		Aggregations aggregations = searchResponse.getAggregations();
 		
 		for (Aggregation aggregation : aggregations) {
-			Map<String, Object> metaData = aggregation.getMetaData();
+			Map<String, Object> metaData = aggregation.getMetadata();
 			String name = aggregation.getName();
 			System.out.println("Aggregation: " + name);
 			List<Bucket> buckets = ((StringTerms) aggregation).getBuckets();

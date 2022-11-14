@@ -4,7 +4,7 @@ import com.loserico.search.builder.admin.ElasticSettingsBuilder;
 import com.loserico.search.enums.Dynamic;
 import com.loserico.search.enums.FieldType;
 import org.elasticsearch.action.admin.indices.template.get.GetIndexTemplatesResponse;
-import org.elasticsearch.cluster.metadata.IndexTemplateMetaData;
+import org.elasticsearch.cluster.metadata.IndexTemplateMetadata;
 import org.junit.Test;
 
 import java.util.List;
@@ -54,7 +54,7 @@ public class IndexTemplateTest {
 	
 	@Test
 	public void testGetIndexTemplate() {
-		Map<String, IndexTemplateMetaData> indexTemplates = ElasticUtils.Admin.getIndexTemplate("template_default");
+		Map<String, IndexTemplateMetadata> indexTemplates = ElasticUtils.Admin.getIndexTemplate("template_default");
 		indexTemplates.entrySet().forEach((entry) -> {
 			System.out.println(entry.getKey());
 			System.out.println(toPrettyJson(entry.getValue()));
@@ -82,7 +82,7 @@ public class IndexTemplateTest {
 	@Test
 	public void testListIndexTemplate() {
 		GetIndexTemplatesResponse response = ElasticUtils.CLIENT.admin().indices().prepareGetTemplates().get();
-		List<IndexTemplateMetaData> indexTemplates = response.getIndexTemplates();
+		List<IndexTemplateMetadata> indexTemplates = response.getIndexTemplates();
 		indexTemplates.forEach((template) -> {
 			System.out.println(template.name());
 		});

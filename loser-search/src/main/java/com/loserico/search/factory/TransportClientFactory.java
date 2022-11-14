@@ -46,6 +46,7 @@ public final class TransportClientFactory {
 		String clusterName = propertyReader.getString(CLUSTER_NAME);
 		String username = propertyReader.getString(USERNAME);
 		String password = propertyReader.getString(PASSWORD);
+		String keystorePath = propertyReader.getString("keystore.path");
 		
 		/*
 		 * 读取Elasticsearch地址, 可以指定ip,ip, 也可以是ip:port,ip:port形式
@@ -88,8 +89,8 @@ public final class TransportClientFactory {
 					//.put("xpack.security.transport.ssl.keystore.password", keystorePassword)
 					//.put("xpack.security.transport.ssl.truststore.password", truststorePassword)
 					.put("xpack.security.transport.ssl.verification_mode", "certificate")
-					.put("xpack.security.transport.ssl.keystore.path", "D:\\Dropbox\\搜索\\第八章 保护你的数据\\elastic-certificates.p12")
-					.put("xpack.security.transport.ssl.truststore.path", "D:\\Dropbox\\搜索\\第八章 保护你的数据\\elastic-certificates.p12");
+					.put("xpack.security.transport.ssl.keystore.path", keystorePath)
+					.put("xpack.security.transport.ssl.truststore.path", keystorePath);
 					//.put("xpack.security.http.ssl.keystore.path", certificatesPath+"/elastic-certificates.p12")
 					//.put("xpack.security.http.ssl.truststore.path", certificatesPath+"/elastic-certificates.p12")
 			settings = builder.build();

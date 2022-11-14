@@ -1,11 +1,6 @@
 package com.loserico.search;
 
-import com.loserico.search.pojo.Product;
 import org.junit.Test;
-
-import static com.loserico.json.jackson.JacksonUtils.toPrettyJson;
-import static org.assertj.core.api.Assertions.*;
-import static org.junit.Assert.*;
 
 /**
  * <p>
@@ -21,9 +16,7 @@ public class GetQueryTest {
 	
 	@Test
 	public void testGetById() {
-		Product product = ElasticUtils.Query.byId("products2", "aPbE4HkBHVbtFXGM3D0Z", Product.class);
-		assertThat(product).isNotNull();
-		assertEquals(product.getId(), "aPbE4HkBHVbtFXGM3D0Z");
-		System.out.println(toPrettyJson(product));
+		String shakespeare = ElasticUtils.Query.byId("shakespeare", "1");
+		System.out.println(shakespeare);
 	}
 }

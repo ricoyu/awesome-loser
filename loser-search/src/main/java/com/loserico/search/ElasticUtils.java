@@ -88,8 +88,8 @@ import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.IndicesAdminClient;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.cluster.health.ClusterHealthStatus;
-import org.elasticsearch.cluster.metadata.IndexTemplateMetaData;
-import org.elasticsearch.cluster.metadata.MappingMetaData;
+import org.elasticsearch.cluster.metadata.IndexTemplateMetadata;
+import org.elasticsearch.cluster.metadata.MappingMetadata;
 import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.xcontent.XContentType;
@@ -940,11 +940,11 @@ public final class ElasticUtils {
 		 * @param templateName
 		 * @return IndexTemplateMetaData
 		 */
-		public static Map<String, IndexTemplateMetaData> getIndexTemplate(String templateName) {
+		public static Map<String, IndexTemplateMetadata> getIndexTemplate(String templateName) {
 			GetIndexTemplatesResponse response = CLIENT.admin().indices().prepareGetTemplates(templateName).get();
-			List<IndexTemplateMetaData> indexTemplates = response.getIndexTemplates();
+			List<IndexTemplateMetadata> indexTemplates = response.getIndexTemplates();
 			return indexTemplates.stream()
-					.collect(toMap(IndexTemplateMetaData::getName, identity()));
+					.collect(toMap(IndexTemplateMetadata::getName, identity()));
 		}
 		
 		/**
@@ -1073,12 +1073,12 @@ public final class ElasticUtils {
 					.prepareGetMappings(index)
 					.get();
 			
-			ImmutableOpenMap<String, ImmutableOpenMap<String, MappingMetaData>> mappings = response.mappings();
+			ImmutableOpenMap<String, ImmutableOpenMap<String, MappingMetadata>> mappings = response.mappings();
 			if (mappings.isEmpty()) {
 				return null;
 			}
 			//获取真正的mapping部分, 其他的都不需要
-			MappingMetaData mappingMetaData = mappings.get(index).get(ONLY_TYPE);
+			MappingMetadata mappingMetaData = mappings.get(index).get(ONLY_TYPE);
 			if (mappingMetaData != null) {
 				return mappingMetaData.sourceAsMap();
 			}
@@ -1114,10 +1114,10 @@ public final class ElasticUtils {
 					new GetFieldMappingsRequestBuilder(CLIENT, GetFieldMappingsAction.INSTANCE, index);
 			GetFieldMappingsResponse response = builder.setFields(fields).get();
 			
-			Map<String, GetFieldMappingsResponse.FieldMappingMetaData> map =
+			Map<String, GetFieldMappingsResponse.FieldMappingMetadata> map =
 					response.mappings().get(index).get(ONLY_TYPE);
 			List<Map> mapList =
-					map.values().stream().map(GetFieldMappingsResponse.FieldMappingMetaData::sourceAsMap).collect(toList());
+					map.values().stream().map(GetFieldMappingsResponse.FieldMappingMetadata::sourceAsMap).collect(toList());
 			Map fieldMappingMap = new HashMap<>(mapList.size());
 			for (Map<String, ?> fieldMap : mapList) {
 				for (String key : fieldMap.keySet()) {
