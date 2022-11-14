@@ -5,17 +5,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8804fbf1-46dc-4773-89cb-dfd5dd420f23" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/loser-security/src/main/java/com/loserico/security/aspect/TokenEndpointAspect.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/loser-tests/src/test/resources/Oauth2Authentication.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/loser-tests/src/test/resources/Oauth2Request.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/commons-lang/src/main/java/com/loserico/common/lang/errors/ErrorTypes.java" beforeDir="false" afterPath="$PROJECT_DIR$/commons-lang/src/main/java/com/loserico/common/lang/errors/ErrorTypes.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loser-codec/src/test/java/com/loserico/codec/Base64UtilsTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/loser-codec/src/test/java/com/loserico/codec/Base64UtilsTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/commons-lang/src/test/java/com/loserico/common/lang/DateUtilsTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/commons-lang/src/test/java/com/loserico/common/lang/DateUtilsTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/loser-messaging/src/test/java/com/loserico/messaging/KafkaUtilsTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/loser-messaging/src/test/java/com/loserico/messaging/KafkaUtilsTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/loser-tests/src/test/java/com/loserico/zookeeper/ZooKeeperTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/loser-tests/src/test/java/com/loserico/zookeeper/ZooKeeperTest.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="CodeInsightWorkspaceSettings">
+    <option name="optimizeImportsOnTheFly" value="true" />
   </component>
   <component name="CompilerWorkspaceConfiguration">
     <option name="MAKE_PROJECT_ON_SAVE" value="true" />
@@ -32,8 +32,6 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="jar://C:/Java/jdk1.8/src.zip!/java/util/Arrays.java" root0="FORCE_HIGHLIGHTING" />
-    <setting file="jar://$PROJECT_DIR$/../../.m2/io/jsonwebtoken/jjwt-impl/0.10.8/jjwt-impl-0.10.8-sources.jar!/io/jsonwebtoken/impl/DefaultJwtBuilder.java" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/pom.xml" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="MarkdownSettingsMigration">
@@ -43,7 +41,6 @@
     <option name="generalSettings">
       <MavenGeneralSettings>
         <option name="mavenHome" value="$PROJECT_DIR$/../../Program Files/Maven" />
-        <option name="useMavenConfig" value="true" />
         <option name="userSettingsFile" value="D:\Program Files\Maven\conf\settings.xml" />
       </MavenGeneralSettings>
     </option>
@@ -68,18 +65,20 @@
     <option name="showVisibilityIcons" value="true" />
     <option name="sortByType" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "WebServerToolWindowFactoryState": "false",
-    "last_opened_file_path": "D:/Learning/awesome-loser/loser-tests/src/test/resources",
-    "node.js.detected.package.eslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "editor.reader.mode"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/Learning/awesome-loser&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;MavenSettings&quot;
   }
-}]]></component>
+}</component>
   <component name="ReactorSettings">
     <option name="notificationShown" value="true" />
   </component>
@@ -96,7 +95,7 @@
       <recent name="com.loserico.gateway.exception" />
     </key>
   </component>
-  <component name="RunManager" selected="JUnit.Base64UtilsTest.testEncode">
+  <component name="RunManager" selected="JUnit.ZooKeeperTest.testCreate">
     <configuration name="Base64UtilsTest.testEncode" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="loser-codec" />
       <extension name="coverage">
@@ -108,6 +107,38 @@
       <option name="PACKAGE_NAME" value="com.loserico.codec" />
       <option name="MAIN_CLASS_NAME" value="com.loserico.codec.Base64UtilsTest" />
       <option name="METHOD_NAME" value="testEncode" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="DateUtilsTest.testUTCDate" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="commons-lang" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.loserico.common.lang.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.loserico.common.lang" />
+      <option name="MAIN_CLASS_NAME" value="com.loserico.common.lang.DateUtilsTest" />
+      <option name="METHOD_NAME" value="testUTCDate" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="KafkaUtilsTest.testStopConsumer" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="loser-messaging" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.loserico.messaging.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.loserico.messaging" />
+      <option name="MAIN_CLASS_NAME" value="com.loserico.messaging.KafkaUtilsTest" />
+      <option name="METHOD_NAME" value="testStopConsumer" />
       <option name="TEST_OBJECT" value="method" />
       <method v="2">
         <option name="Make" enabled="true" />
@@ -129,8 +160,27 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration name="ZooKeeperTest.testCreate" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="loser-tests" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.loserico.zookeeper.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.loserico.zookeeper" />
+      <option name="MAIN_CLASS_NAME" value="com.loserico.zookeeper.ZooKeeperTest" />
+      <option name="METHOD_NAME" value="testCreate" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="JUnit.ZooKeeperTest.testCreate" />
+        <item itemvalue="JUnit.KafkaUtilsTest.testStopConsumer" />
+        <item itemvalue="JUnit.DateUtilsTest.testUTCDate" />
         <item itemvalue="JUnit.Base64UtilsTest.testEncode" />
         <item itemvalue="JUnit.PasswordEncoderTest.test" />
       </list>
@@ -173,6 +223,14 @@
       <workItem from="1666917787924" duration="705000" />
       <workItem from="1666920485999" duration="1164000" />
       <workItem from="1666947004444" duration="1410000" />
+      <workItem from="1667045791930" duration="734000" />
+      <workItem from="1667182908928" duration="1947000" />
+      <workItem from="1667200388161" duration="1395000" />
+      <workItem from="1667207663042" duration="1125000" />
+      <workItem from="1667273631952" duration="600000" />
+      <workItem from="1667275942499" duration="2433000" />
+      <workItem from="1667286959483" duration="658000" />
+      <workItem from="1667540587806" duration="752000" />
     </task>
     <servers />
   </component>
@@ -186,6 +244,11 @@
           <url>file://$PROJECT_DIR$/loser-tests/src/test/java/com/loserico/security/PasswordEncoderTest.java</url>
           <line>22</line>
           <option name="timeStamp" value="1" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/commons-lang/src/test/java/com/loserico/common/lang/DateUtilsTest.java</url>
+          <line>45</line>
+          <option name="timeStamp" value="2" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

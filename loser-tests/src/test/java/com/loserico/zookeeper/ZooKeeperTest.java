@@ -28,7 +28,7 @@ public class ZooKeeperTest {
 		CountDownLatch countDownLatch = new CountDownLatch(1);
 		try {
 //			String connectString = "118.178.252.68:2181";
-			String connectString = "192.168.102.106:2181";
+			String connectString = "localhost:2181";
 //			String connectString = "192.168.1.164:2181";
 //			String connectString = "192.168.1.3:2181, 192.168.1.4:2181, 192.168.1.6:2181";
 			zookeeper = new ZooKeeper(connectString, 5000,
