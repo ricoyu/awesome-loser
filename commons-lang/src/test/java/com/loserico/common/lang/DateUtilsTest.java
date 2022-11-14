@@ -19,7 +19,7 @@ import java.util.regex.Pattern;
 
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 
 /**
@@ -37,6 +37,13 @@ public class DateUtilsTest {
 	
 	public static void main(String[] args) {
 		System.out.println(new Date(1629885814471L));
+	}
+	
+	@Test
+	public void testUTCDate() {
+		String utcDateStr = "2022-10-31T02:21:32.493Z";
+		Date date = DateUtils.parse(utcDateStr);
+		System.out.println(date);
 	}
 	@Test
 	public void testDate() {

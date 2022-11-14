@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.loserico.json.jackson.JacksonUtils.toJson;
-import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.*;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -127,6 +127,24 @@ public class KafkaUtilsTest {
 			messages.forEach(System.out::println);
 		});
 		Thread.currentThread().join();
+	}
+	
+	@SneakyThrows
+	@Test
+	public void testStopConsumer() {
+		Consumer<String, String> consumer = KafkaUtils.newConsumer("10.88.104.233:9092")
+				.groupId("test-group")
+				.autoCommit(true)
+				.fetchMaxBytes(1 * Units.MB)
+				.maxPollRecords(10)
+				.build();
+		consumer.subscribe("index-metadata", (messages) -> {
+			for (Object message : messages) {
+				System.out.println(message);
+			}
+		});
+		SECONDS.sleep(3);
+		consumer.unsubscribe();
 	}
 	
 	@Test
