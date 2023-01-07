@@ -30,8 +30,9 @@ public class JdbcTest {
 		//This will load the MySQL driver, each DB has its own driver
 		Class.forName("com.mysql.jdbc.Driver");
 		//Setup the connection with the DB
-		//connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/nacos?characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true", "rico", "123456");
-		connection = DriverManager.getConnection("jdbc:mysql://192.168.100.101:3306/nacos?characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true", "rico", "123456");
+		//connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/nacos?characterEncoding=utf8&connectTimeout=10000&socketTimeout=3000&autoReconnect=true", "rico", "123456");
+		//connection = DriverManager.getConnection("jdbc:mysql://192.168.100.101:3306/nacos?characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true", "rico", "123456");
+		connection = DriverManager.getConnection("jdbc:mysql://192.168.2.176:3306/micromall?characterEncoding=utf8&connectTimeout=100000&socketTimeout=30000&autoReconnect=true&useSSL=false", "root", "qianyu14");
 		//connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/tuling?useSSL=false&&characterEncoding=UTF-8", "rico", "123456");
 	}
 	
@@ -39,6 +40,17 @@ public class JdbcTest {
 	public static void closeConnection() throws SQLException {
 		if (connection != null) {
 			connection.close();
+		}
+	}
+	
+	@Test
+	public void testSelectOrder() throws SQLException {
+		PreparedStatement preparedStatement =
+				connection.prepareStatement("select * from oms_order");
+		ResultSet rs = preparedStatement.executeQuery();
+		while (rs.next()) {
+			String orderSn = rs.getString(4);
+			System.out.println(orderSn);
 		}
 	}
 	

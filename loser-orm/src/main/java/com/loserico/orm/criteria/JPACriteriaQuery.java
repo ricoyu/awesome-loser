@@ -359,14 +359,12 @@ public class JPACriteriaQuery<T> implements Serializable {
 		return this;
 	}
 
-	public void between(String propertyName, Number begin, Number end) {
-		if (!(isNullOrEmpty(begin))) {
-			ge(propertyName, begin);
+	public JPACriteriaQuery<T> between(String propertyName, Long begin, Long end) {
+		if (!(isNullOrEmpty(begin)) && !(isNullOrEmpty(end))) {
+			this.predicates.add(criteriaBuilder.between((Expression) root.get(propertyName), begin, end));
 		}
 
-		if (!(isNullOrEmpty(end))) {
-			le(propertyName, end);
-		}
+		return this;
 	}
 
 	/**

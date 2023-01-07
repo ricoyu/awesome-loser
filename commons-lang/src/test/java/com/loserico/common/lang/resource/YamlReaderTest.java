@@ -1,6 +1,12 @@
 package com.loserico.common.lang.resource;
 
+import com.loserico.common.lang.utils.IOUtils;
 import org.junit.Test;
+import org.yaml.snakeyaml.Yaml;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Map;
 
 /**
  * <p>
@@ -20,5 +26,14 @@ public class YamlReaderTest {
 		String activeProfile = yamlReader.getString("spring.profiles.active");
 		System.out.println(activeProfile);
 		System.out.println(System.getProperty("user.dir"));
+	}
+	
+	@Test
+	public void testK8sYaml() throws IOException {
+		InputStream inputStream = IOUtils.readFileAsStream("D:\\Dropbox\\Docker & Kubernetes\\tulingmall-gateway-ingress.yaml");
+		Map<String, Object> map = new Yaml().load(inputStream);
+		for (String s : map.keySet()) {
+			System.out.println(s+": " + map.get(s));
+		}
 	}
 }

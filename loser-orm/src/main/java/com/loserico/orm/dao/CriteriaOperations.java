@@ -141,7 +141,20 @@ public interface CriteriaOperations {
 	 */
 	public <T> T findUniqueByProperties(Class<T> entityClass, List<Predicate> predicates, OrderBean... orders);
 	public <T> T findUniqueByProperties(Class<T> entityClass, List<Predicate> predicates, boolean includeDeleted, OrderBean... orders);
-
+	
+	/**
+	 * 数字字段范围查询
+	 * @param entityClass
+	 * @param propertyName
+	 * @param begin
+	 * @param end
+	 * @return List<T>
+	 * @param <T>
+	 */
+	public <T> List<T> findBetween(Class<T> entityClass, String propertyName, Long begin, Long end);
+	
+	public <T> List<T> findBetween(Class<T> entityClass, String propertyName, Long begin, Long end, Page page);
+	
 	public <T> List<T> findBetween(Class<T> entityClass, String propertyName, LocalDateTime begin, LocalDateTime end);
 	public <T> List<T> findBetween(Class<T> entityClass, String propertyName, LocalDateTime begin, LocalDateTime end, boolean includeDeleted);
 

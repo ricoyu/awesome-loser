@@ -1,5 +1,6 @@
 package com.loserico.orm.dao;
 
+import com.loserico.common.lang.transformer.ValueHandlerFactory;
 import com.loserico.common.lang.utils.ArrayTypes;
 import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.common.lang.vo.OrderBean;
@@ -13,7 +14,6 @@ import com.loserico.orm.exception.SQLCountQueryException;
 import com.loserico.orm.exception.SQLQueryException;
 import com.loserico.orm.predicate.Predicate;
 import com.loserico.orm.transformer.ResultTransformerFactory;
-import com.loserico.common.lang.transformer.ValueHandlerFactory;
 import com.loserico.orm.utils.Defaults;
 import com.loserico.orm.utils.HashUtils;
 import com.loserico.orm.utils.JacksonUtils;
@@ -824,6 +824,27 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	public <T> List<T> findBetween(Class<T> entityClass, String propertyName, LocalDateTime begin,
 								   LocalDateTime end) {
 		return findBetween(entityClass, propertyName, begin, end, true);
+	}
+	
+	@Override
+	public <T> List<T> findBetween(Class<T> entityClass, String propertyName, Long begin, Long end) {
+		Objects.requireNonNull(propertyName);
+		Objects.requireNonNull(begin);
+		Objects.requireNonNull(end);
+		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache)
+				.between(propertyName, begin, end);
+		return jpaCriteriaQuery.list();
+	}
+	
+	
+	@Override
+	public <T> List<T> findBetween(Class<T> entityClass, String propertyName, Long begin, Long end, Page page) {
+		Objects.requireNonNull(propertyName);
+		Objects.requireNonNull(begin);
+		Objects.requireNonNull(end);
+		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache)
+				.between(propertyName, begin, end).setPage(page);
+		return jpaCriteriaQuery.list();
 	}
 	
 	@Override
