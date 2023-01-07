@@ -15,11 +15,6 @@
         <version>4.12.3</version>
     </parent>
 
-    <properties>
-        <!--<elasticsearch.version>7.1.1</elasticsearch.version>-->
-        <elasticsearch.version>7.9.3</elasticsearch.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>com.loserico</groupId>
@@ -67,14 +62,25 @@
         </dependency>
 
         <dependency>
+            <groupId>org.elasticsearch</groupId>
+            <artifactId>elasticsearch-core</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.elasticsearch.client</groupId>
             <artifactId>transport</artifactId>
         </dependency>
         <dependency>
             <groupId>org.elasticsearch</groupId>
+            <artifactId>elasticsearch-geo</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.elasticsearch</groupId>
+            <artifactId>elasticsearch-secure-sm</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.elasticsearch</groupId>
             <artifactId>elasticsearch</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.elasticsearch.plugin</groupId>
             <artifactId>x-pack-core</artifactId>
