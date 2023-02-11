@@ -533,6 +533,11 @@ public class JedisPoolOperations implements JedisOperations {
 	}
 	
 	@Override
+	public long bitCount(String key) {
+		return jedis().bitcount(key);
+	}
+	
+	@Override
 	public Long pfadd(String key, String... elements) {
 		return operate((jedis) -> {
 			return jedis.pfadd(key, elements);

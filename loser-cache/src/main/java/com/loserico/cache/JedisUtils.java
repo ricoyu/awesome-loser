@@ -2191,7 +2191,7 @@ public final class JedisUtils {
 		 * 将offset上的bit为设置为0或1, 返回该位置原来的值
 		 *
 		 * @param key
-		 * @param offset
+		 * @param offset 比特位的偏移量
 		 * @param value  值应该是0或1
 		 * @return Boolean 原来该offset上的bit值, true表示该位置上原来是1, false 0
 		 */
@@ -2253,6 +2253,22 @@ public final class JedisUtils {
 			return jedisOperations.bitNot(destKey, srcKey);
 		}
 		
+		/**
+		 * 统计比特位上为1的位数
+		 * @param key
+		 * @return long
+		 */
+		public static long bitCount(String key) {
+			return jedisOperations.bitCount(key);
+		}
+		
+		/**
+		 * 
+		 * @param key
+		 * @param start 第几个字节开始
+		 * @param end 第几个字节结束
+		 * @return
+		 */
 		public static long bitCount(String key, int start, int end) {
 			return jedisOperations.bitCount(key, start, end);
 		}
@@ -2261,11 +2277,11 @@ public final class JedisUtils {
 	public static final class HyperLogLog {
 		
 		/**
-		 * 将制定的elements添加进HyperLogLog, 会对元素去重
+		 * 将指定的elements添加进HyperLogLog, 会对元素去重
 		 *
 		 * @param key
 		 * @param elements
-		 * @return 如果添加改变了HyperLogLog返回1, 没有实质改变返回0
+		 * @return 如果添加改变了HyperLogLog则返回1, 没有实质改变返回0
 		 */
 		public static Long pfadd(String key, String... elements) {
 			return jedisOperations.pfadd(key, elements);

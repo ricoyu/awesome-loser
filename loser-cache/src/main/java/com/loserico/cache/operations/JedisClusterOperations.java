@@ -456,6 +456,11 @@ public class JedisClusterOperations implements JedisOperations {
 	}
 	
 	@Override
+	public long bitCount(String key) {
+		return jedisCluster.bitcount(key);
+	}
+	
+	@Override
 	public Long pfadd(String key, String... elements) {
 		return jedisCluster.pfadd(key, elements);
 	}

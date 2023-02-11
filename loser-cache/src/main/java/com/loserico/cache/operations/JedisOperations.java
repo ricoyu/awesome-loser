@@ -550,7 +550,16 @@ public interface JedisOperations {
 	
 	Long bitNot(String destKey, String srcKey);
 	
+	/**
+	 *
+	 * @param key
+	 * @param start 第几个字节开始
+	 * @param end 第几个字节结束
+	 * @return
+	 */
 	long bitCount(String key, int start, int end);
+	
+	long bitCount(String key);
 	
 	Long pfadd(String key, String[] elements);
 	

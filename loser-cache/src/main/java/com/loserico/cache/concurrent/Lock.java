@@ -23,7 +23,7 @@ public interface Lock{
 	public boolean locked();
 	
 	/**
-	 * 加锁
+	 * 加锁, 加锁成功与否通过locked()方法检查
 	 */
 	public void lock();
 	
