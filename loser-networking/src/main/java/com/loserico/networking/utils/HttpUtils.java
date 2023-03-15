@@ -5,8 +5,10 @@ import com.loserico.networking.builder.JsonRequestBuilder;
 import com.loserico.networking.constants.MediaType;
 import lombok.extern.slf4j.Slf4j;
 
+import static com.loserico.networking.enums.HttpMethod.DELETE;
 import static com.loserico.networking.enums.HttpMethod.GET;
 import static com.loserico.networking.enums.HttpMethod.POST;
+import static com.loserico.networking.enums.HttpMethod.PUT;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 
 /**
@@ -61,6 +63,32 @@ public final class HttpUtils {
 	public static JsonRequestBuilder post(String url) {
 		JsonRequestBuilder requestBuilder = new JsonRequestBuilder();
 		requestBuilder.method(POST);
+		requestBuilder.url(url);
+		requestBuilder.addHeader(CONTENT_TYPE, MediaType.APPLICATION_JSON);
+		return requestBuilder;
+	}
+	
+	/**
+	 * 执行HTTP PUT请求并返回结果, Content-Type默认application-json
+	 *
+	 * @return JsonRequestBuilder
+	 */
+	public static JsonRequestBuilder put(String url) {
+		JsonRequestBuilder requestBuilder = new JsonRequestBuilder();
+		requestBuilder.method(PUT);
+		requestBuilder.url(url);
+		requestBuilder.addHeader(CONTENT_TYPE, MediaType.APPLICATION_JSON);
+		return requestBuilder;
+	}
+	
+	/**
+	 * 执行HTTP DELETE请求并返回结果, Content-Type默认application-json
+	 *
+	 * @return JsonRequestBuilder
+	 */
+	public static JsonRequestBuilder delete(String url) {
+		JsonRequestBuilder requestBuilder = new JsonRequestBuilder();
+		requestBuilder.method(DELETE);
 		requestBuilder.url(url);
 		requestBuilder.addHeader(CONTENT_TYPE, MediaType.APPLICATION_JSON);
 		return requestBuilder;

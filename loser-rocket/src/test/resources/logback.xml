@@ -1,0 +1,25 @@
+<configuration scan="true" scanPeriod="60 seconds" debug="false">
+    <property scope="context" name="logging.path" value="./logs"/>
+    <property scope="context" name="logging.level" value="INFO"/>
+    <property scope="context" name="logging.level.mapper" value="DEBUG"/>
+
+    <!--打印日志到 mybatis-mapper.log 的 appender-->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{70} %L : %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- 控制Mybatis的日志级别为DEBUG, 并且只输出到控制台 -->
+    <logger name="com.loserico.mybatis.sql.mapper" level="DEBUG"/>
+    <logger name="org.apache.ibatis.io.DefaultVFS" level="error"/>
+    <logger name="org.apache.ibatis.io.VFS" level="error"/>
+    <logger name="org.apache.ibatis.io.JBoss6VFS" level="error"/>
+    <logger name="org.apache.ibatis" level="DEBUG"/>
+
+    <root level="info">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+</configuration>

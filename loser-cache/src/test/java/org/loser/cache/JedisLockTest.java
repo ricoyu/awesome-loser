@@ -23,4 +23,13 @@ public class JedisLockTest {
 		System.out.println("...do some work");
 		lock.unlock();
 	}
+	
+	@Test
+	public void testnonBlockingLock() {
+		Lock lock = JedisUtils.nonBlockingLock("lock002");
+		lock.lock();
+		if (lock.locked()) {
+			System.out.println("加锁成功shijian");
+		}
+	}
 }

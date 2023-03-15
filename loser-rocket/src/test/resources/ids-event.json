@@ -1,0 +1,64 @@
+{
+  "timestamp": "2021-08-02 11:28:02",
+  "flow_id": 1603924757226902,
+  "sensor_id": 1,
+  "in_iface": "ens192,ens224,ens256",
+  "event_type": "alert",
+  "vlan": [
+    19
+  ],
+  "src_ip": "43.239.167.201",
+  "src_port": 80,
+  "dest_ip": "10.10.26.20",
+  "dest_port": 52528,
+  "proto": "TCP",
+  "dev_id": 1,
+  "create_time": 1631254058791,
+  "model_ver": "6.0.1 RELEASE",
+  "proto_type": "http",
+  "alert_action": "allowed",
+  "alert_gid": 1,
+  "alert_signature_id": 2841417,
+  "alert_rev": 2,
+  "alert_signature": "web-attack.SCAN Suspected Winnti Scan Activity",
+  "alert_category": "web-attack",
+  "alert_severity": 2,
+  "alert_metadata_attack_target": [
+    "Server"
+  ],
+  "alert_metadata_created_at": [
+    "2020_03_06"
+  ],
+  "alert_metadata_former_category": [
+    "SCAN"
+  ],
+  "alert_metadata_performance_impact": [
+    "Low"
+  ],
+  "alert_metadata_signature_severity": [
+    "Major"
+  ],
+  "alert_metadata_updated_at": [
+    "2020_03_06"
+  ],
+  "event_engine": "ids",
+  "event_id": "9b2e4d6a-def3-11eb-af58-000c29238a8d",
+  "http_hostname": "4040139.com",
+  "http_url": "/",
+  "http_http_user_agent": "curl/7.29.0",
+  "http_http_method": "GET",
+  "http_protocol": "HTTP/1.1",
+  "http_length": 0,
+  "http_response_headers": [],
+  "app_proto": "http",
+  "flow_pkts_toserver": 3,
+  "flow_pkts_toclient": 2,
+  "flow_bytes_toserver": 257,
+  "flow_bytes_toclient": 126,
+  "flow_start": "2021-07-07 15:19:02",
+  "payload": "This is a payload from Rico Yu: 'Hi Avengers!'",
+  "stream": 0,
+  "pcap": "/opt/ids/pcaps/1625642342_232846497_1603924757226902.pcap",
+  "packet": "yB9m04LQXOiDeE73CABFIAAoueVAADAGmPQr76fJCgoaFABQzTDr5lHbUCHqH1AQAOVxlQAAAAAAAAAA",
+  "packet_info_linktype": 1
+}

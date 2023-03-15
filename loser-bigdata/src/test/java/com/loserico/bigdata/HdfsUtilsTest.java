@@ -1,0 +1,64 @@
+package com.loserico.bigdata;
+
+import com.loserico.bigdata.utils.HdfsUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Test;
+
+import java.util.List;
+
+import static org.junit.Assert.*;
+
+/**
+ * <p>
+ * Copyright: (C), 2023-03-14 16:10
+ * <p>
+ * <p>
+ * Company: Sexy Uncle Inc.
+ *
+ * @author Rico Yu ricoyu520@gmail.com
+ * @version 1.0
+ */
+@Slf4j
+public class HdfsUtilsTest {
+	
+	@Test
+	public void testOpen() {
+		String content = HdfsUtils.open("/input/wdtest.txt");
+		log.info(content);
+	}
+	
+	@Test
+	public void testMkdir() {
+		boolean result = HdfsUtils.mkdir("/rico");
+		assertTrue(result);
+	}
+	
+	@Test
+	public void testListDir() {
+		List<String> files = HdfsUtils.list("/");
+		files.forEach(System.out::println);
+	}
+	
+	@Test
+	public void testDelete() {
+		boolean deleted = HdfsUtils.delete("hadoop-3.2.2.tar.gz");
+		assertTrue(deleted);
+	}
+	
+	@Test
+	public void testRename() {
+		boolean renamed = HdfsUtils.rename("/input/wdtest.txt", "/input/test.txt");
+		assertTrue(renamed);
+	}
+	
+	@Test
+	public void testUpload() {
+		HdfsUtils.upload("E:\\Downloads\\EBD2B29656F5576D97D93890C393C1076C9AD1C9.torrent", "/dy.torrent");
+	}
+	
+	@Test
+	public void testExistsfile() {
+		boolean exists = HdfsUtils.isExists("/dy.torrent");
+		System.out.println(exists);
+	}
+}

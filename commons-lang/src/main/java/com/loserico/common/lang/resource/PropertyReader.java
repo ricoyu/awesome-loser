@@ -169,6 +169,9 @@ public class PropertyReader {
 		try {
 			value = resourceBundle.getString(property);
 		} catch (MissingResourceException e) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("classpath下找不到propertysource", e);
+			}
 		}
 		return value == null ? null : value.trim();
 	}

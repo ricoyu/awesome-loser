@@ -10,7 +10,6 @@ public class DeadLockTest {
 		AModel am = new AModel("ss11", "ss22");
 		
 		for (int i = 0; i < 20; i++) {
-			new Thread(new MyThread1(am), "线程1"+i).start();
 			new Thread(new MyThread2(am), "线程2"+i).start();
 		}
 	}

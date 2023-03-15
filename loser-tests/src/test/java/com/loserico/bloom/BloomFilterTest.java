@@ -35,14 +35,14 @@ public class BloomFilterTest {
 	@Test
 	public void test1PercentFalsePositive() {
 		BloomFilter<Integer> filter = BloomFilter.create(Funnels.integerFunnel(),
-				500,
-				0.01);
+				500, //期望的元素数量, 要尽可能提供准确的元素数量, 否则将会产生较高的误报率。
+				0.01); //误报率
 		
-		filter.put(1);
+		filter.put(1); //向过滤器插入元素
 		filter.put(2);
 		filter.put(3);
 		
-		assertThat(filter.mightContain(1)).isTrue();
+		assertThat(filter.mightContain(1)).isTrue(); //测试1是否存在于布隆过滤器中
 		assertThat(filter.mightContain(2)).isTrue();
 		assertThat(filter.mightContain(3)).isTrue();
 		assertThat(filter.mightContain(4)).isFalse();

@@ -1,5 +1,6 @@
 package com.loserico.networking;
 
+import com.loserico.common.lang.concurrent.LoserExecutors;
 import com.loserico.common.lang.utils.IOUtils;
 import com.loserico.json.jackson.JacksonUtils;
 import com.loserico.json.jsonpath.JsonPathUtils;
@@ -35,6 +36,8 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import static java.util.concurrent.TimeUnit.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -369,6 +372,40 @@ public class HttpUtilsTest {
 	@Test
 	public void testHttpsPost() {
 		HttpUtils.post("https://10.10.17.31/api/login").request();
+	}
+	
+	@Test
+	public void testRibbonRule() {
+		for (int i = 0; i < 900; i++) {
+			HttpUtils.get("http://localhost:8080/account-port").request();
+			log.info("完成调用第【{}】次", i);
+			if (i % 100 == 0) {
+				HttpUtils.get("http://localhost:8080/account-statistic").request();
+				log.info("调用一次统计接口");
+			}
+		}
+		HttpUtils.get("http://localhost:8080/account-statistic").request();
+		log.info("调用统计接口完成!");
+	}
+	
+	@SneakyThrows
+	@Test
+	public void testHelloSentinel() {
+		CountDownLatch countDownLatch = new CountDownLatch(100);
+		ThreadPoolExecutor pool = LoserExecutors.of("sentinel-pool")
+				.corePoolSize(8)
+				.maximumPoolSize(12)
+				.prestartAllCoreThreads(true)
+				.build();
+		for (int i = 0; i < 100; i++) {
+			pool.execute(() -> {
+				Object result = HttpUtils.get("http://localhost:8081/hello-sentinel").request();
+				System.out.println(result);
+				countDownLatch.countDown();
+			});
+		}
+		countDownLatch.await();
+		System.out.println("执行完毕!");
 	}
 	
 }

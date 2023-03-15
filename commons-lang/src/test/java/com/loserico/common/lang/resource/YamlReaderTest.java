@@ -36,4 +36,13 @@ public class YamlReaderTest {
 			System.out.println(s+": " + map.get(s));
 		}
 	}
+	
+	@Test
+	public void testbootstrapYaml() throws IOException {
+		InputStream inputStream = IOUtils.readFileAsStream("D:\\Learning\\awesome-plus\\awesome-order\\src\\main\\resources\\bootstrap.yaml");
+		Map<String, Object> map = new Yaml().load(inputStream);
+		for (String s : map.keySet()) {
+			System.out.println(s+": " + map.get(s));
+		}
+	}
 }

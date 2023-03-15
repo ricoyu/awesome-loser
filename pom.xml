@@ -5,7 +5,7 @@
     <groupId>com.loserico</groupId>
     <artifactId>awesome-loser</artifactId>
     <packaging>pom</packaging>
-    <version>4.12.5</version>
+    <version>4.12.6</version>
     <name>Awesome Loser</name>
     <url>http://maven.apache.org</url>
 
@@ -31,13 +31,12 @@
         <module>loser-messaging</module>
         <module>loser-rocket</module>
         <module>loser-mybatis</module>
+        <module>loser-bigdata</module>
     </modules>
 
     <properties>
-        <loser.version>4.12.3</loser.version>
         <encoding>UTF-8</encoding>
         <jdk.version>1.8</jdk.version>
-        <!--<jdk.version>17</jdk.version>-->
 
         <springframework.version>5.1.18.RELEASE</springframework.version>
 
@@ -825,7 +824,6 @@
                     <encoding>${encoding}</encoding>
                     <source>${jdk.version}</source>
                     <target>${jdk.version}</target>
-                    <compilerArgument>-parameters</compilerArgument>
                     <compilerVersion>${jdk.version}</compilerVersion>
                 </configuration>
             </plugin>
