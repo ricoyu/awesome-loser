@@ -395,7 +395,7 @@ public class HttpUtilsTest {
 		ThreadPoolExecutor pool = LoserExecutors.of("sentinel-pool")
 				.corePoolSize(8)
 				.maximumPoolSize(12)
-				.prestartAllCoreThreads(true)
+				.prestartAllCoreThreads()
 				.build();
 		for (int i = 0; i < 100; i++) {
 			pool.execute(() -> {

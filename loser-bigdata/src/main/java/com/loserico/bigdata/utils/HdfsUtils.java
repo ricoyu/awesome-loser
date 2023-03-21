@@ -17,6 +17,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
+ * 基于web HDFS API封装的工具类
  * <p>
  * Copyright: (C), 2023-03-14 15:53
  * <p>

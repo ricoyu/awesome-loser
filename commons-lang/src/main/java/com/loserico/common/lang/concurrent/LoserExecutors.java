@@ -156,11 +156,10 @@ public final class LoserExecutors {
 	/**
 	 * 是否提前启动所有核心线程
 	 *
-	 * @param prestartAllCoreThreads
 	 * @return Executors
 	 */
-	public LoserExecutors prestartAllCoreThreads(boolean prestartAllCoreThreads) {
-		this.prestartAllCoreThreads = prestartAllCoreThreads;
+	public LoserExecutors prestartAllCoreThreads() {
+		this.prestartAllCoreThreads = true;
 		return this;
 	}
 	

@@ -92,6 +92,7 @@ public final class CORS {
 		}
 		
 		public void build(HttpServletResponse response) {
+			response.setCharacterEncoding("UTF-8");
 			response.setHeader(HEADER_ACCESS_CONTROL_ALLOW_HEADERS, joinWith(", ", allowedHeaders));
 			response.setHeader(HEADER_ACCESS_CONTROL_ALLOW_ORIGIN, joinWith(", ", allowedOrigins));
 			response.setHeader(HEADER_ACCESS_CONTROL_ALLOW_METHODS, joinWith(", ", allowedMethods));

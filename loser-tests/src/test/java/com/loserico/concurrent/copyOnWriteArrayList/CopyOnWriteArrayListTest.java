@@ -47,7 +47,7 @@ public class CopyOnWriteArrayListTest {
 				.keepAliveTime(60, SECONDS)
 				.queueSize(1000)
 				.rejectPolicy(Policy.ABORT_WITH_REPORT)
-				.prestartAllCoreThreads(true)
+				.prestartAllCoreThreads()
 				.build();
 		
 		executor.execute(() -> {

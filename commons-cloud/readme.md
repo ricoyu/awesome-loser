@@ -1,0 +1,3 @@
+# 一 限流
+
+RestBlockExceptionHandler提供了REST风格的Alibaba Sentinel统一流控异常处理

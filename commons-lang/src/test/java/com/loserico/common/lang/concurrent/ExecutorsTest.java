@@ -94,7 +94,7 @@ public class ExecutorsTest {
 				.maximumPoolSize(2)
 				.keepAliveTime(4, SECONDS)
 				.rejectPolicy(ABORT_WITH_REPORT)
-				.prestartAllCoreThreads(true)
+				.prestartAllCoreThreads()
 				.build();
 		
 		executor.execute(() -> {
