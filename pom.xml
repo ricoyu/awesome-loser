@@ -395,11 +395,6 @@
                 <version>2.16.0</version>
             </dependency>
             <dependency>
-                <groupId>org.apache.logging.log4j</groupId>
-                <artifactId>log4j-to-slf4j</artifactId>
-                <version>2.16.0</version>
-            </dependency>
-            <dependency>
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-core</artifactId>
                 <version>${logback.version}</version>
@@ -408,6 +403,11 @@
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-classic</artifactId>
                 <version>${logback.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-to-slf4j</artifactId>
+                <version>2.20.0</version>
             </dependency>
 
             <dependency>
@@ -438,7 +438,7 @@
             <dependency>
                 <groupId>cglib</groupId>
                 <artifactId>cglib</artifactId>
-                <version>${cglib.version}</version>
+                <version>3.3.0</version>
             </dependency>
 
             <dependency>
@@ -610,7 +610,7 @@
             <dependency>
                 <groupId>org.redisson</groupId>
                 <artifactId>redisson</artifactId>
-                <version>${redisson.version}</version>
+                <version>3.21.2</version>
             </dependency>
 
             <dependency>
