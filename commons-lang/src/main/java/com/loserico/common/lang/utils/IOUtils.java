@@ -13,6 +13,7 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.Closeable;
@@ -24,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
@@ -122,7 +124,8 @@ public class IOUtils {
 	/**
 	 * 匹配文件名中不允许出现的字符
 	 */
-	public static final Pattern INVALID_FILENAME_PATTERN = Pattern.compile("[`~!@#$%^&*()+=|{}':;',\\\\\\[\\].<>\\/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]");
+	public static final Pattern INVALID_FILENAME_PATTERN =
+			Pattern.compile("[`~!@#$%^&*()+=|{}':;',\\\\\\[\\].<>\\/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]");
 	
 	/**
 	 * 从InputStream读取字符串
@@ -341,6 +344,60 @@ public class IOUtils {
 			log.warn(e.getMessage());
 		}
 		return new byte[0];
+	}
+	
+	/**
+	 * 从指定的offset开始读取指定的字节数
+	 *
+	 * @param filePath
+	 * @param offset      从第几个字节开始读取
+	 * @param bytesToRead 读取多少个字节
+	 * @return
+	 */
+	public static byte[] readFileAsBytes(String filePath, int offset, int bytesToRead) {
+		requireNonNull(filePath, "file 不能为null");
+		Path path = Paths.get(filePath);
+		log.info("通过fILE获取文件大小: {} BYTES", path.toFile().length());
+		try {
+			InputStream inputStream = Files.newInputStream(path);
+			log.info("通过InputStream获取文件大小: {} BYTES", inputStream.available());
+			RandomAccessFile raf = new RandomAccessFile(path.toFile(), "r");
+			raf.seek(offset);
+			byte[] buffer = new byte[bytesToRead];
+			int len = 0;
+			while (-1 != (len = raf.read(buffer))) {
+				
+			}
+			return buffer;
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	/**
+	 * 将多个块合并成一个文件
+	 * @param destFile
+	 * @param blocks
+	 */
+	public static void merge(String destFile, String... blocks) {
+		int len = 0;
+		byte[] buffer = new byte[1024];
+		InputStream is = null;
+		OutputStream bos = null;
+		for (int i = 0; i < blocks.length; i++) {
+			try {
+				bos = new BufferedOutputStream(new FileOutputStream(new File(destFile), true));
+				is = new BufferedInputStream(new FileInputStream(new File(blocks[i])));
+				while (-1 != (len = is.read(buffer))) {
+					bos.write(buffer, 0, len);
+				}
+				bos.flush();
+				bos.close();
+				is.close();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
 	}
 	
 	/**
@@ -1327,7 +1384,8 @@ public class IOUtils {
 	public static List<String> listClasspathFileNames(String classpathDir) {
 		ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
 		if (!classpathDir.startsWith(DIR_SEPARATOR)) {
-			classpathDir = CLASSPATH_PREFIX + DIR_SEPARATOR + classpathDir + DIR_SEPARATOR + "**" + DIR_SEPARATOR + "*.*";
+			classpathDir =
+					CLASSPATH_PREFIX + DIR_SEPARATOR + classpathDir + DIR_SEPARATOR + "**" + DIR_SEPARATOR + "*.*";
 		} else {
 			classpathDir = CLASSPATH_PREFIX + classpathDir + DIR_SEPARATOR + "**" + DIR_SEPARATOR + "*.*";
 		}
@@ -1354,7 +1412,8 @@ public class IOUtils {
 		filePattern = (isBlank(filePattern) ? "*.*" : filePattern);
 		ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
 		if (!classpathDir.startsWith(DIR_SEPARATOR)) {
-			classpathDir = CLASSPATH_PREFIX + DIR_SEPARATOR + classpathDir + DIR_SEPARATOR + "**" + DIR_SEPARATOR + filePattern;
+			classpathDir =
+					CLASSPATH_PREFIX + DIR_SEPARATOR + classpathDir + DIR_SEPARATOR + "**" + DIR_SEPARATOR + filePattern;
 		} else {
 			classpathDir = CLASSPATH_PREFIX + classpathDir + DIR_SEPARATOR + "**" + DIR_SEPARATOR + filePattern;
 		}
@@ -1495,7 +1554,8 @@ public class IOUtils {
 	 * @param upperBoundUnit 单位, k kb m mb g gb
 	 * @return boolean
 	 */
-	public static boolean isBetweenLimitSize(byte[] data, long lowerBound, String lowerBoundUnit, long upperBound, String upperBoundUnit) {
+	public static boolean isBetweenLimitSize(byte[] data, long lowerBound, String lowerBoundUnit, long upperBound,
+	                                         String upperBoundUnit) {
 		requireNonNull(data, "data cannot be null!");
 		return isBetweenLimitSize(data.length, lowerBound, lowerBoundUnit, upperBound, upperBoundUnit);
 	}
@@ -1510,7 +1570,8 @@ public class IOUtils {
 	 * @param upperBoundUnit 单位, k kb m mb g gb
 	 * @return boolean
 	 */
-	public static boolean isBetweenLimitSize(File file, long lowerBound, String lowerBoundUnit, long upperBound, String upperBoundUnit) {
+	public static boolean isBetweenLimitSize(File file, long lowerBound, String lowerBoundUnit, long upperBound,
+	                                         String upperBoundUnit) {
 		requireNonNull(file, "data cannot be null!");
 		if (!file.exists()) {
 			return false;
@@ -1537,7 +1598,8 @@ public class IOUtils {
 	 * @param upperBoundUnit 单位, k kb m mb g gb
 	 * @return boolean
 	 */
-	public static boolean isBetweenLimitSize(long fileSize, long lowerBound, String lowerBoundUnit, long upperBound, String upperBoundUnit) {
+	public static boolean isBetweenLimitSize(long fileSize, long lowerBound, String lowerBoundUnit, long upperBound,
+	                                         String upperBoundUnit) {
 		SizeUnit lowerBoundSizeUnit = SizeUnit.parse(lowerBoundUnit);
 		
 		long lowerBoundBytes = lowerBoundSizeUnit.toBytes(lowerBound);
@@ -1556,6 +1618,7 @@ public class IOUtils {
 	
 	/**
 	 * 拷贝文件到临时目录下, 如果sourceFileName在磁盘上存在, 先读磁盘上; 如果在磁盘上不存在, 尝试读Jar文件中的
+	 *
 	 * @param sourceFileName
 	 * @return Path 拷贝后得到的文件
 	 */
@@ -1572,6 +1635,7 @@ public class IOUtils {
 	
 	/**
 	 * 拷贝一个磁盘上的文件到临时目录下, classpath下的文件本方法不适用
+	 *
 	 * @param sourcePath
 	 * @return Path
 	 */
@@ -1591,6 +1655,7 @@ public class IOUtils {
 	
 	/**
 	 * 拷贝一个InputStream代表的文件到临时目录下
+	 *
 	 * @param in
 	 * @param suffix
 	 * @return Path

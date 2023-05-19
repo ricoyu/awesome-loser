@@ -25,8 +25,6 @@
 
 package com.loserico.map;
 
-import sun.misc.SharedSecrets;
-
 import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.io.Serializable;
@@ -1559,7 +1557,7 @@ public class HashMap<K, V> extends AbstractMap<K, V>
 			
 			// Check Map.Entry[].class since it's the nearest public type to
 			// what we're actually creating.
-			SharedSecrets.getJavaOISAccess().checkArray(s, Map.Entry[].class, cap);
+			//SharedSecrets.getJavaOISAccess().checkArray(s, Map.Entry[].class, cap);
 			@SuppressWarnings({"rawtypes", "unchecked"})
 			Node<K, V>[] tab = (Node<K, V>[]) new Node[cap];
 			table = tab;

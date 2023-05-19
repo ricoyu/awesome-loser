@@ -49,4 +49,15 @@ public class IOUtilsTest {
 		System.out.println(com.loserico.common.lang.utils.IOUtils.readClassPathFileAsString("application.yml"));;
 		System.out.println(com.loserico.common.lang.utils.IOUtils.readFileAsString("D:\\Dropbox\\doc\\bw.txt"));;
 	}
+	
+	@Test
+	public void testReadParts() {
+		byte[] bytes = com.loserico.common.lang.utils.IOUtils.readFileAsBytes("/home/ricoyu/data.txt", 0, 1024*1024);
+		com.loserico.common.lang.utils.IOUtils.write("/home/ricoyu/data.txt.part0", bytes);
+	}
+	
+	@Test
+	public void testMerge() {
+		com.loserico.common.lang.utils.IOUtils.merge("/home/ricoyu/data-back.txt", "/home/ricoyu/data.txt.part0", "/home/ricoyu/data.txt.part1");
+	}
 }
