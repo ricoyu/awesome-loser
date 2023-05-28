@@ -41,7 +41,7 @@ public class HdfsUtilsTest {
 	
 	@Test
 	public void testDelete() {
-		boolean deleted = HdfsUtils.delete("hadoop-3.2.2.tar.gz");
+		boolean deleted = HdfsUtils.delete("/input/wdtest.txt");
 		assertTrue(deleted);
 	}
 	

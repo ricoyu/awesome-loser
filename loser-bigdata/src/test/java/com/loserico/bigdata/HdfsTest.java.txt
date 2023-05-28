@@ -1,0 +1,110 @@
+package com.loserico.bigdata;
+
+import lombok.SneakyThrows;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.BlockLocation;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IOUtils;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+
+import static org.junit.Assert.*;
+
+/**
+ * <p>
+ * Copyright: (C), 2023-05-25 12:11
+ * <p>
+ * <p>
+ * Company: Sexy Uncle Inc.
+ *
+ * @author Rico Yu ricoyu520@gmail.com
+ * @version 1.0
+ */
+public class HdfsTest {
+	
+	private static Configuration conf = null;
+	
+	private static FileSystem fs = null;
+	
+	/**
+	 * 要配置系统环境变量 HADOOP_USER_NAME = root
+	 */
+	@BeforeClass
+	public static void init() {
+		conf = new Configuration(true);
+		try {
+			//fs = FileSystem.get(conf);
+			fs = FileSystem.get(URI.create("hdfs://mycluster"), conf, "root"); //这种方式不需要环境变量里面指定用户
+		} catch (IOException | InterruptedException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	@AfterClass
+	public static void close() {
+		if (fs != null) {
+			try {
+				fs.close();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		if (conf != null) {
+			conf.clear();
+			conf = null;
+		}
+	}
+	
+	@SneakyThrows
+	@Test
+	public void testMkdir() {
+		Path path = new Path("/rico");
+		boolean exists = fs.exists(path);
+		if (exists) {
+			boolean deleted = fs.delete(path);
+			assertTrue(deleted);
+		}
+		//FSDataOutputStream outputStream = fs.create(new Path("/rico/wdtest.txt"));
+		//outputStream.write("my name is rico\nthis is my bigdata lesson\nwelcome to my lesson".getBytes(UTF_8));
+		//outputStream.flush();
+	}
+	
+	@SneakyThrows
+	@Test
+	public void testUpload() {
+		InputStream in = new FileInputStream(new File("E:\\Software\\Hadoop2.6.5\\hadoop-2.6.5.tar.gz"));
+		Path path = new Path("/input/hadoop.tar.gz");
+		FSDataOutputStream out = fs.create(path);
+		IOUtils.copyBytes(in, out, conf, true);
+	}
+	
+	@SneakyThrows
+	@Test
+	public void testBlocks() {
+		Path path = new Path("/input/hadoop.tar.gz");
+		FileStatus fileStatus = fs.getFileStatus(path);
+		BlockLocation[] fileBlockLocations = fs.getFileBlockLocations(fileStatus, 0, fileStatus.getLen());
+		for (int i = 0; i < fileBlockLocations.length; i++) {
+			BlockLocation blockLocation = fileBlockLocations[i];
+			System.out.println(blockLocation);
+		}
+	}
+	
+	@SneakyThrows
+	@Test
+	public void testDownload() {
+		Path path = new Path("/input/hadoop.tar.gz");
+		FSDataInputStream in = fs.open(path);
+	}
+}

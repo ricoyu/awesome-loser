@@ -38,9 +38,18 @@ public final class HdfsUtils {
 	private static String nameNodeHost = null;
 	
 	static {
-		nameNodeHost = PROPERTY_READER.getString("hdfs.host");
-		if (!nameNodeHost.startsWith(HTTP_SCHEMA)) {
-			nameNodeHost = HTTP_SCHEMA+nameNodeHost;
+		String hdfsHosts = PROPERTY_READER.getString("hdfs.hosts"); // 值是 192.168.2.101:9870 形式的
+		String[] nameNodeHosts = hdfsHosts.split(",");
+		for (int i = 0; i < nameNodeHosts.length; i++) {
+			nameNodeHost = nameNodeHosts[i].trim();
+			if (!nameNodeHost.startsWith(HTTP_SCHEMA)) {
+				nameNodeHost = HTTP_SCHEMA+nameNodeHost;
+			}
+			String response = HttpUtils.get(nameNodeHost + "/jmx?qry=Hadoop:service=NameNode,name=NameNodeStatus").request();
+			if (response.contains("active")) {
+				log.info("Active NameNode is {}", nameNodeHosts[i]);
+				break;
+			}
 		}
 	}
 	/**
@@ -77,7 +86,8 @@ public final class HdfsUtils {
 	public static boolean mkdir(String dir) {
 		String url = format(OP_URL_TEMPLATE, nameNodeHost, adjustFilePath(dir), HdfsConstants.OP_MKDIRS);
 		Map<String, Boolean> response = HttpUtils.put(url).timeout(3, TimeUnit.SECONDS).responseType(Map.class).request();
-		return response.get("boolean");
+		log.info("Response: {}", response);
+		return response.get("boolean") == null ? false : response.get("boolean");
 	}
 	
 	/**
@@ -129,7 +139,7 @@ public final class HdfsUtils {
 	public static boolean rename(String sourceFile, String destFile) {
 		String url = format(OP_RENAME_URL_TEMPLATE, nameNodeHost, adjustFilePath(sourceFile), HdfsConstants.OP_RENAME, adjustFilePath(destFile));
 		Map<String, Boolean> response = HttpUtils.put(url).timeout(3, TimeUnit.SECONDS).responseType(Map.class).request();
-		return response.get("boolean");
+		return response.get("boolean") == null ? false :response.get("boolean");
 	}
 	/**
 	 * 删除文件或目录, 删除成功返回true, 删除不存在的文件返回false
@@ -139,7 +149,7 @@ public final class HdfsUtils {
 	public static boolean delete(String file) {
 		String url = format(OP_URL_TEMPLATE, nameNodeHost, adjustFilePath(file), HdfsConstants.OP_DELETE);
 		Map<String, Boolean> response = HttpUtils.delete(url).timeout(3, TimeUnit.SECONDS).responseType(Map.class).request();
-		return response.get("boolean");
+		return response.get("boolean") == null ? false: response.get("boolean");
 	}
 	
 	private static String adjustFilePath(String fileOrDir) {
