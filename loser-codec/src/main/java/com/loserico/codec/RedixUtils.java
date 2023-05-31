@@ -69,8 +69,12 @@ public class RedixUtils {
 	 * @param i
 	 * @return String
 	 */
-	public static String intToBinary(int i) {
-		return Integer.toBinaryString(i);
+	public static String intToBinary(int num) {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 31; i >=0 ; i--) {
+			sb.append((num & (1<<i)) == 0? "0": "1");
+		}
+		return sb.toString();
 	}
 	
 	/**
