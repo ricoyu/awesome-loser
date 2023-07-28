@@ -3,6 +3,7 @@ package com.loserico.search;
 import com.loserico.search.ElasticUtils.Query;
 import com.loserico.search.exception.UriQueryException;
 import com.loserico.search.pojo.Movie;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 
 import java.util.List;
@@ -20,6 +21,7 @@ import static org.junit.Assert.*;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
+@Slf4j
 public class UriQueryTest {
 	
 	@Test
@@ -41,7 +43,9 @@ public class UriQueryTest {
 		
 		List<Movie> moviePojos = Query.uriQuery("movies")
 				.query("2012")
-				.field("title")
+				.df("title")
+				.sort("year:desc")
+				.size(10)
 				.resultType(Movie.class)
 				.queryForList();
 		assertEquals(movies.size(), moviePojos.size());
@@ -148,9 +152,29 @@ public class UriQueryTest {
 				.queryForList()
 				.forEach(System.out::println);
 	}
+	
+	@Test
+	public void testPhraseQuery() {
+		List<Object> movies = Query.uriQuery("movies")
+				.phraseQuery("title:Beautiful Mind")
+				.queryForList();
+		System.out.println(movies.size());
+	}
+	
+	@Test
+	public void testPhraseQueryAll() {
+		List<Object> movies = Query.uriQuery("movies")
+				.phraseQuery("Beautiful Mind")
+				.queryForList();
+		System.out.println(movies.size());
+	}
 
 	@Test
-	public void testPaging() {
-		
+	public void testGroupQuery() {
+		List<Object> movies = Query.uriQuery("movies")
+				.query("title:(Beautiful Mind)")
+				.queryForList();
+		log.info("查询到{}条记录", movies.size());
+		assertEquals(5, movies.size());
 	}
 }

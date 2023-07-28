@@ -88,4 +88,15 @@ public class RegexTest {
 			System.out.println("Not match");
 		}
 	}
+	
+	@Test
+	public void testPhraseQueryPattern() {
+		String phrase = "q=title:Beautiful Mind";
+		Pattern pattern = Pattern.compile("(q=)?([1-9a-z])+:?(.)*");
+		Matcher matcher = pattern.matcher(phrase);
+		if (matcher.matches()) {
+			String group3 = matcher.group(3);
+			System.out.println(group3);
+		}
+	}
 }

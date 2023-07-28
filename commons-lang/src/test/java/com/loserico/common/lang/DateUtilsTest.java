@@ -333,4 +333,12 @@ public class DateUtilsTest {
 		System.out.println(new Date(1627452912796L));
 		System.out.println(new Date(1627439417482L));
 	}
+	
+	@Test
+	public void testParseESDateFormat() {
+		Date date = DateUtils.parse("2018-07-24T10:29:48.103Z");
+		//Date date = DateUtils.parse("2023-07-01T23:45:36+00:00");
+		System.out.println(date);
+	}
+	
 }

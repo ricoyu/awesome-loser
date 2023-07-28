@@ -1,5 +1,6 @@
 package com.loserico.search.builder.query;
 
+import com.loserico.common.lang.resource.PropertyReader;
 import com.loserico.common.lang.utils.StringUtils;
 import com.loserico.json.jsonpath.JsonPathUtils;
 import com.loserico.networking.utils.HttpUtils;
@@ -29,11 +30,22 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  */
 @Slf4j
 public class ElasticUriQueryBuilder {
+	private static final String USERNAME = "elastic.username";
+	private static final String PASSWORD = "elastic.password";
 	
 	private static final String DF = "df=";
 	private static final String SORT = "sort=";
 	private static final String FROM = "from=";
 	private static final String SIZE = "size=";
+	
+	
+	/**
+	 * 默认读取classpath下elastic.properties文件
+	 */
+	private static PropertyReader propertyReader = new PropertyReader("elastic");
+	
+	private static String username = propertyReader.getString(USERNAME);
+	private static String password = propertyReader.getString(PASSWORD);
 	
 	/**
 	 * 要查询的索引, 可以:<ol>
@@ -147,6 +159,39 @@ public class ElasticUriQueryBuilder {
 	}
 	
 	/**
+	 * 执行类似 GET movies/_search?q="Beautiful Mind" 的Phrase query
+	 * 这里Phrase Query参数Beautiful Mind不需要传双引号, 会自动帮你加上
+	 * <li/>Pahrase Query(引号引起来的) GET movies/_search?q=title:"Beautiful Mind"  表示Beautiful Mind要同时出现并且按照规定的顺序
+	 * <li/>                          GET movies/_search?q=title:Beautiful AND Mind
+	 *
+	 * @param q
+	 * @return QueryStringQueryBuilder
+	 */
+	public ElasticUriQueryBuilder phraseQuery(String q) {
+		notEmpty(q, "q cannot be empty");
+		if (!q.startsWith("q=")) {
+			/*
+			 * 如果q传的是title:Beautiful Mind
+			 * 那么要拿到Beautiful Mind部分, 两边套上双引号
+			 * 否则整个串套双引号
+			 */
+			int colonIndex = q.indexOf(":");
+			if (colonIndex == -1) {
+				q = "q=" + "\"" + q + "\"";
+			} else {
+				String phrase = q.substring(colonIndex+1);
+				String field = q.substring(0, colonIndex);
+				q = "q="+field+":\""+phrase+"\"";
+			}
+		} else {
+			String phrase = q.substring(2);
+			phrase = "q=" + "\"" + phrase + "\"";
+		}
+		this.q = q;
+		return this;
+	}
+	
+	/**
 	 * 要查询的字段, 不指定时, 会对所有字段进行查询<p>
 	 * 比如这样一个查询 q=2012&df=title 表示查询title包含2012的文档
 	 * <p>
@@ -156,6 +201,22 @@ public class ElasticUriQueryBuilder {
 	 * @return UriQueryBuilder
 	 */
 	public ElasticUriQueryBuilder field(String df) {
+		notEmpty(df, "df cannot be empty!");
+		this.df = df;
+		return this;
+	}
+	
+	/**
+	 * 要查询的字段, 不指定时, 会对所有字段进行查询<p>
+	 * 比如这样一个查询 q=2012&df=title 表示查询title包含2012的文档
+	 * <p>
+	 * 这里设置的参数df就表示要查询哪个字段, 如 title
+	 *
+	 * @param df
+	 * @return UriQueryBuilder
+	 * @alias field
+	 */
+	public ElasticUriQueryBuilder df(String df) {
 		notEmpty(df, "df cannot be empty!");
 		this.df = df;
 		return this;
@@ -273,6 +334,7 @@ public class ElasticUriQueryBuilder {
 		this.excludeSources = sources;
 		return this;
 	}
+	
 	/**
 	 * 查询返回的结果类型
 	 *
@@ -296,9 +358,14 @@ public class ElasticUriQueryBuilder {
 			throw new IllegalArgumentException("Please set query string first!");
 		}
 		String queryString = buildQueryString();
-		log.info(queryString);
+		log.info("Query String Query: {}", queryString);
 		
-		String responseJson = HttpUtils.get(queryString).request();
+		String responseJson = null;
+		if (isNotBlank(username) && isNotBlank(password)) {
+			responseJson = HttpUtils.get(queryString).basicAuth(username, password).request();
+		} else {
+			responseJson = HttpUtils.get(queryString).request();
+		}
 		boolean error = JsonPathUtils.ifExists(responseJson, "error");
 		if (error) {
 			String rootCause = JsonPathUtils.readNode(responseJson, "$.error.root_cause[0].reason");

@@ -114,6 +114,20 @@ public class ElasticUtilsTest {
 	}
 	
 	@Test
+	public void testCreateWithId() {
+		boolean deleteResult = Admin.deleteIndex("mapping_test");
+		System.out.println(deleteResult);
+		String result =
+				ElasticUtils.index("mapping_test", "{\"firstName\": \"Chan\", \"lastName\": \"Jackie\", \"loginDate\": \"2018-07-24T10:29:48.103Z\"}", 1);
+		String json = ElasticUtils.get("mapping_test", 1);
+		System.out.println(json);
+		result =
+				ElasticUtils.index("mapping_test", "{\"firstName\": \"Chan\", \"lastName\": \"Jackie\", \"loginDate\": \"2018-07-24T10:29:48.103Z\"}", 1);
+		System.out.println(result);
+		json = ElasticUtils.get("mapping_test", 1);
+		System.out.println(json);
+	}
+	@Test
 	public void testCreateDocWithId() {
 		String id = ElasticUtils.index("rico", "{\"name\": \"三少爷\"}", "1");
 		System.out.println(id);
@@ -213,6 +227,12 @@ public class ElasticUtilsTest {
 				.add("users", asList("1", "2"))
 				.request();
 		results.forEach(System.out::println);
+	}
+	
+	@Test
+	public void testGetUsers() {
+		String users = ElasticUtils.get("users", 1);
+		System.out.println(users);
 	}
 	
 	@Test
@@ -910,5 +930,32 @@ public class ElasticUtilsTest {
 		ForceMergeResponse mergeResponse = future.get();
 		RestStatus status = mergeResponse.getStatus();
 		System.out.println(status);
+	}
+	
+	@Test
+	public void testSearchNotIndexedField() {
+		List<Object> users = ElasticUtils.Query
+				.matchQuery("users")
+				.query("mobile", "17895062189")
+				.queryForList();
+		users.forEach(System.out::println);
+	}
+	
+	@Test
+	public void testQueryMatchAll() {
+		List<Object> movies = ElasticUtils.Query
+				.matchAllQuery("movies", "404index")
+				.queryForList();
+		log.info("查询到{}条记录", movies.size());
+	}
+	
+	@Test
+	public void testSourceFiltering() {
+		List<Object> ecommerces = ElasticUtils.Query
+				.matchAllQuery("kibana_sample_data_ecommerce")
+				.sort("order_date:desc")
+				.includeSources("order_date")
+				.queryForList();
+		ecommerces.forEach(System.out::println);
 	}
 }

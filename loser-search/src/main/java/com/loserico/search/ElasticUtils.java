@@ -1,6 +1,7 @@
 package com.loserico.search;
 
 import com.loserico.common.lang.context.ThreadContext;
+import com.loserico.common.lang.resource.PropertyReader;
 import com.loserico.common.lang.transformer.Transformers;
 import com.loserico.common.lang.utils.IOUtils;
 import com.loserico.common.lang.utils.ReflectionUtils;
@@ -176,8 +177,8 @@ public final class ElasticUtils {
 	 * 创建一个新的文档, 返回新创建文档的ID
 	 * 对应REST API POST 方式
 	 *
-	 * @param index
-	 * @param doc
+	 * @param index 索引名
+	 * @param doc   哟啊保存的文档, 会自动通过Jackson序列化成JSON串
 	 * @return String 文档ID
 	 */
 	public static String index(String index, Object doc) {
@@ -209,11 +210,11 @@ public final class ElasticUtils {
 	}
 	
 	/**
-	 * 创建一个新的文档, 返回新创建文档的ID
+	 * 创建一个新的文档, 返回新创建文档的ID, 相同ID的文档如果已存在, Elasticsearch底层会先删掉该文档, 然后重新创建一个文档, 版本号+1
 	 * 对应REST API POST 方式
 	 *
-	 * @param index
-	 * @param doc
+	 * @param index 索引名
+	 * @param doc   要保存的文档
 	 * @return String 文档ID
 	 */
 	public static String index(String index, String doc, int id) {
@@ -224,8 +225,8 @@ public final class ElasticUtils {
 	 * 创建一个新的文档, 返回新创建文档的ID
 	 * 对应REST API POST 方式
 	 *
-	 * @param index
-	 * @param doc
+	 * @param index 索引名
+	 * @param doc   要保存的文档
 	 * @return String 文档ID
 	 */
 	public static String index(String index, Object doc, int id) {
@@ -236,8 +237,8 @@ public final class ElasticUtils {
 	 * 创建一个新的文档, 返回新创建文档的ID
 	 * 对应REST API POST 方式
 	 *
-	 * @param index
-	 * @param doc
+	 * @param index 索引名
+	 * @param doc   要保存的文档
 	 * @return String 文档ID
 	 */
 	public static String index(String index, Object doc, String id) {
@@ -364,6 +365,17 @@ public final class ElasticUtils {
 	 */
 	public static ElasticBulkUpdateBuilder bulkUpdate() {
 		return new ElasticBulkUpdateBuilder();
+	}
+	
+	/**
+	 * 根据ID获取文档
+	 *
+	 * @param index 索引名
+	 * @param id    文档id
+	 * @return T
+	 */
+	public static String get(String index, int id) {
+		return get(index, String.valueOf(id));
 	}
 	
 	/**
@@ -734,6 +746,18 @@ public final class ElasticUtils {
 	public static class Admin {
 		
 		/**
+		 * 默认读取classpath下elastic.properties文件
+		 */
+		private static PropertyReader propertyReader = new PropertyReader("elastic");
+		
+		private static final String USERNAME = "elastic.username";
+		private static final String PASSWORD = "elastic.password";
+		
+		
+		private static String username = propertyReader.getString(USERNAME);
+		private static String password = propertyReader.getString(PASSWORD);
+		
+		/**
 		 * 基于Entity上的注解信息创建索引
 		 *
 		 * @param entityClass 标注了@Index注解的POJO
@@ -906,10 +930,19 @@ public final class ElasticUtils {
 			for (String host : RestSupport.HOSTS) {
 				String result = "";
 				try {
-					result = HttpUtils.post(host + "/_template/" + templateName)
-							.body(templateContent)
-							.method(HttpMethod.PUT)
-							.request();
+					if (isBlank(username)) {
+						result = HttpUtils.post(host + "/_template/" + templateName)
+								.body(templateContent)
+								.method(HttpMethod.PUT)
+								.request();
+					} else {
+						result = HttpUtils.post(host + "/_template/" + templateName)
+								.body(templateContent)
+								.method(HttpMethod.PUT)
+								.basicAuth(username, password)
+								.request();
+						
+					}
 				} catch (Exception e) {
 					log.error("", e);
 					if (++tryCount == RestSupport.HOSTS.size()) {
@@ -1391,6 +1424,8 @@ public final class ElasticUtils {
 		
 		/**
 		 * Match Phrase Query查的是一个短语, 比如查title="one love", 那么title是"the one love"可以搜到, "one I love"搜不到
+		 * <p>
+		 * 在query里面的查询词必须是按照顺序出现的, slop 1表示King George之间可以插入一个其他的单词
 		 *
 		 * @param indices
 		 * @return

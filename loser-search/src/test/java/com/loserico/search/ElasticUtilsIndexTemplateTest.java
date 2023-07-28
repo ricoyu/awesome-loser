@@ -1,7 +1,12 @@
 package com.loserico.search;
 
 import com.loserico.common.lang.utils.IOUtils;
+import org.elasticsearch.cluster.metadata.IndexTemplateMetadata;
 import org.junit.Test;
+
+import java.util.Map;
+
+import static org.junit.Assert.*;
 
 /**
  * <p>
@@ -16,7 +21,20 @@ import org.junit.Test;
 public class ElasticUtilsIndexTemplateTest {
 	
 	@Test
+	public void testDeleteIndexTemplate() {
+		boolean deleted = ElasticUtils.Admin.deleteIndexTemplate("event_template2");
+		assertTrue(deleted);
+	}
+	
+	@Test
 	public void testCreateIndexTemplateByRestAPI() {
-		ElasticUtils.Admin.putIndexTemplate("event_template2", IOUtils.readClassPathFileAsString("index_template.json"));
+		boolean created = ElasticUtils.Admin.putIndexTemplate("event_template", IOUtils.readClassPathFileAsString("index_template.json"));
+		assertTrue(created);
+	}
+	
+	@Test
+	public void testGetIndexTemplate() {
+		Map<String, IndexTemplateMetadata> eventTemplate = ElasticUtils.Admin.getIndexTemplate("event_template");
+		System.out.println(eventTemplate);
 	}
 }
