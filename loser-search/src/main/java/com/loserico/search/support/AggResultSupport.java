@@ -127,6 +127,28 @@ public final class AggResultSupport {
 		return aggResults;
 	}
 	
+	public static <T> List<Map<String, T>> termsResult(Aggregation aggregation) {
+		List<Map<String, T>> aggResults = new ArrayList<>();
+		//TODO 直接强转((StringTerms) aggregation)是有问题的, 有些可能是LongTerms等
+		List<StringTerms.Bucket> buckets = ((StringTerms) aggregation).getBuckets();
+		
+		for (StringTerms.Bucket bucket : buckets) {
+			Map<String, T> result = new HashMap<>();
+			String key = bucket.getKeyAsString();
+			Long docCount = bucket.getDocCount();
+			log.debug("Bucket: {}, Doc Count: {}", key, docCount);
+			result.put(key, (T) docCount);
+			//没有子聚合的话subAggs也不会为null, 可以放心使用
+			Aggregations subAggs = bucket.getAggregations();
+			for (Aggregation subAgg : subAggs) {
+				result.put(subAgg.getName(), aggResult(subAgg));
+			}
+			aggResults.add(result);
+		}
+		
+		return aggResults;
+	}
+	
 	/**
 	 * 返回terms聚合总的桶数量
 	 * @param aggregations
@@ -208,6 +230,9 @@ public final class AggResultSupport {
 		}
 		if (aggregation instanceof InternalSum) {
 			return (T) aggResult((InternalSum) aggregation);
+		}
+		if (aggregation instanceof StringTerms) {
+			return (T)termsResult(aggregation);
 		}
 		
 		return null;
