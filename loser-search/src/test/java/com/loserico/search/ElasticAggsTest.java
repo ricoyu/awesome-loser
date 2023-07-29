@@ -258,9 +258,19 @@ public class ElasticAggsTest {
 	@Test
 	public void testDestCountrythenAvgThenWeather() {
 		List<Map<String, Object>> resultMap = Aggs.terms("kibana_sample_data_flights")
-				.of("flight_dest", "DestCountry")
+				.of("flight_dest", "DestCountry").size(2)
 				.subAggregation(avg("average_price", "AvgTicketPrice"))
 				.subAggregation(SubAggregations.terms("weather", "DestWeather"))
+				.get();
+		System.out.println(toPrettyJson(resultMap));
+	}
+	
+	@Test
+	public void testDestCountrythenStatsThenWeather() {
+		List<Map<String, Object>> resultMap = Aggs.terms("kibana_sample_data_flights")
+				.of("flight_dest", "DestCountry").size(2)
+				.subAggregation(SubAggregations.stats("state_price", "AvgTicketPrice"))
+				.subAggregation(SubAggregations.terms("weather", "DestWeather").size(5))
 				.get();
 		System.out.println(toPrettyJson(resultMap));
 	}

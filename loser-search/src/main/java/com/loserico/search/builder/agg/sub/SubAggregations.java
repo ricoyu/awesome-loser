@@ -24,6 +24,10 @@ public final class SubAggregations {
 		return new ElasticAvgSubAggregation(name, field);
 	}
 	
+	public static ElasticStatsSubAggregation stats(String name, String field) {
+		return new ElasticStatsSubAggregation(name, field);
+	}
+	
 	public static ElasticTermsSubAggregation terms(String name, String field) {
 		return new ElasticTermsSubAggregation(name, field);
 	}

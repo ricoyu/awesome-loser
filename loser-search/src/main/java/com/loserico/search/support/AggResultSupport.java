@@ -13,6 +13,7 @@ import org.elasticsearch.search.aggregations.metrics.InternalAvg;
 import org.elasticsearch.search.aggregations.metrics.InternalCardinality;
 import org.elasticsearch.search.aggregations.metrics.InternalMax;
 import org.elasticsearch.search.aggregations.metrics.InternalMin;
+import org.elasticsearch.search.aggregations.metrics.InternalStats;
 import org.elasticsearch.search.aggregations.metrics.InternalSum;
 import org.elasticsearch.search.aggregations.metrics.InternalTopHits;
 
@@ -127,6 +128,17 @@ public final class AggResultSupport {
 		return aggResults;
 	}
 	
+	public static  Map<String, Object> termsResult(InternalStats aggregation) {
+		Map<String, Object> aggResults = new HashMap<>();
+		aggResults.put("count", aggregation.getCount());
+		aggResults.put("min", aggregation.getMin());
+		aggResults.put("max", aggregation.getMax());
+		aggResults.put("avg", aggregation.getAvg());
+		aggResults.put("sum", aggregation.getSum());
+		
+		return aggResults;
+	}
+	
 	public static <T> List<Map<String, T>> termsResult(Aggregation aggregation) {
 		List<Map<String, T>> aggResults = new ArrayList<>();
 		//TODO 直接强转((StringTerms) aggregation)是有问题的, 有些可能是LongTerms等
@@ -233,6 +245,9 @@ public final class AggResultSupport {
 		}
 		if (aggregation instanceof StringTerms) {
 			return (T)termsResult(aggregation);
+		}
+		if (aggregation instanceof InternalStats) {
+			return (T)termsResult((InternalStats)aggregation);
 		}
 		
 		return null;
