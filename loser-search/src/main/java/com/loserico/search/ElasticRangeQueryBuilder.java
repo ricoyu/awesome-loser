@@ -26,6 +26,8 @@ public class ElasticRangeQueryBuilder extends BaseQueryBuilder implements BoolRa
 	
 	private Object lt;
 	
+	private boolean constantScore = false;
+	
 	public ElasticRangeQueryBuilder() {
 	}
 	
@@ -64,6 +66,11 @@ public class ElasticRangeQueryBuilder extends BaseQueryBuilder implements BoolRa
 		return this;
 	}
 	
+	public ElasticRangeQueryBuilder constantScore(boolean constantScore) {
+		this.constantScore = constantScore;
+		return this;
+	}
+	
 	public ElasticRangeQueryBuilder refresh(boolean refresh) {
 		this.refresh = refresh;
 		return this;
@@ -84,7 +91,11 @@ public class ElasticRangeQueryBuilder extends BaseQueryBuilder implements BoolRa
 			rangeQueryBuilder.lt(lt);
 		}
 		
-		return QueryBuilders.constantScoreQuery(rangeQueryBuilder);
+		if (constantScore) {
+			return QueryBuilders.constantScoreQuery(rangeQueryBuilder);
+		} else {
+			return rangeQueryBuilder;
+		}
 	}
-
+	
 }

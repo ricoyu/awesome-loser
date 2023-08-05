@@ -19,7 +19,7 @@ public class ConstantScoreQueryTest {
 	@Test
 	public void testTermConstantScore() {
 		List<Object> iphones = ElasticUtils.Query.termQuery("products")
-				.query("desc", "iphone")
+				.query("productID.keyword", "XHDK-A-1293-#fJ3")
 				.constantScore(true)
 				.includeSources("desc")
 				.queryForList();

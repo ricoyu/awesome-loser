@@ -64,6 +64,7 @@ import static com.loserico.search.enums.FieldType.KEYWORD;
 import static com.loserico.search.enums.FieldType.TEXT;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.elasticsearch.index.query.MultiMatchQueryBuilder.Type.BEST_FIELDS;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.elasticsearch.search.suggest.SortBy.FREQUENCY;
 import static org.elasticsearch.search.suggest.term.TermSuggestionBuilder.StringDistanceImpl.INTERNAL;
@@ -433,7 +434,7 @@ public class ElasticUtilsTest {
 	public void testMultiMatchQuery() {
 		MultiMatchQueryBuilder multiMatchQueryBuilder = multiMatchQuery("Quick pets", "title", "body")
 				.tieBreaker(0.2f)
-				.type(MultiMatchQueryBuilder.Type.BEST_FIELDS)
+				.type(BEST_FIELDS)
 				.minimumShouldMatch("20%");
 		List<Object> blogs = ElasticUtils.Query.query("blogs")
 				.queryBuilder(multiMatchQueryBuilder)

@@ -564,6 +564,11 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 				.setIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN) //要搜索的index不存在时不报错
 				.setTrackTotalHits(true) //查询返回的totalHits默认最大值是10000, 如果查到的数据超过10000, 那么拿到的totalHits就不准了, 加上这个配置解决这个问题
 				.setQuery(builder());
+		if (this instanceof Highlightable) {
+			searchRequestBuilder.highlighter(((Highlightable)this).toHighlightBuilder());
+		}
+		
+		logDsl(searchRequestBuilder);
 		
 		sortOrders.forEach(sortOrder -> sortOrder.addTo(searchRequestBuilder));
 		

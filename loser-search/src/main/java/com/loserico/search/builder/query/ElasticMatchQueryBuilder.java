@@ -208,7 +208,7 @@ public class ElasticMatchQueryBuilder extends BaseQueryBuilder implements MatchQ
 	 * @param boost
 	 * @return ElasticMatchQueryBuilder
 	 */
-	public ElasticMatchQueryBuilder boost(float boost) {
+	public BoolMatchQuery boost(float boost) {
 		this.boost = boost;
 		return this;
 	}
@@ -327,6 +327,8 @@ public class ElasticMatchQueryBuilder extends BaseQueryBuilder implements MatchQ
 			if (constantScore) {
 				return QueryBuilders.constantScoreQuery(matchQueryBuilder);
 			}
+			
+			matchQueryBuilder.boost(boost);
 			return matchQueryBuilder;
 		}
 		

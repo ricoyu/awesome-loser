@@ -83,7 +83,7 @@ public class ElasticBoolQueryBuilder extends BaseQueryBuilder {
 		return this;
 	}
 	
-	public BoolQuery term(String field, Object value) {
+	public BoolTermQuery term(String field, Object value) {
 		ElasticTermQueryBuilder termQueryBuilder = new ElasticTermQueryBuilder();
 		termQueryBuilder.query(field, value);
 		ReflectionUtils.setField("boolQueryBuilder", termQueryBuilder, this);

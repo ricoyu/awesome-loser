@@ -37,6 +37,7 @@ import com.loserico.search.builder.query.ElasticIdsQueryBuilder;
 import com.loserico.search.builder.query.ElasticMatchAllQueryBuilder;
 import com.loserico.search.builder.query.ElasticMatchPhraseQueryBuilder;
 import com.loserico.search.builder.query.ElasticMatchQueryBuilder;
+import com.loserico.search.builder.query.ElasticMultiMatchQueryBuilder;
 import com.loserico.search.builder.query.ElasticQueryStringBuilder;
 import com.loserico.search.builder.query.ElasticTemplateQueryBuilder;
 import com.loserico.search.builder.query.ElasticTermQueryBuilder;
@@ -1493,8 +1494,8 @@ public final class ElasticUtils {
 		 *
 		 * @param indices
 		 */
-		public static void multiMatch(String... indices) {
-			
+		public static ElasticMultiMatchQueryBuilder multiMatch(String... indices) {
+			return new ElasticMultiMatchQueryBuilder(indices);
 		}
 		
 		/**

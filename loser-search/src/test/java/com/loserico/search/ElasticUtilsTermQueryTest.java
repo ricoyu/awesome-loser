@@ -6,6 +6,7 @@ import org.junit.Test;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.Assert.*;
 
 /**
  * <p>
@@ -41,5 +42,28 @@ public class ElasticUtilsTermQueryTest {
 				.query("desc", "iphone")
 				.queryForList();
 		assertThat(products.size()).isEqualTo(1);
+	}
+	
+	@Test
+	public void testTermQueryProducts() {
+		ElasticUtils.Query.termQuery("products")
+				.query("avaliable", true)
+				.queryForList();
+	}
+	
+	@Test
+	public void testTermQueryConstantScoreProducts() {
+		ElasticUtils.Query.termQuery("products")
+				.query("avaliable", true)
+				.constantScore(true)
+				.queryForList();
+	}
+	
+	@Test
+	public void testQueryMovies2() {
+		long count = Query.termQuery("movies2")
+				.query("genre.keyword", "Comedy")
+				.queryForCount();
+		assertEquals(count, 2);
 	}
 }

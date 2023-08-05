@@ -7,8 +7,10 @@ import com.loserico.search.cache.ElasticCacheUtils;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.document.DocumentField;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -42,6 +44,21 @@ public final class SearchHitsSupport {
 	 */
 	@SuppressWarnings({"unchecked"})
 	public static <T> List<T> toList(SearchHit[] hits, Class resultType) {
+		List<String> highResults = new ArrayList<>();
+		for (int i = 0; i < hits.length; i++) {
+			SearchHit hit = hits[i];
+			Map<String, HighlightField> highlightFieldMap = hit.getHighlightFields();
+			if (highlightFieldMap != null && !highlightFieldMap.isEmpty()) {
+				Map<String, String> resultMap = new HashMap<>();
+				for (String field : highlightFieldMap.keySet()) {
+					HighlightField highlightField = highlightFieldMap.get(field);
+					resultMap.put(field, Arrays.toString(highlightField.getFragments()));
+					highResults.add(JacksonUtils.toJson(resultMap));
+					return (List<T>) highResults;
+				}
+			}
+			String source = hit.getSourceAsString();
+		}
 		if (resultType == null) {
 			return (List<T>) Arrays.stream(hits)
 					.map(SearchHit::getSourceAsString)

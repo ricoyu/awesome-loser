@@ -14,7 +14,9 @@ import org.elasticsearch.index.query.QueryBuilders;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
-public class ElasticExistsQueryBuilder extends BaseQueryBuilder implements BoolQuery{
+public class ElasticExistsQueryBuilder extends BaseQueryBuilder implements BoolQuery {
+	
+	private boolean constantScore = false;
 	
 	public ElasticExistsQueryBuilder() {
 	}
@@ -25,6 +27,7 @@ public class ElasticExistsQueryBuilder extends BaseQueryBuilder implements BoolQ
 	
 	/**
 	 * 返回存在该字段的文档
+	 *
 	 * @param field
 	 * @return ElasticExistsQueryBuilder
 	 */
@@ -33,9 +36,18 @@ public class ElasticExistsQueryBuilder extends BaseQueryBuilder implements BoolQ
 		return this;
 	}
 	
+	public ElasticExistsQueryBuilder constantScore(boolean constantScore) {
+		this.constantScore = constantScore;
+		return this;
+	}
+	
 	@Override
 	protected QueryBuilder builder() {
 		ExistsQueryBuilder queryBuilder = QueryBuilders.existsQuery(field);
-		return QueryBuilders.constantScoreQuery(queryBuilder);
+		if (constantScore) {
+			return QueryBuilders.constantScoreQuery(queryBuilder);
+		} else {
+			return queryBuilder;
+		}
 	}
 }

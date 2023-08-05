@@ -204,7 +204,21 @@ public final class ElasticContextSuggestBuilder {
 	}
 	
 	/**
-	 * 要实现自动完成的字段, Mapping中type是completion
+	 * 要实现自动完成的字段, Mapping中type是completion, 比如下面的Mapping的话就是 comment_autocomplete
+	 * <pre>
+	 * PUT comments/_mapping
+	 * {
+	 *   "properties": {
+	 *     "comment_autocomplete": {
+	 *       "type": "completion", 
+	 *       "contexts": [{
+	 *         "type": "category", 
+	 *         "name": "comment_category"
+	 *       }]
+	 *     }
+	 *   }
+	 * }
+	 * </pre>
 	 *
 	 * @param field
 	 * @return

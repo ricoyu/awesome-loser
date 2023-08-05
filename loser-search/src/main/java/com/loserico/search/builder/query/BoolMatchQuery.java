@@ -16,6 +16,8 @@ public interface BoolMatchQuery extends BoolQuery{
 	
 	public MatchQuery operator(Operator operator);
 	
+	public BoolMatchQuery boost(float boost);
+	
 	public MatchQuery minimumShouldMatch(int minimumShouldMatch);
 	
 	public MatchQuery minimumShouldMatch(String minimumShouldMatch);

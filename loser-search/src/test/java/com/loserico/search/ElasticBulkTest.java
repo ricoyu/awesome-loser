@@ -10,6 +10,7 @@ import org.junit.Test;
 import java.math.BigDecimal;
 import java.util.List;
 
+import static com.loserico.json.jackson.JacksonUtils.toJson;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.*;
@@ -86,5 +87,15 @@ public class ElasticBulkTest {
 		private Gender gender;
 		
 		private BigDecimal salary;
+	}
+	
+	@Test
+	public void testBUlkIndex() {
+		BulkResult bulkResult = ElasticUtils.bulkIndex("products")
+				.docs("{\"productID\": \"XHDK-A-1293-#fJ3\", \"desc\": \"iPhone\"}",
+						"{\"productID\": \"KDKE-B-9947-#kL5\", \"desc\": \"iPad\"}",
+						"{\"productID\": \"JODL-X-1937-#pV7\", \"desc\": \"MBP\"}")
+				.execute();
+		System.out.println(toJson(bulkResult));
 	}
 }

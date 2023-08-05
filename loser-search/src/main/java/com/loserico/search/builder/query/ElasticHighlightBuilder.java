@@ -2,7 +2,7 @@ package com.loserico.search.builder.query;
 
 /**
  * <p>
- * Copyright: (C), 2021-06-13 15:33
+ * Copyright: (C), 2023-08-03 19:41
  * <p>
  * <p>
  * Company: Sexy Uncle Inc.
@@ -10,7 +10,5 @@ package com.loserico.search.builder.query;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
-public interface BoolTermQuery extends BoolQuery {
-	
-	public BoolTermQuery boost(float boost);
+public class ElasticHighlightBuilder {
 }

@@ -14,6 +14,9 @@
     <logger name="com.loserico.networking.builder.AbstractRequestBuilder" level="debug"/>
     <logger name="com.loserico.networking.builder.JsonRequestBuilder" level="debug"/>
     <logger name="com.loserico.networking.builder.FormRequestBuilder" level="debug"/>
+    <logger name="com.loserico.search.builder.query.BaseQueryBuilder" level="debug"/>
+    <logger name="com.loserico.search.builder.ElasticQueryBuilder" level="debug"/>
+    <logger name="com.loserico.search.builder.ElasticSuggestBuilder" level="debug"/>
 
     <root level="INFO">
         <appender-ref ref="STDOUT" />

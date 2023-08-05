@@ -25,7 +25,12 @@ import java.util.List;
  * @version 1.0
  */
 @Slf4j
-public final class ElasticTermQueryBuilder extends BaseQueryBuilder {
+public final class ElasticTermQueryBuilder extends BaseQueryBuilder implements BoolTermQuery {
+	
+	/**
+	 * 提升或者降低查询的权重
+	 */
+	protected float boost = 1f;
 	
 	public ElasticTermQueryBuilder(String... indices) {
 		super(indices);
@@ -223,6 +228,7 @@ public final class ElasticTermQueryBuilder extends BaseQueryBuilder {
 		if (constantScore) {
 			return QueryBuilders.constantScoreQuery(termQueryBuilder);
 		}
+		termQueryBuilder.boost(boost);
 		
 		return termQueryBuilder;
 	}
