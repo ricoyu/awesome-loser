@@ -312,6 +312,214 @@ List<Object> movies = ElasticUtils.Query
 
 
 
+### 2.1.10 Disjunction Max Query
+
+分离最大化查询(Disjunction Max Query)指的是: 将任何与任一查询匹配的文档作为结果返回, 但只将最佳匹配的评分作为查询的评分结果返回
+
+
+
+```json
+POST blogs/_search
+{
+  "query": {
+    "dis_max": {
+      "queries": [
+        {"match": {"title": "Quick fox"}}, 
+        {"match": {"body": "Quick fox"}}  
+      ]
+    }
+  }
+}
+```
+
+对应ElasticUtils API
+
+```java
+DisMaxQueryBuilder queryBuilder = disMaxQuery()
+				.add(matchQuery("title", "Brown fox"))
+				.add(matchQuery("body", "Brown fox"));
+		queryBuilder.tieBreaker(0f);
+		List<String> blogs = ElasticUtils.Query.query("blogs")
+				.queryBuilder(queryBuilder)
+				.queryForList();
+```
+
+
+
+### 2.1.11 Tie Breaker 最佳字段查询调优
+
+Tie Breaker是一个介于0-1之间的浮点数, 0代表使用最佳匹配; 1代表所有语句同等重要
+
+```
+POST blogs/_search
+{
+  "query": {
+    "dis_max": {
+      "tie_breaker": 0.2,
+      "queries": [
+        {"match": {"title": "Quick pets"}},
+        {"match": {"body": "Quick pets"}}
+      ]
+    }
+  }
+}
+```
+
+对应ElasticUtils API
+
+```java
+DisMaxQueryBuilder queryBuilder = disMaxQuery()
+    .tieBreaker(0.2f)
+    .add(matchQuery("title", "Quick pets"))
+    .add(matchQuery("body", "Quick pets"));
+List<Object> blogs = ElasticUtils.Query
+    .query("blogs")
+    .queryBuilder(queryBuilder)
+    .queryForList();
+```
+
+### 2.1.12 Multi Match Query
+
+1. 最佳字段(Best Fields)
+
+   当字段之间相互竞争, 有相互关联, 例如title和body这样的字段, 评分来自最匹配字段
+
+2. 多数字段(Most Fields)
+
+   处理英文内容时: 一种常见的手段是是, 在主字段(English Analyzer), 抽取词干, 加入同义词, 以匹配更多的文档. 相同的文本, 加入子字段(Standard Analyzer), 以提供更精确的匹配. 其他字段作为匹配文档提高相关度的信号. 匹配字段越多则越好
+
+3. 混合字段(Cross Field)
+
+   对于某些实体, 例如人名, 地址, 图书信息. 需要在多个字段中确定信息, 单个字段只能作为整体的一部分. 希望在任何这些列出的字段中找到尽可能多的词
+
+#### 1) best_fields 
+
+```json
+POST blogs/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "Quick pets",
+      "type": "best_fields", 
+      "fields": ["title", "body"], 
+      "tie_breaker": 0.2, 
+      "minimum_should_match": "20%"
+    }
+  }
+}
+```
+
+* multi_match 声明这是一个Multi Match Query
+
+* query       提供一个查询的语句
+
+* fields      查询语句要匹配到哪些字段上
+
+* type
+
+  * best_fields 默认类型, 最佳字段, 可以不指定
+
+    表示会在fields指定的字段中取一个评分最高的作为一个返回结果
+
+  * most_fields 多数字段
+
+  * cross_fields 跨字段
+
+对应ElasticUtils API
+
+```java
+List<Object> movies = ElasticUtils.Query
+        .multiMatch("blogs")
+        .query("Quick pets")
+        .size(1)
+        .includeSources("title", "overview")
+        .queryForList();
+```
+
+#### 2) Most_fields
+
+对多个字段上的算分进行累加
+
+1. 英文分词器, 导致精确度降低, 时态信息丢失
+
+   ```json
+   DELETE titles
+   PUT titles
+   {
+     "mappings": {
+       "properties": {
+         "title":{
+           "type": "text",
+           "analyzer": "english"
+         }
+       }
+     }
+   }
+   
+   PUT titles/_bulk
+   {"index":{"_id":1}}
+   {"title":"My Dog barks"}
+   {"index":{"_id":2}}
+   {"title":"I see a lot of barking dogs  on the road"}
+   ```
+
+   下面这个查询文档1排在前面, 但实际应该文档2更匹配, 应该排在前面
+
+   ```json
+   POST titles/_search
+   {
+     "query": {
+       "match": {
+         "title": "barking dogs"
+       }
+     }
+   }
+   ```
+
+   对应ElasticUtils API
+
+   ```java
+   MultiMatchQueryBuilder queryBuilder = multiMatchQuery("barking dogs", "title")
+       .type(MOST_FIELDS);
+   List<Object> titles = ElasticUtils.Query
+       .query("titles")
+       .queryBuilder(queryBuilder)
+       .queryForList();
+   ```
+
+
+
+
+#### 3 跨字段搜索 cross_fields
+
+```json
+POST address/_doc/1
+{
+ "street": "5 Poland Street", 
+ "city": "Lodon", 
+ "country": "United Kingdom", 
+ "postcode": "W1V 3DG"
+}
+POST address/_doc/2
+{
+ "street": "5 Poland Street", 
+ "city": "Berminhan", 
+ "country": "United Kingdom", 
+ "postcode": "W2V 3DG"
+}
+```
+
+```java
+MultiMatchQueryBuilder queryBuilder = multiMatchQuery("Poland Street W1V", "street", "city", "country", "postcode")
+    .type(MOST_FIELDS);
+List<Object> addresses = ElasticUtils.Query
+    .query("address")
+    .queryBuilder(queryBuilder)
+    .queryForList();
+```
+
+
+
 
 
 ## 2.2 聚合
