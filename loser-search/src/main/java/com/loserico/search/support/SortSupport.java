@@ -1,5 +1,6 @@
 package com.loserico.search.support;
 
+import com.loserico.search.enums.Direction;
 import com.loserico.search.enums.SortOrder;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,6 +32,7 @@ public final class SortSupport {
 	 *     <li/>-name,year:desc
 	 * </ul>
 	 * 字段名前面-表示desc降序
+	 *
 	 * @param sort
 	 * @return List<SortOrder>
 	 */
@@ -79,7 +81,18 @@ public final class SortSupport {
 					direction = "asc";
 				}
 			}
-			SortOrder sortOrder = SortOrder.fieldSort(field).direction(direction);
+			
+			SortOrder sortOrder = null;
+			if ("_score".equals(field)) {
+				SortOrder.SortOrderBuilder scoreSort = SortOrder.scoreSort();
+				if (Direction.ASC.name().equalsIgnoreCase(direction)) {
+					sortOrder = scoreSort.asc();
+				} else if (Direction.DESC.name().equalsIgnoreCase(direction)) {
+					sortOrder = scoreSort.desc();
+				}
+			} else {
+				sortOrder = SortOrder.fieldSort(field).direction(direction);
+			}
 			sortOrders.add(sortOrder);
 		}
 		
