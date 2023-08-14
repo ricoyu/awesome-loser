@@ -243,11 +243,22 @@ public class ElasticUriQueryBuilder {
 	 * @param size
 	 * @return QueryStringQueryBuilder
 	 */
-	public ElasticUriQueryBuilder page(Integer from, Integer size) {
+	public ElasticUriQueryBuilder paging(Integer from, Integer size) {
 		notNull(from, "from cannot be null!");
 		notNull(size, "size cannot be null!");
 		this.from = from;
 		this.size = size;
+		return this;
+	}
+	
+	/**
+	 * 从第几条记录开始, 第一条记录是1
+	 *
+	 * @param from 从第几页开始
+	 * @return ElasticMatchQueryBuilder
+	 */
+	public ElasticUriQueryBuilder from(int from) {
+		this.from = from;
 		return this;
 	}
 	

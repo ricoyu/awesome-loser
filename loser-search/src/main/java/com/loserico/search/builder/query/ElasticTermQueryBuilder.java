@@ -62,6 +62,17 @@ public final class ElasticTermQueryBuilder extends BaseQueryBuilder implements B
 	}
 	
 	/**
+	 * 从第几条记录开始, 第一条记录是1
+	 *
+	 * @param from 从第几页开始
+	 * @return ElasticMatchQueryBuilder
+	 */
+	public ElasticTermQueryBuilder from(int from) {
+		this.from = from;
+		return this;
+	}
+	
+	/**
 	 * ES默认只返回10条数据, 这里可以指定返回多少条数据<p>
 	 * 通过Search After分页时第一次需要设置size<p>
 	 * 深度分页时推荐用Search After

@@ -142,6 +142,16 @@ public class ElasticMultiMatchQueryBuilder extends BaseQueryBuilder implements H
 		return this;
 	}
 	
+	/**
+	 * 从第几条记录开始, 第一条记录是1
+	 *
+	 * @param from 从第几页开始
+	 * @return ElasticMatchQueryBuilder
+	 */
+	public ElasticMultiMatchQueryBuilder from(int from) {
+		this.from = from;
+		return this;
+	}
 	
 	/**
 	 * ES默认只返回10条数据, 这里可以指定返回多少条数据<p>

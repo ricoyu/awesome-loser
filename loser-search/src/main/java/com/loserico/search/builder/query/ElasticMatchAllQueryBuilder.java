@@ -9,6 +9,7 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * <p>
@@ -29,7 +30,7 @@ public class ElasticMatchAllQueryBuilder extends BaseQueryBuilder {
 	/**
 	 * 设置分页属性, 深度分页建议用Search After
 	 *
-	 * @param from
+	 * @param from 从第几页开始, 页码从1开始算
 	 * @param size
 	 * @return ElasticMatchQueryBuilder
 	 */
@@ -49,6 +50,18 @@ public class ElasticMatchAllQueryBuilder extends BaseQueryBuilder {
 	 */
 	public ElasticMatchAllQueryBuilder size(int size) {
 		this.size = size;
+		return this;
+	}
+	
+	
+	/**
+	 * 从第几条记录开始, 第一条记录是1
+	 *
+	 * @param from 从第几页开始
+	 * @return ElasticMatchQueryBuilder
+	 */
+	public ElasticMatchAllQueryBuilder from(int from) {
+		this.from = from;
 		return this;
 	}
 	
@@ -95,6 +108,18 @@ public class ElasticMatchAllQueryBuilder extends BaseQueryBuilder {
 	 */
 	public ElasticMatchAllQueryBuilder searchAfter(Object[] searchAfter) {
 		this.searchAfter = searchAfter;
+		return this;
+	}
+	
+	/**
+	 * Scroll API
+	 * @param scrollWindow Scroll查询的时间窗口
+	 * @param timeUnit scrollWindow的单位, 最终scrollWindow会转成毫秒数s
+	 * @return
+	 */
+	@Override
+	public ElasticMatchAllQueryBuilder scroll(long scrollWindow, TimeUnit timeUnit) {
+		super.scroll(scrollWindow, timeUnit);
 		return this;
 	}
 	

@@ -59,7 +59,7 @@ public final class SearchHitsSupport {
 			}
 			String source = hit.getSourceAsString();
 		}
-		if (resultType == null) {
+		if (resultType == null || resultType == String.class) {
 			return (List<T>) Arrays.stream(hits)
 					.map(SearchHit::getSourceAsString)
 					.collect(Collectors.toList());

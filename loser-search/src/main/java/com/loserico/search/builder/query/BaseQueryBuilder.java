@@ -11,12 +11,15 @@ import com.loserico.search.enums.SortOrder.SortOrderBuilder;
 import com.loserico.search.exception.DocumentDeleteException;
 import com.loserico.search.support.SearchHitsSupport;
 import com.loserico.search.vo.ElasticPage;
+import com.loserico.search.vo.ElasticScroll;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.lucene.search.TotalHits;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchScrollRequestBuilder;
 import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.common.lucene.search.function.CombineFunction;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilder;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
@@ -34,7 +37,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.elasticsearch.common.lucene.search.function.CombineFunction.MULTIPLY;
 
 /**
@@ -146,6 +151,20 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 	protected Object[] searchAfter;
 	
 	/**
+	 * Scroll查询的时间窗口
+	 */
+	protected Long scrollWindow;
+	
+	/**
+	 * Scroll查询的时间窗口单位
+	 */
+	protected TimeUnit timeUnit;
+	
+	/**
+	 * 上一次查询拿到的scrollId
+	 */
+	protected String scrollId;
+	/**
 	 * 是否强制刷新
 	 */
 	protected Boolean refresh;
@@ -180,7 +199,7 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 		return this;
 	}
 	
-/*	*//**
+	/*	*//**
 	 * 添加排序规则<p>
 	 * sort格式: 字段1:asc,字段2:desc,字段3<p>
 	 * 其中字段3按升序排(ASC)<p>
@@ -196,8 +215,8 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 		}
 		
 		*//*
-		 * 先把 name,age:asc,year:desc 这种形式的排序字符串用,拆开
-		 *//*
+	 * 先把 name,age:asc,year:desc 这种形式的排序字符串用,拆开
+	 *//*
 		String[] sorts = split(sort, ",");
 		for (int i = 0; i < sorts.length; i++) {
 			String s = sorts[i];
@@ -415,6 +434,42 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 	}
 	
 	/**
+	 * Scroll API
+	 * 在第一次调用的时候传入一个Scroll存活的时间
+	 * 基于这一次请求创建一个快照, 带来的问题是有新的数据写入后, 无法被查到
+	 * 每次查询后, 输入上次的Scroll Id
+	 * @return
+	 * @param <T>
+	 */
+	public <T> ElasticScroll<T> queryForScroll() {
+		SearchResponse response = searchResponse();
+		Long total = response.getHits().getTotalHits().value;
+		SearchHit[] hits = response.getHits().getHits();
+		
+		if (hits.length == 0) {
+			return ElasticScroll.emptyResult();
+		}
+		
+		//拿到本次的scroll
+		String scrollId = response.getScrollId();
+		//本次查询得到结果集
+		List<T> results = SearchHitsSupport.toList(hits, resultType);
+		
+		ElasticScroll<T> elasticScroll = ElasticScroll.<T>builder()
+				.results(results)
+				.scrollId(scrollId)
+				.build();
+		if (size != null) {
+			elasticScroll.setPageSize(size);
+		}
+		if (from != null) {
+			elasticScroll.setCurrentPage(from);
+		}
+		elasticScroll.setTotalCount(total.intValue());
+		return elasticScroll;
+	}
+	
+	/**
 	 * 执行查询, 返回一条记录
 	 *
 	 * @param <T>
@@ -523,6 +578,7 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 	
 	/**
 	 * 根据查询条件来删除
+	 *
 	 * @return long 删除的文档数量
 	 */
 	public long delete() {
@@ -543,7 +599,7 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 		} catch (Exception e) {
 			log.error("", e);
 			throw new DocumentDeleteException(e);
-		} 
+		}
 		
 		return bulkByScrollResponse.getDeleted();
 	}
@@ -560,54 +616,62 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 	}
 	
 	private SearchResponse searchResponse() {
-		SearchRequestBuilder searchRequestBuilder = ElasticUtils.CLIENT.prepareSearch(indices)
-				.setIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN) //要搜索的index不存在时不报错
-				.setTrackTotalHits(true) //查询返回的totalHits默认最大值是10000, 如果查到的数据超过10000, 那么拿到的totalHits就不准了, 加上这个配置解决这个问题
-				.setQuery(builder());
-		if (this instanceof Highlightable) {
-			searchRequestBuilder.highlighter(((Highlightable)this).toHighlightBuilder());
-		}
-		
-		logDsl(searchRequestBuilder);
-		
-		sortOrders.forEach(sortOrder -> sortOrder.addTo(searchRequestBuilder));
-		
-		/*
-		 * Search After 避免深度分页, 如果用search after, 不需要指定from了
-		 */
-		if (searchAfter != null && searchAfter.length > 0) {
-			searchRequestBuilder.searchAfter(searchAfter);
+		if (isNotBlank(scrollId)) {
+			SearchScrollRequestBuilder searchRequestBuilder =
+					ElasticUtils.CLIENT.prepareSearchScroll(scrollId);
+			return searchRequestBuilder.get();
 		} else {
-			Integer firstResult = getFirstResult();
-			if (firstResult != null) {
-				searchRequestBuilder.setFrom(firstResult);
+			SearchRequestBuilder searchRequestBuilder = ElasticUtils.CLIENT.prepareSearch(indices)
+					.setIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN) //要搜索的index不存在时不报错
+					.setTrackTotalHits(true) //查询返回的totalHits默认最大值是10000, 如果查到的数据超过10000, 那么拿到的totalHits就不准了, 加上这个配置解决这个问题
+					.setQuery(builder());
+			if (scrollWindow != null) {
+				searchRequestBuilder.setScroll(new TimeValue(timeUnit.toMillis(scrollWindow)));
 			}
-		}
-		
-		if (size != null) {
-			searchRequestBuilder.setSize(size);
-		}
-		
-		if (includeSource != null && includeSource.length > 0 || excludeSource != null && excludeSource.length > 0) {
-			searchRequestBuilder.setFetchSource(includeSource, excludeSource);
-		} else {
-			searchRequestBuilder.setFetchSource(fetchSource);
-		}
-		
-		if (!scriptFields.isEmpty()) {
-			for (Map.Entry<String, String> entry : scriptFields.entrySet()) {
-				searchRequestBuilder.addScriptField(entry.getKey(), new Script(entry.getValue()));
+			if (this instanceof Highlightable) {
+				searchRequestBuilder.highlighter(((Highlightable) this).toHighlightBuilder());
 			}
+			//logDsl(searchRequestBuilder);
+			sortOrders.forEach(sortOrder -> sortOrder.addTo(searchRequestBuilder));
+			
 			/*
-			 * 设置了script_fields后, 对应的fields是单独返回的, 不是放在_source里面的
-			 * 所以_source就不要取了
+			 * Search After 避免深度分页, 如果用search after, 不需要指定from了
 			 */
-			searchRequestBuilder.setFetchSource(false);
+			if (searchAfter != null && searchAfter.length > 0) {
+				searchRequestBuilder.searchAfter(searchAfter);
+			} else {
+				Integer firstResult = getFirstResult();
+				if (firstResult != null) {
+					searchRequestBuilder.setFrom(firstResult);
+				}
+			}
+			
+			if (size != null) {
+				searchRequestBuilder.setSize(size);
+			}
+			
+			if (includeSource != null && includeSource.length > 0 || excludeSource != null && excludeSource.length > 0) {
+				searchRequestBuilder.setFetchSource(includeSource, excludeSource);
+			} else {
+				searchRequestBuilder.setFetchSource(fetchSource);
+			}
+			
+			if (!scriptFields.isEmpty()) {
+				for (Map.Entry<String, String> entry : scriptFields.entrySet()) {
+					searchRequestBuilder.addScriptField(entry.getKey(), new Script(entry.getValue()));
+				}
+				/*
+				 * 设置了script_fields后, 对应的fields是单独返回的, 不是放在_source里面的
+				 * 所以_source就不要取了
+				 */
+				searchRequestBuilder.setFetchSource(false);
+			}
+			if (log.isDebugEnabled()) {
+				log.debug("Query DSL:\n{}", new JSONObject(searchRequestBuilder.toString()).toString(2));
+			}
+			return searchRequestBuilder.get();
 		}
-		if (log.isDebugEnabled()) {
-			log.debug("Query DSL:\n{}", new JSONObject(searchRequestBuilder.toString()).toString(2));
-		}
-		return searchRequestBuilder.get();
+		
 	}
 	
 	protected static void notNull(Object obj, String msg) {
@@ -640,6 +704,31 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 		boolQueryBuilder.filter(builder());
 		return boolQueryBuilder;
 	}
+	
+	/**
+	 * Scroll APIA
+	 *
+	 * @param scrollWindow Scroll查询的时间窗口
+	 * @param timeUnit     scrollWindow的单位, 最终scrollWindow会转成毫秒数s
+	 * @return
+	 */
+	protected BaseQueryBuilder scroll(long scrollWindow, TimeUnit timeUnit) {
+		this.scrollWindow = scrollWindow;
+		this.timeUnit = timeUnit;
+		return this;
+	}
+	
+	/**
+	 * Scroll APIA
+	 *
+	 * @param scrollId 上一次scroll查询拿到的ScrollId
+	 * @return
+	 */
+	protected BaseQueryBuilder scrollId(String scrollId) {
+		this.scrollId = scrollId;
+		return this;
+	}
+	
 	
 	protected void logDsl(SearchRequestBuilder builder) {
 		if (log.isDebugEnabled()) {
