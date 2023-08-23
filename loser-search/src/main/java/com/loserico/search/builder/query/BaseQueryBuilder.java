@@ -29,6 +29,7 @@ import org.elasticsearch.index.reindex.DeleteByQueryRequestBuilder;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.json.JSONObject;
 
 import java.lang.reflect.Field;
@@ -67,6 +68,16 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 	 */
 	protected String field;
 	
+	/**
+	 * 支持简单的字段高亮显示
+	 */
+	protected String highlightField;
+	
+	/**
+	 * 对应_source不存储, 每个字段单独设置store=true时,
+	 * Search时提供的stored_fields参数
+	 */
+	protected String[] storedFields;
 	/**
 	 * 要查询的值
 	 */
@@ -307,6 +318,29 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 	}
 	
 	/**
+	 * 设置高亮显示某个字段
+	 *
+	 * @param highlightField
+	 * @return BaseQueryBuilder
+	 */
+	public BaseQueryBuilder highlightField(String highlightField) {
+		this.highlightField = highlightField;
+		return this;
+	}
+	
+	/**
+	 * 对应_source不存储, 每个字段单独设置store=true时,
+	 * Search时提供的stored_fields参数
+	 *
+	 * @param storedFields
+	 * @return
+	 */
+	public BaseQueryBuilder storedFields(String... storedFields) {
+		this.storedFields = storedFields;
+		return this;
+	}
+	
+	/**
 	 * 脚本字段查询
 	 *
 	 * @param fieldName
@@ -438,8 +472,9 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 	 * 在第一次调用的时候传入一个Scroll存活的时间
 	 * 基于这一次请求创建一个快照, 带来的问题是有新的数据写入后, 无法被查到
 	 * 每次查询后, 输入上次的Scroll Id
-	 * @return
+	 *
 	 * @param <T>
+	 * @return
 	 */
 	public <T> ElasticScroll<T> queryForScroll() {
 		SearchResponse response = searchResponse();
@@ -630,6 +665,16 @@ public abstract class BaseQueryBuilder implements BoolQuery {
 			}
 			if (this instanceof Highlightable) {
 				searchRequestBuilder.highlighter(((Highlightable) this).toHighlightBuilder());
+			}
+			if (highlightField != null) {
+				HighlightBuilder highlightBuilder = new HighlightBuilder();
+				HighlightBuilder.Field field = new HighlightBuilder.Field(highlightField);
+				highlightBuilder.field(field);
+				searchRequestBuilder.highlighter(highlightBuilder);
+			}
+			
+			if (this.storedFields != null) {
+				searchRequestBuilder.storedFields(this.storedFields);
 			}
 			//logDsl(searchRequestBuilder);
 			sortOrders.forEach(sortOrder -> sortOrder.addTo(searchRequestBuilder));

@@ -103,4 +103,14 @@ public class MatchQueryTest {
 		titles2.forEach(System.out::println);
 	}
 
+	
+	@Test
+	public void testMatchStoredFields() {
+		List<Object> books = ElasticUtils.Query.matchQuery("books")
+				.query("content", "searching")
+				.highlightField("content")
+				.storedFields("title", "author", "public_date")
+				.queryForList();
+		books.forEach(System.out::println);
+	}
 }

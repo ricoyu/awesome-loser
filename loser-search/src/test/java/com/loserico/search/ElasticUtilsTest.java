@@ -109,9 +109,11 @@ public class ElasticUtilsTest {
 	
 	@Test
 	public void testCreateDoc() {
-		//String id = ElasticUtils.index("rico", "{\"name\": \"三少爷\"}");
-		//System.out.println(id);
-		ElasticUtils.index("logs-2021-03-30", "{\"key\": \"三少爷\"}", "1");
+		String id = ElasticUtils.index("rico", "{\"firstName\": \"Chan\", \"lastName\": \"Jackie\", \"loginDate\": \"2018-07-24T10:29:48.103Z\"}", 2);
+		System.out.println(id);
+		ElasticUtils.index("rico", "{\"key\": \"三少爷\"}", "1");
+		id = ElasticUtils.index("rico").doc("{\"key\": \"三少爷\"}").id(1).execute();
+		assertThat(id).isEqualTo("1");
 	}
 	
 	@Test
@@ -873,6 +875,12 @@ public class ElasticUtilsTest {
 	}
 	
 	@Test
+	public void testReindexSimple() {
+		BulkByScrollResponse scrollResponse = Admin.reindex("blogs", "blogs_fix").get();
+		System.out.println(scrollResponse.toString());
+	}
+	
+	@Test
 	public void testReindexHuge() {
 		boolean created = Admin.createIndex("event_xxx")
 				.mapping()
@@ -959,4 +967,8 @@ public class ElasticUtilsTest {
 				.queryForList();
 		ecommerces.forEach(System.out::println);
 	}
+	
+	 @Test
+	 public void testCreatePipeline() {
+	 }
 }

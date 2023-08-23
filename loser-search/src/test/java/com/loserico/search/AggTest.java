@@ -2,13 +2,22 @@ package com.loserico.search;
 
 import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.search.builder.agg.sub.SubAggregations;
+import com.loserico.search.builder.agg.support.RangeAggResult;
 import com.loserico.search.builder.query.ElasticTermQueryBuilder;
+import com.loserico.search.support.StatsAggResult;
 import com.loserico.search.vo.ElasticPage;
 import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.InternalAggregations;
+import org.elasticsearch.search.aggregations.bucket.filter.FilterAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.filter.InternalFilter;
+import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
 import org.junit.Test;
 
 import java.util.List;
@@ -30,6 +39,26 @@ import static com.loserico.json.jackson.JacksonUtils.toPrettyJson;
  */
 @Slf4j
 public class AggTest {
+	
+	@Test
+	public void testStatAgg() {
+		StatsAggResult statsAggResult = ElasticUtils.Aggs.stats("employees")
+				.of("stats_salary", "salary")
+				.get();
+		
+		System.out.println(statsAggResult);
+	}
+	
+	@Test
+	public void testTermsAgg() {
+		List<Map<String, Object>> results = ElasticUtils.Aggs.terms("employees")
+				.of("jobs", "job")
+				.size(20)
+				.sort("key:asc")
+				.get();
+		
+		System.out.println(toPrettyJson(results));
+	}
 	
 	@Test
 	public void testAggOnDestContry() {
@@ -87,7 +116,41 @@ public class AggTest {
 				.min("min_salary", "salary")
 				.max("max_salary", "salary")
 				.avg("avg_salary", "salary")
-				.terms("term_agg", "age").and()
+				//.terms("term_agg", "age").and()
+				.get();
+		
+		System.out.println(toPrettyJson(result));
+	}
+	
+	@Test
+	public void testTopHitsAgg() {
+		List<Map<String, Object>> result = ElasticUtils.Aggs.terms("employees")
+				.of("jobs_agg", "job.keyword")
+				.subAggregation(SubAggregations.topHits("old_employee")
+						.sort("age:desc")
+						.size(3))
+				.get();
+		
+		System.out.println(toPrettyJson(result));
+	}
+	
+	@Test
+	public void testRangeAgg() {
+		Map<String, List<RangeAggResult>> map = ElasticUtils.Aggs.range("employees")
+				.of("salary_range", "salary")
+				.addRange(10000, 20000)
+				.addUnboundedTo(10000)
+				.addUnboundedFrom(">20000", 20000)
+				.get();
+		
+		System.out.println(toPrettyJson(map));
+	}
+	
+	@Test
+	public void testNestAgg() {
+		List<Map<String, Object>> result = ElasticUtils.Aggs.terms("employees")
+				.of("job_term", "job.keyword")
+				.subAggregation(SubAggregations.stats("salary_stats", "salary"))
 				.get();
 		
 		System.out.println(toPrettyJson(result));
@@ -111,13 +174,34 @@ public class AggTest {
 		ElasticRangeQueryBuilder rangeQueryBuilder = ElasticUtils.Query.range("employees").field("age").gt(20);
 		List<Map<String, Object>> aggResults = ElasticUtils.Aggs.terms("employees")
 				.of("jobs", "job.keyword")
-				.size(10)
 				.setQuery(rangeQueryBuilder)
 				.get();
 		
 		System.out.println(toPrettyJson(aggResults));
 	}
 	
+	@Test
+	public void testFilterAggregation() {
+		FilterAggregationBuilder aggregationBuilder = AggregationBuilders.filter("jobs", QueryBuilders.rangeQuery("age").gte(35))
+				.subAggregation(AggregationBuilders.terms("jobs").field("job.keyword"));
+		SearchRequestBuilder searchRequestBuilder = ElasticUtils.CLIENT.prepareSearch("employees");
+		searchRequestBuilder.addAggregation(aggregationBuilder);
+		SearchResponse searchResponse = searchRequestBuilder.get();
+		Aggregations aggregations = searchResponse.getAggregations();
+		for (Aggregation aggregation : aggregations) {
+			InternalFilter filter = (InternalFilter)aggregation;
+			InternalAggregations agg = (InternalAggregations)filter.getAggregations();
+			List<? extends Aggregation> aggs = ReflectionUtils.getFieldValue("aggregations", agg);
+			for (Aggregation agg1 : aggs) {
+				StringTerms stringTerms = (StringTerms) agg1;
+				List<StringTerms.Bucket> buckets = stringTerms.getBuckets();
+				for (StringTerms.Bucket bucket : buckets) {
+					String key = bucket.getKeyAsString();
+					long docCount = bucket.getDocCount();
+				}
+			}
+		}
+	}
 	@Test
 	public void testQueryThenComposite() {
 		ElasticRangeQueryBuilder rangeQueryBuilder = ElasticUtils.Query.range("event_2021-07-05")
@@ -161,7 +245,6 @@ public class AggTest {
 		page.setTotalCount(results.size());
 		log.info("第{}页, 每页{}条, 总共{}条", page.getCurrentPage(), page.getPageSize(), page.getTotalCount());
 		page.getResults().forEach((result) -> System.out.println(toPrettyJson(result)));
-		
 		
 		
 		page = ElasticUtils.Aggs.multiTerms("event_*")

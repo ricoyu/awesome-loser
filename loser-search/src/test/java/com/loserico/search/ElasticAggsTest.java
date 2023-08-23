@@ -126,6 +126,7 @@ public class ElasticAggsTest {
 		Map<String, Object> resultMap = Aggs.histogram("employees")
 				.of("salary_histogram", "salary")
 				.interval(5000)
+				.extendedBounds(0L, 100000L)
 				.get();
 		
 		System.out.println(toPrettyJson(resultMap));

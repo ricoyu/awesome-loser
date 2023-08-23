@@ -48,8 +48,12 @@ public final class SearchHitsSupport {
 		for (int i = 0; i < hits.length; i++) {
 			SearchHit hit = hits[i];
 			Map<String, HighlightField> highlightFieldMap = hit.getHighlightFields();
-			if (highlightFieldMap != null && !highlightFieldMap.isEmpty()) {
+			Map<String, DocumentField> storedFields = hit.getFields();
 				Map<String, String> resultMap = new HashMap<>();
+				for(String field: storedFields.keySet()) {
+					resultMap.put(field, storedFields.get(field).getValue());
+				}
+			if (highlightFieldMap != null && !highlightFieldMap.isEmpty()) {
 				for (String field : highlightFieldMap.keySet()) {
 					HighlightField highlightField = highlightFieldMap.get(field);
 					resultMap.put(field, Arrays.toString(highlightField.getFragments()));

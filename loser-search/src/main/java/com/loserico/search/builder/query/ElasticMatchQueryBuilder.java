@@ -325,6 +325,18 @@ public class ElasticMatchQueryBuilder extends BaseQueryBuilder implements MatchQ
 	}
 	
 	@Override
+	public ElasticMatchQueryBuilder highlightField(String highlightField) {
+		super.highlightField(highlightField);
+		return this;
+	}
+	
+	@Override
+	public ElasticMatchQueryBuilder storedFields(String... storedFields) {
+		super.storedFields(storedFields);
+		return this;
+	}
+	
+	@Override
 	protected QueryBuilder builder() {
 		if (isNotBlank(field)) {
 			MatchQueryBuilder matchQueryBuilder = new MatchQueryBuilder(field, value);

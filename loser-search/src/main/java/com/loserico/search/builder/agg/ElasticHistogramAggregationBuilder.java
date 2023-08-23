@@ -138,6 +138,31 @@ public class ElasticHistogramAggregationBuilder extends AbstractAggregationBuild
 		return this;
 	}
 	
+	/**
+	 * min_doc_count 参数强制返回空 buckets，但是 Elasticsearch 默认只返回你的数据中最小值和最大值之间的 buckets。
+	 * <p>
+	 * 因此如果你的数据只落在了 4 月和 7 月之间，那么你只能得到这些月份的 buckets（可能为空也可能不为空）。因此为了得到全年数据，
+	 * 我们需要告诉 Elasticsearch 我们想要全部 buckets， 即便那些 buckets 可能落在最小日期 之前 或 最大日期 之后 。
+	 * 
+	 * <pre> {@code
+	 * "extended_bounds" : {
+	 *     "min" : "2014-01-01",
+	 *     "max" : "2014-12-31"
+	 * }
+	 * }</pre>
+	 *
+	 * @param minBound
+	 * @param maxBound
+	 * @return ElasticHistogramAggregationBuilder
+	 */
+	public ElasticHistogramAggregationBuilder extendedBounds(Integer minBound, Integer maxBound) {
+		Objects.requireNonNull(minBound, "minBound cannot be null!");
+		Objects.requireNonNull(maxBound, "maxBound cannot be null!");
+		this.minBound = minBound.longValue();
+		this.maxBound = maxBound.longValue();
+		return this;
+	}
+	
 	@Override
 	public ElasticHistogramAggregationBuilder setQuery(BaseQueryBuilder queryBuilder) {
 		super.setQuery(queryBuilder);

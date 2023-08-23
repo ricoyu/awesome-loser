@@ -6,11 +6,13 @@ import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.engine.VersionConflictEngineException;
 
 import java.util.Objects;
 
 import static com.loserico.json.jackson.JacksonUtils.toJson;
 import static com.loserico.search.ElasticUtils.ONLY_TYPE;
+import static com.loserico.search.support.UpdateResult.Result.VERSION_CONFLICT;
 
 /**
  * <p>
@@ -42,6 +44,10 @@ public class ElasticUpdateBuilder {
 	 * 更新后是否立即刷新? 立即刷新可以马上搜索到, 不立即刷新可能要1s过后
 	 */
 	private Boolean refresh;
+	
+	private Long ifSeqNo;
+	
+	private Long ifPrimaryTerm;
 	
 	public ElasticUpdateBuilder(String index) {
 		Objects.requireNonNull(index, "index cannot be null!");
@@ -94,6 +100,17 @@ public class ElasticUpdateBuilder {
 		return this;
 	}
 	
+	
+	public ElasticUpdateBuilder ifSeqNo(Long ifSeqNo) {
+		this.ifSeqNo = ifSeqNo;
+		return this;
+	}
+	
+	public ElasticUpdateBuilder ifPrimaryTerm(Long ifPrimaryTerm) {
+		this.ifPrimaryTerm = ifPrimaryTerm;
+		return this;
+	}
+	
 	public UpdateResult update() {
 		String document = null;
 		if (doc instanceof String) {
@@ -109,7 +126,21 @@ public class ElasticUpdateBuilder {
 		if (upsert != null && upsert.booleanValue()) {
 			updateRequestBuilder.setDocAsUpsert(true);
 		}
-		UpdateResponse response = updateRequestBuilder.get();
-		return UpdateResult.from(response);
+		
+		if (ifSeqNo != null) {
+			updateRequestBuilder.setIfSeqNo(ifSeqNo);
+		}
+		if (ifPrimaryTerm != null) {
+			updateRequestBuilder.setIfPrimaryTerm(ifPrimaryTerm);
+		}
+		
+		try {
+			UpdateResponse response = updateRequestBuilder.get();
+			return UpdateResult.from(response);
+		} catch (VersionConflictEngineException e) {
+			UpdateResult updateResult = new UpdateResult();
+			updateResult.setResult(VERSION_CONFLICT);
+			return updateResult;
+		}
 	}
 }

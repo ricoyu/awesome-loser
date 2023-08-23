@@ -1,0 +1,17 @@
+{
+  "description": "A blog pipeline",
+  "processors": [
+    {
+      "split": {
+        "field": "tags",
+        "separator": ","
+      }
+    },
+    {
+      "set": {
+        "field": "views",
+        "value": 0
+      }
+    }
+  ]
+}

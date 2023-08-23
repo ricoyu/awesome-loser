@@ -16,7 +16,28 @@ public class UpdateResult {
 	
 	private Long version;
 	
+	
+	private Long ifSeqNo;
+	
+	private Long ifPrimaryTerm;
+	
 	private Result result;
+	
+	public Long getIfSeqNo() {
+		return ifSeqNo;
+	}
+	
+	public void setIfSeqNo(Long ifSeqNo) {
+		this.ifSeqNo = ifSeqNo;
+	}
+	
+	public Long getIfPrimaryTerm() {
+		return ifPrimaryTerm;
+	}
+	
+	public void setIfPrimaryTerm(Long ifPrimaryTerm) {
+		this.ifPrimaryTerm = ifPrimaryTerm;
+	}
 	
 	public static enum Result {
 		
@@ -33,11 +54,20 @@ public class UpdateResult {
 		/**
 		 * 没有做任何操作
 		 */
-		NOOP;
+		NOOP,
+		
+		/**
+		 * 版本冲突, 更新失败
+		 */
+		VERSION_CONFLICT;
 	}
 	
 	public Long getVersion() {
 		return version;
+	}
+	
+	public void setResult(Result result) {
+		this.result = result;
 	}
 	
 	public Result getResult() {
@@ -52,6 +82,8 @@ public class UpdateResult {
 	public static UpdateResult from(UpdateResponse response) {
 		UpdateResult updateResult = new UpdateResult();
 		updateResult.version = response.getVersion();
+		long ifSeqNo = response.getSeqNo();
+		long ifPrimaryTerm = response.getPrimaryTerm();
 		switch (response.getResult()) {
 			case CREATED:
 				updateResult.result = Result.CREATED;
@@ -62,7 +94,8 @@ public class UpdateResult {
 			default:
 				updateResult.result = Result.NOOP;
 		}
-		
+		updateResult.setIfSeqNo(ifSeqNo);
+		updateResult.setIfPrimaryTerm(ifPrimaryTerm);
 		return updateResult;
 	}
 }

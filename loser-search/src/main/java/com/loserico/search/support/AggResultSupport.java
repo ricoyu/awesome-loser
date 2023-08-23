@@ -1,11 +1,14 @@
 package com.loserico.search.support;
 
+import com.loserico.search.builder.agg.support.RangeAggResult;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.histogram.InternalDateHistogram;
 import org.elasticsearch.search.aggregations.bucket.histogram.InternalHistogram;
+import org.elasticsearch.search.aggregations.bucket.range.InternalRange;
+import org.elasticsearch.search.aggregations.bucket.range.InternalRange.Bucket;
 import org.elasticsearch.search.aggregations.bucket.terms.LongTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.UnmappedTerms;
@@ -128,7 +131,7 @@ public final class AggResultSupport {
 		return aggResults;
 	}
 	
-	public static  Map<String, Object> termsResult(InternalStats aggregation) {
+	public static Map<String, Object> termsResult(InternalStats aggregation) {
 		Map<String, Object> aggResults = new HashMap<>();
 		aggResults.put("count", aggregation.getCount());
 		aggResults.put("min", aggregation.getMin());
@@ -163,6 +166,7 @@ public final class AggResultSupport {
 	
 	/**
 	 * 返回terms聚合总的桶数量
+	 *
 	 * @param aggregations
 	 * @return Integer
 	 */
@@ -227,6 +231,35 @@ public final class AggResultSupport {
 		return aggResults;
 	}
 	
+	public static Map<String, Object> rangeResult(Aggregations aggregations) {
+		Map<String, Object> aggResults = new HashMap<>();
+		if (aggregations == null) {
+			return aggResults;
+		}
+		for (Aggregation aggregation : aggregations) {
+			List<RangeAggResult> rangeAggResults = new ArrayList<>();
+			InternalRange range = (InternalRange) aggregation;
+			List<Bucket> buckets = range.getBuckets();
+			String name = range.getName();
+			for (Bucket bucket : buckets) {
+				String key = bucket.getKey();
+				long docCount = bucket.getDocCount();
+				Object from = bucket.getFrom();
+				Object to = bucket.getTo();
+				RangeAggResult rangeAggResult = RangeAggResult.builder()
+						.docCount(docCount)
+						.key(key)
+						.from(from)
+						.to(to)
+						.build();
+				rangeAggResults.add(rangeAggResult);
+			}
+			
+			aggResults.put(name, rangeAggResults);
+		}
+		return aggResults;
+	}
+	
 	private static <T> T aggResult(Aggregation aggregation) {
 		if (aggregation instanceof InternalHistogram) {
 			return (T) aggResult((InternalHistogram) aggregation);
@@ -244,10 +277,10 @@ public final class AggResultSupport {
 			return (T) aggResult((InternalSum) aggregation);
 		}
 		if (aggregation instanceof StringTerms) {
-			return (T)termsResult(aggregation);
+			return (T) termsResult(aggregation);
 		}
 		if (aggregation instanceof InternalStats) {
-			return (T)termsResult((InternalStats)aggregation);
+			return (T) termsResult((InternalStats) aggregation);
 		}
 		
 		return null;
@@ -320,6 +353,7 @@ public final class AggResultSupport {
 	
 	/**
 	 * 负责处理Top Hits聚合的结果
+	 *
 	 * @param aggregation
 	 * @return
 	 */
@@ -356,6 +390,29 @@ public final class AggResultSupport {
 		}
 		for (Aggregation aggregation : aggregations) {
 			return ((InternalMax) aggregation).getValue();
+		}
+		
+		return null;
+	}
+	
+	public static StatsAggResult statsResult(Aggregations aggregations) {
+		if (aggregations == null) {
+			return null;
+		}
+		for (Aggregation aggregation : aggregations) {
+			InternalStats stats = (InternalStats) aggregation;
+			String name = stats.getName();
+			long count = stats.getCount();
+			double min = stats.getMin();
+			double max = stats.getMax();
+			double sum = stats.getSum();
+			return StatsAggResult.builder()
+					.sum(sum)
+					.min(min)
+					.max(max)
+					.count(count)
+					.name(name)
+					.build();
 		}
 		
 		return null;

@@ -28,6 +28,8 @@ import com.loserico.search.builder.agg.ElasticHistogramAggregationBuilder;
 import com.loserico.search.builder.agg.ElasticMaxAggregationBuilder;
 import com.loserico.search.builder.agg.ElasticMinAggregationBuilder;
 import com.loserico.search.builder.agg.ElasticMultiTermsAggregationBuilder;
+import com.loserico.search.builder.agg.ElasticRangeAggregationBuilder;
+import com.loserico.search.builder.agg.ElasticStatsAggregationBuilder;
 import com.loserico.search.builder.agg.ElasticSumAggregationBuilder;
 import com.loserico.search.builder.agg.ElasticTermsAggregationBuilder;
 import com.loserico.search.builder.bulk.ESBulkProcessor;
@@ -38,6 +40,7 @@ import com.loserico.search.builder.query.ElasticMatchAllQueryBuilder;
 import com.loserico.search.builder.query.ElasticMatchPhraseQueryBuilder;
 import com.loserico.search.builder.query.ElasticMatchQueryBuilder;
 import com.loserico.search.builder.query.ElasticMultiMatchQueryBuilder;
+import com.loserico.search.builder.query.ElasticPipelineBuilder;
 import com.loserico.search.builder.query.ElasticQueryStringBuilder;
 import com.loserico.search.builder.query.ElasticScrollQueryBuilder;
 import com.loserico.search.builder.query.ElasticTemplateQueryBuilder;
@@ -56,6 +59,7 @@ import com.loserico.search.support.MappingSupport;
 import com.loserico.search.support.RestSupport;
 import com.loserico.search.support.SettingsSupport;
 import com.loserico.search.support.UpdateResult;
+import com.loserico.search.vo.VersionedResult;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.DocWriteResponse;
@@ -161,6 +165,18 @@ public final class ElasticUtils {
 	 */
 	public static void ping() {
 		Admin.existsIndex("ricoyu");
+	}
+	
+	/**
+	 * 创建一个新的文档, 返回新创建文档的ID
+	 * 对应REST API POST 方式
+	 *
+	 * @param index
+	 * @param doc
+	 * @return String 文档ID
+	 */
+	public static ElasticIndexDocBuilder index(String index) {
+		return new ElasticIndexDocBuilder(index);
 	}
 	
 	/**
@@ -387,12 +403,47 @@ public final class ElasticUtils {
 	 * @param id    文档id
 	 * @return T
 	 */
+	public static VersionedResult<String> getWithVersion(String index, int id) {
+		return getWithVersion(index, String.valueOf(id));
+	}
+	
+	/**
+	 * 根据ID获取文档
+	 *
+	 * @param index 索引名
+	 * @param id    文档id
+	 * @return T
+	 */
 	public static String get(String index, String id) {
 		Objects.requireNonNull(index, "索引名不能为null");
 		Objects.requireNonNull(id, "id 不能为null");
 		
 		GetResponse response = CLIENT.prepareGet(index, ONLY_TYPE, id).get();
 		return response.getSourceAsString();
+	}
+	
+	/**
+	 * 根据ID获取文档
+	 *
+	 * @param index 索引名
+	 * @param id    文档id
+	 * @return T
+	 */
+	public static VersionedResult<String> getWithVersion(String index, String id) {
+		Objects.requireNonNull(index, "索引名不能为null");
+		Objects.requireNonNull(id, "id 不能为null");
+		
+		GetResponse response = CLIENT.prepareGet(index, ONLY_TYPE, id).get();
+		long ifSeqNo = response.getSeqNo();
+		long ifPrimaryTerm = response.getPrimaryTerm();
+		
+		String source = response.getSourceAsString();
+		return VersionedResult.<String>builder()
+				.doc(source)
+				.id(id)
+				.ifSeqNo(ifSeqNo)
+				.ifPrimaryTerm(ifPrimaryTerm)
+				.build();
 	}
 	
 	/**
@@ -412,6 +463,34 @@ public final class ElasticUtils {
 		GetResponse response = CLIENT.prepareGet(index, ONLY_TYPE, id).get();
 		String source = response.getSourceAsString();
 		return toObject(source, clazz);
+	}
+	
+	/**
+	 * 根据ID获取并转成指定类型对象
+	 *
+	 * @param index 索引名
+	 * @param id    文档id
+	 * @param clazz
+	 * @param <T>
+	 * @return T
+	 */
+	public static <T> VersionedResult<T> getWithVersion(String index, String id, Class<T> clazz) {
+		Objects.requireNonNull(index, "索引名不能为null");
+		Objects.requireNonNull(id, "id 不能为null");
+		Objects.requireNonNull(clazz, "clazz不能为null");
+		
+		GetResponse response = CLIENT.prepareGet(index, ONLY_TYPE, id).get();
+		
+		long seqNo = response.getSeqNo();
+		long primaryTerm = response.getPrimaryTerm();
+		String source = response.getSourceAsString();
+		T result = toObject(source, clazz);
+		
+		return VersionedResult.<T>builder()
+				.ifSeqNo(seqNo)
+				.ifPrimaryTerm(primaryTerm)
+				.doc(result)
+				.build();
 	}
 	
 	/**
@@ -996,6 +1075,18 @@ public final class ElasticUtils {
 				log.info("Index Template [{}] 不存在", templateName);
 				return false;
 			}
+		}
+		
+		
+		/**
+		 * 创建pipeline
+		 *
+		 * @param pipelineName
+		 * @return ElasticPipelineBuilder
+		 */
+		public static ElasticPipelineBuilder pipeline(String pipelineName) {
+			ElasticPipelineBuilder elasticPipelineBuilder = new ElasticPipelineBuilder(pipelineName);
+			return elasticPipelineBuilder;
 		}
 		
 		/**
@@ -1589,6 +1680,18 @@ public final class ElasticUtils {
 		}
 		
 		/**
+		 * Range Aggregation
+		 * <p>
+		 * https://www.elastic.co/guide/en/elasticsearch/reference/7.6/search-aggregations-bucket-histogram-aggregation.html
+		 *
+		 * @param indices
+		 * @return ElasticRangeAggregationBuilder
+		 */
+		public static ElasticRangeAggregationBuilder range(String... indices) {
+			return ElasticRangeAggregationBuilder.instance(indices);
+		}
+		
+		/**
 		 * Histogram Aggregation
 		 * <p>
 		 * https://www.elastic.co/guide/en/elasticsearch/reference/7.6/search-aggregations-bucket-histogram-aggregation.html
@@ -1650,6 +1753,16 @@ public final class ElasticUtils {
 		 */
 		public static ElasticSumAggregationBuilder sum(String... indices) {
 			return ElasticSumAggregationBuilder.instance(indices);
+		}
+		
+		/**
+		 * stats聚合
+		 *
+		 * @param indices
+		 * @return ElasticSumAggregationBuilder
+		 */
+		public static ElasticStatsAggregationBuilder stats(String... indices) {
+			return ElasticStatsAggregationBuilder.instance(indices);
 		}
 		
 		/**
