@@ -22,13 +22,19 @@ public class ReentrantLockTest {
 		Lock lock = new ReentrantLock();
 		Thread t1 = new Thread(() -> {
 			lock.lock();
-			System.out.println("这是线程1在执行");
-			lock.unlock();
+			try {
+				System.out.println("这是线程1在执行");
+			} finally {
+				lock.unlock();
+			}
 		});
 		Thread t2 = new Thread(() -> {
 			lock.lock();
-			System.out.println("这是线程2在执行");
-			lock.unlock();
+			try {
+				System.out.println("这是线程2在执行");
+			} finally {
+				lock.unlock();
+			}
 		});
 		t1.start();
 		t2.start();

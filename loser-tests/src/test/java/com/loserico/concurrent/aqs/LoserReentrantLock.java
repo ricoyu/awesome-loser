@@ -98,7 +98,7 @@ public class LoserReentrantLock implements Lock, java.io.Serializable {
 			final Thread current = Thread.currentThread();
 			int c = getState();
 			/*
-			 * 不需要判断同步队列（CLH）中是否有排队等待线程
+			 * 不需要判断同步队列（CLH）中是否有排队等待线程, 上来就抢锁
 			 */
 			if (c == 0) {
 				//unsafe操作，cas修改state状态
@@ -143,9 +143,12 @@ public class LoserReentrantLock implements Lock, java.io.Serializable {
 			 * 只有全部释放了, free才是true, 同时把exclusiveOwnerThread(标记加锁的线程)清除
 			 */
 			if (c == 0) {
+				//如果state-1后的值为0, 代表释放干净了
 				free = true;
+				//将持有锁的线程置为null
 				setExclusiveOwnerThread(null);
 			}
+			//将c设置为state
 			setState(c);
 			return free;
 		}
@@ -199,10 +202,13 @@ public class LoserReentrantLock implements Lock, java.io.Serializable {
 		 * 如果当前有人占用锁，再尝试去加一次锁, 如果还加锁失败则入队等待
 		 */
 		final void lock() {
+			//非公平锁上来就尝试将state从0改为1
 			if (compareAndSetState(0, 1)) {
-				//标记当前锁属于这哥线程
+				//标记当前锁属于这个线程, 将当前线程赋值给sync的
+				//private transient Thread exclusiveOwnerThread属性, 表示当前线程持有锁资源
 				setExclusiveOwnerThread(Thread.currentThread());
 			} else {
+				//获取锁失败, 执行acquire, 尝试再次获取锁资源
 				acquire(1);
 			}
 		}
@@ -249,6 +255,7 @@ public class LoserReentrantLock implements Lock, java.io.Serializable {
 				 * 如果没有则可以尝试CAS获取锁
 				 */
 				if (!hasQueuedPredecessors() &&
+						//抢锁
 						compareAndSetState(0, acquires)) {
 					//如果抢到了锁, 将独占线程指向当前线程
 					setExclusiveOwnerThread(current);
@@ -260,6 +267,8 @@ public class LoserReentrantLock implements Lock, java.io.Serializable {
 			 */
 			else if (current == getExclusiveOwnerThread()) {
 				int nextc = c + acquires;
+				//说明对重入次数+1后, 超过了int正数的取值范围, 说明重入的次数超过界限了
+				//就比如Integer.MAX_VALUE + 1结果是一个负数
 				if (nextc < 0) {
 					throw new Error("Maximum lock count exceeded");
 				}
@@ -292,14 +301,17 @@ public class LoserReentrantLock implements Lock, java.io.Serializable {
 	}
 	
 	/**
-	 * 尝试获去取锁，获取失败被阻塞，线程被中断直接抛出异常
+	 * 尝试获去取锁，拿不到锁资源就死等, 等到锁资源释放后被唤醒或者是被中断唤醒
 	 */
 	public void lockInterruptibly() throws InterruptedException {
 		sync.acquireInterruptibly(1);
 	}
 	
 	/**
-	 * 尝试加锁
+	 * 无论公平锁还是非公平锁, 都会走非公平锁抢占资源的操作
+	 * 就是拿到state的值, 如过事0, 直接CAS浅尝一下
+	 * state不是0 , 那就看是不是锁重入操作
+	 * 如果没有抢到, 或者不是锁重入操作, 告辞, 返回false
 	 */
 	public boolean tryLock() {
 		return sync.nonfairTryAcquire(1);

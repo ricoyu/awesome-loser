@@ -1,7 +1,8 @@
 package com.loserico.common.lang.transformer;
 
 import com.loserico.common.lang.utils.DateUtils;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -17,8 +18,8 @@ import java.util.Date;
  * @author Loser
  * @since May 29, 2016
  */
-@Slf4j
 public class ValueHandlerFactory {
+	private static Logger log = LoggerFactory.getLogger(ValueHandlerFactory.class);
 	
 	private ValueHandlerFactory() {
 	}
@@ -152,6 +153,33 @@ public class ValueHandlerFactory {
 		
 		@Override
 		public String render(Float value) {
+			return value.toString() + 'F';
+		}
+	}
+	
+	
+	public static class DoubleValueHandler extends BaseValueHandler<Double> implements Serializable {
+		private static final long serialVersionUID = 1L;
+		public static final DoubleValueHandler INSTANCE = new DoubleValueHandler();
+		
+		@Override
+		public Double convert(Object value) {
+			if (value == null) {
+				return null;
+			}
+			
+			if (value instanceof Float) {
+				return (Double) value;
+			}
+			
+			if (BigDecimal.class.isInstance(value)) {
+				return ((BigDecimal) value).doubleValue();
+			}
+			throw unknownConversion(value, Double.class);
+		}
+		
+		@Override
+		public String render(Double value) {
 			return value.toString() + 'F';
 		}
 	}
@@ -492,6 +520,9 @@ public class ValueHandlerFactory {
 		}
 		if (Float.class.equals(targetType) || Float.TYPE.equals(targetType)) {
 			return (ValueHandler<T>) FloatValueHandler.INSTANCE;
+		}
+		if (Double.class.equals(targetType) || Double.TYPE.equals(targetType)) {
+			return (ValueHandler<T>) DoubleValueHandler.INSTANCE;
 		}
 		if (BigDecimal.class.equals(targetType)) {
 			return (ValueHandler<T>) BigDecimalValueHandler.INSTANCE;

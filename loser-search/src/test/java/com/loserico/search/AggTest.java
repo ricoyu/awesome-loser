@@ -103,6 +103,14 @@ public class AggTest {
 	}
 	
 	@Test
+	public void testAvgNotAccurate() {
+		Double avgRating = ElasticUtils.Aggs.avg("ratings")
+				.of("rating_avg", "rating")
+				.get();
+		System.out.println(avgRating);
+	}
+	
+	@Test
 	public void testSum() {
 		Double sum = ElasticUtils.Aggs.sum("employees")
 				.of("sum_agg", "age")

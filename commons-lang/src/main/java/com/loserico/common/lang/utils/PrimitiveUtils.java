@@ -17,12 +17,12 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * @version 1.0
  */
 public final class PrimitiveUtils {
-
+	
 	public static boolean isPrimitive(Object value) {
 		if (value == null) {
 			return false;
 		}
-
+		
 		Class<?> clazz = value.getClass();
 		if (Byte.class.equals(clazz) || Byte.TYPE.equals(clazz)) {
 			return true;
@@ -48,10 +48,10 @@ public final class PrimitiveUtils {
 		if (Character.class.equals(clazz) || Short.TYPE.equals(clazz)) {
 			return true;
 		}
-
+		
 		return false;
 	}
-
+	
 	@SuppressWarnings("unchecked")
 	public static <T> T toPrimitive(byte[] data, Class<T> clazz) {
 		if (Byte.class.equals(clazz) || Byte.TYPE.equals(clazz)) {
@@ -80,8 +80,8 @@ public final class PrimitiveUtils {
 		}
 		return null;
 	}
-
-
+	
+	
 	/**
 	 * 如果value是null，那么返回0
 	 * 否则返回对应的int value
@@ -118,8 +118,8 @@ public final class PrimitiveUtils {
 		
 		return Integer.valueOf(toString(data));
 	}
-
-
+	
+	
 	public static String toString(Object value) {
 		if (value == null) {
 			return null;
@@ -149,16 +149,41 @@ public final class PrimitiveUtils {
 			return ((Byte) value).toString();
 		}
 		if (value instanceof byte[]) {
-			return new String((byte[])value, UTF_8);
+			return new String((byte[]) value, UTF_8);
 		}
 		return null;
 	}
-
+	
 	public static boolean isByteArray(Object obj) {
 		return obj instanceof byte[];
 	}
-
+	
 	private static String toString(byte[] data) {
 		return new String(data, UTF_8);
+	}
+	
+	/**
+	 * 打印整数的二进制形式
+	 * <p>
+	 * 一个整数占4字节, 32位
+	 * 1左移31位就是把1从第1位上的移到了32位上, 变成 10000000 00000000 00000000 00000000
+	 * 所以一个正数(符号位0)与其位与, 得到的二进制形式就是
+	 * 00000000 00000000 00000000 00000000, 即整数0, 此时输出符号位"0"
+	 * 负数的话得到
+	 * 10000000 00000000 00000000 00000000, 即Integer.MIN_VALUE, 不等于0, 此时输出符号位 "1"
+	 * <p>
+	 * 接下来1左移30位, 那么二进制形式为 01000000 00000000 00000000 00000000
+	 * 任意数与其位与, 如果这个数的31位上是0, 位与得到的结果就是00000000 00000000 00000000 00000000, 即整数0, 此时输出31位 "0"
+	 * 如果这个数的31为上是1, 位与得到的结果就是01000000 00000000 00000000 00000000, 不等于0, 所以此时输出31位二进制 "1"
+	 * <p>
+	 * 依次类推
+	 *
+	 * @param num
+	 */
+	public static void printBinary(int num) {
+		for (int i = 31; i >= 0; i--) {
+			System.out.print((num & (1 << i)) == 0 ? "0" : "1");
+		}
+		System.out.println();
 	}
 }

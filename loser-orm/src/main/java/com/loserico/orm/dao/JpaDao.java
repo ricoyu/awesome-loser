@@ -18,13 +18,14 @@ import com.loserico.orm.utils.Defaults;
 import com.loserico.orm.utils.HashUtils;
 import com.loserico.orm.utils.JacksonUtils;
 import com.loserico.orm.utils.PrimitiveUtils;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
 import org.apache.velocity.runtime.RuntimeConstants;
 import org.hibernate.MultiIdentifierLoadAccess;
 import org.hibernate.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
@@ -74,8 +75,9 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  * @since Mar 6, 2016
  */
 @Repository
-@Slf4j
 public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations, EntityOperations, InitializingBean {
+	
+	private static Logger log = LoggerFactory.getLogger(JpaDao.class);
 	
 	private static final String IS_COUNT_QUERY = "isCountQuery";
 	

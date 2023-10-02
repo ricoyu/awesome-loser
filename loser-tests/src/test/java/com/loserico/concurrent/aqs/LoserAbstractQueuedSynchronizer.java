@@ -117,6 +117,8 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 	 */
 	static final class Node {
 		/**
+		 * 持有的锁类型
+		 * 表示共享锁
 		 * 标记节点在共享模式中等待
 		 * Marker to indicate a node is waiting in shared mode
 		 */
@@ -128,17 +130,22 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 		static final Node EXCLUSIVE = null;
 		
 		/**
+		 * 代表当前节点已经取消了
 		 * waitStatus value to indicate thread has cancelled <br/>
 		 * 在同步队列中等待的线程等待超时或者被中断<br/>
 		 * 线程生命周期已经结束了<br/>
 		 * 调用了这个线程的intercept()方法?
 		 */
 		static final int CANCELLED = 1;
+		
 		/**
-		 * waitStatus value to indicate successor's thread needs unparking
-		 * 标记后继节点可以被唤醒的一种状态
+		 * waitStatus value to indicate successor's thread needs unparking <p/>
+		 * 代表当前节点的后继节点, 可以挂起线程, 后续我会唤醒我的后继节点
+		 * 
+		 * 默认的状态0代表这个节点刚刚创建, 什么事都还没做呢
 		 */
 		static final int SIGNAL = -1;
+		
 		/**
 		 * waitStatus value to indicate thread is waiting on condition
 		 * 在使用Condition时, 如 Condition isEmpty = lock.newCondition()
@@ -146,7 +153,7 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 		 */
 		static final int CONDITION = -2;
 		/**
-		 * 表示下一次共享时同步状态获取将会被无条件地传播下去
+		 * 共享锁的时候用到
 		 * <p>
 		 * waitStatus value Node.PROPAGATE can only set for head node.
 		 * <p>
@@ -159,20 +166,20 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 		static final int PROPAGATE = -3;
 		
 		/**
-		 * 标记当前节点的信号量状态 <br/>
+		 * 标记当前节点的信号量状态, 就是上面这几个状态 <br/>
 		 * The values are arranged numerically to simplify use. Non-negative values mean that a node doesn't need to signal.
 		 * 1, 0 两种状态表示node不需要被signal通知?
 		 * <ul>
 		 *     <li/>CANCELLED 1  表示因为超时或者在这个线程上调用了interrupt()导致这个线程cancelled <br/>
 		 *                       This node is cancelled due to timeout or interrupt. Nodes never leave this state.
 		 *                       In particular, a thread with cancelled node never again blocks.
-		 *     <li/>0            None of the above
-		 *     <li/>SIGNAL -1    表示当前节点释放锁或者cancel时, 应该unpark后继节点(此时后继节点以及block住了) <br/>
+		 *     <li/>0            None of the above 后面可能有节点但是没有挂起, 所以当我释放锁的时候就可以不去唤醒后面的线程
+		 *     <li/>SIGNAL -1    表示后面有节点并且已经挂起了, 我在释放锁以后要去唤醒后面的节点 <br/>
 		 *                       The successor of this node is blocked (via park), so the current node must unpark its successor when it releases or cancels.
 		 *     <li/>CONDITION -2 表示这个节点在条件队列里面?
 		 *                       This node is currently on a condition queue.
 		 *                       It will not be used as a sync queue node until transferred, at which time the status will be set to 0.
-		 *     <li/>PROPAGATE -3 ???
+		 *     <li/>PROPAGATE -3 
 		 *                       A releaseShared should be propagated to other nodes. <br/>
 		 *                       This is set (for head node only) in doReleaseShared to ensure propagation continues,
 		 *                       even if other operations have since intervened.
@@ -192,6 +199,7 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 		
 		/**
 		 * 节点包含的线程
+		 * 正常有效的node都会维护一个线程
 		 */
 		volatile Thread thread;
 		
@@ -308,14 +316,6 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 	}
 	
 	/**
-	 * 1. 查看工作节点          kubectl get nodes
-	 * 2. K8S相关节点           kubectl get pods -n kube-system
-	 * 3. 查看Pod上部署的应用   kubectl get pods -o wide
-	 * 4. 生成Token             kubeadm token create --print-join-command
-	 * 5. 向集群添加新节点      kubeadm join 192.168.100.201:6443 --token xxx --discovery-token-ca-cert-hash zxczxc 
-	 * 6. 安装目录              /etc/kubernetes/
-	 * 7. 部署容器网络(CNI)     kubectl apply -f calico.yaml
-	 * 8. 创建并部署一个Pod     kubectl create deployment nginx --image=nginx
 	 * CAS修改state <br/>
 	 * Atomically sets synchronization state to the given updated
 	 * value if the current state value equals the expected value.
@@ -362,8 +362,9 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 		 */
 		for (; ; ) {
 			Node t = tail;
+			//尾结点为空, 表示CLH队列还没有初始化
 			if (t == null) { // Must initialize
-				//队列为空, 需要初始化，创建空的头节点
+				//队列为空, 需要初始化，构建一个伪节点作为head和tail
 				if (compareAndSetHead(new Node())) {
 					tail = head;
 				}
@@ -389,6 +390,7 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 	}
 	
 	/**
+	 * 将当前线程封装进Node对象然后入队, 返回当前节点
 	 * Creates and enqueues node for current thread and given mode.
 	 *
 	 * @param mode Node.EXCLUSIVE for exclusive, Node.SHARED for shared
@@ -399,7 +401,7 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 		Node node = new Node(Thread.currentThread(), mode);
 		/*
 		 * 2: Try the fast path of enq; backup to full enq on failure
-		 * 将 pred指向tail节点
+		 * 拿到尾结点
 		 */
 		Node pred = tail;
 		/*
@@ -414,10 +416,9 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 		 * 在遇到tail == null(队列还未初始化时, 这种情况不常见), 才走enq(node)初始化队列在入队
 		 */
 		if (pred != null) {
-			// 队尾节点设为当前节点的前驱
+			// 新来一个线程排队, 将这个新来的Node的prev指向尾结点
 			node.prev = pred;
 			/*
-			 * 将当前节点设为尾结点
 			 * 1: CAS设置当前节点为尾节点
 			 * 2: 原来尾结点的next指向当前节点
 			 * 
@@ -427,7 +428,7 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 			if (compareAndSetTail(pred, node)) {
 				/*
 				 * pred指向的是原来的tail节点, 进到这里, tail已经指向了当前节点node
-				 * 在前一步已经将当前节点的prev指向pred
+				 * 在前一步已经将当前节点的prev指向pred(if上面的语句)
 				 * 这里再将pred.next指向当前节点即可
 				 * 修改pred.next指向也是多线程竞争的点, 但是这里是在CAS成功后才会执行, 所以可以直接赋值
 				 */
@@ -453,15 +454,16 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 	 */
 	private void setHead(Node node) {
 		head = node;
+		//头节点不需要线程信息
 		node.thread = null;
 		node.prev = null;
 	}
 	
 	/**
-	 *
+	 * 唤醒后面排队的节点
 	 */
 	private void unparkSuccessor(Node node) {
-		//获取wait状态
+		//获取头结点wait状态(注意这里传入的node是头结点)
 		int ws = node.waitStatus;
 		/*
 		 * CANCELLED 1     表示因为超时或者在这个线程上调用了interrupt()导致这个线程cancelled <br/>
@@ -479,30 +481,31 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 		 *                       even if other operations have since intervened.
 		 */
 		if (ws < 0) {
+			//若为-1先基于CAS将自己的状态改为0
 			compareAndSetWaitStatus(node, ws, 0);// 将等待状态waitStatus设置为初始值0
 		}
 		
-		/**
-		 * 若后继结点为空, 或状态为CANCELLED, 则从后尾部往前遍历找到最前的一个处于正常阻塞状态的结点进行唤醒
+		/*
+		 * 拿到头结点的后继节点
+		 * 若后继结点为空, 或状态为CANCELLED, 则从尾部往前遍历找到最前的一个处于正常阻塞状态的结点进行唤醒
 		 */
 		Node s = node.next;
+		/*
+		 * 如果后继节点的状态为1(表示节点取消了), 判断s==null大概率是为了避免后面的空指针错误
+		 */
 		if (s == null || s.waitStatus > 0) { // > 0 只有一种状态, CANCELLED
 			s = null;
 			/*
-			 * 从尾结点往前找第一个不是CANCELLED状态的节点, 然后唤醒它
-			 * node 指向的是当前正在释放锁的节点
-			 * tail 指向尾结点, t初始指向尾结点
-			 * 1: 先看尾结点, 如果尾结点不是CANCELLED, 用s指向尾结点, 表示找到第一个不是CANCELLED状态的节点
-			 * 2: 然后t指向t.prev, 再看前驱节点, 如果前驱节点不是CANCELLED, 那么s再指向t.prev
-			 * 3: 如此一直往前找, 直到发现t指向了当前正在释放锁的节点为止
-			 * 4: 此时s就指向了当前释放锁的节点node后面第一个不是CANCELLED状态的节点
+			 * 从尾结点往前找到排在最前面的一个不是CANCELLED状态的节点, 然后唤醒它
 			 */
 			for (Node t = tail; t != null && t != node; t = t.prev) {
+				//找到离head最近的有效节点并赋值给s
 				if (t.waitStatus <= 0) {
 					s = t;
 				}
 			}
 		}
+		//找到了需要被唤醒的节点, 执行unpark
 		if (s != null) {
 			LockSupport.unpark(s.thread);//唤醒线程
 		}
@@ -573,18 +576,40 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 	// Utilities for various versions of acquire
 	
 	/**
+	 * 取消在AQS中排队的Node <p/>
+	 * 取消节点整体操作流程<ol>
+	 * <li/>thread=null
+	 * <li/>往前找到有效节点(waitStatus!=1)作为当前节点的prev
+	 * <li/>waitStatus=1, 代表取消
+	 * <li>脱离整个AQS队列
+	 * <pre> 
+	 * 4.1 当前节点是tail节点
+	 * 4.2 当前节点是head的后继节点
+	 * 4.3 不是head的后继也不是tail节点
+	 * </pre>
+	 * </li>
+	 * <li/>sss
+	 * <li/>
+	 * <li/>
+	 * <ol/>
+	 * 取消一个节点的话, 要把这个节点的waitStatus设为1, thread设为null, tail指针要指向我前面的节点
 	 * Cancels an ongoing attempt to acquire.
 	 *
 	 * @param node the node
 	 */
 	private void cancelAcquire(Node node) {
 		// Ignore if node doesn't exist
+		//当前节点为null直接忽略
 		if (node == null) {
 			return;
 		}
 		
+		//第一步线程置为null
 		node.thread = null;
 		
+		/*
+		 * 往前跳过被取消的节点, 找到一个有效的节点
+		 */
 		// Skip cancelled predecessors
 		Node pred = node.prev;
 		while (pred.waitStatus > 0) {
@@ -599,24 +624,41 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 		// Can use unconditional write instead of CAS here.
 		// After this atomic step, other Nodes can skip past us.
 		// Before, we are free of interference from other threads.
+		// 当前节点状态设为1, 代表节点取消
 		node.waitStatus = Node.CANCELLED;
 		
+		/*
+		 * 脱离AQS队列的操作
+		 * 如果当前节点是尾节点, CAS将尾结点设为当前节点的上一个节点
+		 */
 		// If we are the tail, remove ourselves.
 		if (node == tail && compareAndSetTail(node, pred)) {
+			//pred现在是新的尾节点, CAS将其next设为null
 			compareAndSetNext(pred, predNext, null);
 		} else {
+			/*
+			 * 到这里表示当前要cancel的节点不是尾节点或者说CAS替换尾结点失败
+			 */
 			// If successor needs signal, try to set pred's next-link
 			// so it will get one. Otherwise wake it up to propagate.
 			int ws;
 			if (pred != head &&
+					//拿到上一个节点的状态, 并且判断是否为-1, 如果不是-1并且不是取消状态(大于0的只有1, 即CANCEL), 就改为-1
 					((ws = pred.waitStatus) == Node.SIGNAL ||
 							(ws <= 0 && compareAndSetWaitStatus(pred, ws, Node.SIGNAL))) &&
 					pred.thread != null) {
+				/*
+				 * 上面的判断都是为了避免后面节点无法被唤醒
+				 * 前驱节点是有效节点, 可以唤醒后面的节点
+				 */
 				Node next = node.next;
+				//我的下一个节点是有效节点
 				if (next != null && next.waitStatus <= 0) {
+					//将上一个节点的next指向我的下一个节点
 					compareAndSetNext(pred, predNext, next);
 				}
 			} else {
+				//当前节点是head的后继节点, 直接唤醒后继节点
 				unparkSuccessor(node);
 			}
 			
@@ -625,6 +667,7 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 	}
 	
 	/**
+	 * 当前Node没有拿到锁资源, 或者没有资格竞争锁资源, 看一下能否挂起当前线程<p/>
 	 * Checks and updates status for a node that failed to acquire.
 	 * Returns true if thread should block. This is the main signal
 	 * control in all acquire loops.  Requires that pred == node.prev.
@@ -645,7 +688,7 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 	private static boolean shouldParkAfterFailedAcquire(Node pred, Node node) {
 		int ws = pred.waitStatus;
 		/*
-		 * 前驱节点处于可以被唤醒的状态
+		 * 前驱节点知道我要被挂起
 		 *
 		 * CANCELLED 1     表示因为超时或者在这个线程上调用了interrupt()导致这个线程cancelled <br/>
 		 *                       This node is cancelled due to timeout or interrupt. Nodes never leave this state.
@@ -668,7 +711,7 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 		if (ws > 0) {
 			/*
 			 * waitStatus > 0 只有一种状态, 即 CANCELLED 1 表示线程等待超时或者被中断了
-			 * 前驱节点状态如果被取消状态，将被移除出队列
+			 * 前驱节点状态如果是取消状态，将被移除出队列, 当前节点就需要往前找到一个状态不为1的Node作为他的prev
 			 */
 			do {
 				node.prev = pred = pred.prev;
@@ -685,6 +728,7 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 	}
 	
 	/**
+	 * 只是打上一个中断标记, 二不是直接中断这个线程
 	 * 中断这个线程 Interrupts this thread. 线程被中断后可以自行决定退出还是继续运行
 	 * <p>
 	 * 如果这个线程因为调用以下方法的原因进入了阻塞(blocked)状态:
@@ -714,6 +758,7 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 	 */
 	private final boolean parkAndCheckInterrupt() {
 		LockSupport.park(this);//阻塞
+		//这个方法可以判断, 当前挂起的线程, 是被中断唤醒的还是被正常唤醒的
 		return Thread.interrupted();
 	}
 	
@@ -725,7 +770,9 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 	 * cancel if tryAcquire throws exception) and other control, at
 	 * least not without hurting performance too much.
 	 * 
-	 * 如果当前节点的前驱节点是投节点, 那么在此tryAcquire(arg)尝试获取锁, 如果成功则返回false
+	 * 查看当前节点是否是第一个排队的节点, 如果是可以再次尝试获取锁资源, 如果长时间拿不到就要挂起线程
+	 * 如果不是第一个排队的节点, 那么就尝试挂起线程
+	 * 如果当前节点的前驱节点是头节点, 那么再次tryAcquire(arg)尝试获取锁, 如果成功则返回false
 	 * 
 	 */
 	final boolean acquireQueued(final Node node, int arg) {
@@ -735,10 +782,11 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 			for (; ; ) {
 				final Node p = node.predecessor();//找到当前结点的前驱结点
 				/*
-				 * 如果当前节点的前驱节点是头结点, 那么表示只有当前节点在排队
+				 * 如果当前节点的前驱节点是头结点, 那么表示当前节点是第一个排队的节点
 				 * 然后尝试获取锁(因为之前获取锁的线程可能已经释放了锁)
 				 */
 				if (p == head && tryAcquire(arg)) {
+					//获取锁资源成功了
 					setHead(node);
 					/*
 					 * 上面一步已经把 node.prev 设为null了
@@ -747,7 +795,7 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 					 * 所以旧的头结点可以被垃圾回收了
 					 */
 					p.next = null; // help GC
-					failed = false;
+					failed = false; //获取锁资源成功了
 					return interrupted;
 				}
 			
@@ -769,7 +817,8 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 	 */
 	private void doAcquireInterruptibly(int arg)
 			throws InterruptedException {
-		final Node node = addWaiter(Node.EXCLUSIVE);//以独占模式放入队列尾部
+		//放到AQS队列末尾
+		final Node node = addWaiter(Node.EXCLUSIVE);
 		boolean failed = true;
 		try {
 			for (; ; ) {
@@ -805,30 +854,41 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 		if (nanosTimeout <= 0L) {
 			return false;
 		}
+		//设置结束时间
 		final long deadline = System.nanoTime() + nanosTimeout;
 		final Node node = addWaiter(Node.EXCLUSIVE);//加入队列
 		boolean failed = true;
 		try {
 			for (; ; ) {
 				final Node p = node.predecessor();
+				//如果前驱节点是头结点, 立马抢锁, 意思就是当前节点是第一个排队的节点
 				if (p == head && tryAcquire(arg)) {
+					//如果抢锁成功, 将当前节点设为头结点, 将原来的头结点从队列中移除
 					setHead(node);
 					p.next = null; // help GC
 					failed = false;
 					return true;
 				}
+				
+				//计算剩余的可用时间
 				nanosTimeout = deadline - System.nanoTime();
+				//判断时间是否用尽了
 				if (nanosTimeout <= 0L) {
 					return false;//超时直接返回获取失败
 				}
+				//根据上一个节点状态来判断我是否可以挂起线程
 				if (shouldParkAfterFailedAcquire(p, node) &&
+						//避免剩余时间太少, 如果剩余时间太少就不用挂起了
 						nanosTimeout > spinForTimeoutThreshold)
 				//阻塞指定时长，超时则线程自动被唤醒
 				{
+					//如果剩余时间足够, 将线程挂起剩余时间
 					LockSupport.parkNanos(this, nanosTimeout);
 				}
+				//如果线程醒了, 查看是中断唤醒的, 还是时间到了唤醒的
 				if (Thread.interrupted())//当前线程中断状态
 				{
+					//是中断唤醒的, 直接抛异常
 					throw new InterruptedException();
 				}
 			}
@@ -1112,6 +1172,7 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 	}
 	
 	/**
+	 * acquire是公平锁和非公平锁共用的一套逻辑
 	 * <ol>
 	 *     <li/>先尝试获取锁
 	 *     <li/>如果获取锁失败, 将自己加入CLH队列中等待
@@ -1129,6 +1190,7 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 	 */
 	public final void acquire(int arg) {
 		if (!tryAcquire(arg) &&
+				//没有拿到锁资源
 				acquireQueued(
 						//将当前线程包装进Node, 然后入队, Node.EXCLUSIVE表示排它锁
 						addWaiter(Node.EXCLUSIVE), arg)) {
@@ -1179,10 +1241,12 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 	 */
 	public final boolean tryAcquireNanos(int arg, long nanosTimeout)
 			throws InterruptedException {
+		//线程的中断标记位, 是不是从false被改为了true, 如果是, 直接抛异常
 		if (Thread.interrupted()) {
 			throw new InterruptedException();
 		}
 		return tryAcquire(arg) ||
+				//如果拿锁失败, 在这等待指定时间
 				doAcquireNanos(arg, nanosTimeout);
 	}
 	
@@ -1191,6 +1255,7 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 	 */
 	public final boolean release(int arg) {
 		if (tryRelease(arg)) {//释放锁
+			//如果锁成功释放掉, 走这个逻辑
 			Node h = head;
 			/*
 			 * CANCELLED 1     表示因为超时或者在这个线程上调用了interrupt()导致这个线程cancelled <br/>
@@ -1207,6 +1272,7 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 			 *                       This is set (for head node only) in doReleaseShared to ensure propagation continues,
 			 *                       even if other operations have since intervened.
 			 */
+			//头结点没有线程信息, 不会有cancel状态, 所以不等于0的话只能是-1
 			if (h != null && h.waitStatus != 0) {
 				unparkSuccessor(h);//唤醒后继结点
 			}
@@ -1411,20 +1477,25 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 	}
 	
 	/**
-	 * 判断当前节点是否有前驱节点
+	 * 没人排队当前线程可以抢锁
+	 * 有人排队且排队第一位就是当前线程可以抢锁
+	 * 即判断是否已经有线程在AQS的双向队列中排队, 返回false代表没人排队
 	 */
 	public final boolean hasQueuedPredecessors() {
 		Node t = tail; // Read fields in reverse initialization order
 		Node h = head;
+		// s会指向头结点的next节点
 		Node s;
 		/*
 		 * <ul>
-		 *     <li/>h == t 表示头尾指针指向同一个节点, 这个是队列刚初始化的形态, 此时队列为空, 所以h != t表示队列不为空
+		 *     <li/>h == t 表示头尾指针指向同一个节点, 这个是队列刚初始化的形态, 此时队列为空, 没有线程排队, 直接抢占锁资源.
 		 *     <li/>(s = h.next) == null ?
 		 *     <li/>s.thread != Thread.currentThread()
 		 * </ul>
 		 */
 		return h != t &&
+				//判断s==null只是为了后面s.thread可以null safe, 即如果s不等于null且s.thread不是当前线程, 那么就有线程在排队获取锁了
+				//反过来如果当前线程排在第一名, 那么就可以抢锁
 				((s = h.next) == null || s.thread != Thread.currentThread());
 	}
 	
