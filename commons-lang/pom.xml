@@ -122,6 +122,11 @@
             <artifactId>logback-syslog4j</artifactId>
             <version>1.0.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.github.jsqlparser</groupId>
+            <artifactId>jsqlparser</artifactId>
+            <version>4.0</version>
+        </dependency>
     </dependencies>
 
     <build>

@@ -1,12 +1,12 @@
-## 配置
+## 一 配置
 
-### Maven依赖
+### 1.1 Maven依赖
 
 ```xml
 <dependency>
     <groupId>com.loserico</groupId>
     <artifactId>loser-orm</artifactId>
-    <version>4.10</version>
+    <version>4.12.7</version>
 </dependency>
 <dependency>
     <groupId>org.hibernate</groupId>
@@ -23,11 +23,17 @@
     <artifactId>spring-boot-starter-data-jpa</artifactId>
     <version>2.3.2.RELEASE</version>
 </dependency>
+
+<!-- web环境可以简化分页的使用 -->
+<dependency>
+    <groupId>com.loserico</groupId>
+    <artifactId>loser-spring-boot-web-starter</artifactId>
+</dependency>
 ```
 
 引入spring-boot-starter-data-jpa是为了让SpringBoot自动装配EntityManager
 
-### application.yml
+### 1.2 application.yml
 
 ```yaml
 management.endpoints.web.exposure.include: "*"
@@ -80,9 +86,9 @@ hibernate.query.cache: true
 hibernate.jdbc.batch_size: 100
 ```
 
-### named-sql目录
+### 1.3 named-sql目录
 
-在 src/main/resources下新建named-sql目录, 里面放Hibernate映射文件xxx.hbm.xml, 比如Semester.hbm.xml
+在 src/main/resources下新建named-sql目录, 里面放Hibernate映射文件xxx.hbm.xml, 比如Semester.hbm.xml, 在这里写原生SQL
 
 ```xml
 <?xml version="1.0"?>
@@ -90,7 +96,7 @@ hibernate.jdbc.batch_size: 100
         "http://hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
-    
+    <!-- 给你的原生SQL起一个名字, 调用的地方要用到 -->
     <sql-query name="semesters">
         <![CDATA[
             SELECT 
@@ -110,9 +116,9 @@ hibernate.jdbc.batch_size: 100
 </hibernate-mapping>
 ```
 
+### 1.4 Java Config
 
-
-### Java Config
+你的SpringBoot项目里只需要配置这个bean即可
 
 ```java
 @Configuration
@@ -134,7 +140,7 @@ public class PersistentConfig {
   protected EntityManager entityManager;
   ```
 
-### Entity注解用法
+### 1.5 BaseEntity 示例
 
 ```java
 @Data
@@ -194,7 +200,7 @@ public class BaseEntity implements Serializable {
 
 
 
-# SQL中动态语法介绍
+# 二 SQL中动态语法介绍
 
 检查为null可以简化成这样(检查params里面没有塞这个参数)
 
@@ -227,7 +233,7 @@ public class BaseEntity implements Serializable {
 1. `$usedInclude == true`  表示传了这个参数并且值是true
 2. `$usedInclude == false` 表示传了这个参数并且值是false
 
-### SQL中集合类型参数介绍
+## 2.1 SQL中集合类型参数介绍
 
 ### Demo 1
 
@@ -268,7 +274,7 @@ SELECT 1 FROM ROLE WHERE deleted=0 and role=:role
 
 
 
-### SQL 中自定义的命令
+### 2.2 SQL 中自定义的命令
 
 1. ifNull ifNotNull
 
@@ -287,13 +293,11 @@ SELECT 1 FROM ROLE WHERE deleted=0 and role=:role
 
    ```sql
    SELECT
-       #count()
            #ifPresent($purchaser, "DISTINCT") 
            r.ID, r.RETURN_ID, 
            ......
            r.SETTLED,
            r.OWNER
-       #end
    FROM
        purchase_return r
        #ifPresent($purchaser, "join return_item i on r.RETURN_ID = i.RETURN_ID and i.deleted = 0 and r.deleted = 0")
@@ -313,23 +317,18 @@ SELECT 1 FROM ROLE WHERE deleted=0 and role=:role
 
 ### SQL 中的分页
 
-```
+```sql
 SELECT 
-	#count()
 		p.id privilege_id, p.`create_time`, p.`creator`, p.`deleted`,
 		p.`modifier`, p.`modify_time`, p.`privilege`, p.`remark`, p.`version`
-	#end
 FROM privilege p
 WHERE p.`deleted` = '0'
-
-#omitForCount()
-	group by ld.id
-#end
+group by ld.id
 ```
 
 ### SQL 中的BETWEEN
 
-```
+```sql
 #between("CLOSE_MONTH", $beginDate, $endDate)       生成 AND CLOSE_MONTH BETWEEN :beginDate AND :endDate 
 #between("CLOSE_MONTH", $beginDate, $endDate, "OR") 生成 OR CLOSE_MONTH BETWEEN :beginDate AND :endDate 
 ```
@@ -352,15 +351,11 @@ params.put("approverName", ifNotNull(invoiceSearchVO.getApproverName(), name -> 
 
 
 
-
-
-
-
-# 核心接口
+# 三 核心接口
 
 根据接口隔离原则, 结合使用场景划分为如下几个接口
 
-## 1.EntityOperations
+## 3.1 EntityOperations
 
 JPA的entity对象的一些简单操作API
 
@@ -380,7 +375,7 @@ JPA的entity对象的一些简单操作API
 
 * ......
 
-## 2.CriteriaOperations
+## 3.2 CriteriaOperations
 
 一些简单的查询可以通过CriteriaOperations来完成, 毕竟写SQL码字数量也挺多的...
 
@@ -449,7 +444,7 @@ JPA的entity对象的一些简单操作API
 * 骚操作太多, 不一一列举
   ......
 
-## 3.SQLOperations
+## 3.3 SQLOperations
 
 **重点总是留到最后**, 在src/main/resources/named-sql目录下添加**XXX.hbm.xml**, 这里面写SQL, 比如:MessageContent.hbm.xml
 
@@ -592,8 +587,120 @@ public class MessageContent {
 
   ......
 
+# 四 完整示例
 
-# 示例
+## 4.1 分页查询
+
+### 4.1.1 Controller
+
+```java
+/**
+ * 分页查询员工表
+ */
+@PostMapping("/list")
+public Result listEmployees(@RequestBody EmployeeQueryVO queryVO) {
+  List<Employee> employees = employeeService.listEmployees(queryVO);
+  return Results.success().result(employees);
+}
+```
+
+EmployeeQueryVO
+
+```java
+@Data
+public class EmployeeQueryVO {
+	
+	private String fullName;
+	
+	private Page page;
+}
+```
+
+
+
+Page对象是commons-lang提供的, 可以作为接收查询参数的Bean的属性存在, 提交的POST请求查询数据格式示例:
+
+```json
+{
+  "fullName": "Dennis Lee",
+  "page": {
+      "pageNum":1,
+      "pageSize": 10,
+      "sorts": ["-age", "salary" ]
+    }
+}
+```
+
+如果有多个排序规则, 还提供了简化的语法, 字段前加"-"表示按这个字段DESC排, 否则ASC, 这个语法糖是通过PageDeserializer自定义了Jackson对Page对象的反序列化来实现的
+
+```json
+{
+  "pageNum":3,
+  "pageSize": 20,
+  "sorts": ["-age", "salary" ]
+}
+```
+
+只要引入了loser-spring-boot-web-starter, page对象会被回填到返回的Result对象里面, 即返回的JSON对象会包含一个page对象, 示例如下:
+
+```
+{
+  "code": "0",
+  "status": "success",
+  "page": {
+    "hasNextPage": true,
+    "hasPreviousPage": true,
+    "pageNum": 3,
+    "pageSize": 20,
+    "total": 4064001,
+    "totalPages": 203201
+  },
+  "data": [
+    ...
+  ]
+}
+```
+
+### 4.1.2 Service 层
+
+```java
+@Service
+public class EmployeeService {
+  
+  @Autowired
+  private SQLOperations sqlOperations;
+  
+    public List<Employee> listEmployees(EmployeeQueryVO queryVO) {
+      return sqlOperations.namedSqlQuery("queryEmployees", "fullName", queryVO.getFullName(), Employee.class, queryVO.getPage());
+    }
+}
+```
+
+只需要注入SQLOperations对象, SQLOperations是一个接口, JpaDao实现了该接口, 主要提供原生SQL查询的功能, listEmployees是这个原生SQL的名字, 在named-sql目录下的xxx.hbm.xml中定义, Employee可以是JPA的实体类也可以是普通的POJO, 其中"fullName"是SQL语句中查询条件的占位符名字
+
+### 4.1.3 Employee.hbm.xml
+
+分页语句已经排序子句都会自动生成, 你这边只需要写select以及查询条件即可
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd" >
+<hibernate-mapping>
+    <sql-query name="listEmployees">
+        <![CDATA[
+            select * from employee
+    	]]>
+    </sql-query>
+
+    <sql-query name="queryEmployees">
+        <![CDATA[
+            select * from employee where full_name=:fullName
+    	]]>
+    </sql-query>
+</hibernate-mapping>
+```
+
+
 
 ## Service层注入JpaDao
 

@@ -3,6 +3,7 @@ package com.loserico.orm.dao;
 import com.loserico.common.lang.transformer.ValueHandlerFactory;
 import com.loserico.common.lang.utils.ArrayTypes;
 import com.loserico.common.lang.utils.ReflectionUtils;
+import com.loserico.common.lang.utils.SqlUtils;
 import com.loserico.common.lang.vo.OrderBean;
 import com.loserico.common.lang.vo.Page;
 import com.loserico.orm.criteria.JPACriteriaQuery;
@@ -1185,10 +1186,14 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		if (page != null && page.isAutoCount()) {
 			context.put(IS_COUNT_QUERY, true);
 			// 查询总记录数
-			StringWriter countSQL = new StringWriter();
-			//进行解析  
-			Velocity.evaluate(context, countSQL, queryName, rawQuery);
-			org.hibernate.query.Query<T> countQuery = entityManager.createNativeQuery(countSQL.toString())
+			//StringWriter countSQL = new StringWriter();
+			////进行解析  
+			//Velocity.evaluate(context, countSQL, queryName, rawQuery);
+			//StringBuilder countSQL = new StringBuilder();
+			//countSQL.append("SELECT COUNT(*) FROM (").append(rawQuery).append(") AS COUNT_QUERY");
+			String countSql = SqlUtils.generateCountSql(parsedSQL);
+			log.info("Count SQL: {}", countSql);
+			org.hibernate.query.Query<T> countQuery = entityManager.createNativeQuery(countSql)
 					.unwrap(org.hibernate.query.Query.class);
 			if (isNotEmpty(params)) {
 				countQuery.setProperties(params);
@@ -1197,7 +1202,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 				Integer totalRecords = ((BigInteger) countQuery.getSingleResult()).intValue();
 				page.setTotalCount(totalRecords);
 			} catch (Throwable e) {
-				String msg = format("Failed to get result count from query[{0}] with parameters[{1}]!", countSQL,
+				String msg = format("Failed to get result count from query[{0}] with parameters[{1}]!", countSql,
 						JacksonUtils.toJson(params));
 				throw new SQLCountQueryException(msg, e);
 			}

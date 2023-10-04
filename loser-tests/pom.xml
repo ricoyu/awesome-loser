@@ -15,6 +15,13 @@
     </parent>
 
     <dependencies>
+       <!-- <dependency>
+            <groupId>com.github.jsqlparser</groupId>
+            <artifactId>jsqlparser</artifactId>
+            <version>4.7</version>
+            <type>bundle</type>
+        </dependency>-->
+
         <dependency>
             <groupId>com.loserico</groupId>
             <artifactId>commons-lang</artifactId>
@@ -469,6 +476,12 @@
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.jsqlparser</groupId>
+            <artifactId>jsqlparser</artifactId>
+            <version>4.0</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

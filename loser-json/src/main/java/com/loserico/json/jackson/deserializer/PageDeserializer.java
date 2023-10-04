@@ -131,7 +131,6 @@ public class PageDeserializer extends StdDeserializer<Page> {
 		}
 		
 		OrderBean order = new OrderBean(orderBy, (ORDER_BY) EnumUtils.lookupEnum(ORDER_BY.class, direction));
-		page.setOrder(order);
 		page.getOrders().add(order);
 	}
 }
