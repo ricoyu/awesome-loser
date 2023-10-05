@@ -202,6 +202,16 @@ public class BaseEntity implements Serializable {
 
 # 二 SQL中动态语法介绍
 
+检查fullName不为null则输出and full_name=:fullName
+
+```velocity
+#if($fullName)
+and full_name=:fullName
+#end
+```
+
+
+
 检查为null可以简化成这样(检查params里面没有塞这个参数)
 
 ```
@@ -333,7 +343,7 @@ group by ld.id
 #between("CLOSE_MONTH", $beginDate, $endDate, "OR") 生成 OR CLOSE_MONTH BETWEEN :beginDate AND :endDate 
 ```
 
-注意 #between 要小写
+注意 #between 要小写, CLOSE_MONTH 指表的字段名, 要套上双引号, 不然会报错
 
 ### SQL 中的LIKE用法
 
@@ -613,7 +623,12 @@ public class EmployeeQueryVO {
 	private String fullName;
 	
 	private Page page;
+	
+	private Double lowSalary;
+	
+	private Double highSalary;
 }
+
 ```
 
 
@@ -622,12 +637,14 @@ Page对象是commons-lang提供的, 可以作为接收查询参数的Bean的属�
 
 ```json
 {
-  "fullName": "Dennis Lee",
+  "fullName": "Tiffany Schneider",
   "page": {
-      "pageNum":1,
-      "pageSize": 10,
-      "sorts": ["-age", "salary" ]
-    }
+    "pageNum": 1,
+    "pageSize": 10,
+    "sorts": [
+      "-full_name"
+    ]
+  }
 }
 ```
 
@@ -670,9 +687,13 @@ public class EmployeeService {
   @Autowired
   private SQLOperations sqlOperations;
   
-    public List<Employee> listEmployees(EmployeeQueryVO queryVO) {
-      return sqlOperations.namedSqlQuery("queryEmployees", "fullName", queryVO.getFullName(), Employee.class, queryVO.getPage());
-    }
+  public List<Employee> listEmployees(EmployeeQueryVO queryVO) {
+    Map<String, Object> params = new HashMap<>();
+    params.put("fullName", queryVO.getFullName());
+    params.put("lowSalary", queryVO.getLowSalary());
+    params.put("highSalary", queryVO.getHighSalary());
+    return sqlOperations.namedSqlQuery("queryEmployees", params, Employee.class, queryVO.getPage());
+  }
 }
 ```
 
@@ -680,21 +701,19 @@ public class EmployeeService {
 
 ### 4.1.3 Employee.hbm.xml
 
-分页语句已经排序子句都会自动生成, 你这边只需要写select以及查询条件即可
+分页语句以及排序子句都会自动生成, 你这边只需要写select以及查询条件即可
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>  
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd" >
 <hibernate-mapping>
-    <sql-query name="listEmployees">
-        <![CDATA[
-            select * from employee
-    	]]>
-    </sql-query>
-
     <sql-query name="queryEmployees">
         <![CDATA[
-            select * from employee where full_name=:fullName
+            select * from employee where 1=1
+            #if($fullName)
+            and full_name=:fullName
+            #end
+            #between("salary", $lowSalary, $highSalary)
     	]]>
     </sql-query>
 </hibernate-mapping>

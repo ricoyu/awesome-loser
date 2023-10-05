@@ -53,6 +53,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -482,7 +483,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public <T> List<T> findByProperty(Class<T> entityClass, Predicate predicate, boolean includeDeleted,
-									  OrderBean... orders) {
+	                                  OrderBean... orders) {
 		Objects.requireNonNull(predicate, "predicate cannot be null!");
 		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache)
 				.addPredicate(predicate)
@@ -500,7 +501,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public <T> List<T> findByProperty(Class<T> entityClass, Predicate predicate, boolean includeDeleted,
-									  Page page) {
+	                                  Page page) {
 		Objects.requireNonNull(predicate, "predicate cannot be null!");
 		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache)
 				.addPredicate(predicate);
@@ -517,7 +518,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public <T> List<T> findByProperty(Class<T> entityClass, String propertyName, Object value,
-									  boolean includeDeleted) {
+	                                  boolean includeDeleted) {
 		Objects.requireNonNull(propertyName, "propertyName cannot be null!");
 		JPACriteriaQuery<T> jpaCriteriaQuery =
 				JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache);
@@ -540,7 +541,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public <T> List<T> findByProperty(Class<T> entityClass, String propertyName, Object value,
-									  boolean includeDeleted, Page page) {
+	                                  boolean includeDeleted, Page page) {
 		requireNonNull(propertyName, "propertyName cannot be null!");
 		JPACriteriaQuery<T> jpaCriteriaQuery =
 				JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache);
@@ -559,13 +560,13 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public <T> List<T> findByProperty(Class<T> entityClass, String propertyName, Object value,
-									  OrderBean... orders) {
+	                                  OrderBean... orders) {
 		return findByProperty(entityClass, propertyName, value, true, orders);
 	}
 	
 	@Override
 	public <T> List<T> findByProperty(Class<T> entityClass, String propertyName, Object value,
-									  boolean includeDeleted, OrderBean... orders) {
+	                                  boolean includeDeleted, OrderBean... orders) {
 		Objects.requireNonNull(propertyName, "propertyName cannot be null!");
 		JPACriteriaQuery<T> jpaCriteriaQuery =
 				JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache);
@@ -587,7 +588,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public <T> T findUniqueByProperty(Class<T> entityClass, String propertyName, Object value,
-									  boolean includeDeleted) {
+	                                  boolean includeDeleted) {
 		List<T> resultList = null;
 		JPACriteriaQuery<T> jpaCriteriaQuery =
 				JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache);
@@ -605,13 +606,13 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public <T> T findUniqueByProperty(Class<T> entityClass, String propertyName, Object value,
-									  OrderBean... orders) {
+	                                  OrderBean... orders) {
 		return findUniqueByProperty(entityClass, propertyName, value, true, orders);
 	}
 	
 	@Override
 	public <T> T findUniqueByProperty(Class<T> entityClass, String propertyName, Object value,
-									  boolean includeDeleted, OrderBean... orders) {
+	                                  boolean includeDeleted, OrderBean... orders) {
 		List<T> resultList = findByProperty(entityClass, propertyName, value, includeDeleted, orders);
 		return resultList.isEmpty() ? null : resultList.get(0);
 	}
@@ -639,7 +640,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public <T> T findUniqueByProperties(Class<T> entityClass, List<Predicate> predicates, boolean includeDeleted,
-										OrderBean... orders) {
+	                                    OrderBean... orders) {
 		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache)
 				.addPredicates(predicates)
 				.addOrders(orders);
@@ -668,7 +669,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public <T> List<T> findByProperties(Class<T> entityClass, List<Predicate> predicates, boolean includeDeleted,
-										OrderBean... orders) {
+	                                    OrderBean... orders) {
 		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache)
 				.addPredicates(predicates)
 				.addOrders(orders);
@@ -685,7 +686,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public <T> List<T> findByProperties(Class<T> entityClass, List<Predicate> predicates, boolean includeDeleted,
-										Page page) {
+	                                    Page page) {
 		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache)
 				.addPredicates(predicates)
 				.setPage(page);
@@ -722,13 +723,13 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	 */
 	@Override
 	public <T> List<T> findIn(Class<T> entityClass, final String propertyName, Collection<?> values,
-							  OrderBean... orders) {
+	                          OrderBean... orders) {
 		return findIn(entityClass, propertyName, values, true, orders);
 	}
 	
 	@Override
 	public <T> List<T> findIn(Class<T> entityClass, final String propertyName, Collection<?> values,
-							  boolean includeDeleted, OrderBean... orders) {
+	                          boolean includeDeleted, OrderBean... orders) {
 		Objects.requireNonNull(propertyName);
 		if (isEmpty(values)) {
 			return new ArrayList<>();
@@ -749,7 +750,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public <T> List<T> findIn(Class<T> entityClass, String propertyName, Collection<?> values,
-							  boolean includeDeleted) {
+	                          boolean includeDeleted) {
 		Objects.requireNonNull(propertyName);
 		if (isEmpty(values)) {
 			return new ArrayList<>();
@@ -788,7 +789,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public <T> List<T> findIn(Class<T> entityClass, String propertyName, Collection<?> values,
-							  boolean includeDeleted, Page page) {
+	                          boolean includeDeleted, Page page) {
 		Objects.requireNonNull(propertyName);
 		if (isEmpty(values)) {
 			return new ArrayList<>();
@@ -804,13 +805,13 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public <T> List<T> findBetween(Class<T> entityClass, String propertyName, LocalDateTime begin,
-								   LocalDateTime end, OrderBean... orders) {
+	                               LocalDateTime end, OrderBean... orders) {
 		return findBetween(entityClass, propertyName, begin, end, true, orders);
 	}
 	
 	@Override
 	public <T> List<T> findBetween(Class<T> entityClass, String propertyName, LocalDateTime begin,
-								   LocalDateTime end, boolean includeDeleted, OrderBean... orders) {
+	                               LocalDateTime end, boolean includeDeleted, OrderBean... orders) {
 		Objects.requireNonNull(propertyName);
 		Objects.requireNonNull(begin);
 		Objects.requireNonNull(end);
@@ -825,7 +826,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public <T> List<T> findBetween(Class<T> entityClass, String propertyName, LocalDateTime begin,
-								   LocalDateTime end) {
+	                               LocalDateTime end) {
 		return findBetween(entityClass, propertyName, begin, end, true);
 	}
 	
@@ -852,7 +853,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public <T> List<T> findBetween(Class<T> entityClass, String propertyName, LocalDateTime begin,
-								   LocalDateTime end, boolean includeDeleted) {
+	                               LocalDateTime end, boolean includeDeleted) {
 		Objects.requireNonNull(propertyName);
 		Objects.requireNonNull(begin);
 		Objects.requireNonNull(end);
@@ -866,13 +867,13 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public <T> List<T> findBetween(Class<T> entityClass, String propertyName, LocalDateTime begin,
-								   LocalDateTime end, Page page) {
+	                               LocalDateTime end, Page page) {
 		return findBetween(entityClass, propertyName, begin, end, true, page);
 	}
 	
 	@Override
 	public <T> List<T> findBetween(Class<T> entityClass, String propertyName, LocalDateTime begin,
-								   LocalDateTime end, boolean includeDeleted, Page page) {
+	                               LocalDateTime end, boolean includeDeleted, Page page) {
 		Objects.requireNonNull(propertyName);
 		Objects.requireNonNull(begin);
 		Objects.requireNonNull(end);
@@ -936,7 +937,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public <T> T leftJoinFetchSingleResult(Class<T> entityClass, Predicate predicate, List<OrderBean> orders,
-										   String... attributeNames) {
+	                                       String... attributeNames) {
 		List<T> results = JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache)
 				.addPredicate(predicate)
 				.addOrders(orders)
@@ -1159,6 +1160,16 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 				enumLookupProperties));
 		
 		if (isNotEmpty(params)) {
+			/*
+			 * 如果params里面某个key对应的value是null, 下面query.setProperties(params)会抛NullpointException, 所以这里要移除值为null的key
+			 */
+			Iterator<Map.Entry<String, Object>> iterator = params.entrySet().iterator();
+			while (iterator.hasNext()) {
+				Map.Entry<String, Object> entry = iterator.next();
+				if (entry.getValue() == null) {
+					iterator.remove();
+				}
+			}
 			for (String key : params.keySet()) {
 				Object value = params.get(key);
 				processInOperate(params, key, value);
@@ -1213,7 +1224,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	@SuppressWarnings("rawtypes")
 	@Override
 	public <T> List<T> namedSqlQuery(String queryName, String paramName, Object paramValue, Class<T> clazz,
-									 Page page) {
+	                                 Page page) {
 		//如果参数值是List类型，那么该SQL语句认为是IN查询，如果List的size则为0，就不需要查询了，直接返回空的ArrayList
 		if (paramValue instanceof List) {
 			if (((List) paramValue).size() == 0) {
@@ -1429,7 +1440,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 				.map(result -> ValueHandlerFactory.convert(result, type))
 				.collect(toList());
 	}
-
+	
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	@Override
 	public List namedScalarListQuery(String queryName, Map<String, Object> params, Class... types) {
@@ -1475,7 +1486,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 				.unwrap(org.hibernate.query.Query.class);
 		if (clazz != null) {
 			query.setResultTransformer(
-				ResultTransformerFactory.getResultTransformer(sql, clazz, hibernateQueryMode, enumLookupProperties));
+					ResultTransformerFactory.getResultTransformer(sql, clazz, hibernateQueryMode, enumLookupProperties));
 		}
 		if (isNotEmpty(params)) {
 			query.setProperties(params);
@@ -1494,7 +1505,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	@Override
 	@SuppressWarnings({"unchecked", "deprecation"})
 	public <T> List<T> sqlQuery(String sql, String countSql, Map<String, Object> params, Class<T> clazz,
-								Page page) {
+	                            Page page) {
 		org.hibernate.query.Query<T> query = null;
 		// 排序
 		if (page != null && page.getOrder() != null) {
@@ -1562,7 +1573,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public <T> List<T> sqlQuery(String sql, String countSql, String paramName, Object paramValue, Class<T> clazz,
-								Page page) {
+	                            Page page) {
 		Map<String, Object> params = new HashMap<String, Object>();
 		if (StringUtils.isNotBlank(paramName)) {
 			params.put(paramName, paramValue);
@@ -1607,7 +1618,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public <T> JPACriteriaQuery<T> createJPACriteriaQuery(Class<T> entityClass,
-														  List<Predicate> predicates, OrderBean... orders) {
+	                                                      List<Predicate> predicates, OrderBean... orders) {
 		return JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache)
 				.addPredicates(predicates)
 				.addOrders(orders);
@@ -1615,7 +1626,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public <T> int deleteByProperty(Class<T> entityClass, String propertyName,
-									Object propertyValue) {
+	                                Object propertyValue) {
 		CriteriaBuilder criteriaBuilder = this.entityManager.getCriteriaBuilder();
 		CriteriaDelete<T> delete = criteriaBuilder.createCriteriaDelete(entityClass);
 		Root<T> root = delete.from(entityClass);
@@ -1654,7 +1665,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public <T, PK extends Serializable> T ensureEntityExists(Class<T> entityClass,
-															 PK id) throws EntityNotFoundException {
+	                                                         PK id) throws EntityNotFoundException {
 		T entity = get(entityClass, id);
 		if (entity == null) {
 			throw new EntityNotFoundException(format("Unable to find {0} with id {1}", entityClass.getSimpleName(), id));
@@ -1698,13 +1709,13 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public <T> T ensureEntityExists(Class<T> entityClass, String propertyName,
-									Object value) throws EntityNotFoundException {
+	                                Object value) throws EntityNotFoundException {
 		return ensureEntityExists(entityClass, propertyName, value, true);
 	}
 	
 	@Override
 	public <T> T ensureEntityExists(Class<T> entityClass, String propertyName, Object value,
-									boolean includeDeleted) throws EntityNotFoundException {
+	                                boolean includeDeleted) throws EntityNotFoundException {
 		List<T> resultList = findByProperty(entityClass, propertyName, value, includeDeleted);
 		T entity = resultList.isEmpty() ? null : resultList.get(0);
 		if (entity == null) {
@@ -1723,7 +1734,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		}
 		return query;
 	}
-
+	
 	@Override
 	public <T> Query createQuery(final String jpql, String paramName, Object paramValue, Class<T> resultClass) {
 		Objects.requireNonNull(jpql, "jpql cannot be null");
@@ -2071,5 +2082,5 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		this.enumLookupProperties = enumLookupProperties;
 	}
 	
- 
+	
 }
