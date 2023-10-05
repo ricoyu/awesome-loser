@@ -1196,12 +1196,12 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		//接下来是分页查询中的查询总记录数
 		if (page != null && page.isAutoCount()) {
 			context.put(IS_COUNT_QUERY, true);
+			//查总记录数不需要排序, 提升性能
+			int orderByIndex = parsedSQL.toLowerCase().lastIndexOf("order by");
+			if (orderByIndex!= -1) {
+				parsedSQL = parsedSQL.substring(0, orderByIndex);
+			}
 			// 查询总记录数
-			//StringWriter countSQL = new StringWriter();
-			////进行解析  
-			//Velocity.evaluate(context, countSQL, queryName, rawQuery);
-			//StringBuilder countSQL = new StringBuilder();
-			//countSQL.append("SELECT COUNT(*) FROM (").append(rawQuery).append(") AS COUNT_QUERY");
 			String countSql = SqlUtils.generateCountSql(parsedSQL);
 			log.info("Count SQL: {}", countSql);
 			org.hibernate.query.Query<T> countQuery = entityManager.createNativeQuery(countSql)
