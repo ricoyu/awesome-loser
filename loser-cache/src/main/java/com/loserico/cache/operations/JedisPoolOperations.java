@@ -21,6 +21,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static java.util.Collections.emptyList;
 
@@ -69,6 +70,12 @@ public class JedisPoolOperations implements JedisOperations {
 	@Override
 	public Boolean exists(byte[] key) {
 		return operate((jedis) -> jedis.exists(key));
+	}
+	
+	@Override
+	public List<String> keys(String pattern) {
+		Set<String> keys = operate((jedis) -> jedis.keys(pattern));
+		return keys.stream().collect(Collectors.toList());
 	}
 	
 	@Override

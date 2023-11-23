@@ -10,8 +10,17 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * Protostuff是基于ProtoBuf实现的, 主要用于Java领域的序列化框架。
+ * <ul>
+ * <li/>可以直接使用Java类, 而不是.proto文件
+ * <li/>它较于protobuf最明显的好处是, 在几乎不损耗性能的情况下做到了不用我们写.proto文件来实现序列化。
+ * <li/>Protostuff基于Protobuf。它使用Protobuf的核心概念, 但添加了更易用的API和额外的功能。
+ * <li/>Protobuf是面向多种语言的更通用解决方案, 而Protostuff主要针对Java开发者, 提供更简洁的使用方式。
+ * <li/>Protobuf需要.proto文件来定义数据结构, 而Protostuff可以直接利用Java类进行序列化。
+ * <li/>Protostuff在Protobuf的基础上提供了更多的功能, 如schema-less序列化和数据压缩。
+ * </ul>
+ * 优势: 对象不需要有默认构造函数也不需要实现Serializble接口<p/>
  * 限制: 反序列化需要提供Class对象<p>
- * 优势: 对象不需要有默认构造函数也不需要实现Serializble接口
  * <p>
  * Copyright: (C), 2020-10-10 17:31
  * <p>

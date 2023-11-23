@@ -21,6 +21,17 @@
             <version>2.6.2</version>
         </dependency>
         <dependency>
+            <groupId>org.apache.rocketmq</groupId>
+            <artifactId>rocketmq-client</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+            </exclusions>
+            <version>4.9.3</version>
+        </dependency>
+        <dependency>
             <groupId>com.loserico</groupId>
             <artifactId>commons-lang</artifactId>
             <version>${project.parent.version}</version>

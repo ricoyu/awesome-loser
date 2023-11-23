@@ -79,15 +79,19 @@
             <artifactId>protostuff-runtime</artifactId>
         </dependency>
 
-        
+
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
-            <version>4.1.39.Final</version>
-            <!--<version>4.1.35.Final</version>
--->        </dependency>
+            <version>4.1.28.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>3.19.1</version>
+        </dependency>
     </dependencies>
-    
+
     <build>
         <resources>
             <resource>

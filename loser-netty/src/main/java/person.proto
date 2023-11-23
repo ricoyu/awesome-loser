@@ -1,0 +1,11 @@
+syntax = "proto3"; //协议版本(proto3中, 在第一行非空白非注释行, 必须写syntax = "proto3")
+package protobuf_Demo;
+
+option java_package="com.loserico.netty.protobuf"; //指定生成的类应该放在什么Java包下
+option java_outer_classname="PersonProto"; //生成对应.java文件的类名(不能跟下面message的类名相同)
+
+message Person {
+  int32 id = 1;
+  string name = 2;
+  string email = 3;
+}

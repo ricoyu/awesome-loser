@@ -32,6 +32,7 @@
         <module>loser-rocket</module>
         <module>loser-mybatis</module>
         <module>loser-bigdata</module>
+        <module>loser-algorithm</module>
     </modules>
 
     <properties>
@@ -734,49 +735,39 @@
     </dependencies>
 
     <distributionManagement>
-        <!--<repository>
-            <id>phantom-maven2</id>
-            <name>phantom-maven2</name>
-            <url>http://172.23.12.66:8081/repository/phantom-maven2/</url>
-        </repository>-->
+        <repository>
+            <id>magic-store</id>
+            <name>magic-store</name>
+            <url>http://139.196.141.138:9091/repository/magic-store/</url>
+        </repository>
     </distributionManagement>
 
     <repositories>
-        <!--<repository>
-            <id>public</id>
-            <name>Public Repositories</name>
-            <url>http://172.23.12.66:8081/repository/maven-public/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>-->
         <repository>
-            <id>elasticsearch-releases</id>
-            <url>https://artifacts.elastic.co/maven</url>
+            <id>magic-store</id>
+            <name>magic-store</name>
+            <url>http://139.196.141.138:9091/repository/maven-public/</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
             <snapshots>
-                <enabled>false</enabled>
+                <enabled>true</enabled>
             </snapshots>
         </repository>
     </repositories>
 
     <pluginRepositories>
-        <!--<pluginRepository>
-            <id>public</id>
-            <name>Public Repositories</name>
-            <url>http://172.23.12.66:8081/repository/maven-public</url>
+        <pluginRepository>
+            <id>magic-store</id>
+            <name>magic-store</name>
+            <url>http://139.196.141.138:9091/repository/maven-public</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
-        </pluginRepository>-->
+        </pluginRepository>
     </pluginRepositories>
 
     <build>

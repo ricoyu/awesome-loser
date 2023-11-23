@@ -35,6 +35,13 @@ public interface JedisOperations {
 	
 	public Boolean exists(final byte[] key);
 	
+	/**
+	 * 根据pattern返回所有的key名字
+	 * @param pattern
+	 * @return
+	 */
+	public List<String> keys(final String pattern);
+	
 	public Long incr(final String key);
 	
 	public Long incrBy(final String key, final long increment);

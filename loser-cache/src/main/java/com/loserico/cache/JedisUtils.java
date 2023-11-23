@@ -2672,6 +2672,15 @@ public final class JedisUtils {
 		return value;
 	}
 	
+	/**
+	 * 获取所有的key
+	 * @param keyPattern
+	 * @return
+	 */
+	public static List<String> keys(String keyPattern) {
+		return jedisOperations.keys(keyPattern);
+	}
+	
 	@SuppressWarnings("unchecked")
 	public static <T> T eval(String script) {
 		return (T) jedisOperations.eval(script);

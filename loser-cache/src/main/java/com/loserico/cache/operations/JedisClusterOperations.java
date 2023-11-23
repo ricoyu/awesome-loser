@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static com.loserico.cache.utils.ByteUtils.toBytes;
+import static java.util.stream.Collectors.toList;
 
 /**
  * <p>
@@ -58,6 +59,11 @@ public class JedisClusterOperations implements JedisOperations {
 	@Override
 	public Boolean exists(byte[] key) {
 		return jedisCluster.exists(key);
+	}
+	
+	@Override
+	public List<String> keys(String pattern) {
+		return jedisCluster.keys(pattern).stream().collect(toList());
 	}
 	
 	@Override

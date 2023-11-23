@@ -483,6 +483,12 @@
             <version>4.0</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-api</artifactId>
+            <version>1.23.0</version>
+        </dependency>
     </dependencies>
 
 </project>

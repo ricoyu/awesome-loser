@@ -11,8 +11,8 @@ import java.util.Base64;
 /**
  * Kryo序列化/反序列化
  * <p>
- * 限制: 对象需要有默认构造函数
- * 优势: 不需要实现Serializble接口
+ * 优势: 不需要实现Serializble接口; 反序列化不需要提供Class对象
+ * 限制: 对象需要有默认构造函数; 只能在Java生态圈用, 不能跨语言
  *
  * <p>
  * Copyright: (C), 2021-01-19 20:35

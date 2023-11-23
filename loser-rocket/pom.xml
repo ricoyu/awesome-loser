@@ -4,7 +4,7 @@
     <artifactId>loser-rocket</artifactId>
     <packaging>jar</packaging>
     <version>${project.parent.version}</version>
-    <name>Loser messages encapsulation of Kafka</name>
+    <name>Loser RocketMQ Utils</name>
     <url>http://maven.apache.org</url>
 
     <parent>
@@ -15,11 +15,18 @@
     </parent>
 
     <dependencies>
-        <!--<dependency>
-          <groupId>org.apache.rocketmq</groupId>
-          <artifactId>rocketmq-client</artifactId>
-           <version>4.9.3</version>
-        </dependency>-->
+        <dependency>
+            <groupId>org.apache.rocketmq</groupId>
+            <artifactId>rocketmq-client</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+            </exclusions>
+            <version>4.9.3</version>
+            <scope>compile</scope>
+        </dependency>
         <dependency>
             <groupId>org.apache.rocketmq</groupId>
             <artifactId>rocketmq-tools</artifactId>

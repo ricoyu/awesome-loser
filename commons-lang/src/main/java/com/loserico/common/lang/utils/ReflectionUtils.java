@@ -29,8 +29,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import static org.springframework.util.ObjectUtils.nullSafeToString;
-
 /**
  * 反射工具类
  * <p>
@@ -649,9 +647,9 @@ public class ReflectionUtils {
 			methodInvoker.setArguments(args);
 			methodInvoker.prepare();
 			
-			if (logger.isDebugEnabled()) {
-				logger.debug(String.format("Invoking method '%s' on %s with arguments %s", name, safeToString(target), nullSafeToString(args)));
-			}
+			//if (logger.isDebugEnabled()) {
+			//	logger.debug(String.format("Invoking method '%s' on %s with arguments %s", name, safeToString(target), nullSafeToString(args)));
+			//}
 			
 			return (T) methodInvoker.invoke();
 		} catch (Exception ex) {

@@ -1,6 +1,9 @@
 package com.loserico.binary;
 
+import com.loserico.codec.RedixUtils;
 import org.junit.Test;
+
+import java.util.Random;
 
 /**
  * 1 1 2 10 3 11 4 100 5 101 6 110 7 111 8 1000 9 1001 10 1010
@@ -47,4 +50,19 @@ public class BinaryTest {
 		a &= b;
 		System.out.println("a = " + a);
 	}
+	
+	@Test
+	public void test() {
+		Random random = new Random();
+		int num1 = random.nextInt(10000);
+		System.out.println("num1: " +num1);
+		byte[] bytes = RedixUtils.int2ByteArray(num1);
+		//byte[] bytes1 = RedixUtils.intToByteArray(num2);
+		String binaryStr = RedixUtils.bytes2BinaryStr(bytes);
+		//RedixUtils.print(bytes1);
+		System.out.println(binaryStr);
+		int value = RedixUtils.binary2Int(binaryStr);
+		System.out.println("还原成int: "+value);
+	}
+	
 }

@@ -281,7 +281,7 @@ public class IPUtils {
 		 * IP的每一部分都介于0~255之间, 255的二进制表示为11111111
 		 * 所以如果小于255, 那么二进制前面补零, 补足8位
 		 */
-		String s = RedixUtils.intToBinary(subIp);
+		String s = RedixUtils.int2BinaryStr(subIp);
 		int initialLength = s.length();
 		for (int i = initialLength; i < 8; i++) {
 			s = "0" + s;
@@ -299,7 +299,7 @@ public class IPUtils {
 		if (isBlank(subIp)) {
 			return "0000000000000000";
 		}
-		String s = RedixUtils.hexToBinary(subIp);
+		String s = RedixUtils.hex2BinaryStr(subIp);
 		int initialLength = s.length();
 		for (int i = initialLength; i < 16; i++) {
 			s = "0" + s;

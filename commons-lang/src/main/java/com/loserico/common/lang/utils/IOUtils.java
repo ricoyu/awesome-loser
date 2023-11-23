@@ -3,11 +3,12 @@ package com.loserico.common.lang.utils;
 import com.loserico.common.lang.enums.SizeUnit;
 import com.loserico.common.lang.exception.FileCopyException;
 import com.loserico.common.lang.exception.IORuntimeException;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
@@ -82,9 +83,9 @@ import static org.apache.commons.lang3.StringUtils.join;
  * @author Rico Yu  ricoyu520@gmail.com
  * @version 1.0
  */
-@Slf4j
 public class IOUtils {
 	
+	private static final Logger log = LoggerFactory.getLogger(IOUtils.class);
 	/**
 	 * The Unix directory separator character.
 	 * 这个不要随便改, jar中的路径是以/分隔的
@@ -376,6 +377,7 @@ public class IOUtils {
 	
 	/**
 	 * 将多个块合并成一个文件
+	 *
 	 * @param destFile
 	 * @param blocks
 	 */
@@ -1681,5 +1683,49 @@ public class IOUtils {
 	 */
 	public static String fileExtension(String filename) {
 		return FilenameUtils.getExtension(filename);
+	}
+	
+	/**
+	 * 从命令行不断读取用户输入
+	 *
+	 * @param consumer
+	 */
+	public static void readUserInput(Consumer<String> consumer) {
+		Scanner sc = new Scanner(System.in);
+		while (true) {
+			System.out.print("请输入命令（输入'exit'以退出）: ");
+			String input = sc.nextLine();
+			if ("exit".equals(input)) {
+				break;
+			}
+			consumer.accept(input);
+		}
+	}
+	
+	/**
+	 * 从命令行读取一次用户输入
+	 *
+	 * @param inputPrompt 输入提示
+	 * @return String 用户输入的内容
+	 */
+	public static String readUserInputOnce(String inputPrompt) {
+		//Scanner用完不要关闭, sc.close()实际关闭的是System.in, 所以即使每次方法里面重新new Scanner也没用, 不能再重新读取了
+		Scanner sc = new Scanner(System.in);
+		System.out.print(inputPrompt);
+		return sc.nextLine();
+	}
+	
+	public static void slientUserInput(String prompt, Consumer<String> consumer) {
+		new Thread(() -> {
+			Scanner sc = new Scanner(System.in);
+			while (true) {
+				System.out.print(prompt);
+				String input = sc.nextLine();
+				if ("exit".equals(input)) {
+					break;
+				}
+				consumer.accept(input);
+			}
+		}, "等待用户输入线程").start();
 	}
 }
