@@ -135,14 +135,14 @@ public class NioServerHandler implements Runnable {
 			
 			System.out.println("服务端收到消息: " + msg);
 			TimeUnit.MILLISECONDS.sleep(100);
-			IOUtils.slientUserInput("请输入数据:", (response) -> {
-				byte[] bytes = response.getBytes(UTF_8);
+			IOUtils.slientUserInput("请输入数据:", (input) -> {
+				byte[] bytes = input.getBytes(UTF_8);
 				ByteBuffer responseBuffer = ByteBuffer.allocate(bytes.length);
 				responseBuffer.put(bytes);
 				//接下来sc从buffer中读取数据, 所以要先flip一下
 				responseBuffer.flip();
 				//写回客户端
-				System.out.println("服务端发送消息: " + response);
+				System.out.println("服务端发送消息: " + input);
 				try {
 					sc.write(responseBuffer);
 				} catch (IOException e) {

@@ -5,7 +5,7 @@
     <groupId>com.loserico</groupId>
     <artifactId>awesome-loser</artifactId>
     <packaging>pom</packaging>
-    <version>4.12.7</version>
+    <version>4.12.8</version>
     <name>Awesome Loser</name>
     <url>http://maven.apache.org</url>
 
@@ -734,7 +734,7 @@
         </dependency>
     </dependencies>
 
-    <!--<distributionManagement>
+    <distributionManagement>
         <repository>
             <id>magic-store</id>
             <name>magic-store</name>
@@ -768,7 +768,7 @@
                 <enabled>true</enabled>
             </snapshots>
         </pluginRepository>
-    </pluginRepositories>-->
+    </pluginRepositories>
 
     <build>
         <resources>
@@ -792,7 +792,7 @@
                     <encoding>${encoding}</encoding>
                 </configuration>
             </plugin>
-            <plugin>
+            <!--<plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
                 <version>${maven-source-plugin.version}</version>
@@ -805,7 +805,7 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
+            </plugin>-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>

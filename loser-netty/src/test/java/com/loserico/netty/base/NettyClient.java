@@ -39,6 +39,7 @@ public class NettyClient {
 					.handler(new ChannelInitializer<SocketChannel>() {
 						@Override
 						protected void initChannel(SocketChannel ch) throws Exception {
+							ch.pipeline().addLast(new BaseMessageDecoder());
 							//加入处理器
 							ch.pipeline().addLast(new NettyClientHandler());
 						}

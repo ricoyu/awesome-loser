@@ -1715,6 +1715,11 @@ public class IOUtils {
 		return sc.nextLine();
 	}
 	
+	/**
+	 * 另起一个线程读取用户输入, 输入exit退出
+	 * @param prompt 控制台打印的提示语
+	 * @param consumer 用户的输入会传给这个consumer去消费
+	 */
 	public static void slientUserInput(String prompt, Consumer<String> consumer) {
 		new Thread(() -> {
 			Scanner sc = new Scanner(System.in);

@@ -4,10 +4,13 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.util.CharsetUtil;
+import io.netty.util.ReferenceCountUtil;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.concurrent.TimeUnit.*;
 
 /**
  * 自定义Handler需要继承netty规定好的某个HandlerAdapter(规范)
@@ -24,6 +27,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 @Slf4j
 public class NettyServerHandler extends ChannelInboundHandlerAdapter {
 	
+	private AtomicInteger counter = new AtomicInteger();
+	
 	/**
 	 * 读取客户端发送的数据
 	 * @param ctx 上下文对象, 含有通道channel, 管道pipeline
@@ -33,8 +38,9 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 		log.info("服务器读取线程 {}", Thread.currentThread().getName());
-		ByteBuf buf = (ByteBuf)msg;
-		log.info("客户端发送消息是:{}", buf.toString(CharsetUtil.UTF_8));
+		//ByteBuf buf = (ByteBuf)msg;
+		ReferenceCountUtil.release(msg); // 释放内存
+		log.info("客户端发送消息是:{}", msg);
 	}
 	
 	/**
@@ -44,7 +50,8 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
 	 */
 	@Override
 	public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
-		ByteBuf buf = Unpooled.copiedBuffer("HelloClient".getBytes(UTF_8));
+		SECONDS.sleep(2);
+		ByteBuf buf = Unpooled.copiedBuffer(("HelloClient"+counter.incrementAndGet()).getBytes(UTF_8));
 		ctx.writeAndFlush(buf);
 	}
 	
@@ -56,6 +63,7 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
 	 */
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+		cause.printStackTrace();
 		ctx.close();
 	}
 }

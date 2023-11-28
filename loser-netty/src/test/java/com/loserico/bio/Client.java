@@ -24,7 +24,7 @@ public class Client {
 		Socket socket = null;
 		ObjectInputStream inputStream = null;
 		ObjectOutputStream outputStream = null;
-		InetSocketAddress address = new InetSocketAddress("192.168.100.11", 8888);
+		InetSocketAddress address = new InetSocketAddress("localhost", 8888);
 		try {
 			socket = new Socket();
 			socket.connect(address);

@@ -56,6 +56,7 @@ public class NettyServer {
 						 */
 						@Override
 						protected void initChannel(SocketChannel ch) throws Exception {
+							ch.pipeline().addLast(new BaseMessageDecoder());
 							//对workerGroup的SocketChannel设置处理器
 							ch.pipeline().addLast(new NettyServerHandler());
 						}
