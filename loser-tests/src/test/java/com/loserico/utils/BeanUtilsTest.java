@@ -1,6 +1,7 @@
 package com.loserico.utils;
 
 import com.loserico.common.lang.utils.BeanUtils;
+import com.loserico.json.jackson.JacksonUtils;
 import org.junit.Test;
 
 import java.time.LocalDateTime;
@@ -51,9 +52,11 @@ public class BeanUtilsTest {
 		User source = new User();
 		source.setAge(12);
 		source.setCount(Long.valueOf(34));
-		source.setName("rico");
+		source.setName(null);
 		User target = new User();
-		BeanUtils.copyProperties(source, target);
+		target.setName("俞雪华");
+		BeanUtils.copyProperties(source, target, true);
+		System.out.println(JacksonUtils.toJson(target));
 	}
 	
 	@Test

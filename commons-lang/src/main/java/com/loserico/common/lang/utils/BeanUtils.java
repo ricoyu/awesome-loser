@@ -30,18 +30,18 @@ import static org.springframework.beans.BeanUtils.getPropertyDescriptors;
 public class BeanUtils {
 
 	/**
-	 * 从source拷贝到target，拷贝所有，包括值为null的属性
+	 * 从source拷贝到target, 不包括值为null的属性
 	 * 
 	 * @param source
 	 * @param target
 	 */
 	public static void copyProperties(Object source, Object target) {
-		copyProperties(source, target, false);
+		copyProperties(source, target, true);
 	}
 
 	/**
 	 * 根据class创建相应对象，从source拷贝到target<br/>
-	 * 拷贝所有，包括值为null的属性<br/>
+	 * 拷贝所有，不包括值为null的属性<br/>
 	 * 该类需要有一个默认构造函数<p>
 	 * 
 	 * @param source
@@ -53,7 +53,7 @@ public class BeanUtils {
 		T target = null;
 		try {
 			target = (T) clazz.newInstance();
-			copyProperties(source, target, false);
+			copyProperties(source, target, true);
 		} catch (InstantiationException | IllegalAccessException e) {
 			log.error("msg", e);
 		}
@@ -62,7 +62,7 @@ public class BeanUtils {
 
 	/**
 	 * 从 sources 中取出元素挨个拷贝属性
-	 * 根据class创建相应对象，从source拷贝到target，拷贝所有，包括值为null的属性
+	 * 根据class创建相应对象，从source拷贝到target，拷贝所有，不包括值为null的属性
 	 * 
 	 * 该类需要有一个默认构造函数
 	 * 
@@ -82,7 +82,7 @@ public class BeanUtils {
 
 	/**
 	 * 从 sources 中取出元素挨个拷贝属性
-	 * 根据class创建相应对象，从source拷贝到target，拷贝所有，包括值为null的属性
+	 * 根据class创建相应对象，从source拷贝到target，不包括值为null的属性
 	 * 
 	 * 该类需要有一个默认构造函数
 	 * 
@@ -102,18 +102,18 @@ public class BeanUtils {
 	}
 
 	/**
-	 * 从source拷贝到target，可以指定忽略哪些属性，值为null的属性也会拷贝
+	 * 从source拷贝到target，可以指定忽略哪些属性，不包括值为null的属性
 	 * 
 	 * @param source
 	 * @param target
 	 * @param ignoreProperties
 	 */
 	public static void copyProperties(Object source, Object target, String... ignoreProperties) {
-		copyProperties(source, target, false, ignoreProperties);
+		copyProperties(source, target, true, ignoreProperties);
 	}
 
 	/**
-	 * 从source拷贝到target，可以指定忽略哪些属性，值为null的属性也会拷贝
+	 * 从source拷贝到target，可以指定忽略哪些属性，不包括值为null的属性
 	 * 
 	 * @param source
 	 * @param clazz
@@ -124,7 +124,7 @@ public class BeanUtils {
 		T target = null;
 		try {
 			target = (T) clazz.newInstance();
-			copyProperties(source, target, false, ignoreProperties);
+			copyProperties(source, target, true, ignoreProperties);
 		} catch (InstantiationException | IllegalAccessException e) {
 			log.error("msg", e);
 		}

@@ -35,7 +35,7 @@ public class OptimizedSlidingTimeWindowRateLimiter {
 	 * 构造函数
 	 *
 	 * @param windowSizeInMillis      整个时间窗口的大小（以毫秒为单位）
-	 * @param maxRequestsPerSubWindow 每个子窗口允许的最大请求数
+	 * @param maxRequestsPerSubWindow 每个子窗口允许的最大请求数, 数组的长度表示子窗口的总数
 	 */
 	public OptimizedSlidingTimeWindowRateLimiter(long windowSizeInMillis, int[] maxRequestsPerSubWindow) {
 		this.windowSizeInMillis = windowSizeInMillis;
