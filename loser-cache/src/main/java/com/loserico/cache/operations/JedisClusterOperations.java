@@ -192,6 +192,16 @@ public class JedisClusterOperations implements JedisOperations {
 	}
 	
 	@Override
+	public String lindex(String key, int index) {
+		return jedisCluster.lindex(key, index);
+	}
+	
+	@Override
+	public String lindex(String key, long index) {
+		return jedisCluster.lindex(key, index);
+	}
+	
+	@Override
 	public List<String> lrange(String key, long start, long stop) {
 		return jedisCluster.lrange(key, start, stop);
 	}

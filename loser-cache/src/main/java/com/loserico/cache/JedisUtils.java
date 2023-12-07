@@ -1110,6 +1110,10 @@ public final class JedisUtils {
 			return jedisOperations.llen(key);
 		}
 		
+		public static String lindex(String key, int index) {
+			return jedisOperations.lindex(key, index);
+		}
+		
 		/**
 		 * lrange 返回指定列表中指定范围的元素值 <br/>
 		 * index从0开始,  -1表示最后一个元素 <br/>

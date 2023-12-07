@@ -218,6 +218,16 @@ public class JedisPoolOperations implements JedisOperations {
 	}
 	
 	@Override
+	public String lindex(String key, int index) {
+		return operate((jedis) -> jedis.lindex(key, (long)index));
+	}
+	
+	@Override
+	public String lindex(String key, long index) {
+		return operate((jedis) -> jedis.lindex(key, index));
+	}
+	
+	@Override
 	public List<String> lrange(String key, long start, long stop) {
 		return operate((jedis) -> jedis.lrange(key, start, stop));
 	}

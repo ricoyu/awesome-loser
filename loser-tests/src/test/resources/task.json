@@ -1,0 +1,25 @@
+{
+  "LoadingPlatform": "0",
+  "Speed": "2",
+  "EquipmentId": "TAMR006",
+  "TaskQty": 1,
+  "Floor": "03",
+  "PathArr": [
+    {
+      "LoadingPlatform": "0",
+      "Speed": "2",
+      "PathId": "3",
+      "SubtaskId": "1",
+      "TaskId": "DISPATCH1701419337803",
+      "EquipmentId": "TAMR006",
+      "ContainerId": "",
+      "StartPosition": "0B09",
+      "EndPosition": "0C09",
+      "WcsStartPosition": "03002009T1111",
+      "WcsEndPosition": "03003009S0011",
+      "CommandId": "MOV",
+      "Floor": 3,
+      "LiftId": "1"
+    }
+  ]
+}

@@ -162,6 +162,22 @@ public interface JedisOperations {
 	 */
 	public Long llen(final String key);
 	
+	/**
+	 * 返回但不删除指定位置的元素
+	 * @param key
+	 * @param index
+	 * @return String
+	 */
+	public String lindex(final String key, int index);
+	
+	/**
+	 * 返回但不删除指定位置的元素
+	 * @param key
+	 * @param index
+	 * @return String
+	 */
+	public String lindex(final String key, long index);
+	
 	public List<String> lrange(final String key, final long start, final long stop);
 	
 	public List<byte[]> lrange(final byte[] key, final long start, final long stop);

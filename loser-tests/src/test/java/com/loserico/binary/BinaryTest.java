@@ -56,12 +56,12 @@ public class BinaryTest {
 		Random random = new Random();
 		int num1 = random.nextInt(10000);
 		System.out.println("num1: " +num1);
-		byte[] bytes = RedixUtils.int2ByteArray(num1);
+		byte[] bytes = RedixUtils.int2Bytes(num1);
 		//byte[] bytes1 = RedixUtils.intToByteArray(num2);
 		String binaryStr = RedixUtils.bytes2BinaryStr(bytes);
 		//RedixUtils.print(bytes1);
 		System.out.println(binaryStr);
-		int value = RedixUtils.binary2Int(binaryStr);
+		int value = RedixUtils.binaryStr2Int(binaryStr);
 		System.out.println("还原成int: "+value);
 	}
 	

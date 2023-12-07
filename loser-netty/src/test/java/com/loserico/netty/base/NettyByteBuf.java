@@ -31,7 +31,8 @@ public class NettyByteBuf {
 		log.info("byteBuf={}", buf);
 		
 		for (int i = 0; i < 8; i++) {
-			buf.writeByte(i);
+			buf.writeInt(i);
+			log.info("byteBuf={}", buf);
 		}
 		log.info("byteBuf={}", buf);
 		
