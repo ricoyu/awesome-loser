@@ -6,6 +6,8 @@ https://gist.github.com/JonCole/925630df72be1351b21440625ff2671f
 
 # 摘要
 
+src/main/resources下放redis.properties, 配置Redis IP和密码等等, 具体可配置项如下
+
 1. redis.host=localhost
 2. redis.port=6379
 3. redis.password

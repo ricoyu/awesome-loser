@@ -1,7 +1,10 @@
 package com.loserico.codec;
 
 import com.loserico.common.lang.utils.IOUtils;
+import com.loserico.common.lang.utils.StringUtils;
 import org.junit.Test;
+
+import java.nio.charset.StandardCharsets;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.*;
@@ -25,7 +28,7 @@ public class RedixUtilsTest {
 	
 	@Test
 	public void testHex2Int() {
-		System.out.println(RedixUtils.hex2Int("22"));
+		System.out.println(RedixUtils.hex2Int("00 7b"));
 	}
 	
 	@Test
@@ -113,15 +116,15 @@ public class RedixUtilsTest {
 		for (int i = 0; i < len; i += 2) {
 			char c1 = hex.charAt(i);
 			int digit = Character.digit(c1, 16);
-			System.out.println(digit+" 的二进制形式: "+RedixUtils.int2BinaryStr(digit));
+			System.out.println(digit + " 的二进制形式: " + RedixUtils.int2BinaryStr(digit));
 			char c2 = hex.charAt(i + 1);
 			int digit1 = Character.digit(c2, 16);
-			System.out.println(digit1+" 的二进制形式: "+RedixUtils.int2BinaryStr(digit1));
+			System.out.println(digit1 + " 的二进制形式: " + RedixUtils.int2BinaryStr(digit1));
 			int tmp = digit << 4;
-			System.out.println(digit +" 左移四位后: " + tmp +", 对应的二进制形式: " + RedixUtils.int2BinaryStr(tmp));
+			System.out.println(digit + " 左移四位后: " + tmp + ", 对应的二进制形式: " + RedixUtils.int2BinaryStr(tmp));
 			int sum = tmp + digit1;
 			System.out.println(sum);
-			System.out.println(digit +" + "+digit1+" 对应的二进制形式: " + RedixUtils.int2BinaryStr(sum));
+			System.out.println(digit + " + " + digit1 + " 对应的二进制形式: " + RedixUtils.int2BinaryStr(sum));
 		}
 	}
 	
@@ -158,8 +161,8 @@ public class RedixUtilsTest {
 	public void testBytes2Int() {
 		String bytes = "11011011";
 		byte[] data = RedixUtils.binaryStr2Bytes(bytes);
-		int i = (int)data[0];  //-37
-		int j = (int)data[0]&0xff; //219
+		int i = (int) data[0];  //-37
+		int j = (int) data[0] & 0xff; //219
 		System.out.println(i);
 		System.out.println(j);
 		
@@ -169,8 +172,8 @@ public class RedixUtilsTest {
 		
 		String s = "11111111";
 		data = RedixUtils.binaryStr2Bytes(s);
-		System.out.println((int)data[0]);
-		System.out.println((int)(data[0]&0xff));
+		System.out.println((int) data[0]);
+		System.out.println((int) (data[0] & 0xff));
 	}
 	
 	@Test
@@ -179,5 +182,79 @@ public class RedixUtilsTest {
 		byte[] bytes = RedixUtils.float2Bytes(f);
 		RedixUtils.print(bytes);
 		System.out.println(RedixUtils.bytes2Float(bytes));
+	}
+	
+	@Test
+	public void testFloat2Bytes2() {
+		float f = 1.112f;
+		byte[] bytes = RedixUtils.float2Bytes(f);
+		RedixUtils.print(bytes);
+	}
+	
+	@Test
+	public void testCharInt() {
+		int i = 123;
+		byte[] bytes = RedixUtils.int2Bytes(i);
+		String s = new String(bytes);
+		System.out.println(s);
+	}
+	
+	@Test
+	public void testInt2Byte() {
+		byte[] bytes = RedixUtils.int2Bytes(123);
+		RedixUtils.print(bytes);
+	}
+	
+	@Test
+	public void testStr2asciiBytes() {
+		String s = "<STX>";
+		byte[] bytes = s.getBytes(StandardCharsets.US_ASCII);
+		RedixUtils.print(bytes);
+	}
+	
+	@Test
+	public void testbyteStr2int() {
+		int i = RedixUtils.binaryStr2Int("01111011");
+		System.out.println(i);
+	}
+	
+	@Test
+	public void test3bytesInt() {
+		int i = RedixUtils.binaryStr2Int("11111111 11111111 11111111");
+		System.out.println(i);
+	}
+	
+	@Test
+	public void testHex2AscII() {
+		String hex = "57 65 6c 63 6f 6d 65 20 74 6f 20 4e 65 74 74 7921";
+		String ascii = RedixUtils.hex2ASCII(hex);
+		System.out.println(ascii);
+	}
+	
+	@Test
+	public void testAscii2bytes() {
+		char a = 'a';
+		byte[] bytes = RedixUtils.char2Bytes(a);
+		String s = RedixUtils.bytes2Hex(bytes);
+		System.out.println(s);
+		String ascii = RedixUtils.hex2ASCII(s);
+		System.out.println(ascii);
+	}
+	
+	@Test
+	public void testHex2Bytes() {
+		String hex = "57 65 6c 63 6f 6d 65 20 74 6f 20 4e 65 74 74 7921";
+		byte[] bytes = RedixUtils.hex2Bytes(hex);
+		RedixUtils.print(bytes);
+		String hex2 = RedixUtils.binaryStr2Hex(RedixUtils.hex2BinaryStr(hex));
+		System.out.println(hex);
+		hex = StringUtils.trimAll(hex);
+		assertEquals(hex, hex2);
+	}
+	
+	@Test
+	public void testPrintHex2BinaryStr() {
+		String binaryStr = RedixUtils.hex2BinaryStr("0xCAFEBABE");
+		System.out.println(binaryStr);
 	}
 }

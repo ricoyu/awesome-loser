@@ -1,5 +1,7 @@
 package com.loserico.classloader;
 
+import org.junit.Test;
+
 public class ClassLoaderTest {
 
 	public static void main(String[] args) throws ClassNotFoundException {
@@ -19,5 +21,10 @@ public class ClassLoaderTest {
 		
 		Class<?> clazz1 = Class.forName(name);
 		System.out.println(clazz1.getClassLoader());
+	}
+	
+	@Test
+	public void testStringClassLoader() {
+		System.out.println(String.class.getClassLoader());
 	}
 }

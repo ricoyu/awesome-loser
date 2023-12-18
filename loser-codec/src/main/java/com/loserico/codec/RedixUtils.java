@@ -1,5 +1,7 @@
 package com.loserico.codec;
 
+import com.loserico.common.lang.utils.StringUtils;
+
 import java.math.BigInteger;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -159,7 +161,21 @@ public class RedixUtils {
 	 * @return int
 	 */
 	public static int binaryStr2Int(String binaryStr) {
+		binaryStr = preCheckBinaryStr(binaryStr);
 		return Integer.parseInt(binaryStr, 2);
+	}
+	
+	/**
+	 * 二进制字符串转十六进制
+	 *
+	 * @param binaryStr
+	 * @return String
+	 */
+	public static String binaryStr2Hex(String binaryStr) {
+		binaryStr = preCheckBinaryStr(binaryStr);
+		BigInteger intVal = new BigInteger(binaryStr, 2);
+		String hexString = intVal.toString(16); // 转换为十六进制
+		return hexString;
 	}
 	
 	/**
@@ -302,14 +318,38 @@ public class RedixUtils {
 	 * @return Integer
 	 */
 	public static Integer hex2Int(String hex) {
-		if (isBlank(hex)) {
-			return null;
-		}
+		hex = preCheck(hex);
 		
 		if (hex.startsWith(HEX_PREFIX)) {
 			hex = hex.substring(2);
 		}
 		return Integer.parseInt(hex, 16);
+	}
+	
+	/**
+	 * 十六进制字符串转成ASCII字符串
+	 * @param hex
+	 * @return
+	 */
+	public static String hex2ASCII(String hex) {
+		hex = preCheck(hex);
+		
+		StringBuilder result = new StringBuilder();
+		StringBuilder temp = new StringBuilder();
+		
+		//49204c6f7665204a617661 split into two characters 49, 20, 4c...
+		for (int i = 0; i < hex.length() - 1; i += 2) {
+			
+			//grab the hex in pairs
+			String output = hex.substring(i, (i + 2));
+			//convert hex to decimal
+			int decimal = Integer.parseInt(output, 16);
+			//convert the decimal to character
+			result.append((char) decimal);
+			
+			temp.append(decimal);
+		}
+		return result.toString();
 	}
 	
 	
@@ -340,11 +380,31 @@ public class RedixUtils {
 			throw new IllegalArgumentException("Can not be blank!");
 		}
 		
-		hex = hex.trim().toUpperCase();
+		//hex = hex.trim().toUpperCase();
+		hex = StringUtils.trimAll(hex).toUpperCase();
 		if (hex.indexOf("0X") != -1) {
 			hex = hex.substring(2);
 		}
 		return hex;
+	}
+	
+	
+	/**
+	 * 对hex预处理, null检查, 空字符串检查, trim, 去掉开头的0x, 返回处理后的字符串
+	 *
+	 * @param binaryStr 二进制的字符串表示, 如 11111111
+	 * @return String
+	 */
+	private static String preCheckBinaryStr(String binaryStr) {
+		if (isBlank(binaryStr)) {
+			throw new IllegalArgumentException("Can not be blank!");
+		}
+		
+		binaryStr = StringUtils.trimAll(binaryStr).toLowerCase();
+		if (binaryStr.indexOf("0b") != -1) {
+			binaryStr = binaryStr.substring(2);
+		}
+		return binaryStr;
 	}
 	
 	/**
