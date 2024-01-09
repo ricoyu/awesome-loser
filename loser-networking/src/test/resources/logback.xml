@@ -1,13 +1,43 @@
 <configuration scan="true" scanPeriod="60 seconds" debug="false">
-    <property scope="context" name="logging.path" value="./logs"/>
-    <property scope="context" name="logging.level" value="INFO"/>
-    <property scope="context" name="logging.level.mapper" value="DEBUG"/>
 
-    <!--打印日志到 mybatis-mapper.log 的 appender-->
+    <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS}  %-5level [${PID:- }] --- [%16.16t] %-45.45logger:   L%line - %msg%n" />
+    
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{70} %L : %msg%n</pattern>
+            <pattern>${LOG_PATTERN}</pattern>
             <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- 滚动文件输出，按日期和大小滚动 -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- 如果application.yml中没有配置logging.file.path, 那么默认输出在工作目录下的logs目录-->
+        <file>logs/fileInfo.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>logs/fileInfo.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>64MB</maxFileSize> <!-- 每个日志文件大小限制为64MB -->
+            <maxHistory>7</maxHistory> <!-- 保留7天的日志文件 -->
+        </rollingPolicy>
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 滚动文件输出，按日期和大小滚动 -->
+    <appender name="ERROR_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- 如果application.yml中没有配置logging.file.path, 那么默认输出在工作目录下的logs目录-->
+        <file>logs/error.log</file>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <!--设置日志级别,过滤掉info日志,只输入error日志-->
+            <level>ERROR</level>
+        </filter> 
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>logs/error.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>64MB</maxFileSize> <!-- 每个日志文件大小限制为64MB -->
+            <maxHistory>7</maxHistory> <!-- 保留7天的日志文件 -->
+        </rollingPolicy>
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
         </encoder>
     </appender>
 
@@ -20,6 +50,8 @@
 
     <root level="info">
         <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+        <appender-ref ref="ERROR_LOG"/>
     </root>
 
 </configuration>

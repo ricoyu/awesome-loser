@@ -2269,8 +2269,8 @@ public final class JedisUtils {
 		/**
 		 * 
 		 * @param key
-		 * @param start 第几个字节开始
-		 * @param end 第几个字节结束
+		 * @param start 第几个字节开始, 0表示第一个字节
+		 * @param end 第几个字节结束, -1表示最后一个字节
 		 * @return
 		 */
 		public static long bitCount(String key, int start, int end) {

@@ -45,4 +45,10 @@ public class JedisUtilsListTest {
 		List<String> metadatas = JedisUtils.LIST.rpop("metadata-list", 1000);
 		System.out.println(metadatas.size());
 	}
+	
+	@Test
+	public void testBrpop() {
+		String val = JedisUtils.LIST.brpop(1, "metadata-list");
+		System.out.println("ok");
+	}
 }

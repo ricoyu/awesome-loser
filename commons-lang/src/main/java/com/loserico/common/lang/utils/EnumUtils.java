@@ -15,14 +15,14 @@ public final class EnumUtils {
 	private static final Logger logger = LoggerFactory.getLogger(EnumUtils.class);
 	
 	/**
-	 * 根据value的类型自动解析成对应的enum
+	 * 根据value的类型自动解析成对应的enum, 如果value是String类型, 则根据enum的name去匹配, 否则根据ordinal去匹配
 	 *
 	 * @param clazz
 	 * @param value
 	 * @return
 	 */
 	@SuppressWarnings({"rawtypes"})
-	public static Enum lookupEnum(Class clazz, Object value) {
+	public static <T extends Enum> T lookupEnum(Class clazz, Object value) {
 		if (value == null) {
 			return null;
 		}
@@ -38,7 +38,7 @@ public final class EnumUtils {
 					return null;
 				}
 			} else {
-				return result;
+				return (T)result;
 			}
 		}
 		if (value instanceof Long) {
@@ -61,7 +61,7 @@ public final class EnumUtils {
 	 * @return
 	 */
 	@SuppressWarnings("rawtypes")
-	public static Enum lookupEnum(Class clazz, Object value, String property) {
+	public static <T extends Enum> T lookupEnum(Class clazz, Object value, String property) {
 		if (value == null) {
 			return null;
 		}
@@ -78,7 +78,7 @@ public final class EnumUtils {
 					return null;
 				}
 			} else {
-				return result;
+				return (T)result;
 			}
 		}
 		if (value instanceof Long) {
@@ -107,7 +107,7 @@ public final class EnumUtils {
 	 * @on
 	 */
 	@SuppressWarnings("rawtypes")
-	public static Enum lookupEnum(Class clazz, Object value, String property, String downgradeProperty) {
+	public static <T extends Enum> T lookupEnum(Class clazz, Object value, String property, String downgradeProperty) {
 		if (value == null) {
 			return null;
 		}
@@ -118,7 +118,7 @@ public final class EnumUtils {
 			if (result == null) {
 				result = lookup(clazz, value.toString(), downgradeProperty);
 				if (result != null) {
-					return result;
+					return (T)result;
 				}
 				try {
 					Integer propertyValue = Integer.parseInt((String) value);
@@ -128,7 +128,7 @@ public final class EnumUtils {
 					return null;
 				}
 			} else {
-				return result;
+				return (T)result;
 			}
 		}
 		if (value instanceof Long) {
@@ -212,7 +212,7 @@ public final class EnumUtils {
 	 * @return
 	 */
 	@SuppressWarnings({"rawtypes", "unchecked"})
-	private static Enum lookup(Class clazz, Integer ordinal) {
+	private static <T extends Enum> T lookup(Class clazz, Integer ordinal) {
 		if (ordinal == null) {
 			return null;
 		}
@@ -225,14 +225,14 @@ public final class EnumUtils {
 			}
 			Enum rval = iterator.next();
 			if (rval.ordinal() == ordinal.intValue()) {
-				return (Enum) rval;
+				return (T) rval;
 			}
 		}
 		return null;
 	}
 	
 	@SuppressWarnings("rawtypes")
-	private static Enum lookup(Class clazz, Integer value, String property) {
+	private static <T extends Enum> T lookup(Class clazz, Integer value, String property) {
 		if (value == null) {
 			return null;
 		}
@@ -251,7 +251,7 @@ public final class EnumUtils {
 				break;
 			}
 			if (propertyValue != null && value != null && value.intValue() == propertyValue.intValue()) {
-				return (Enum) enumObj;
+				return (T) enumObj;
 			}
 		}
 		return null;
@@ -265,7 +265,7 @@ public final class EnumUtils {
 	 * @return
 	 */
 	@SuppressWarnings({"rawtypes", "unchecked"})
-	private static Enum lookup(Class clazz, Long ordinal) {
+	private static <T extends Enum> T lookup(Class clazz, Long ordinal) {
 		if (ordinal == null) {
 			return null;
 		}
@@ -278,13 +278,13 @@ public final class EnumUtils {
 			}
 			Enum rval = iterator.next();
 			assert (rval.ordinal() == ordinal.intValue());
-			return (Enum) rval;
+			return (T) rval;
 		}
 		return null;
 	}
 	
 	@SuppressWarnings("rawtypes")
-	private static Enum lookup(Class clazz, Long value, String property) {
+	private static <T extends Enum> T lookup(Class clazz, Long value, String property) {
 		if (value == null) {
 			return null;
 		}
@@ -296,7 +296,7 @@ public final class EnumUtils {
 			if (objValue instanceof Long) {
 				Long propertyValue = (Long) objValue;
 				if (value != null && propertyValue != null && value.intValue() == propertyValue.intValue()) {
-					return (Enum) enumObj;
+					return (T) enumObj;
 				}
 			}
 		}
@@ -311,7 +311,7 @@ public final class EnumUtils {
 	 * @return
 	 */
 	@SuppressWarnings({"rawtypes", "unchecked"})
-	private static Enum lookup(Class clazz, BigInteger ordinal) {
+	private static <T extends Enum> T lookup(Class clazz, BigInteger ordinal) {
 		if (ordinal == null) {
 			return null;
 		}
@@ -324,14 +324,14 @@ public final class EnumUtils {
 			}
 			Enum rval = iterator.next();
 			assert (rval.ordinal() == ordinal.intValue());
-			return (Enum) rval;
+			return (T) rval;
 		}
 		throw new IllegalArgumentException(
 				"Invalid value " + ordinal + " for " + clazz.getName() + ", must be < " + enumSet.size());
 	}
 	
 	@SuppressWarnings("rawtypes")
-	private static Enum lookup(Class clazz, BigInteger value, String property) {
+	private static <T extends Enum> T lookup(Class clazz, BigInteger value, String property) {
 		if (value == null) {
 			return null;
 		}
@@ -343,7 +343,7 @@ public final class EnumUtils {
 			if (objValue instanceof BigInteger) {
 				BigInteger propertyValue = (BigInteger) objValue;
 				if (value != null && propertyValue != null && value.intValue() == propertyValue.intValue()) {
-					return (Enum) enumObj;
+					return (T) enumObj;
 				}
 			}
 		}
@@ -358,17 +358,17 @@ public final class EnumUtils {
 	 * @return
 	 */
 	@SuppressWarnings({"rawtypes", "unchecked"})
-	private static Enum lookup(Class clazz, String name) {
+	private static <T extends Enum> T lookup(Class clazz, String name) {
 		if (isBlank(name)) {
 			throw new IllegalArgumentException("Invalid value " + name + " for " + clazz.getName() + ", must be" + EnumSet.allOf(clazz));
 		}
 		try {
-			return Enum.valueOf(clazz, name);
+			return (T)Enum.valueOf(clazz, name);
 		} catch (IllegalArgumentException e) {
 			logger.trace("msg", e);
 		}
 		try {
-			return Enum.valueOf(clazz, name.toUpperCase());
+			return (T)Enum.valueOf(clazz, name.toUpperCase());
 		} catch (IllegalArgumentException e) {
 			logger.trace("msg", e);
 			return null;
@@ -384,7 +384,7 @@ public final class EnumUtils {
 	 * @return
 	 */
 	@SuppressWarnings({"unchecked", "rawtypes"})
-	private static Enum lookup(Class clazz, String value, String property) {
+	private static <T extends Enum> T lookup(Class clazz, String value, String property) {
 		if (isBlank(value)) {
 			return null;
 		}
@@ -402,7 +402,7 @@ public final class EnumUtils {
 				break; //不再继续尝试
 			}
 			if (StringUtils.equalsIgCase(propertyValue, value)) {
-				return (Enum) enumObj;
+				return (T) enumObj;
 			}
 		}
 		return null;

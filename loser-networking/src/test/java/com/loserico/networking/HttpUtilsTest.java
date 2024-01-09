@@ -408,4 +408,13 @@ public class HttpUtilsTest {
 		System.out.println("执行完毕!");
 	}
 	
+	@Test
+	public void testcallback() throws InterruptedException {
+		HttpUtils.get("http://localhost:8080/hello-boot/hello").request((result) -> {
+			log.info("拿到结果: {}", result);
+		});
+		log.info("调用结束");
+		SECONDS.sleep(5);
+	}
+	
 }

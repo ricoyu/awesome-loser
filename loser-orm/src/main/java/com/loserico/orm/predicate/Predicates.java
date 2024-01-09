@@ -3,6 +3,74 @@ package com.loserico.orm.predicate;
 import java.time.LocalDate;
 
 public class Predicates {
+	
+	/**
+	 * 等于查询
+	 * @param propertyName
+	 * @param propertyValue
+	 * @return Predicate
+	 */
+	public static Predicate eq(String propertyName, Object propertyValue) {
+		if (propertyValue == null) {
+			return stringPredicate(propertyName, null);
+		}
+		
+		if (propertyValue instanceof String) {
+			return stringPredicate(propertyName, (String) propertyValue);
+		}
+		
+		if (propertyValue instanceof Integer) {
+			return integerPredicate(propertyName, (Integer) propertyValue);
+		}
+		
+		if (propertyValue instanceof Long) {
+			return longPredicate(propertyName, (Long) propertyValue);
+		}
+		
+		if (propertyValue instanceof Boolean) {
+			return booleanPredicate(propertyName, (Boolean) propertyValue);
+		}
+		
+		if (propertyValue instanceof LocalDate) {
+			return localDatePredicate(propertyName, (LocalDate) propertyValue);
+		}
+		
+		return basicPredicate(propertyName, propertyValue);
+	}
+	
+	/**
+	 * 不等于查询
+	 * @param propertyName
+	 * @param propertyValue
+	 * @return Predicate
+	 */
+	public static Predicate ne(String propertyName, Object propertyValue) {
+		if (propertyValue == null) {
+			return new StringPredicate(propertyName, null, CompareMode.NOTEQ);
+		}
+		
+		if (propertyValue instanceof String) {
+			return stringPredicate(propertyName, (String) propertyValue, CompareMode.NOTEQ);
+		}
+		
+		if (propertyValue instanceof Integer) {
+			return integerPredicate(propertyName, (Integer) propertyValue, CompareMode.NOTEQ);
+		}
+		
+		if (propertyValue instanceof Long) {
+			return longPredicate(propertyName, (Long) propertyValue, CompareMode.NOTEQ);
+		}
+		
+		if (propertyValue instanceof Boolean) {
+			return booleanPredicate(propertyName, (Boolean) propertyValue, CompareMode.NOTEQ);
+		}
+		
+		if (propertyValue instanceof LocalDate) {
+			throw new IllegalArgumentException("LocalDate类型不支持不等于查询");
+		}
+		
+		return new BasicPredicate(propertyName, propertyValue, BasicMatchMode.NE);
+	}
 
 	public static Predicate stringPredicate(String propertyName, String propertyValue) {
 		return new StringPredicate(propertyName, propertyValue);

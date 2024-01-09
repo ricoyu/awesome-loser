@@ -170,7 +170,7 @@ public class PropertyReader {
 			value = resourceBundle.getString(property);
 		} catch (MissingResourceException e) {
 			if (logger.isDebugEnabled()) {
-				logger.debug("classpath下找不到propertysource", e);
+				logger.debug("resourceBundle中没有对应的key: {}", property);
 			}
 		}
 		return value == null ? null : value.trim();

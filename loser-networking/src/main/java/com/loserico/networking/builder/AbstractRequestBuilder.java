@@ -1,6 +1,7 @@
 package com.loserico.networking.builder;
 
 import com.loserico.common.lang.bean.UrlParts;
+import com.loserico.common.lang.concurrent.Concurrent;
 import com.loserico.common.lang.transformer.Transformers;
 import com.loserico.common.lang.utils.DateUtils;
 import com.loserico.common.lang.utils.IOUtils;
@@ -63,6 +64,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.function.Consumer;
@@ -620,6 +622,18 @@ public abstract class AbstractRequestBuilder {
 		}
 		
 		return null;
+	}
+	
+	/**
+	 * 异步执行HTTP请求, 拿到结果后回调callback
+	 * @param callback
+	 */
+	public void request(Consumer<Object> callback) {
+		Objects.requireNonNull(callback, "callbacl cannot be null!");
+		Concurrent.execute(() -> {
+			Object result = this.request();
+			callback.accept(result);
+		});
 	}
 	
 	/**

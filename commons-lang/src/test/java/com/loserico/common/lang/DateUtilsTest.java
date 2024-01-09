@@ -341,4 +341,10 @@ public class DateUtilsTest {
 		System.out.println(date);
 	}
 	
+	@Test
+	public void testParse2() {
+		String dateStr = "Sun, 31 Dec 2023 20:31:01 +0800";
+		Date date = DateUtils.parse(dateStr);
+		System.out.println(date);
+	}
 }

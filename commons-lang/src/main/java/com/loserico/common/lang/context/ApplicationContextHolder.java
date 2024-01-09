@@ -38,6 +38,7 @@ public class ApplicationContextHolder implements ApplicationContextAware {
 	
 	/**
 	 * 判断是否在Spring环境
+	 *
 	 * @return
 	 */
 	public static boolean isSpringApp() {
@@ -75,5 +76,12 @@ public class ApplicationContextHolder implements ApplicationContextAware {
 		}
 		Map<String, T> beansMap = applicationContext.getBeansOfType(clazz);
 		return beansMap.values().stream().collect(toList());
+	}
+	
+	public static String getProperty(String propertyName) {
+		if (applicationContext != null) {
+			return applicationContext.getEnvironment().getProperty(propertyName);
+		}
+		return null;
 	}
 }

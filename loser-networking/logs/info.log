@@ -1,0 +1,4 @@
+2024-01-03 11:49:01.750  INFO  [ ] --- [            main] com.loserico.networking.HttpUtilsTest        :   L416 - 调用结束
+2024-01-03 11:49:04.823  INFO  [ ] --- [   loser-pool-T1] com.loserico.networking.HttpUtilsTest        :   L414 - 拿到结果: hi
+2024-01-03 11:59:45.893  INFO  [ ] --- [            main] com.loserico.networking.HttpUtilsTest        :   L416 - 调用结束
+2024-01-03 11:59:48.967  INFO  [ ] --- [   loser-pool-T1] com.loserico.networking.HttpUtilsTest        :   L414 - 拿到结果: hi

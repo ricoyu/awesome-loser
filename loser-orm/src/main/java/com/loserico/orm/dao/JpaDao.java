@@ -48,7 +48,6 @@ import java.math.BigInteger;
 import java.text.MessageFormat;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -64,6 +63,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import static java.text.MessageFormat.format;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
@@ -702,6 +702,11 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	}
 	
 	@Override
+	public <T> List<T> findBy(Class<T> entityClass, Predicate... predicates) {
+		return findByProperties(entityClass, asList(predicates), true);
+	}
+	
+	@Override
 	public <T> List<T> findByProperties(Class<T> entityClass, List<Predicate> predicates, boolean includeDeleted) {
 		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache)
 				.addPredicates(predicates);
@@ -775,7 +780,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			return new ArrayList<>();
 		}
 		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache)
-				.in(propertyName, Arrays.asList(values));
+				.in(propertyName, asList(values));
 		if (!includeDeleted) {
 			jpaCriteriaQuery.eq("deleted", false);
 		}
@@ -1660,7 +1665,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	@Override
 	public <T> int deleteIn(Class<T> entityClass, String propertyName, Object[] values) {
 		requireNonNull(values, "values cannot be null");
-		return deleteIn(entityClass, propertyName, Arrays.asList(values));
+		return deleteIn(entityClass, propertyName, asList(values));
 	}
 	
 	@Override

@@ -108,6 +108,8 @@ public interface CriteriaOperations {
 	public <T> Optional<T> findOne(Class<T> entityClass, String propertyName, Object value, boolean includeDeleted);
 
 	public <T> List<T> findByProperties(Class<T> entityClass, List<Predicate> predicates);
+	
+	public <T> List<T> findBy(Class<T> entityClass, Predicate... predicates);
 	public <T> List<T> findByProperties(Class<T> entityClass, List<Predicate> predicates, boolean includeDeleted);
 	
 	/**
