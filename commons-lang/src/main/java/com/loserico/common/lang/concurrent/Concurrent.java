@@ -2,7 +2,8 @@ package com.loserico.common.lang.concurrent;
 
 import com.alibaba.ttl.threadpool.TtlExecutors;
 import com.loserico.common.lang.exception.ConcurrentOperationException;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -34,8 +35,9 @@ import java.util.function.Supplier;
  * @version 1.0
  * @on
  */
-@Slf4j
 public final class Concurrent {
+	
+	private static Logger log = LoggerFactory.getLogger(Concurrent.class);
 	
 	/**
 	 * The number of CPUs

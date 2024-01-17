@@ -36,7 +36,7 @@ public interface EntityOperations {
 	/**
 	 * merge返回的是一个受当前Persistence Context管理的新对象
 	 * 
-	 * @param entity
+	 * @param entities
 	 * @return List<T>
 	 */
 	public <T> List<T> merge(List<T> entities);
@@ -73,7 +73,7 @@ public interface EntityOperations {
 	/**
 	 * 删除
 	 * 
-	 * @param entity
+	 * @param entities
 	 */
 	public <T> void delete(List<T> entities);
 
@@ -90,7 +90,7 @@ public interface EntityOperations {
 	/**
 	 * 跟Hibernate的get方法同语义，根据主键查找，返回bean本身，找不到则返回null
 	 * 
-	 * @param clazz
+	 * @param entityClass
 	 * @param id
 	 * @return
 	 */
@@ -99,8 +99,8 @@ public interface EntityOperations {
 	/**
 	 * 跟Hibernate的get方法同语义，根据主键列表查找，返回bean本身，找不到则返回null
 	 * 
-	 * @param clazz
-	 * @param id
+	 * @param entityClass
+	 * @param ids
 	 * @return
 	 */	
 	@SuppressWarnings("unchecked")
@@ -109,8 +109,8 @@ public interface EntityOperations {
 	/**
 	 * 跟Hibernate的get方法同语义，根据主键列表查找，返回bean本身，找不到则返回null
 	 * 
-	 * @param clazz
-	 * @param id
+	 * @param entityClass
+	 * @param ids
 	 * @return
 	 */	
 	public <T, PK extends Serializable> List<T> getMulti(Class<T> entityClass, List<PK> ids);
@@ -202,5 +202,20 @@ public interface EntityOperations {
 	 * Synchronize the persistence context to the underlying database.
 	 */
 	public void flush();
+	
+	/**
+	 * 如果未开启spring事务，则需要手动开启事务
+	 */
+	public void begin();
+	
+	/**
+	 * 如果未开启spring事务，则需要手动提交事务
+	 */
+	public void commit();
+	
+	/**
+	 * 如果未开启spring事务，则需要手动回滚事务
+	 */
+	public void rollback();
 
 }

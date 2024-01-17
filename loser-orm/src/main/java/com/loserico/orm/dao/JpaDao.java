@@ -28,10 +28,13 @@ import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
@@ -86,6 +89,14 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	private static final String HINT_QUERY_CACHE = "org.hibernate.cacheable";
 	
 	private static final ConcurrentMap<String, ArrayTypes> ARRAY_TYPE_MAP = new ConcurrentHashMap<>();
+	
+	@Autowired
+	private EntityManagerFactory entityManagerFactory;
+	
+	/**
+	 * Spring环境下拿到的是LocalContainerEntityManagerFactoryBean的代理类
+	 */
+	protected transient EntityManager noTransactionalEntityManager;
 	
 	@PersistenceContext
 	protected EntityManager entityManager;
@@ -162,7 +173,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	public <T> void persist(T entity) {
 		Objects.requireNonNull(entity, "entity cannot be null");
 		try {
-			entityManager.persist(entity);
+			em().persist(entity);
 		} catch (Throwable e) {
 			String msg = MessageFormat.format("Entity: {0}", JacksonUtils.toPrettyJson(entity));
 			log.error(msg, e);
@@ -178,7 +189,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		}
 		try {
 			for (int i = 0; i < entities.size(); i++) {
-				entityManager.persist(entities.get(i));
+				em().persist(entities.get(i));
 			}
 		} catch (Throwable e) {
 			log.error("", e);
@@ -196,7 +207,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	public <T> T merge(T entity) {
 		Objects.requireNonNull(entity, "entity cannot be null");
 		try {
-			return entityManager.merge(entity);
+			return em().merge(entity);
 		} catch (Throwable e) {
 			String msg = format("Entity: {0}", JacksonUtils.toPrettyJson(entity));
 			log.error(msg, e);
@@ -219,7 +230,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		for (T entity : entities) {
 			Objects.requireNonNull(entity, "entity cannot be null");
 			try {
-				results.add(entityManager.merge(entity));
+				results.add(em().merge(entity));
 			} catch (Throwable e) {
 				String msg = format("Entity: {0}", JacksonUtils.toPrettyJson(entity));
 				log.error(msg, e);
@@ -239,7 +250,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			return entity;
 		} else {
 			try {
-				return entityManager.merge(entity);
+				return em().merge(entity);
 			} catch (Throwable e) {
 				String msg = format("Entity: {0}", JacksonUtils.toPrettyJson(entity));
 				log.error(msg, e);
@@ -304,7 +315,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	public <T> void delete(T entity) {
 		Objects.requireNonNull(entity, "entity cannot be null");
 		try {
-			entityManager.remove(entity);
+			em().remove(entity);
 		} catch (Throwable e) {
 			log.error("", e);
 			throw e;
@@ -322,7 +333,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		try {
 			for (T t : entities) {
 				if (t != null) {
-					entityManager.remove(t);
+					em().remove(t);
 				}
 			}
 		} catch (Throwable e) {
@@ -340,7 +351,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	@Override
 	public <T, PK extends Serializable> void deleteByPK(Class<T> entityClass, PK id) {
 		Objects.requireNonNull(id, "id cannot be null");
-		T entity = entityManager.getReference(entityClass, id);
+		T entity = em().getReference(entityClass, id);
 		delete(entity);
 	}
 	
@@ -367,7 +378,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		Objects.requireNonNull(id, "id cannot be null");
 		log.debug("Try to find " + clazz.getName() + " by id " + id);
 		try {
-			return entityManager.find(clazz, id);
+			return em().find(clazz, id);
 		} catch (Throwable e) {
 			log.error("", e);
 			throw new EntityOperationException(e);
@@ -380,7 +391,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		Objects.requireNonNull(ids, "ids cannot be null");
 		log.debug("Try to find " + clazz.getName() + " by ids " + ids);
 		try {
-			Session session = entityManager.unwrap(Session.class);
+			Session session = em().unwrap(Session.class);
 			return session.byMultipleIds(clazz).multiLoad(ids);
 		} catch (Throwable e) {
 			log.error("", e);
@@ -393,7 +404,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		Objects.requireNonNull(ids, "ids cannot be null");
 		log.debug("Try to find " + clazz.getName() + " by ids " + ids);
 		try {
-			Session session = entityManager.unwrap(Session.class);
+			Session session = em().unwrap(Session.class);
 			return session.byMultipleIds(clazz).multiLoad(ids);
 		} catch (Throwable e) {
 			log.error("", e);
@@ -403,7 +414,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public <T, PK extends Serializable> T find(Class<T> clazz, PK id) {
-		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+		CriteriaBuilder criteriaBuilder = em().getCriteriaBuilder();
 		CriteriaQuery<T> criteriaQuery = criteriaBuilder.createQuery(clazz);
 		Root<T> root = criteriaQuery.from(clazz);
 		javax.persistence.criteria.Predicate idPredicate = criteriaBuilder.equal(root.get("id"), id);
@@ -411,7 +422,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		criteriaQuery.select(root)
 				.where(idPredicate, deletedPredicate)
 				.distinct(true);
-		TypedQuery<T> query = entityManager.createQuery(criteriaQuery);
+		TypedQuery<T> query = em().createQuery(criteriaQuery);
 		if (hibernateUseQueryCache) {
 			query.setHint(HINT_QUERY_CACHE, true);
 		}
@@ -424,14 +435,14 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public <T, PK extends Serializable> Optional<T> findOne(Class<T> clazz, PK id) {
-		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+		CriteriaBuilder criteriaBuilder = em().getCriteriaBuilder();
 		CriteriaQuery<T> criteriaQuery = criteriaBuilder.createQuery(clazz);
 		Root<T> root = criteriaQuery.from(clazz);
 		javax.persistence.criteria.Predicate idPredicate = criteriaBuilder.equal(root.get("id"), id);
 		criteriaQuery.select(root)
 				.where(idPredicate)
 				.distinct(true);
-		TypedQuery<T> query = entityManager.createQuery(criteriaQuery);
+		TypedQuery<T> query = em().createQuery(criteriaQuery);
 		if (hibernateUseQueryCache) {
 			query.setHint(HINT_QUERY_CACHE, true);
 		}
@@ -445,7 +456,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	@Override
 	public <T, PK extends Serializable> T load(Class<T> entityClass, PK id) {
 		try {
-			return entityManager.getReference(entityClass, id);
+			return em().getReference(entityClass, id);
 		} catch (Throwable e) {
 			log.error("", e);
 			throw new EntityOperationException(e);
@@ -454,9 +465,9 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public <T> List<T> findAll(Class<T> entityClass) {
-		CriteriaQuery<T> criteriaQuery = entityManager.getCriteriaBuilder().createQuery(entityClass);
+		CriteriaQuery<T> criteriaQuery = em().getCriteriaBuilder().createQuery(entityClass);
 		criteriaQuery.from(entityClass);
-		TypedQuery<T> query = entityManager.createQuery(criteriaQuery);
+		TypedQuery<T> query = em().createQuery(criteriaQuery);
 		if (hibernateUseQueryCache) {
 			query.setHint(HINT_QUERY_CACHE, true);
 		}
@@ -471,7 +482,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	@Override
 	public <T> List<T> findByProperty(Class<T> entityClass, Predicate predicate, boolean includeDeleted) {
 		Objects.requireNonNull(predicate, "predicate cannot be null!");
-		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache)
+		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
 				.addPredicate(predicate);
 		if (!includeDeleted) {
 			jpaCriteriaQuery.eq("deleted", false);
@@ -488,7 +499,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	public <T> List<T> findByProperty(Class<T> entityClass, Predicate predicate, boolean includeDeleted,
 	                                  OrderBean... orders) {
 		Objects.requireNonNull(predicate, "predicate cannot be null!");
-		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache)
+		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
 				.addPredicate(predicate)
 				.addOrders(orders);
 		if (!includeDeleted) {
@@ -506,7 +517,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	public <T> List<T> findByProperty(Class<T> entityClass, Predicate predicate, boolean includeDeleted,
 	                                  Page page) {
 		Objects.requireNonNull(predicate, "predicate cannot be null!");
-		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache)
+		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
 				.addPredicate(predicate);
 		if (!includeDeleted) {
 			jpaCriteriaQuery.eq("deleted", false);
@@ -524,7 +535,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	                                  boolean includeDeleted) {
 		Objects.requireNonNull(propertyName, "propertyName cannot be null!");
 		JPACriteriaQuery<T> jpaCriteriaQuery =
-				JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache);
+				JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache);
 		if (value == null) {
 			jpaCriteriaQuery.isNull(propertyName);
 		} else {
@@ -547,7 +558,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	                                  boolean includeDeleted, Page page) {
 		requireNonNull(propertyName, "propertyName cannot be null!");
 		JPACriteriaQuery<T> jpaCriteriaQuery =
-				JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache);
+				JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache);
 		if (value == null) {
 			jpaCriteriaQuery.isNull(propertyName);
 		} else {
@@ -572,7 +583,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	                                  boolean includeDeleted, OrderBean... orders) {
 		Objects.requireNonNull(propertyName, "propertyName cannot be null!");
 		JPACriteriaQuery<T> jpaCriteriaQuery =
-				JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache);
+				JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache);
 		if (value == null) {
 			jpaCriteriaQuery.isNull(propertyName);
 		} else {
@@ -594,7 +605,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	                                  boolean includeDeleted) {
 		List<T> resultList = null;
 		JPACriteriaQuery<T> jpaCriteriaQuery =
-				JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache);
+				JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache);
 		if (value == null) {
 			jpaCriteriaQuery.isNull(propertyName);
 		} else {
@@ -627,7 +638,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public <T> T findUniqueByProperties(Class<T> entityClass, List<Predicate> predicates, boolean includeDeleted) {
-		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache)
+		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
 				.addPredicates(predicates);
 		if (!includeDeleted) {
 			jpaCriteriaQuery.eq("deleted", false);
@@ -644,7 +655,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	@Override
 	public <T> T findUniqueByProperties(Class<T> entityClass, List<Predicate> predicates, boolean includeDeleted,
 	                                    OrderBean... orders) {
-		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache)
+		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
 				.addPredicates(predicates)
 				.addOrders(orders);
 		if (!includeDeleted) {
@@ -673,7 +684,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	@Override
 	public <T> List<T> findByProperties(Class<T> entityClass, List<Predicate> predicates, boolean includeDeleted,
 	                                    OrderBean... orders) {
-		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache)
+		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
 				.addPredicates(predicates)
 				.addOrders(orders);
 		if (!includeDeleted) {
@@ -690,7 +701,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	@Override
 	public <T> List<T> findByProperties(Class<T> entityClass, List<Predicate> predicates, boolean includeDeleted,
 	                                    Page page) {
-		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache)
+		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
 				.addPredicates(predicates)
 				.setPage(page);
 		if (!includeDeleted) {
@@ -711,7 +722,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public <T> List<T> findByProperties(Class<T> entityClass, List<Predicate> predicates, boolean includeDeleted) {
-		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache)
+		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
 				.addPredicates(predicates);
 		if (!includeDeleted) {
 			jpaCriteriaQuery.eq("deleted", false);
@@ -742,7 +753,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		if (isEmpty(values)) {
 			return new ArrayList<>();
 		}
-		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache)
+		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
 				.in(propertyName, values)
 				.addOrders(orders);
 		if (!includeDeleted) {
@@ -764,7 +775,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			return new ArrayList<>();
 		}
 		
-		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache)
+		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
 				.in(propertyName, values);
 		if (!includeDeleted) {
 			jpaCriteriaQuery.eq("deleted", false);
@@ -782,7 +793,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		if (values == null || values.length == 0) {
 			return new ArrayList<>();
 		}
-		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache)
+		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
 				.in(propertyName, asList(values));
 		if (!includeDeleted) {
 			jpaCriteriaQuery.eq("deleted", false);
@@ -802,7 +813,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		if (isEmpty(values)) {
 			return new ArrayList<>();
 		}
-		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache)
+		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
 				.in(propertyName, values)
 				.setPage(page);
 		if (!includeDeleted) {
@@ -823,7 +834,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		Objects.requireNonNull(propertyName);
 		Objects.requireNonNull(begin);
 		Objects.requireNonNull(end);
-		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache)
+		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
 				.between(propertyName, begin, end)
 				.addOrders(orders);
 		if (!includeDeleted) {
@@ -843,7 +854,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		Objects.requireNonNull(propertyName);
 		Objects.requireNonNull(begin);
 		Objects.requireNonNull(end);
-		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache)
+		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
 				.between(propertyName, begin, end);
 		return jpaCriteriaQuery.list();
 	}
@@ -854,7 +865,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		Objects.requireNonNull(propertyName);
 		Objects.requireNonNull(begin);
 		Objects.requireNonNull(end);
-		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache)
+		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
 				.between(propertyName, begin, end).setPage(page);
 		return jpaCriteriaQuery.list();
 	}
@@ -865,7 +876,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		Objects.requireNonNull(propertyName);
 		Objects.requireNonNull(begin);
 		Objects.requireNonNull(end);
-		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache)
+		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
 				.between(propertyName, begin, end);
 		if (!includeDeleted) {
 			jpaCriteriaQuery.eq("deleted", false);
@@ -885,7 +896,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		Objects.requireNonNull(propertyName);
 		Objects.requireNonNull(begin);
 		Objects.requireNonNull(end);
-		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache)
+		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
 				.between(propertyName, begin, end)
 				.setPage(page);
 		if (!includeDeleted) {
@@ -898,7 +909,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	public <T> List<T> findIsNull(Class<T> entityClass, String propertyName) {
 		Objects.requireNonNull(propertyName, "propertyName cannot be null!");
 		JPACriteriaQuery<T> jpaCriteriaQuery =
-				JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache);
+				JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache);
 		jpaCriteriaQuery.isNull(propertyName);
 		return jpaCriteriaQuery.list();
 	}
@@ -907,7 +918,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	public <T> List<T> findIsNull(Class<T> entityClass, String propertyName, boolean includeDeleted) {
 		Objects.requireNonNull(propertyName, "propertyName cannot be null!");
 		JPACriteriaQuery<T> jpaCriteriaQuery =
-				JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache);
+				JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache);
 		jpaCriteriaQuery.isNull(propertyName);
 		if (!includeDeleted) {
 			jpaCriteriaQuery.eq("deleted", false);
@@ -918,7 +929,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	@Override
 	public <T> List<T> leftJoinFetch(Class<T> entityClass, Predicate predicate, String... attributeNames) {
 		Objects.requireNonNull(predicate, "predicate cannot be null!");
-		return JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache)
+		return JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
 				.addPredicate(predicate)
 				.leftJoinFetch(attributeNames)
 				.list();
@@ -927,7 +938,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	@Override
 	public <T> List<T> leftJoinFetch(Class<T> entityClass, List<Predicate> predicates, String... attributeNames) {
 		Objects.requireNonNull(predicates, "predicates cannot be null!");
-		return JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache)
+		return JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
 				.addPredicates(predicates)
 				.leftJoinFetch(attributeNames)
 				.list();
@@ -936,7 +947,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	@Override
 	public <T> T leftJoinFetchSingleResult(Class<T> entityClass, Predicate predicate, String... attributeNames) {
 		Objects.requireNonNull(predicate, "predicate cannot be null!");
-		List<T> results = JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache)
+		List<T> results = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
 				.addPredicate(predicate)
 				.leftJoinFetch(attributeNames)
 				.list();
@@ -946,7 +957,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	@Override
 	public <T> T leftJoinFetchSingleResult(Class<T> entityClass, Predicate predicate, List<OrderBean> orders,
 	                                       String... attributeNames) {
-		List<T> results = JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache)
+		List<T> results = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
 				.addPredicate(predicate)
 				.addOrders(orders)
 				.leftJoinFetch(attributeNames)
@@ -1006,7 +1017,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public <T> List<T> namedQuery(String queryName, Map<String, Object> params, Class<T> clazz, Page page) {
-		TypedQuery<T> query = entityManager.createNamedQuery(queryName, clazz);
+		TypedQuery<T> query = em().createNamedQuery(queryName, clazz);
 		setParameters(query, params);
 		if (page != null) {
 			query.setMaxResults(page.getMaxResults());
@@ -1103,7 +1114,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	@SuppressWarnings({"unchecked", "deprecation"})
 	@Override
 	public <T> List<T> namedSqlQuery(String queryName, Map<String, Object> params, Class<T> clazz, Page page) {
-		org.hibernate.query.Query<T> query = entityManager.createNamedQuery(queryName)
+		org.hibernate.query.Query<T> query = em().createNamedQuery(queryName)
 				.unwrap(org.hibernate.query.Query.class);
 		String rawQuery = query.getQueryString();
 		StringBuilder queryString = new StringBuilder(rawQuery);
@@ -1161,7 +1172,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		Velocity.evaluate(context, sql, queryName, queryString.toString());
 		
 		String parsedSQL = sql.toString();
-		query = entityManager
+		query = em()
 				.createNativeQuery(parsedSQL)
 				.unwrap(org.hibernate.query.Query.class);
 		query.setResultTransformer(ResultTransformerFactory.getResultTransformer(HashUtils.sha256(parsedSQL), clazz, hibernateQueryMode,
@@ -1212,7 +1223,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			// 查询总记录数
 			String countSql = SqlUtils.generateCountSql(parsedSQL);
 			log.info("Count SQL: {}", countSql);
-			org.hibernate.query.Query<T> countQuery = entityManager.createNativeQuery(countSql)
+			org.hibernate.query.Query<T> countQuery = em().createNativeQuery(countSql)
 					.unwrap(org.hibernate.query.Query.class);
 			if (isNotEmpty(params)) {
 				countQuery.setProperties(params);
@@ -1293,7 +1304,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public List<?> namedRawSqlQuery(String queryName, Map<String, Object> params) {
-		org.hibernate.query.Query<?> query = entityManager
+		org.hibernate.query.Query<?> query = em()
 				.createNamedQuery(queryName)
 				.unwrap(org.hibernate.query.Query.class);
 		
@@ -1314,7 +1325,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		Velocity.evaluate(context, sql, queryName, queryString);
 		queryString = sql.toString();
 		
-		query = entityManager
+		query = em()
 				.createNativeQuery(queryString)
 				.unwrap(org.hibernate.query.Query.class);
 		
@@ -1368,7 +1379,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public <T> boolean ifExists(Class<T> entityClass, String propertyName, Object value, boolean includeDeleted) {
-		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+		CriteriaBuilder criteriaBuilder = em().getCriteriaBuilder();
 		
 		CriteriaQuery<Boolean> query = criteriaBuilder.createQuery(Boolean.class);
 		query.from(entityClass);
@@ -1387,7 +1398,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		subquery.where(predicate, deletedPredicate);
 		query.where(criteriaBuilder.exists(subquery));
 		
-		TypedQuery<Boolean> typedQuery = entityManager.createQuery(query);
+		TypedQuery<Boolean> typedQuery = em().createQuery(query);
 		List<Boolean> results = typedQuery.getResultList();
 		if (results.isEmpty()) {
 			return false;
@@ -1397,7 +1408,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public <T> boolean ifExists(Class<T> entityClass, String propertyName, Object value) {
-		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+		CriteriaBuilder criteriaBuilder = em().getCriteriaBuilder();
 		
 		CriteriaQuery<Boolean> query = criteriaBuilder.createQuery(Boolean.class);
 		query.from(entityClass);
@@ -1413,7 +1424,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		subquery.where(predicate);
 		query.where(criteriaBuilder.exists(subquery));
 		
-		TypedQuery<Boolean> typedQuery = entityManager.createQuery(query);
+		TypedQuery<Boolean> typedQuery = em().createQuery(query);
 		List<Boolean> results = typedQuery.getResultList();
 		if (results.isEmpty()) {
 			return false;
@@ -1490,7 +1501,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	@Override
 	@SuppressWarnings({"unchecked", "deprecation"})
 	public <T> List<T> sqlQuery(String sql, Map<String, Object> params, Class<T> clazz) {
-		org.hibernate.query.Query<T> query = entityManager.createNativeQuery(sql)
+		org.hibernate.query.Query<T> query = em().createNativeQuery(sql)
 				.unwrap(org.hibernate.query.Query.class);
 		if (clazz != null) {
 			query.setResultTransformer(
@@ -1519,9 +1530,9 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		if (page != null && page.getOrder() != null) {
 			String queryStrWithSortOrder = sql + " ORDER BY " + page.getOrder().getOrderBy() + " "
 					+ page.getOrder().getDirection();
-			query = entityManager.createNativeQuery(queryStrWithSortOrder).unwrap(org.hibernate.query.Query.class);
+			query = em().createNativeQuery(queryStrWithSortOrder).unwrap(org.hibernate.query.Query.class);
 		} else {
-			query = entityManager.createNativeQuery(sql).unwrap(org.hibernate.query.Query.class);
+			query = em().createNativeQuery(sql).unwrap(org.hibernate.query.Query.class);
 		}
 		
 		query.setResultTransformer(
@@ -1537,7 +1548,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		//获取总记录条数
 		if (page != null) {
 			if (StringUtils.isNotBlank(countSql)) {
-				org.hibernate.query.Query<T> countQuery = entityManager
+				org.hibernate.query.Query<T> countQuery = em()
 						.createNativeQuery(countSql)
 						.unwrap(org.hibernate.query.Query.class);
 				if (params != null && !params.isEmpty()) {
@@ -1610,7 +1621,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	}
 	
 	public int sqlCountQuery(String sql, Map<String, Object> params) {
-		Query query = entityManager.createNativeQuery(sql);
+		Query query = em().createNativeQuery(sql);
 		for (String paramName : params.keySet()) {
 			query.setParameter(paramName, params.get(paramName));
 		}
@@ -1627,7 +1638,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	@Override
 	public <T> JPACriteriaQuery<T> createJPACriteriaQuery(Class<T> entityClass,
 	                                                      List<Predicate> predicates, OrderBean... orders) {
-		return JPACriteriaQuery.from(entityClass, entityManager, hibernateUseQueryCache)
+		return JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
 				.addPredicates(predicates)
 				.addOrders(orders);
 	}
@@ -1635,16 +1646,16 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	@Override
 	public <T> int deleteByProperty(Class<T> entityClass, String propertyName,
 	                                Object propertyValue) {
-		CriteriaBuilder criteriaBuilder = this.entityManager.getCriteriaBuilder();
+		CriteriaBuilder criteriaBuilder = this.em().getCriteriaBuilder();
 		CriteriaDelete<T> delete = criteriaBuilder.createCriteriaDelete(entityClass);
 		Root<T> root = delete.from(entityClass);
 		delete.where(criteriaBuilder.equal(root.get(propertyName), propertyValue));
-		return entityManager.createQuery(delete).executeUpdate();
+		return em().createQuery(delete).executeUpdate();
 	}
 	
 	@Override
 	public <T> int deleteByProperties(Class<T> entityClass, List<Predicate> predicates) {
-		CriteriaBuilder criteriaBuilder = this.entityManager.getCriteriaBuilder();
+		CriteriaBuilder criteriaBuilder = this.em().getCriteriaBuilder();
 		CriteriaDelete<T> delete = criteriaBuilder.createCriteriaDelete(entityClass);
 		Root<T> root = delete.from(entityClass);
 		List<javax.persistence.criteria.Predicate> conditions = new ArrayList<javax.persistence.criteria.Predicate>();
@@ -1652,17 +1663,17 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			conditions.add(predicate.toPredicate(criteriaBuilder, root));
 		});
 		delete.where(conditions.toArray(new javax.persistence.criteria.Predicate[0]));
-		return this.entityManager.createQuery(delete).executeUpdate();
+		return this.em().createQuery(delete).executeUpdate();
 	}
 	
 	@Override
 	public <T> int deleteIn(Class<T> entityClass, String propertyName, Collection<?> values) {
-		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+		CriteriaBuilder criteriaBuilder = em().getCriteriaBuilder();
 		CriteriaDelete<T> criteriaDelete = criteriaBuilder.createCriteriaDelete(entityClass);
 		Root<T> root = criteriaDelete.from(entityClass);
 		criteriaDelete.where(root.get(propertyName).in(values));
 		
-		return entityManager.createQuery(criteriaDelete).executeUpdate();
+		return em().createQuery(criteriaDelete).executeUpdate();
 	}
 	
 	@Override
@@ -1684,7 +1695,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T, PK extends Serializable> List<T> ensureMultiEntityExists(Class<T> entityClass, PK... ids) {
-		Session session = entityManager.unwrap(Session.class);
+		Session session = em().unwrap(Session.class);
 		MultiIdentifierLoadAccess<T> multiIdentifierLoadAccess = session.byMultipleIds(entityClass);
 		List<T> entities = multiIdentifierLoadAccess.multiLoad(ids);
 		if (entities.size() != ids.length) {
@@ -1701,7 +1712,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	@Override
 	public <T, PK extends Serializable> List<T> ensureMultiEntityExists(Class<T> entityClass, List<PK> ids) {
 		requireNonNull(ids, "ids cannot be null!");
-		Session session = entityManager.unwrap(Session.class);
+		Session session = em().unwrap(Session.class);
 		MultiIdentifierLoadAccess<T> multiIdentifierLoadAccess = session.byMultipleIds(entityClass);
 		List<T> entities = multiIdentifierLoadAccess.multiLoad(ids);
 		if (entities.size() != ids.size()) {
@@ -1736,7 +1747,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	@Override
 	public <T> Query createQuery(String jpql, Class<T> resultClass) {
 		Objects.requireNonNull(jpql, "jpql cannot be null");
-		TypedQuery<T> query = entityManager.createQuery(jpql, resultClass);
+		TypedQuery<T> query = em().createQuery(jpql, resultClass);
 		if (hibernateUseQueryCache) {
 			query.setHint(HINT_QUERY_CACHE, true);
 		}
@@ -1746,7 +1757,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	@Override
 	public <T> Query createQuery(final String jpql, String paramName, Object paramValue, Class<T> resultClass) {
 		Objects.requireNonNull(jpql, "jpql cannot be null");
-		TypedQuery<T> query = entityManager.createQuery(jpql, resultClass);
+		TypedQuery<T> query = em().createQuery(jpql, resultClass);
 		if (hibernateUseQueryCache) {
 			query.setHint(HINT_QUERY_CACHE, true);
 		}
@@ -1759,7 +1770,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	@Override
 	public <T> void detach(T entity) {
 		requireNonNull(entity, "entity cannot be null!");
-		entityManager.detach(entity);
+		em().detach(entity);
 	}
 	
 	@Override
@@ -1767,7 +1778,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		requireNonNull(entities, "entities cannot be null!");
 		entities.forEach((entity) -> {
 			requireNonNull(entity);
-			entityManager.detach(entity);
+			em().detach(entity);
 		});
 	}
 	
@@ -1779,7 +1790,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public List<?> sqlQuery(String sql, Map<String, Object> params) {
-		org.hibernate.query.Query<?> query = entityManager
+		org.hibernate.query.Query<?> query = em()
 				.createNativeQuery(sql)
 				.unwrap(org.hibernate.query.Query.class);
 		
@@ -1851,7 +1862,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	@Override
 	public int executeUpdate(String queryName, Map<String, Object> params) {
 		org.hibernate.query.Query<Integer> query =
-				entityManager.createNamedQuery(queryName).unwrap(org.hibernate.query.Query.class);
+				em().createNamedQuery(queryName).unwrap(org.hibernate.query.Query.class);
 		String rawQuery = query.getQueryString();
 		
 		//建立context， 并放入数据  
@@ -1871,7 +1882,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		Velocity.evaluate(context, sql, queryName, rawQuery);
 		
 		String parsedSQL = sql.toString();
-		query = entityManager.createNativeQuery(parsedSQL)
+		query = em().createNativeQuery(parsedSQL)
 				.unwrap(org.hibernate.query.Query.class);
 		
 		if (isNotEmpty(params)) {
@@ -1896,7 +1907,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public void execute(String sql) {
-		org.hibernate.query.Query query = entityManager.createNativeQuery(sql)
+		org.hibernate.query.Query query = em().createNativeQuery(sql)
 				.unwrap(org.hibernate.query.Query.class);
 		
 		if (hibernateUseQueryCache) {
@@ -1928,7 +1939,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public void flush() {
-		entityManager.flush();
+		em().flush();
 	}
 	
 	/**
@@ -1938,7 +1949,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	 */
 	private <T> Query createQuery(final String jpql, final Map<String, ?> params, Class<T> resultClass) {
 		Objects.requireNonNull(jpql, "jpql cannot be null");
-		TypedQuery<T> query = entityManager.createQuery(jpql, resultClass);
+		TypedQuery<T> query = em().createQuery(jpql, resultClass);
 		if (hibernateUseQueryCache) {
 			query.setHint(HINT_QUERY_CACHE, true);
 		}
@@ -2090,5 +2101,64 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		this.enumLookupProperties = enumLookupProperties;
 	}
 	
+	/**
+	 * 判断是否在spring事务中
+	 * @return
+	 */
+	public boolean isInSpringTransaction() {
+		return TransactionSynchronizationManager.isActualTransactionActive();
+	}
 	
+	/**
+	 * 基于是否受Spring事务管理，获取Spring管理的EntityManager或者自行通过EntityManagerFactory创建的EntityManager
+	 * @return EntityManager
+	 */
+	private EntityManager em() {
+		if (TransactionSynchronizationManager.isActualTransactionActive()) {
+			return entityManager;
+		} else {
+			if (noTransactionalEntityManager != null) {
+				return noTransactionalEntityManager;
+			} else {
+				noTransactionalEntityManager = entityManagerFactory.createEntityManager();
+				return noTransactionalEntityManager;
+			}
+		}
+	}
+	
+	/**
+	 * 如果未开启spring事务，则需要手动开启事务
+	 */
+	public void begin() {
+		if(isInSpringTransaction()) {
+			log.debug("Spring transaction is active, no need to begin transaction");
+			return;
+		}else {
+			em().getTransaction().begin();
+		}
+	}
+	
+	/**
+	 * 如果未开启spring事务，则需要手动提交事务
+	 */
+	public void commit() {
+		if(isInSpringTransaction()) {
+			log.debug("Spring transaction is active, no need to commit transaction");
+			return;
+		}else {
+			em().getTransaction().commit();
+		}
+	}
+	
+	/**
+	 * 如果未开启spring事务，则需要手动回滚事务
+	 */
+	public void rollback() {
+		if(isInSpringTransaction()) {
+			log.debug("Spring transaction is active, no need to commit transaction");
+			return;
+		}else {
+			em().getTransaction().rollback();
+		}
+	}
 }

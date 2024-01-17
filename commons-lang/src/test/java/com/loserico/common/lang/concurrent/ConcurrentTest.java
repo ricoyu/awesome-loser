@@ -37,15 +37,15 @@ public class ConcurrentTest {
 		FutureResult<String> futureResult = Concurrent.submit(() -> {
 			return "hello";
 		});
-		
+
 		FutureResult<String> futureResult1 = Concurrent.submit(() -> {
 			if (true) {
 				throw new RuntimeException("第二个任务执行失败");
 			}
 			return "world";
 		});
-		
+
 		Concurrent.await();
-		System.out.println("执行完毕: " + futureResult.get());
+		System.out.println("执行完毕: " + futureResult1.get());
 	}
 }
