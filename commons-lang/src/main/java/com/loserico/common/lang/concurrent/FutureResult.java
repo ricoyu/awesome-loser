@@ -40,7 +40,12 @@ public class FutureResult<T> implements Serializable {
 	 */
 	public T get() {
 		try {
-			return future.get();
+			Object t = future.get();
+			if (t instanceof CompletableFuture) {
+				return ((CompletableFuture<T>) t).get();
+			} else {
+				return future.get();
+			}
 		} catch (Exception e) {
 			logger.error("msg", e);
 			throw new AsyncExecutionException("", e);

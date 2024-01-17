@@ -226,7 +226,7 @@ public class RedixUtilsTest {
 	
 	@Test
 	public void testHex2AscII() {
-		String hex = "01 00 63 6f 6d 2e 6c 6f 73 65 72 69 63 6f 2e 626f 6f 74 2e 6e 65 74 74 79 2e 61 64 76 2e 76 6f2e 4d 79 4d 65 73 73 61 67 e5 01 00 01 01 63 6f6d 2e 6c 6f 73 65 72 69 63 6f 2e 62 6f 6f 74 2e6e 65 74 74 79 2e 61 64 76 2e 76 6f 2e 4d 79 4865 61 64 65 f2 01 01 02 6a 61 76 61 2e 75 74 696c 2e 48 61 73 68 4d 61 f0 01 01 fd fb 87 c1 0a00 00 00 05";
+		String hex = "01 00 63 6f 6d 2e 6c 6f 73 65 72 69 63 6f 2e 62";
 		String ascii = RedixUtils.hex2ASCII(hex);
 		System.out.println(ascii);
 		

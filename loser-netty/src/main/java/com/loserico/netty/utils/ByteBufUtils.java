@@ -25,6 +25,23 @@ public final class ByteBufUtils {
 	private static final Logger log = LoggerFactory.getLogger(ByteBufUtils.class);
 	
 	/**
+	 * 将ByteBuf转换成byte数组, 注意不能直接用byteBuf.array()来获得
+	 * @param byteBuf
+	 * @return byte[]
+	 */
+	public static byte[] toBytes(Object byteBuf) {
+		if (byteBuf == null || !(byteBuf instanceof ByteBuf)) {
+			log.warn("参数byteBuf不是一个ByteBuf对象, 直接返回null");
+			return null;
+		}
+		
+		ByteBuf buf = (ByteBuf) byteBuf;
+		byte[] bytes = new byte[buf.readableBytes()];
+		buf.readBytes(bytes);
+		return bytes;
+	}
+	
+	/**
 	 * 用UTF-8将ByteBuf转换成字符串, 注意不能直接用byteBuf.toString()来获得, 
 	 * 这个toString()不会更新readerIndex, 会导致下次读取的时候, 读到的是不断累积的数据
 	 * @param byteBuf

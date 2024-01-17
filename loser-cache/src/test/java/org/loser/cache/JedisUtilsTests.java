@@ -3,9 +3,11 @@ package org.loser.cache;
 import com.loserico.cache.JedisUtils;
 import com.loserico.cache.concurrent.Lock;
 import com.loserico.common.lang.utils.IOUtils;
+import com.loserico.json.jackson.JacksonUtils;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
+import org.loser.cache.pojo.User;
 
 import java.util.Date;
 import java.util.List;
@@ -13,11 +15,9 @@ import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.concurrent.TimeUnit.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * <p>
@@ -389,5 +389,16 @@ public class JedisUtilsTests {
 		JedisUtils.Bitmap.bitOr("{rico}dest", "rico");
 		long count = JedisUtils.Bitmap.bitCount("{rico}dest", 0, 9);
 		assertEquals(count, 2);
+	}
+	
+	@Test
+	public void testRedisTemplateJSON() {
+		//JedisUtils.set("k1", "v1");
+		User user = new User();
+		user.setName("三少爷");
+		user.setAge(18);
+		String json = JacksonUtils.toJson(user);
+		JedisUtils.set("k1", json);
+		
 	}
 }

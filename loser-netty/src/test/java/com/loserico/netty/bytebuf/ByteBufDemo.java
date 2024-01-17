@@ -55,7 +55,6 @@ public class ByteBufDemo {
 		// 创建一个ByteBuf
 		ByteBuf buffer = Unpooled.buffer(10);
 		
-		buffer = Unpooled.buffer(10);
 		System.out.println("初始状态：readIndex=" + buffer.readerIndex() + ", writeIndex=" + buffer.writerIndex()); // 初始状态：readIndex=0, writeIndex=0
 		buffer.writeBytes(packet.getBytes(StandardCharsets.US_ASCII));
 		System.out.println("写入报文后：readIndex=" + buffer.readerIndex() + ", writeIndex=" + buffer.writerIndex());// 写入报文后：readIndex=0, writeIndex=34

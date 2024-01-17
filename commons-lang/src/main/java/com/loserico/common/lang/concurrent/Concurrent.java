@@ -19,7 +19,7 @@ import java.util.function.Supplier;
 
 /**
  * 基于JDK1.8 的并发工具类
- * 
+ * <p>
  * 合理的最佳线程数估算公式:
  * 最佳线程数目 = ((线程等待时间 + 线程CPU时间) / 线程CPU时间 ) * CPU数目
  * 即
@@ -29,21 +29,25 @@ import java.util.function.Supplier;
  * <p>
  * Company: Sexy Uncle Inc.
  * <p>
+ *
  * @author Rico Yu  ricoyu520@gmail.com
  * @version 1.0
  * @on
  */
 @Slf4j
 public final class Concurrent {
-
-	/** The number of CPUs */
+	
+	/**
+	 * The number of CPUs
+	 */
 	private static final int NCPUS = Runtime.getRuntime().availableProcessors();
-
+	
 	private static final ThreadFactory defaultThreadFactory = new LoserThreadFactory();
-
+	
 	/**
 	 * IO 密集型线程池, 比如执行多个数据库查询操作 <p/>
 	 * 用TtlExecutors包装ExecutorService是为了在线程池中执行时也能获取到父线程中设置的ThreadLocal变量
+	 *
 	 * @on
 	 */
 	private static final ExecutorService IO_POOL = TtlExecutors.getTtlExecutorService(ioConcentratedFixedThreadPool());
@@ -52,17 +56,17 @@ public final class Concurrent {
 	 * 负责执行延迟任务
 	 */
 	private static ScheduledThreadPoolExecutor DELAY_POOL = new ScheduledThreadPoolExecutor(NCPUS + 1);
-
+	
 	/**
 	 * 这个ThreadLocal放的是CompletableFuture对象, 这是在主线程里调用的,
 	 * 不需要用阿里的TransmittableThreadLocal
 	 */
 	private static final ThreadLocal<Set<CompletableFuture<?>>> COMPLETABLE_FUTURE_THREAD_LOCAL = new ThreadLocal<>();
-
+	
 	/**
 	 * CPU 内核数 + 1个线程, 适合CPU密集型应用<p/>
 	 * 任务队列大小为2600, 线程池已经预热
-	 * 
+	 *
 	 * @return ExecutorService
 	 * @on
 	 */
@@ -74,12 +78,12 @@ public final class Concurrent {
 		threadPoolExecutor.prestartAllCoreThreads();
 		return threadPoolExecutor;
 	}
-
+	
 	/**
 	 * 2 * CPU 内核数 + 1个线程, 适合IO密集型应用
 	 * <p/>
 	 * 任务队列大小为2600, 线程池已经预热
-	 * 
+	 *
 	 * @return ExecutorService
 	 */
 	public static ExecutorService ioConcentratedFixedThreadPool() {
@@ -90,36 +94,58 @@ public final class Concurrent {
 		threadPoolExecutor.prestartAllCoreThreads();
 		return threadPoolExecutor;
 	}
-
+	
 	/**
 	 * 提交一个异步任务并执行
-	 * 
+	 *
 	 * @param <T>
 	 * @param supplier
 	 * @return FutureResult<T>
 	 */
 	public static <T> FutureResult<T> submit(Supplier<T> supplier) {
-		CompletableFuture<T> completableFuture = CompletableFuture.supplyAsync(supplier, IO_POOL);
+		CompletableFuture completableFuture = CompletableFuture.supplyAsync(supplier, IO_POOL);
+		completableFuture = completableFuture.handle((result, e) -> {
+			if (e != null) {
+				log.error("任务执行失败", e);
+				CompletableFuture<T> failedFuture = new CompletableFuture<>();
+				failedFuture.completeExceptionally((Throwable) e); // 使用异常完成新的 CompletableFuture
+				return failedFuture;
+			} else {
+				log.info("任务执行成功");
+			}
+			return CompletableFuture.completedFuture(result);// 返回一个正常完成的 CompletableFuture, 因为是 runAsync，所以返回 null
+		});
 		addCompleteFuture(completableFuture);
 		return new FutureResult<>(completableFuture);
 	}
-
+	
 	/**
 	 * 提交一个异步任务并执行
-	 * 
+	 *
 	 * @param task
 	 * @return FutureResult<T>
 	 */
 	public static void execute(Runnable task) {
 		CompletableFuture completableFuture = CompletableFuture.runAsync(task, IO_POOL);
+		completableFuture = completableFuture.handle((result, e) -> {
+			if (e != null) {
+				log.error("任务执行失败", e);
+				CompletableFuture<Void> failedFuture = new CompletableFuture<>();
+				failedFuture.completeExceptionally((Throwable) e); // 使用异常完成新的 CompletableFuture
+				return failedFuture;
+			} else {
+				log.info("任务执行成功");
+				return CompletableFuture.completedFuture(null); // 返回一个正常完成的 CompletableFuture, 因为是 runAsync，所以返回 null
+			}
+		});
 		addCompleteFuture(completableFuture);
 	}
-
+	
 	/**
 	 * 等待所有submit的任务执行完毕, 如果有任务抛异常了, await()方法会抛出一个CompletionException
 	 * <p/>
 	 * 不管任务是否都成功执行, COMPLETABLE_FUTURE_THREAD_LOCAL都会被清理
-	 * 
+	 *
 	 * @throws CompletionException
 	 */
 	@SuppressWarnings("rawtypes")
@@ -137,7 +163,7 @@ public final class Concurrent {
 			COMPLETABLE_FUTURE_THREAD_LOCAL.remove();
 		}
 	}
-
+	
 	private static void addCompleteFuture(CompletableFuture<?> completableFuture) {
 		Set<CompletableFuture<?>> set = COMPLETABLE_FUTURE_THREAD_LOCAL.get();
 		if (set == null) {
@@ -147,7 +173,7 @@ public final class Concurrent {
 		log.debug("提交第{}个任务", set.size() + 1);
 		set.add(completableFuture);
 	}
-
+	
 	public static void awaitTermination(ExecutorService executorService, long timeout, TimeUnit timeUnit) {
 		Objects.requireNonNull(executorService);
 		executorService.shutdown();
@@ -161,6 +187,7 @@ public final class Concurrent {
 	
 	/**
 	 * 延迟指定时间执行一次(注意: 是执行一次)
+	 *
 	 * @param task
 	 * @param delay
 	 * @param timeUnit
@@ -170,19 +197,19 @@ public final class Concurrent {
 	}
 	
 	static class ThreadLocalSupplier<V, T> implements Supplier<V> {
-
+		
 		private final ThreadLocal<T> threadLocal;
-
+		
 		private final T value;
-
+		
 		private final Supplier<V> supplier;
-
+		
 		public ThreadLocalSupplier(ThreadLocal<T> threadLocal, T value, Supplier<V> supplier) {
 			this.threadLocal = threadLocal;
 			this.supplier = supplier;
 			this.value = value;
 		}
-
+		
 		@Override
 		public V get() {
 			T oldValue = threadLocal.get();
@@ -193,6 +220,6 @@ public final class Concurrent {
 				threadLocal.set(oldValue);
 			}
 		}
-
+		
 	}
 }

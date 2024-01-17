@@ -347,4 +347,10 @@ public class DateUtilsTest {
 		Date date = DateUtils.parse(dateStr);
 		System.out.println(date);
 	}
+	
+	@Test
+	public void testFormat() {
+		String format = DateUtils.format(new Date(), "yyyyMMddHHmmssS");
+		System.out.println(format);
+	}
 }

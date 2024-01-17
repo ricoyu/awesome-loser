@@ -256,13 +256,16 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		List<T> results = new ArrayList<>();
 		for (int i = 0, length = entities.size(); i < length; i++) {
 			results.add(save(entities.get(i)));
-			if (i > 0 && (i % batchSize == 0)) {
+			/*
+			 * i+1是因为i是从0开始的, 如果batchSize=100, 那么i=99的时候, i+1=100, 正好是100的倍数, 此时需要flush
+			 */
+			if (i > 0 && ((i+1) % batchSize == 0)) {
 				flush();
 			}
 		}
 		/*
 		 * You may also want to flush and clear the persistence context
-		 * after each batch to release memory, otherwise all of the managed
+		 * after each batch to release memory, otherwise all the managed
 		 * objects remain in the persistence context until it is closed.
 		 */
 		flush();
