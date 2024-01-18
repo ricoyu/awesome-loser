@@ -96,7 +96,8 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	/**
 	 * Spring环境下拿到的是LocalContainerEntityManagerFactoryBean的代理类
 	 */
-	protected transient EntityManager noTransactionalEntityManager;
+	protected transient ThreadLocal<EntityManager> entityManagerThreadLocal = new ThreadLocal<>();
+	//protected transient EntityManager noTransactionalEntityManager;
 	
 	@PersistenceContext
 	protected EntityManager entityManager;
@@ -270,7 +271,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			/*
 			 * i+1是因为i是从0开始的, 如果batchSize=100, 那么i=99的时候, i+1=100, 正好是100的倍数, 此时需要flush
 			 */
-			if (i > 0 && ((i+1) % batchSize == 0)) {
+			if (i > 0 && ((i + 1) % batchSize == 0)) {
 				flush();
 			}
 		}
@@ -1217,7 +1218,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			context.put(IS_COUNT_QUERY, true);
 			//查总记录数不需要排序, 提升性能
 			int orderByIndex = parsedSQL.toLowerCase().lastIndexOf("order by");
-			if (orderByIndex!= -1) {
+			if (orderByIndex != -1) {
 				parsedSQL = parsedSQL.substring(0, orderByIndex);
 			}
 			// 查询总记录数
@@ -1303,7 +1304,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	}
 	
 	@Override
-	public List<?> namedRawSqlQuery(String queryName, Map<String, Object> params) {
+	public <T> List<T> namedRawSqlQuery(String queryName, Map<String, Object> params) {
 		org.hibernate.query.Query<?> query = em()
 				.createNamedQuery(queryName)
 				.unwrap(org.hibernate.query.Query.class);
@@ -1337,7 +1338,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			query.setProperties(params);
 		}
 		try {
-			return query.getResultList();
+			return (List<T>) query.getResultList();
 		} catch (Throwable e) {
 			String msg = format("Execute raw SQL query[{0}] with parameter[{1}] failed!", queryString,
 					JacksonUtils.toJson(params));
@@ -1789,7 +1790,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	}
 	
 	@Override
-	public List<?> sqlQuery(String sql, Map<String, Object> params) {
+	public <T> List<T> sqlQuery(String sql, Map<String, Object> params) {
 		org.hibernate.query.Query<?> query = em()
 				.createNativeQuery(sql)
 				.unwrap(org.hibernate.query.Query.class);
@@ -1802,7 +1803,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			query.setProperties(params);
 		}
 		try {
-			return query.getResultList();
+			return (List<T>) query.getResultList();
 		} catch (Throwable e) {
 			String msg = format("Execute raw SQL query[{0}] with parameter[{1}] failed!", sql,
 					JacksonUtils.toJson(params));
@@ -2103,6 +2104,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	/**
 	 * 判断是否在spring事务中
+	 *
 	 * @return
 	 */
 	public boolean isInSpringTransaction() {
@@ -2111,16 +2113,18 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	/**
 	 * 基于是否受Spring事务管理，获取Spring管理的EntityManager或者自行通过EntityManagerFactory创建的EntityManager
+	 *
 	 * @return EntityManager
 	 */
 	private EntityManager em() {
 		if (TransactionSynchronizationManager.isActualTransactionActive()) {
 			return entityManager;
 		} else {
-			if (noTransactionalEntityManager != null) {
-				return noTransactionalEntityManager;
+			if (entityManagerThreadLocal.get() != null) {
+				return entityManagerThreadLocal.get();
 			} else {
-				noTransactionalEntityManager = entityManagerFactory.createEntityManager();
+				EntityManager noTransactionalEntityManager = entityManagerFactory.createEntityManager();
+				entityManagerThreadLocal.set(noTransactionalEntityManager);
 				return noTransactionalEntityManager;
 			}
 		}
@@ -2131,7 +2135,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	 */
 	public void begin() {
 		if(isInSpringTransaction()) {
-			log.debug("Spring transaction is active, no need to begin transaction");
+			log.warn("Spring transaction is active, no need to begin transaction");
 			return;
 		}else {
 			em().getTransaction().begin();
@@ -2142,10 +2146,10 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	 * 如果未开启spring事务，则需要手动提交事务
 	 */
 	public void commit() {
-		if(isInSpringTransaction()) {
-			log.debug("Spring transaction is active, no need to commit transaction");
+		if (isInSpringTransaction()) {
+			log.warn("Spring transaction is active, no need to commit transaction");
 			return;
-		}else {
+		} else {
 			em().getTransaction().commit();
 		}
 	}
@@ -2154,10 +2158,10 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	 * 如果未开启spring事务，则需要手动回滚事务
 	 */
 	public void rollback() {
-		if(isInSpringTransaction()) {
+		if (isInSpringTransaction()) {
 			log.debug("Spring transaction is active, no need to commit transaction");
 			return;
-		}else {
+		} else {
 			em().getTransaction().rollback();
 		}
 	}

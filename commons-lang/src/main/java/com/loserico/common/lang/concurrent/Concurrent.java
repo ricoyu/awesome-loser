@@ -113,7 +113,7 @@ public final class Concurrent {
 				failedFuture.completeExceptionally((Throwable) e); // 使用异常完成新的 CompletableFuture
 				return failedFuture;
 			} else {
-				log.info("任务执行成功");
+				log.debug("任务执行成功");
 			}
 			return CompletableFuture.completedFuture(result);// 返回一个正常完成的 CompletableFuture, 因为是 runAsync，所以返回 null
 		});
@@ -136,7 +136,7 @@ public final class Concurrent {
 				failedFuture.completeExceptionally((Throwable) e); // 使用异常完成新的 CompletableFuture
 				return failedFuture;
 			} else {
-				log.info("任务执行成功");
+				log.debug("任务执行成功");
 				return CompletableFuture.completedFuture(null); // 返回一个正常完成的 CompletableFuture, 因为是 runAsync，所以返回 null
 			}
 		});
@@ -164,6 +164,13 @@ public final class Concurrent {
 		} finally {
 			COMPLETABLE_FUTURE_THREAD_LOCAL.remove();
 		}
+	}
+	
+	/**
+	 * 关闭线程池, 使得主程序可以退出
+	 */
+	public static void shutdown() {
+		IO_POOL.shutdown();
 	}
 	
 	private static void addCompleteFuture(CompletableFuture<?> completableFuture) {

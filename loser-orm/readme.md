@@ -807,3 +807,17 @@ public class PurchaseOrderListsVO {
 </hibernate-mapping>
 ```
 
+
+
+# 五 多线程环境下没有Spring事务控制下使用
+
+写数据需要手工开启事务/提交事务, 比如:
+
+```java
+entityOperations.begin();
+entityOperations.save(outboundItems);
+entityOperations.commit();
+```
+
+
+

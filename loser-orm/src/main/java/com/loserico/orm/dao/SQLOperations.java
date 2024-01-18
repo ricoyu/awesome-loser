@@ -116,18 +116,18 @@ public interface SQLOperations {
 	 * 跟namedSqlQuery的差别就是结果集不封装到Bean里面
 	 *
 	 * @param queryName
-	 * @return List<?>
+	 * @return List<T>
 	 */
-	public List<?> namedRawSqlQuery(String queryName);
+	public <T> List<T> namedRawSqlQuery(String queryName);
 	
 	/**
 	 * 跟namedSqlQuery的差别就是结果集不封装到Bean里面
 	 * List里面存的是Object[], 数组长度取决于你SELECT了几个字段
 	 *
 	 * @param queryName
-	 * @return List<?>
+	 * @return List<T>
 	 */
-	public List<?> namedRawSqlQuery(String queryName, String propertyName, Object value);
+	public <T> List<T> namedRawSqlQuery(String queryName, String propertyName, Object value);
 	
 	/**
 	 * 跟namedSqlQuery的差别就是结果集不封装到Bean里面
@@ -135,9 +135,9 @@ public interface SQLOperations {
 	 * 而是转成Integer, Long, Float, BigDecimal, String, Boolean, Short等相对基本类型或者是LocalDateTime, Date, LocalDate, LocalTime类型
 	 *
 	 * @param queryName
-	 * @return List<?>
+	 * @return List<T>
 	 */
-	public List<?> namedRawSqlQuery(String queryName, Map<String, Object> params);
+	public <T> List<T> namedRawSqlQuery(String queryName, Map<String, Object> params);
 	
 	/**
 	 * 跟namedSqlQuery的差别就是结果集不封装到Bean里面<p/>
@@ -398,7 +398,7 @@ public interface SQLOperations {
 	 * @param params
 	 * @return List<?>
 	 */
-	public List<?> sqlQuery(String sql, Map<String, Object> params);
+	public <T> List<T> sqlQuery(String sql, Map<String, Object> params);
 	
 	/**
 	 * 直接在Java代码里面写SQL语句查询，结果不封装到Bean,返回单个结果
