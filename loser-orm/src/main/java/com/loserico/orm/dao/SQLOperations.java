@@ -133,6 +133,7 @@ public interface SQLOperations {
 	 * 跟namedSqlQuery的差别就是结果集不封装到Bean里面
 	 * RawSqlQuery跟sqlQuery的差别是结果不封装进POJO, 
 	 * 而是转成Integer, Long, Float, BigDecimal, String, Boolean, Short等相对基本类型或者是LocalDateTime, Date, LocalDate, LocalTime类型
+	 * 如果select了多个字段，那么返回的List里面存的是Object[], 数组长度取决于你SELECT了几个字段
 	 *
 	 * @param queryName
 	 * @return List<T>

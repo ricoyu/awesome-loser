@@ -55,7 +55,7 @@ public class BuilderTricks {
 	}
 
 	public static final class Book {
-		// Make fields final so we always know we've missed assigning one in the constructor!
+		// Make fields final, so we always know we've missed assigning one in the constructor!
 		private final String author;
 		private final String title;
 		private final String category;

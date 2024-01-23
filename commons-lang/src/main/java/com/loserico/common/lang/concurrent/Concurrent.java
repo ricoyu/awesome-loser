@@ -1,7 +1,6 @@
 package com.loserico.common.lang.concurrent;
 
 import com.alibaba.ttl.threadpool.TtlExecutors;
-import com.loserico.common.lang.exception.ConcurrentOperationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -154,7 +153,8 @@ public final class Concurrent {
 	public static void await() {
 		Set<CompletableFuture<?>> set = COMPLETABLE_FUTURE_THREAD_LOCAL.get();
 		if (set == null || set.isEmpty()) {
-			throw new ConcurrentOperationException("没有提交过任何任务就别瞎等了, 哥~!");
+			log.debug("没有任务需要等待执行, 无需等待");
+			return;
 		}
 		try {
 			int taskCount = set.size();
