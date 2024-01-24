@@ -2761,7 +2761,9 @@ public final class JedisUtils {
 			
 			@Override
 			public void onMessage(String channel, String message) {
-				messageListener.onMessage(channel, message);
+				EXECUTOR.execute(() -> {
+					messageListener.onMessage(channel, message);
+				});
 			}
 		};
 		jedisOperations.subscribe(jedisPubSub, chnannels);
