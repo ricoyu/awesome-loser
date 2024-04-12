@@ -15,6 +15,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
@@ -36,7 +37,7 @@ import java.util.function.Supplier;
  */
 public final class Concurrent {
 	
-	private static Logger log = LoggerFactory.getLogger(Concurrent.class);
+	private static final Logger log = LoggerFactory.getLogger(Concurrent.class);
 	
 	/**
 	 * The number of CPUs
@@ -136,6 +137,34 @@ public final class Concurrent {
 				return failedFuture;
 			} else {
 				log.debug("任务执行成功");
+				return CompletableFuture.completedFuture(null); // 返回一个正常完成的 CompletableFuture, 因为是 runAsync，所以返回 null
+			}
+		});
+		addCompleteFuture(completableFuture);
+	}
+	
+	/**
+	 * 提交一个异步任务并执行
+	 *
+	 * @param task
+	 * @param consumer task执行成功后的回调函数, 参数传的是null
+	 * @return FutureResult<T>
+	 */
+	public static void execute(Runnable task, Consumer consumer) {
+		CompletableFuture completableFuture = CompletableFuture.runAsync(task, IO_POOL);
+		completableFuture = completableFuture.handle((result, e) -> {
+			if (e != null) {
+				log.error("任务执行失败", e);
+				CompletableFuture<Void> failedFuture = new CompletableFuture<>();
+				failedFuture.completeExceptionally((Throwable) e); // 使用异常完成新的 CompletableFuture
+				return failedFuture;
+			} else {
+				log.debug("任务执行成功");
+				try {
+					consumer.accept(null);
+				} catch (Exception e1) {
+					log.error("", e1);
+				}
 				return CompletableFuture.completedFuture(null); // 返回一个正常完成的 CompletableFuture, 因为是 runAsync，所以返回 null
 			}
 		});

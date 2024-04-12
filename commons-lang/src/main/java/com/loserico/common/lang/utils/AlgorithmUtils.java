@@ -22,12 +22,13 @@ public final class AlgorithmUtils {
 	 * @return
 	 */
 	public static int[] randomArr(int len, int maxValue) {
+		int length = 0;
 		do {
-			len = (int) (Math.random() * len);
-		} while (len == 0);
-		int[] nums = new int[len];
+			length = (int) (Math.random() * len);
+		} while (length == 0);
+		int[] nums = new int[length];
 		nums[0] = (int) (Math.random() * maxValue);
-		for (int i = 1; i < len; i++) {
+		for (int i = 1; i < length; i++) {
 			do {
 				nums[i] = (int) (Math.random() * maxValue);
 			} while (nums[i - 1] == nums[i]);

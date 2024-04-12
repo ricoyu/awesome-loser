@@ -4,7 +4,8 @@ import com.loserico.cache.JedisUtils;
 import com.loserico.cache.exception.OperationNotSupportedException;
 import com.loserico.cache.listeners.MessageListener;
 import com.loserico.common.lang.concurrent.LoserThreadFactory;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import redis.clients.jedis.JedisPubSub;
 
 import java.util.UUID;
@@ -24,8 +25,9 @@ import java.util.concurrent.locks.LockSupport;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
-@Slf4j
 public class BlockingLock implements Lock {
+	
+	private static final Logger log = LoggerFactory.getLogger(BlockingLock.class);
 	
 	private static final int NCPUS = Runtime.getRuntime().availableProcessors();
 	

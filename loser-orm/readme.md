@@ -821,3 +821,109 @@ entityOperations.commit();
 
 
 
+# 六 枚举类型用自定义属性值读写
+
+1. 假设有这样一个有自定义属性的枚举类EquipmentType
+
+   ```java
+   public enum EquipmentType {
+   	
+   	ELEVATOR("LIFT","提升机"),
+   	VEHICLE("TAMR","小车");
+   	
+   	private final String typeId;
+   	private final String typeName;
+   	
+   	private EquipmentType(String typeId,String typeName){
+   		this.typeId = typeId;
+   		this.typeName = typeName;
+   	}
+   	
+   	public String getTypeId() {
+   		return typeId;
+   	}
+   	
+   	public String getTypeName() {
+   		return typeName;
+   	}
+   }
+   ```
+
+2. 实体类持久该enum类型, 但是数据库实际存的既不是这个enum的name, 也不是其ordinal, 而是其typeId属性值
+
+   此时就可以加上 @Convert(converter = EquipmentTypeConverter.class)注解, 这是JPA原生 API
+
+   **但是注意了:** 使用了 @Enumerated(EnumType.STRING)注解的话 @Convert注解就无效了
+
+   ```java
+   @Entity
+   @Table(name = "tcp_task_status")
+   public class TcpTaskStatus {
+   
+       @Id
+       @GeneratedValue(strategy = GenerationType.IDENTITY)
+       private Integer id;
+   
+       @Column(nullable = false)
+       private Integer seq;
+   
+       @Column(nullable = false)
+       @Enumerated(EnumType.STRING)
+       @Convert(converter = EquipmentTypeConverter.class)
+       private EquipmentType equipmentType;
+   
+       @Column(length = 64, nullable = false)
+       private String equipmentId;
+   
+       @Column(nullable = false)
+       private Integer qty;
+   
+       @Column(nullable = false)
+       private Integer finishedQty;
+   
+       @Column(length = 20, nullable = false)
+       private String taskType;
+   
+       @Column(length = 50, nullable = false)
+       private String positionId;
+   
+       @Column(length = 1024, nullable = false)
+       private String msg;
+   
+       @Column(length = 20, nullable = false)
+       private String commandId;
+   
+       @Column(length = 64, nullable = false)
+       private String creator;
+   
+       @Column(nullable = false)
+       private LocalDateTime createTime;
+   
+       @Column(length = 64, nullable = false)
+       private String modifier;
+   
+       @Column(nullable = false)
+       private LocalDateTime modifyTime;
+   
+   }
+   ```
+
+3. EquipmentTypeConverter
+
+   ```java
+   @Converter
+   public class EquipmentTypeConverter implements AttributeConverter<EquipmentType, String> {
+   	
+   	@Override
+   	public String convertToDatabaseColumn(EquipmentType attribute) {
+   		return attribute.getTypeId();
+   	}
+   	
+   	@Override
+   	public EquipmentType convertToEntityAttribute(String dbData) {
+   		return EnumUtils.toEnum(EquipmentType.class, dbData, "typeId");
+   	}
+   }
+   ```
+
+   

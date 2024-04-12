@@ -32,7 +32,7 @@ public class SentinelTest {
 	public void testRelateRule() {
 		ThreadPoolExecutor executor = LoserExecutors.of("order-pool")
 				.corePoolSize(8)
-				.maximumPoolSize(18)
+				.maxPoolSize(18)
 				.build();
 		
 		CountDownLatch countDownLatch = new CountDownLatch(100);
@@ -61,7 +61,7 @@ public class SentinelTest {
 	public void testWarmUp() {
 		ThreadPoolExecutor executor = LoserExecutors.of("order-pool")
 				.corePoolSize(10)
-				.maximumPoolSize(18)
+				.maxPoolSize(18)
 				.prestartAllCoreThreads()
 				.build();
 		

@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
 
+import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
@@ -54,9 +55,7 @@ public final class ByteBufUtils {
 		}
 		
 		ByteBuf buf = (ByteBuf) byteBuf;
-		byte[] bytes = new byte[buf.readableBytes()];
-		buf.readBytes(bytes);
-		return new String(bytes, UTF_8);
+		return buf.toString(US_ASCII);
 	}
 	
 	/**
@@ -79,9 +78,7 @@ public final class ByteBufUtils {
 		}
 		
 		ByteBuf buf = (ByteBuf) byteBuf;
-		byte[] bytes = new byte[buf.readableBytes()];
-		buf.readBytes(bytes);
-		return new String(bytes, charset);
+		return buf.toString(charset);
 	}
 	
 	/**
@@ -111,8 +108,6 @@ public final class ByteBufUtils {
 		
 		ByteBuf buf = (ByteBuf) byteBuf;
 		
-		byte[] bytes = new byte[buf.readableBytes()];
-		buf.readBytes(bytes);
-		return new String(bytes, charset1);
+		return buf.toString(charset1);
 	}
 }

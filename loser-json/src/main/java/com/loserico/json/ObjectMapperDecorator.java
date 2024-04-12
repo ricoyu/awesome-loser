@@ -24,7 +24,6 @@ import com.loserico.json.jackson.deserializer.EnumDeserializer;
 import com.loserico.json.jackson.deserializer.LocalDateDeserializer;
 import com.loserico.json.jackson.deserializer.LocalDateTimeDeserializer;
 import com.loserico.json.jackson.deserializer.PageDeserializer;
-import com.loserico.json.jackson.serializer.EnumI18NSerializer;
 import com.loserico.json.jackson.serializer.LocalDateTimeSerializer;
 import com.loserico.json.jackson.serializer.ResultSerializer;
 
@@ -86,7 +85,7 @@ public class ObjectMapperDecorator {
 		 */
 		SimpleModule customModule = new SimpleModule();
 		customModule.addSerializer(Result.class, new ResultSerializer());
-		customModule.addSerializer(Enum.class, new EnumI18NSerializer());
+		//customModule.addSerializer(Enum.class, new EnumI18NSerializer());
 		customModule.setDeserializerModifier(new BeanDeserializerModifier() {
 			@SuppressWarnings({"unchecked", "rawtypes"})
 			@Override

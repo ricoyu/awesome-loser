@@ -19,6 +19,7 @@ public class BubbleSort {
 		int n = data.length;
 		
 		for (int i = 0; i < n - 1; i++) { //排序的次数
+			//flag用来标记是否发生交换
 			boolean flag = false;
 			for (int j = 0; j < n-1 -i; j++) {
 				if (data[j] > data[j+1]) {

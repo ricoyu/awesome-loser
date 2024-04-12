@@ -394,7 +394,7 @@ public class HttpUtilsTest {
 		CountDownLatch countDownLatch = new CountDownLatch(100);
 		ThreadPoolExecutor pool = LoserExecutors.of("sentinel-pool")
 				.corePoolSize(8)
-				.maximumPoolSize(12)
+				.maxPoolSize(12)
 				.prestartAllCoreThreads()
 				.build();
 		for (int i = 0; i < 100; i++) {

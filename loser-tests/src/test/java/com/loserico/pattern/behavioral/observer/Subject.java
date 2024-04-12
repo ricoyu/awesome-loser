@@ -1,33 +1,18 @@
 package com.loserico.pattern.behavioral.observer;
 
 /**
+ * 被观察者接口
  * <p>
- * Copyright: (C), 2020/2/2 10:09
- * <p>
+ * Copyright: Copyright (c) 2024-03-29 17:48
  * <p>
  * Company: Sexy Uncle Inc.
- *
- * @author Rico Yu ricoyu520@gmail.com
+ * <p>
+
+ * @author Rico Yu  ricoyu520@gmail.com
  * @version 1.0
  */
-public interface Subject {
-	
-	/**
-	 * 注册观察者对象
-	 *
-	 * @param observer
-	 */
-	public void registerObserver(Observer observer);
-	
-	/**
-	 * 删除观察者对象
-	 *
-	 * @param observer
-	 */
-	public void removeObserver(Observer observer);
-	
-	/**
-	 * 通知观察者
-	 */
-	public void notifyObservers();
+interface Subject {
+    void registerObserver(Observer o);
+    void removeObserver(Observer o);
+    void notifyObservers();
 }

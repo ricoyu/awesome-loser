@@ -4,10 +4,10 @@ import com.loserico.common.lang.utils.IOUtils;
 import com.loserico.common.lang.utils.StringUtils;
 import org.junit.Test;
 
-import java.nio.charset.StandardCharsets;
-
+import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * <p>
@@ -38,7 +38,7 @@ public class RedixUtilsTest {
 	
 	@Test
 	public void testHexToBinary() {
-		System.out.println(RedixUtils.hex2BinaryStr("0x00000C"));
+		System.out.println(RedixUtils.hex2BinaryStr("0x0F"));
 	}
 	
 	@Test
@@ -64,6 +64,8 @@ public class RedixUtilsTest {
 		System.out.println("---------------");
 		int k = 300;
 		System.out.println(RedixUtils.int2BinaryStr(k));//00000000000000000000000100101100
+		byte[] bytes = RedixUtils.binaryStr2Bytes(RedixUtils.int2BinaryStr(k));
+		RedixUtils.print(bytes);
 		byte b2 = (byte) k; //只取最后一个字节 00101100
 		RedixUtils.print(b2); //00101100
 		int l = (int) b2; //00101100 对应的int是44
@@ -208,7 +210,7 @@ public class RedixUtilsTest {
 	@Test
 	public void testStr2asciiBytes() {
 		String s = "<STX>";
-		byte[] bytes = s.getBytes(StandardCharsets.US_ASCII);
+		byte[] bytes = s.getBytes(US_ASCII);
 		RedixUtils.print(bytes);
 	}
 	
@@ -227,10 +229,10 @@ public class RedixUtilsTest {
 	@Test
 	public void testHex2AscII() {
 		String hex = "01 00 63 6f 6d 2e 6c 6f 73 65 72 69 63 6f 2e 62";
-		String ascii = RedixUtils.hex2ASCII(hex);
+		String ascii = RedixUtils.hex2Ascii(hex);
 		System.out.println(ascii);
 		
-		System.out.println(RedixUtils.hex2ASCII("0x03"));
+		System.out.println(RedixUtils.hex2Ascii("0x03"));
 	}
 	
 	@Test
@@ -239,7 +241,7 @@ public class RedixUtilsTest {
 		byte[] bytes = RedixUtils.char2Bytes(a);
 		String s = RedixUtils.bytes2Hex(bytes);
 		System.out.println(s);
-		String ascii = RedixUtils.hex2ASCII(s);
+		String ascii = RedixUtils.hex2Ascii(s);
 		System.out.println(ascii);
 	}
 	
@@ -258,5 +260,33 @@ public class RedixUtilsTest {
 	public void testPrintHex2BinaryStr() {
 		String binaryStr = RedixUtils.hex2BinaryStr("0xCAFEBABE");
 		System.out.println(binaryStr);
+	}
+
+	@Test
+	public void testHex2Asciii() {
+		System.out.println(RedixUtils.ascii2Hex("2"));
+	}
+
+	@Test
+	public void testhex2Asci() {
+		String ascii = RedixUtils.hex2Ascii("37");
+		System.out.println(ascii);
+	}
+	@Test
+	public void testascii2Bytes() {
+		byte[] bytes = RedixUtils.ascii2Bytes("$02");
+		RedixUtils.print(bytes);
+	}
+
+	@Test
+	public void testHex2Ascii() {
+		String hex = "0231323b4d433032333b313b54414d523b6576743d4d53473b6f69643d463b7174793d313b6f72643d324d4f563330443035304330353b03";
+		System.out.println(RedixUtils.hex2Ascii(hex));;
+	}
+
+	@Test
+	public void testAscii2Hex() {
+		String s = "M";
+		System.out.println(RedixUtils.ascii2Hex(s));
 	}
 }

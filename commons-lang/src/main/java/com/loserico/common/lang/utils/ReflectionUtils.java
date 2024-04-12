@@ -1,6 +1,5 @@
 package com.loserico.common.lang.utils;
 
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cglib.proxy.UndeclaredThrowableException;
@@ -21,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -40,8 +40,9 @@ import java.util.regex.Pattern;
  * @author Rico Yu  ricoyu520@gmail.com
  * @version 1.0
  */
-@Slf4j
 public class ReflectionUtils {
+	
+	private static final Logger log = LoggerFactory.getLogger(ReflectionUtils.class);
 	
 	private static final String SETTER_PREFIX = "set";
 	
@@ -1184,6 +1185,9 @@ public class ReflectionUtils {
 	}
 	
 	/**
+	 * 这个方法会在clazz中找到所有的方法, 包括父类中的方法, 但不包括Object类中的方法, 
+	 * 但是如果clazz是Spring启动CGlib动态代理的时候生成的代理类, 则不会再去找代理类的父类中的方法了 
+	 * 一次是代理类的, 一次是这个代理类的父类
 	 * Perform the given callback operation on all matching methods of the given
 	 * class and superclasses.
 	 * <p>
@@ -1201,6 +1205,7 @@ public class ReflectionUtils {
 	/**
 	 * Perform the given callback operation on all matching methods of the given
 	 * class and superclasses (or given interface and super-interfaces).
+	 * 当在代理类和代理类的父类中找到同名方法时, 只调用代理类中的方法
 	 * <p>
 	 * The same named method occurring on subclass and superclass will appear twice,
 	 * unless excluded by the specified {@link MethodFilter}.
@@ -1212,6 +1217,7 @@ public class ReflectionUtils {
 	public static void doWithMethods(Class<?> clazz, MethodCallback mc, MethodFilter mf) {
 		// Keep backing up the inheritance hierarchy.
 		Method[] methods = getDeclaredMethods(clazz);
+		//methods = filterProxyMethods(clazz, methods);
 		for (Method method : methods) {
 			if (mf != null && !mf.matches(method)) {
 				continue;
@@ -1222,13 +1228,37 @@ public class ReflectionUtils {
 				throw new IllegalStateException("Not allowed to access method '" + method.getName() + "': " + ex);
 			}
 		}
-		if (clazz.getSuperclass() != null) {
+		
+		// 获取父类, 但如果clazz是代理类的话就不找其父类了
+		if (!clazz.getName().contains("$$") && clazz.getSuperclass() != null) {
 			doWithMethods(clazz.getSuperclass(), mc, mf);
 		} else if (clazz.isInterface()) {
 			for (Class<?> superIfc : clazz.getInterfaces()) {
 				doWithMethods(superIfc, mc, mf);
 			}
 		}
+	}
+	
+	public static Method[] filterProxyMethods(Class<?> clazz, Method[]  allMethods) {
+		// 获取原始类, 如果clazz是代理类的话
+		Class<?> originalClass = (clazz.getName().contains("$$")) ? clazz.getSuperclass() : clazz;
+		
+		Map<String, Method> uniqueMethods = new HashMap<>();
+		
+		for (Method method : allMethods) {
+			String methodName = method.getName();
+			Class<?> declaringClass = method.getDeclaringClass();
+			
+			// 如果方法声明的类不是原始类，则优先保留
+			if (!declaringClass.equals(originalClass)) {
+				uniqueMethods.put(methodName, method);
+			} else {
+				// 如果方法声明的类是原始类，且在代理类中不存在同名方法，则保留
+				uniqueMethods.putIfAbsent(methodName, method);
+			}
+		}
+		
+		return uniqueMethods.values().toArray(new Method[0]);
 	}
 	
 	/**
@@ -1288,6 +1318,8 @@ public class ReflectionUtils {
 	}
 	
 	/**
+	 * 拿到所有在这个类中声明的方法, 包括private方法, 但不包括父类中的方法
+	 * 如果这个类实现了接口, 接口中的default方法也会被包括进来
 	 * This variant retrieves {@link Class#getDeclaredMethods()} from a local cache
 	 * in order to avoid the JVM's SecurityManager check and defensive array
 	 * copying. In addition, it also includes Java 8 default methods from locally
@@ -1731,5 +1763,43 @@ public class ReflectionUtils {
 		
 		return true;
 	}
-	
+
+	/**
+	 * 将下划线风格的数据库字段名转换为驼峰式的Java属性名。
+	 *
+	 * @param underscoreName 下划线风格的名称
+	 * @return 驼峰式的名称
+	 */
+	public static String toPropertyName(String underscoreName) {
+		if (underscoreName == null || underscoreName.isEmpty()) {
+			return "";
+		}
+
+		StringBuilder camelCaseName = new StringBuilder();
+		boolean nextCharUpperCase = false;
+
+		for (int i = 0; i < underscoreName.length(); i++) {
+			char c = underscoreName.charAt(i);
+
+			if (c == '_') {
+				if (camelCaseName.length() > 0) {
+					nextCharUpperCase = true;
+				}
+			} else {
+				if (nextCharUpperCase) {
+					camelCaseName.append(Character.toUpperCase(c));
+					nextCharUpperCase = false;
+				} else {
+					if (camelCaseName.length() == 0) {
+						camelCaseName.append(Character.toLowerCase(c));
+					} else {
+						camelCaseName.append(c);
+					}
+				}
+			}
+		}
+
+		return camelCaseName.toString();
+	}
+
 }

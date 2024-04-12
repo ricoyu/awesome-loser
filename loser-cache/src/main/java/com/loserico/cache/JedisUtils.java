@@ -18,7 +18,8 @@ import com.loserico.common.lang.concurrent.LoserThreadExecutor;
 import com.loserico.common.lang.utils.IOUtils;
 import com.loserico.common.lang.utils.PrimitiveUtils;
 import com.loserico.json.jackson.JacksonUtils;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import redis.clients.jedis.GeoCoordinate;
 import redis.clients.jedis.GeoRadiusResponse;
 import redis.clients.jedis.GeoUnit;
@@ -57,7 +58,7 @@ import static com.loserico.cache.utils.UnMarshaller.toSeconds;
 import static com.loserico.json.jackson.JacksonUtils.toJson;
 import static java.lang.String.join;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.*;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
@@ -77,8 +78,9 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
  * @author Rico Yu  ricoyu520@gmail.com
  * @version 1.0
  */
-@Slf4j
 public final class JedisUtils {
+	
+	private static final Logger log = LoggerFactory.getLogger(JedisUtils.class);
 	
 	public static final String STATUS_SUCCESS = "OK";
 	
@@ -2761,11 +2763,12 @@ public final class JedisUtils {
 			
 			@Override
 			public void onMessage(String channel, String message) {
-				EXECUTOR.execute(() -> {
+				//EXECUTOR.execute(() -> {
 					messageListener.onMessage(channel, message);
-				});
+				//});
 			}
 		};
+		//这边订阅呃实现已经是异步的了, 不需要再开线程了
 		jedisOperations.subscribe(jedisPubSub, chnannels);
 		return jedisPubSub;
 	}
@@ -2819,6 +2822,7 @@ public final class JedisUtils {
 	}*/
 	
 	/**
+	 * 可以试试blockingLock()以及nonBlockingLock, 这两种加锁方式更好
 	 * <pre>
 	 * <b>非公平锁</b></p>
 	 * Redis 下获取分布式锁
@@ -2869,9 +2873,9 @@ public final class JedisUtils {
 	 * Sometimes it is perfectly fine that under special circumstances, like during a failure, multiple clients can hold the lock at the same time.
 	 * If this is the case, you can use your replication based solution. </pre>
 	 *
-	 * @param key       锁的名字
+	 * @param key       这个方法的key就是锁的名字
 	 * @param leaseTime key过期时间, 单位秒
-	 * @return String token 返回null表示没有获取到锁,  返回一个token表示成功获取锁, 解锁的时候用这个token来解锁
+	 * @return boolean false表示没有获取到锁, true表示获取到锁了
 	 * @on
 	 */
 	public static boolean lock(String key, String requestId, long leaseTime, TimeUnit timeUnit) {
@@ -2881,7 +2885,7 @@ public final class JedisUtils {
 	/**
 	 * 阻塞非公平锁
 	 *
-	 * @param key
+	 * @param key 这个key并不是真正Redis中key的名字, 而是其中的一部分, 用于替换后面%s部分, "loser:nblk:%s:lock"
 	 * @return
 	 */
 	public static Lock blockingLock(String key) {
@@ -2891,7 +2895,7 @@ public final class JedisUtils {
 	/**
 	 * 非阻塞非公平锁
 	 *
-	 * @param key
+	 * @param key 这个key并不是真正Redis中key的名字, 而是其中的一部分, 用于替换后面%s部分, "loser:nblk:%s:lock"
 	 * @return
 	 */
 	public static Lock nonBlockingLock(String key) {
@@ -2899,9 +2903,10 @@ public final class JedisUtils {
 	}
 	
 	/**
-	 * 释放分布式锁
+	 * 释放分布式锁, 只针对JedisUtils.lock()方法加的锁释放, 如果key对应的value不是requestId, 则解锁失败, 返回false, 否则返回true
 	 * <p>
-	 * token 是成功加锁后返回的, 这里回传是为了确定解锁的是自己加的锁, 否则会把别人加的锁给解锁了。
+	 * requestId 是自己生成的然后传给加锁方法的
+	 * 这里回传是为了确定解锁的是自己加的锁, 否则会把别人加的锁给解锁了。
 	 * <p>
 	 * Lua 脚本:
 	 * if redis.call("get",KEYS[1]) == ARGV[1] then
@@ -2921,10 +2926,10 @@ public final class JedisUtils {
 	 * so the lock will be removed only if it is still the one that was set by the client trying to remove it.
 	 *
 	 * @param key   锁
-	 * @param value 用于解锁的
+	 * @param requestId 用于解锁的值,requestId是自己生成的然后传给加锁方法的
 	 * @return boolean 是否释放成功
 	 */
-	public static boolean unlock(String key, String value) {
+	public static boolean unlock(String key, String requestId) {
 		String setnxSha1 = shaHashs.computeIfAbsent("unlock.lua", x -> {
 			log.debug("Load script {}", "unlock.lua");
 			if (jedisOperations instanceof JedisClusterOperations) {
@@ -2933,7 +2938,7 @@ public final class JedisUtils {
 			return jedisOperations.scriptLoad(IOUtils.readClassPathFileAsString("/lua-scripts/unlock.lua"));
 		});
 		
-		long result = (long) jedisOperations.evalsha(setnxSha1, 1, key, value);
+		long result = (long) jedisOperations.evalsha(setnxSha1, 1, key, requestId);
 		return result == 1L;
 	}
 	
@@ -2976,5 +2981,13 @@ public final class JedisUtils {
 	
 	private static boolean isNotEmpty(Collection<?> collection) {
 		return collection != null && !collection.isEmpty();
+	}
+	
+	/**
+	 * 为非阻塞方式加锁提供requestId
+	 * @return
+	 */
+	public static String requestId() {
+		return Thread.currentThread().getName() + UUID.randomUUID().toString();
 	}
 }

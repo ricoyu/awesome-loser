@@ -4,7 +4,7 @@ https://blog.didispace.com/JedisPool%E8%B5%84%E6%BA%90%E6%B1%A0%E4%BC%98%E5%8C%9
 
 https://gist.github.com/JonCole/925630df72be1351b21440625ff2671f
 
-# 摘要
+# 一 摘要
 
 src/main/resources下放redis.properties, 配置Redis IP和密码等等, 具体可配置项如下
 
@@ -27,7 +27,7 @@ src/main/resources下放redis.properties, 配置Redis IP和密码等等, 具体�
 17. redis.minEvictableIdleTimeMillis=60000
 18. redis.numTestsPerEvictionRun=-1
 
-# Tips
+# 二 Tips
 
 1. maxTotal, maxIdle 设置一样大 50
 2. 一个连接的QPS大约是1000(即每次执行一个Jedis操作耗费1ms), 业务期望的QPS是50000, 那么理论上需要的资源池大小是50000 / 1000 = 50个 
@@ -50,7 +50,9 @@ src/main/resources下放redis.properties, 配置Redis IP和密码等等, 具体�
 8. testOnReturn
    向资源池归还连接时是否做连接有效性检测(ping)，无效连接会被移除 默认false, 业务量很大时候建议设置为false(多一次ping的开销)
 
-# 通用配置项
+# 三 配置
+
+## 3.1 通用配置项
 
 * redis.default.enabled true
 
@@ -100,7 +102,7 @@ src/main/resources下放redis.properties, 配置Redis IP和密码等等, 具体�
     }
   ```
 
-# 连接超时配置
+## 3.2 连接超时配置
 
 * redis.connectionTimeout
   连接超时时间 默认50000
@@ -109,7 +111,7 @@ src/main/resources下放redis.properties, 配置Redis IP和密码等等, 具体�
 
 
 
-# 最大最小资源数
+## 3.3 最大最小资源数
 
 * redis.maxTotal 默认 50
   最大连接数, 如果赋值为-1, 则表示不限制; 如果pool已经分配了maxActive个jedis实例, 则此时pool的状态为exhausted(耗尽)。
@@ -118,7 +120,7 @@ src/main/resources下放redis.properties, 配置Redis IP和密码等等, 具体�
 * redis.minIdle 8
   最小空闲数
 
-# 测试连接可用性
+## 3.4 测试连接可用性
 
 * redis.testOnBorrow true
   向资源池借用连接时是否做连接有效性检测(ping), 无效连接会被移除, 如果检验失败, 则从池中去除连接并尝试取出另一个
@@ -130,13 +132,13 @@ src/main/resources下放redis.properties, 配置Redis IP和密码等等, 具体�
   
   业务量很大时候建议设置为false(多一次ping的开销)。
 
-# 资源用尽时处理
+## 3.5 资源用尽时处理
 
 * redis.blockWhenExhausted=true
 * redis.maxWaitMillis 5000
   等待可用连接的最大时间, 单位毫秒, 默认值为-1, 表示永不超时。如果超过等待时间, 则直接抛出JedisConnectionException
 
-# 空闲资源监测
+## 3.6 空闲资源监测
 
 1. redis.testWhileIdle true
    是否开启空闲资源监测 默认false, 建议true
@@ -170,7 +172,7 @@ public class JedisPoolConfig extends GenericObjectPoolConfig {
 
 
 
-# 单节点配置
+## 3.7 单节点配置
 
 src/main/resources/redis.properties
 
@@ -182,7 +184,7 @@ redis.password=deepdata$
 redis.db=12
 ```
 
-# Sentinel配置
+## 3.8 Sentinel配置
 
 src/main/resources/redis.properties
 
@@ -195,7 +197,7 @@ redis.timeout=2000
 redis.db=0
 ```
 
-# Cluster 配置
+## 3.9 Cluster 配置
 
 src/main/resources/redis.properties
 
@@ -215,58 +217,71 @@ redis.timeout=2000
 redis.db=0
 ```
 
-# 初始化流程
+
+
+# 四 初始化流程
 
 1. 先看是否配置了`redis.sentinels`, 如果配置了则创建基于Sentinel的JedisPool
 2. 否则看是否配置了`redis.clusters`, 如果配置了则创建JedisCluster
 3. 如果上述两项都没有配置, 则看是否配置了`redis.default.enabled`, 如果为true则创建一个单实例的JedisPool
 4. 如果是单实例或者哨兵模式, 可以对JedisPool预热, 通过参数redis.warmUp=true开启, 默认true
 
-# 用法
+
+
+# 五 用法
 
 常用的Redis API都支持了, 也有一些比较有特色的API
 
-1. string操作
-
-   ```
-   JedisUtils.set("key1", "v1")
-   JedisUtils.get("key1")
-   ```
-
-2. HASH操作, 支持HASH的field过期
+1. HASH操作, 支持HASH的field过期
 
    ```java
    JedisUtils.HASH.hset("k1", "field1", "v1");     //无过期时间的版本 
    JedisUtils.HASH.hset("k1", "field1", "v1", 12); //field1 12秒后过期, k1不过期
    ```
 
-3. 分布式锁
+## 5.1 分布式锁
+
+1. 阻塞锁
 
    ```java
-   Lock lock = JedisUtils.lock(LOCK_KEY + msgId, 5000);
-   if (!lock.locked()) {
-     log.warn("请不要重复消费消息{}", msgTxtVO);
-     channel.basicReject(deliveryTag, false);
-     return;
+   @Test
+   public void testBlockingLock() {
+     Lock lock = JedisUtils.blockingLock("lock001");
+     lock.lock();
+     System.out.println("...do some work");
+     lock.unlock();
    }
    ```
 
-4. 一些泛型方法
+2. 非阻塞锁
 
-   * key是字符串, value是一个ArrayList, 通过Jackson序列化反序列化
+   ```java
+   @Test
+   public void testnonBlockingLock() {
+     Lock lock = JedisUtils.nonBlockingLock("lock002");
+     lock.lock();
+     if (lock.locked()) {
+       System.out.println("加锁成功shijian");
+     }
+   }
+   ```
 
-     ```java
-     public static <T> List<T> getList(String key, Class<T> clazz)
-     ```
+## 5.2 一些泛型方法
 
-   * value不是字符串的情况, 使用Jackson反序列化
+* key是字符串, value是一个ArrayList, 通过Jackson序列化反序列化
 
-     ```java
-     public static boolean set(String key, Object value)
-     public static <T> T get(String key, Class<T> clazz)
-     ```
+  ```java
+  public static <T> List<T> getList(String key, Class<T> clazz)
+  ```
 
-     
+* value不是字符串的情况, 使用Jackson反序列化
+
+  ```java
+  public static boolean set(String key, Object value)
+  public static <T> T get(String key, Class<T> clazz)
+  ```
+
+  
 
 # JedisPool配置说明
 
@@ -320,3 +335,8 @@ JedisPool保证资源在一个可控范围内, 并且提供了线程安全, 但�
 
    连接池的最佳性能是 ==maxTotal = maxIdle==, 这样就避免连接池伸缩带来的性能干扰。但是如果并发量不大或者maxTotal设置过高, 会导致不必要的连接资源浪费。
    可以根据实际总OPS和调用redis客户端的规模整体评估每个节点所使用的连接池。
+
+
+
+# 分布式锁用法
+

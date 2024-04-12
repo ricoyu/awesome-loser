@@ -226,4 +226,38 @@ public class EnumUtilsTest {
 		
 	}
 
+	@Test
+	public void testLookupSpeed() {
+		String speed = "2";
+		Enum speed1 = EnumUtils.lookupEnum(Speed.class, speed, "speed");
+		System.out.println(speed1);
+	}
+
+	public enum Speed {
+
+		/**
+		 * 速度
+		 */
+		HIGH(1, "高速"),
+
+		MIDDLE(2, "中速"),
+
+		LOW(3, "低速");
+
+		private int speed;
+		private String desc;
+
+		private Speed(int speed, String desc) {
+			this.speed = speed;
+			this.desc = desc;
+		}
+
+		public String getDesc() {
+			return desc;
+		}
+
+		public int getSpeed() {
+			return speed;
+		}
+	}
 }

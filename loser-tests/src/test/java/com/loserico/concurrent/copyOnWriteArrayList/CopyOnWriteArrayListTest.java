@@ -43,7 +43,7 @@ public class CopyOnWriteArrayListTest {
 		
 		ThreadPoolExecutor executor = LoserExecutors.of("copy-on-write-arraylist-")
 				.corePoolSize(2)
-				.maximumPoolSize(100)
+				.maxPoolSize(100)
 				.keepAliveTime(60, SECONDS)
 				.queueSize(1000)
 				.rejectPolicy(Policy.ABORT_WITH_REPORT)

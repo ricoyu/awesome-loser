@@ -201,3 +201,17 @@
 
   
 
+# 4.类型转换
+
+```java
+ValueHandlerFactory.ValueHandler<T> valueHandler = ValueHandlerFactory.determineAppropriateHandler(clazz);
+return valueHandler.convert(value);
+```
+
+或者简化用法
+
+```java
+Long value = Transformers.convert("12", Long.class);
+assertThat(value).isEqualTo(12l);
+```
+

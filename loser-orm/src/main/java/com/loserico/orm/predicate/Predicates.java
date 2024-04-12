@@ -1,6 +1,7 @@
 package com.loserico.orm.predicate;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class Predicates {
 	
@@ -70,6 +71,10 @@ public class Predicates {
 		}
 		
 		return new BasicPredicate(propertyName, propertyValue, BasicMatchMode.NE);
+	}
+	
+	public static Predicate between(String propertyName, LocalDateTime begin, LocalDateTime end) {
+		return new LocalDateTimePredicate(propertyName, begin, end);
 	}
 
 	public static Predicate stringPredicate(String propertyName, String propertyValue) {

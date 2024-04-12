@@ -29,64 +29,74 @@ import java.util.Set;
  * @version 1.0
  */
 public class ReflectionUtilsTest {
-	
-	@Test
-	public void testGetSpringMvcControllerAnnotation() {
-		boolean exists = ReflectionUtils.existsAnnotation(RestController.class, MyController.class);
-		if (exists) {
-			Set<String> uris = new HashSet<>();
-			Set<Method> methods = ReflectionUtils.filterMethodByAnnotation(MyController.class, SpeedUpDev.class);
-			for (Method method : methods) {
-				String[] values = null;
-				GetMapping getMapping = method.getAnnotation(GetMapping.class);
-				if (getMapping != null) {
-					values = getMapping.value();
-					for (int i = 0; i < values.length; i++) {
-						String uri = values[i];
-						if (uri!= null) {
-						uris.add(uri);
-						}
-					}
-					
-				} else {
-					PostMapping postMapping = method.getAnnotation(PostMapping.class);
-					if (postMapping != null) {
-						values = postMapping.value();
-						for (int i = 0; i < values.length; i++) {
-							String uri = values[i];
-							if (uri!= null) {
-								uris.add(uri);
-							}
-						}
-					}
-				}
-			}
-			
-			uris.forEach(System.out::println);
-		}
-	}
-	
-	@Inherited
-	@Documented
-	@Target(ElementType.METHOD)
-	@Retention(RetentionPolicy.RUNTIME)
-	public static @interface SpeedUpDev {
-		
-	}
-	
-	@RestController
-	static class MyController {
-		
-		@SpeedUpDev
-		@GetMapping("/hi")
-		public Result hi() {
-			return Results.success().build();
-		}
-		
-		@SpeedUpDev
-		@PostMapping("/create")
-		public Result create() {
-			return Results.success().build();
-		}
-	}
+
+    @Test
+    public void testGetSpringMvcControllerAnnotation() {
+        boolean exists = ReflectionUtils.existsAnnotation(RestController.class, MyController.class);
+        if (exists) {
+            Set<String> uris = new HashSet<>();
+            Set<Method> methods = ReflectionUtils.filterMethodByAnnotation(MyController.class, SpeedUpDev.class);
+            for (Method method : methods) {
+                String[] values = null;
+                GetMapping getMapping = method.getAnnotation(GetMapping.class);
+                if (getMapping != null) {
+                    values = getMapping.value();
+                    for (int i = 0; i < values.length; i++) {
+                        String uri = values[i];
+                        if (uri != null) {
+                            uris.add(uri);
+                        }
+                    }
+
+                } else {
+                    PostMapping postMapping = method.getAnnotation(PostMapping.class);
+                    if (postMapping != null) {
+                        values = postMapping.value();
+                        for (int i = 0; i < values.length; i++) {
+                            String uri = values[i];
+                            if (uri != null) {
+                                uris.add(uri);
+                            }
+                        }
+                    }
+                }
+            }
+
+            uris.forEach(System.out::println);
+        }
+    }
+
+    @Test
+    public void test() {
+        String[] underscoreNames = new String[]{"src_field", "basicTask_equipmentChangeNotify"};
+        for (int i = 0; i < underscoreNames.length; i++) {
+            String underscoreName = underscoreNames[i];
+            String camelCaseName = ReflectionUtils.toPropertyName(underscoreName);
+            System.out.println(camelCaseName); // 输出: srcField
+        }
+    }
+
+    @Inherited
+    @Documented
+    @Target(ElementType.METHOD)
+    @Retention(RetentionPolicy.RUNTIME)
+    public static @interface SpeedUpDev {
+
+    }
+
+    @RestController
+    static class MyController {
+
+        @SpeedUpDev
+        @GetMapping("/hi")
+        public Result hi() {
+            return Results.success().build();
+        }
+
+        @SpeedUpDev
+        @PostMapping("/create")
+        public Result create() {
+            return Results.success().build();
+        }
+    }
 }

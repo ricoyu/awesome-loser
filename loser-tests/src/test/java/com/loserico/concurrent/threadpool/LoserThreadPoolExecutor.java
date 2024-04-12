@@ -106,8 +106,8 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	 * 代表预设的一个工作线程数的最大值<br/>
 	 * int型占4byte, 32bit <br/>
 	 * 00000000 00000000 00000000 00000001<br/>
-	 * 00100000 00000000 00000000 00000000 左移29位<br/>
-	 * 00011111 11111111 11111111 11111111 左移29位-1 整型值:536870911 5个多亿
+	 * 00100000 00000000 00000000 00000000 1左移29位<br/>
+	 * 00011111 11111111 11111111 11111111 1左移29位-1 整型值:536870911 5个多亿
 	 */
 	private static final int CAPACITY = (1 << COUNT_BITS) - 1;
 	
@@ -115,7 +115,7 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	 * 线程池的状态 runState is stored in the high-order bits
 	 * <p>
 	 * 注意数字在计算机中的二进制都是补码形式
-	 * 11111111 11111111 11111111 11111111  1的二进制形式(在原码的基础上符号位不变, 其余按位取反, 然后+1)
+	 * 11111111 11111111 11111111 11111111  -1的二进制形式(在原码的基础上符号位不变, 其余按位取反, 然后+1)
 	 * 11100000 00000000 00000000 00000000  左移29位
 	 * <p>
 	 * 线程池处在RUNNING状态时, 能够接收新任务, 以及对已添加的任务进行处理
@@ -126,6 +126,7 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	/**
 	 * 线程池处在SHUTDOWN状态时, 不接收新任务, 但能处理已添加的任务
 	 * 状态切换: 调用线程池的shutdown()接口时, 线程池由RUNNING -> SHUTDOWN
+	 * RUNNING --> shutdown() --> SHUTDOWN
 	 */
 	private static final int SHUTDOWN = 0 << COUNT_BITS;  //高3位 000
 	
@@ -190,7 +191,7 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	 * </ul>
 	 */
 	private static int runStateOf(int c) {
-		return c & ~CAPACITY;
+		return c & ~CAPACITY; //CAPACITY是 00011111 11111111 11111111 11111111 1左移29位-1
 	}
 	
 	/**
@@ -200,7 +201,7 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	 * 位与后, 低29位保持不变, 高3位都是0, 所以最终获取到低29位工作线程数
 	 */
 	private static int workerCountOf(int c) {
-		return c & CAPACITY;
+		return c & CAPACITY; //CAPACITY是 00011111 11111111 11111111 11111111 1左移29位-1
 	}
 	
 	/**
@@ -245,7 +246,6 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	 * <p>
 	 * 注意RUNNING是负数, 所以RUNNING是最小的
 	 */
-	
 	private static boolean runStateLessThan(int c, int s) {
 		return c < s;
 	}
@@ -316,7 +316,7 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 	}
 	
 	/**
-	 * 保存客户端提交的Runnable任务
+	 * workQueue用来保存客户端提交的Runnable任务
 	 * <p>
 	 * The queue used for holding tasks and handing off to worker
 	 * threads.  We do not require that workQueue.poll() returning
@@ -1345,7 +1345,7 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 			 * 从第二次循环开始都是从阻塞队列取任务, 如果没有任务的话线程阻塞,
 			 * 线程池中的线程为什么可以一直存活的原因就在这里
 			 *
-			 * 当然, 如果运行线程超时, 那么getTask()会阻塞keepAliveTime, 然后返回null, 这时候这里就跳出while循环
+			 * 当然, 如果运行线程超时, 那么getTask()会阻塞keepAliveTime长的时间, 然后返回null, 这时候这里就跳出while循环
 			 * 线程结束
 			 */
 			while (task != null || (task = getTask()) != null) {

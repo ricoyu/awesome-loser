@@ -5,72 +5,69 @@ import com.loserico.json.jsonpath.JsonPathUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-import static org.assertj.core.api.Assertions.*;
-
-/**
- * <p>
- * Copyright: (C), 2021-04-29 16:47
- * <p>
- * <p>
- * Company: Sexy Uncle Inc.
- *
- * @author Rico Yu ricoyu520@gmail.com
- * @version 1.0
- */
 @Slf4j
 public class JsonPathUtilsTest {
-	
-	@Test
-	public void test() {
-		String json = IOUtils.readClassPathFileAsString("es-data.json");
-		List<Movie> movies = JsonPathUtils.readListNode(json, "$.hits.hits[*]._source", Movie.class);
-		movies.forEach(System.out::println);
-		JsonPathUtils.readNode(json, "$.hits");
-	}
-	
-	@Test
-	public void test2() {
-		String allJson = IOUtils.readFileAsString("D:\\all.json");
-		List<String> allIds = JsonPathUtils.readListNode(allJson, "$.content.data[*]._id").stream().sorted().collect(Collectors.toList());
-		
-		//检查下分页查到的数据是不是都在完整的数据里面
-		for (int i = 1; i < 5; i++) {
-			String json = IOUtils.readFileAsString("D:\\page" + i + ".json");
-			List<String> idList = JsonPathUtils.readListNode(json, "$.content.data[*]._id");
-			for (String id : idList) {
-				if (!allIds.contains(id)) {
-					log.warn("分页查到的ID不在完整的数据里面");
-				}
-			}
-		}
-		
-		Set<String> ids = new HashSet<>();
-		for (int i = 1; i < 5; i++) {
-			String json = IOUtils.readFileAsString("D:\\page" + i + ".json");
-			List<String> idList = JsonPathUtils.readListNode(json, "$.content.data[*]._id").stream().sorted().collect(Collectors.toList());
-			System.out.println("第" + i + "页数据:");
-			idList.forEach(System.out::println);
-			
-			List<String> duplicateIds = new ArrayList<>();
-			for (String id : idList) {
-				if (ids.contains(id)) {
-					duplicateIds.add(id);
-				}
-			}
-			if (!duplicateIds.isEmpty()) {
-				System.out.println("第" + i + "页发现有" + duplicateIds.size() + "条数据重复:");
-				duplicateIds.forEach(System.out::println);
-			}
-			ids.addAll(idList);
-			
-		}
-		assertThat(ids.size()).isEqualTo(70);
-	}
-	
+
+    @Test
+    public void testIfExistsWithBlankJson() {
+        assertFalse(JsonPathUtils.ifExists("", "$.name"));
+        assertFalse(JsonPathUtils.ifExists("   ", "$.name"));
+    }
+
+    @Test
+    public void testIfExistsWithNonExistingPath() {
+        String json = "{\"name\": \"John Doe\"}";
+        assertFalse(JsonPathUtils.ifExists(json, "$.address"));
+    }
+
+    @Test
+    public void testIfExistsWithExistingPath() {
+        String json = "{\"name\": \"John Doe\"}";
+        assertTrue(JsonPathUtils.ifExists(json, "$.name"));
+    }
+
+    @Test
+    public void testIfExistsWithExistingEmptyArray() {
+        String json = "{\"emptyArray\": []}";
+        assertFalse(JsonPathUtils.ifExists(json, "$.emptyArray[0]"));
+    }
+
+    @Test
+    public void testIfExistsWithExistingNonEmptyArray() {
+        String json = "{\"names\": [\"John\", \"Jane\"]}";
+        assertTrue(JsonPathUtils.ifExists(json, "$.names[0]"));
+        assertTrue(JsonPathUtils.ifExists(json, "$.names[1]"));
+    }
+
+    @Test
+    public void testIfExistsWithNonExistentPropertyInArray() {
+        String json = "[{\"name\": \"John\"}, {\"name\": \"Jane\"}]";
+        assertFalse(JsonPathUtils.ifExists(json, "$[0].address"));
+    }
+
+    // Add more tests for edge cases and exceptional scenarios
+
+    @Test
+    public void testFBillNo() {
+        String msgData = IOUtils.readFileAsString("d:/msg_data.json");
+        System.out.println(msgData);
+        Object billJson = JsonPathUtils.readNode(msgData, "$.billJson");
+        System.out.println(billJson);
+        Object billNo = JsonPathUtils.readNode(msgData, "$.billJson.FBillNo");
+        System.out.println(billNo);
+    }
+
+    @Test
+    public void testFBillNoInsideArr() {
+        String msgData = IOUtils.readFileAsString("d:/msg_data3.json");
+        //System.out.println(msgData);
+        Object FBillNo = JsonPathUtils.readNode(msgData, "$.FBillNo");
+        boolean exists = JsonPathUtils.ifExists(msgData, "$.FBillNo");
+        //Object FBillNo = JsonPathUtils.readNode(msgData, "$.[0].FBillNo");
+        System.out.println(FBillNo);
+    }
+
 }

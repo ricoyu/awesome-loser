@@ -422,6 +422,20 @@ public class JPACriteriaQuery<T> implements Serializable {
 		}
 		this.predicates.add(criteriaBuilder.gt((Expression) root.get(propertyName), value));
 	}
+	
+	/**
+	 * 大于等于
+	 * 
+	 * @param propertyName 属性名称
+	 * @param value 属性值
+	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public void gte(String propertyName, Number value) {
+		if (isNullOrEmpty(value)) {
+			return;
+		}
+		this.predicates.add(criteriaBuilder.ge((Expression) root.get(propertyName), value));
+	}
 
 	/**
 	 * in

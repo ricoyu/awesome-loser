@@ -1,0 +1,13 @@
+{
+  "appCode": "magic_path",
+  "topic": "RCS_Stack_Info",
+  "msgId": "1703475715182",
+  "bizId": "W00002",
+  "payLoad": {
+    "positionId": "01004039T101101",
+    "taskType": "8",
+    "startPosition": "01003039S000101",
+    "endPosition": "01007039F001001",
+    "ddTenantId": "00000"
+  }
+}

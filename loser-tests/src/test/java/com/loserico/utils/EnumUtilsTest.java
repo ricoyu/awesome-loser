@@ -11,11 +11,12 @@ public class EnumUtilsTest {
 		ExportType preview = ExportType.PREVIEW;
 		Object value = ReflectionUtils.getField(preview, ExportType.class, "code");
 		System.out.println(value);
-		
-		EnumUtils.lookupEnum(ExportType.class, "PREVIEW");
-		EnumUtils.lookupEnum(ExportType.class, "PREVIEW", "code");
-		EnumUtils.lookupEnum(ExportType.class, 1);
-		EnumUtils.lookupEnum(ExportType.class, 1, "code");
+
+		Enum preview1 = EnumUtils.lookupEnum(ExportType.class, "PREVIEW");
+		Enum anEnum = EnumUtils.lookupEnum(ExportType.class, "PREVIEW", "code");
+		Enum anEnum1 = EnumUtils.lookupEnum(ExportType.class, 1);
+		Enum anEnum2 = EnumUtils.lookupEnum(ExportType.class, 1, "code");
+		System.out.println(ExportType.PREVIEW.ordinal());
 	}
 
 	public static enum ExportType {

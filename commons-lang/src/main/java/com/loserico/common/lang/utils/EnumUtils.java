@@ -396,6 +396,10 @@ public final class EnumUtils {
 				Object objValue = ReflectionUtils.getField(enumObj, clazz, property);
 				if (objValue instanceof String) {
 					propertyValue = (String) objValue;
+				} else {
+					if (objValue != null) {
+						propertyValue = objValue.toString();
+					}
 				}
 			} catch (ClassCastException e) {
 				//logger.warn("属性 {} 不是字符串类型", property);

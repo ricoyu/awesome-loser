@@ -2,11 +2,12 @@ package com.loserico.json.jsonpath;
 
 import com.google.common.collect.Sets;
 import com.jayway.jsonpath.Configuration;
-import com.jayway.jsonpath.InvalidJsonException;
 import com.jayway.jsonpath.Option;
 import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
 import com.jayway.jsonpath.spi.json.JsonProvider;
 import com.jayway.jsonpath.spi.mapper.MappingProvider;
+import com.loserico.common.lang.transformer.ValueHandlerFactory;
+import com.loserico.json.JSON;
 import com.loserico.json.collections.ExpiringHashMap;
 import com.loserico.json.generic.ParameterizedTypeImpl;
 import com.loserico.json.jackson.JacksonUtils;
@@ -17,12 +18,14 @@ import lombok.extern.slf4j.Slf4j;
 import net.minidev.json.JSONArray;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
  * https://github.com/json-path/JsonPath
@@ -55,231 +58,291 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
  */
 @Slf4j
 public final class JsonPathUtils {
-	
-	private static ExpiringHashMap<String, DocumentContext> expireingCache = new ExpiringHashMap<>();
-	
-	static {
-		Configuration.setDefaults(new Configuration.Defaults() {
-			
-			//需要com.fasterxml.jackson.core:jackson-databind:2.4.5
-			private final JsonProvider jsonProvider = new JacksonJsonProvider();
-			private final MappingProvider mappingProvider = new JacksonMappingProvider(JacksonUtils.objectMapper());
-			
-			@Override
-			public Set<Option> options() {
-				return Sets.newHashSet(Option.SUPPRESS_EXCEPTIONS);
-			}
-			
-			@Override
-			public MappingProvider mappingProvider() {
-				return mappingProvider;
-			}
-			
-			@Override
-			public JsonProvider jsonProvider() {
-				return jsonProvider;
-			}
-		});
-	}
-	
-	/**
-	 * @param json
-	 * @param path
-	 * @return
-	 */
-	public static boolean ifExists(String json, String path) {
-		if (isBlank(json)) {
-			return false;
-		}
-		Object result = getDocumentContext(json).read(path);
-		if (result == null) {
-			return false;
-		}
-		if (result instanceof JSONArray) {
-			return ((JSONArray) result).size() != 0;
-		}
-		
-		return true;
-	}
-	
-	/**
-	 * 通过Jsonpath读取某个节点，可能返回的是单个对象，也可能是集合对象
-	 *
-	 * @param json
-	 * @param path
-	 * @return
-	 */
-	public static <T> T readNode(String json, String path) {
-		if (isBlank(json)) {
-			return null;
-		}
-		return getDocumentContext(json).read(path);
-	}
-	
-	/**
-	 * FIXME 实测在高并发下有问题? 线程都被hang住了
-	 * @param json
-	 * @param path
-	 * @param <T>
-	 * @return
-	 */
-	public static <T> T readNodeIfExists(String json, String path) {
-		if (isBlank(json)) {
-			return null;
-		}
-		if (ifExists(json, path)) {
-			return getDocumentContext(json).read(path);
-		}
-		return null;
-	}
-	
-	/**
-	 * 通过Jsonpath读取某个节点，可能返回的是单个对象，也可能是集合对象
-	 *
-	 * @param json
-	 * @param path
-	 * @return
-	 */
-	public static <T> T readNode(String json, String path, Class<T> clazz) {
-		if (isBlank(json)) {
-			return null;
-		}
-		return getDocumentContext(json).read(path, clazz);
-	}
-	
-	public static <T> T readNodeIfExists(String json, String path, Class<T> clazz) {
-		if (isBlank(json)) {
-			return null;
-		}
-		
-		if (ifExists(json, path)) {
-			return getDocumentContext(json).read(path, clazz);
-		}
-		return null;
-	}
-	
-	/**
-	 * 示例1：给定json数组
-	 * <pre>{@code
-	 * [
-	 *   {
-	 *     "username": "hawk",
-	 *     "error": {
-	 *       "code": 899001,
-	 *       "message": "user exist"
-	 *     }
-	 *   },
-	 *   {
-	 *     "username": "ricoyucsd",
-	 *     "error": {
-	 *       "code": 899001,
-	 *       "message": "user exist"
-	 *     }
-	 *   },
-	 *   {
-	 *     "username": "ricoyussss",
-	 *     "nickname": "三少爷",
-	 *     "birthday": "1982-11-09",
-	 *     "gender": 1,
-	 *     "avatar": "qiniu/image/j/8D57A18AD6926D6D879DFA36B4ED9CC4.jpg"
-	 *   }
-	 * ]
-	 * }</pre>
-	 * 分别读取包含/不包含 error属性的元素<p>
-	 * <pre>{@code
-	 * JsonPathUtils.readListNode(result, "[?(@.error)].username", String.class)
-	 * JsonPathUtils.readListNode(result, "[?(!@.error)].username", String.class)
-	 * }</pre>
-	 * <p>
-	 * 示例2：给定json对象
-	 * <pre>{@code
-	 * {
-	 *   "count": 2,
-	 *   "total": 714,
-	 *   "start": 0,
-	 *   "users": [
-	 *     {
-	 *       "mtime": "2018-03-16 18:12:41",
-	 *       "gender": 0,
-	 *       "username": "96289794xcuqzz",
-	 *       "ctime": "2018-03-16 18:12:41"
-	 *     },
-	 *     {
-	 *       "mtime": "2018-03-16 18:12:41",
-	 *       "gender": 0,
-	 *       "username": "96269528oydxvk",
-	 *       "ctime": "2018-03-16 18:12:41"
-	 *     }
-	 *   ]
-	 * }
-	 * }</pre>
-	 * 取所有的username：$.users[*].username
-	 *
-	 * @param json
-	 * @param path
-	 * @param clazz
-	 * @return
-	 */
-	public static <T> List<T> readListNode(String json, String path, Class<T> clazz) {
-		if (isBlank(json)) {
-			return null;
-		}
-		Type type = new ParameterizedTypeImpl(List.class, new Class[]{clazz});
-		return getDocumentContext(json).read(path, type);
-	}
-	
-	@SuppressWarnings({"unchecked"})
-	public static List<String> readListNode(String json, String path) {
-		if (isBlank(json)) {
-			return null;
-		}
-		List results = getDocumentContext(json).read(path);
-		return (List<String>) results.stream().map(result -> JacksonUtils.toJson(result)).collect(toList());
-	}
-	
-	/**
-	 * 通过Jsonpath读取某个节点，返回单个对象，如果是集合则取第一个
-	 *
-	 * @param json
-	 * @param path
-	 * @return
-	 */
-	@SuppressWarnings({"unchecked", "rawtypes"})
-	public static <T> T readNodeSingleValue(String json, String path) {
-		if (isBlank(json)) {
-			return null;
-		}
-		Object result = getDocumentContext(json).read(path);
-		if (result instanceof JSONArray) {
-			JSONArray jsonArray = (JSONArray) result;
-			if (jsonArray.size() == 0) {
-				return null;
-			}
-			return (T) jsonArray.get(0);
-		}
-		if (result instanceof List) {
-			List list = (List) result;
-			if (list.size() == 0) {
-				return null;
-			}
-			return (T) list.get(0);
-		}
-		return (T) result;
-	}
-	
-	private static DocumentContext getDocumentContext(String json) {
-		DocumentContext documentContext = expireingCache.computeIfAbsent(json, (x) -> {
-			Configuration configuration = Configuration.defaultConfiguration();
-			try {
-				Object obj = configuration.jsonProvider().parse(json);
-				return new JsonContext(obj, configuration);
-			} catch (InvalidJsonException e) {
-				log.error("", e);
-				log.info("JSON格式有问题: {}", json);
-				throw e;
-			}
-		}, 1, TimeUnit.MINUTES);
-		return documentContext;
-	}
-	
+
+    private static ExpiringHashMap<String, DocumentContext> expireingCache = new ExpiringHashMap<>();
+
+    static {
+        Configuration.setDefaults(new Configuration.Defaults() {
+
+            //需要com.fasterxml.jackson.core:jackson-databind:2.4.5
+            private final JsonProvider jsonProvider = new JacksonJsonProvider();
+            private final MappingProvider mappingProvider = new JacksonMappingProvider(JacksonUtils.objectMapper());
+
+            @Override
+            public Set<Option> options() {
+                return Sets.newHashSet(Option.SUPPRESS_EXCEPTIONS);
+            }
+
+            @Override
+            public MappingProvider mappingProvider() {
+                return mappingProvider;
+            }
+
+            @Override
+            public JsonProvider jsonProvider() {
+                return jsonProvider;
+            }
+        });
+    }
+
+    /**
+     * @param json
+     * @param path
+     * @return
+     */
+    public static boolean ifExists(String json, String path) {
+        if (isBlank(json)) {
+            return false;
+        }
+        Object result = null;
+        try {
+            result = getDocumentContext(json).read(path);
+        } catch (Exception e) {
+            log.error("读取JSON节点: {} 报错, JSON为: {}", path, json, e);
+            return false;
+        }
+        if (result == null) {
+            return false;
+        }
+        if (result instanceof JSONArray) {
+            return ((JSONArray) result).size() != 0;
+        }
+
+        return true;
+    }
+
+    /**
+     * 通过Jsonpath读取某个节点，可能返回的是单个对象，也可能是集合对象
+     *
+     * @param json
+     * @param path
+     * @return
+     */
+    public static <T> T readNode(String json, String path) {
+        if (isBlank(json)) {
+            return null;
+        }
+        try {
+            return getDocumentContext(json).read(path);
+        } catch (Exception e) {
+            log.error("读取JSON节点: {} 报错, JSON为: {}", path, json, e);
+            return null;
+        }
+    }
+
+    /**
+     * FIXME 实测在高并发下有问题? 线程都被hang住了
+     *
+     * @param json
+     * @param path
+     * @param <T>
+     * @return
+     */
+    public static <T> T readNodeIfExists(String json, String path) {
+        if (isBlank(json)) {
+            return null;
+        }
+        if (ifExists(json, path)) {
+            try {
+                return getDocumentContext(json).read(path);
+            } catch (Exception e) {
+                log.error("读取JSON节点: {} 报错, JSON为: {}", path, json, e);
+                return null;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 通过Jsonpath读取某个节点，可能返回的是单个对象，也可能是集合对象
+     *
+     * @param json
+     * @param path
+     * @return
+     */
+    public static <T> T readNode(String json, String path, Class<T> clazz) {
+        if (isBlank(json)) {
+            return null;
+        }
+        Object value = null;
+        try {
+            value = getDocumentContext(json).read(path, clazz);
+        } catch (Exception e) {
+            log.error("读取JSON节点: {} 报错, JSON为: {}", path, json, e);
+        }
+        ValueHandlerFactory.ValueHandler<T> valueHandler = ValueHandlerFactory.determineAppropriateHandler(clazz);
+        return valueHandler.convert(value);
+    }
+
+    public static <T> T readNodeIfExists(String json, String path, Class<T> clazz) {
+        if (isBlank(json)) {
+            return null;
+        }
+
+        if (ifExists(json, path)) {
+            Object value = null;
+            try {
+                value = getDocumentContext(json).read(path, clazz);
+            } catch (Exception e) {
+                log.error("读取JSON节点: {} 报错, JSON为: {}", path, json, e);
+            }
+            ValueHandlerFactory.ValueHandler<T> valueHandler = ValueHandlerFactory.determineAppropriateHandler(clazz);
+            return valueHandler.convert(value);
+        }
+        return null;
+    }
+
+    /**
+     * 示例1：给定json数组
+     * <pre>{@code
+     * [
+     *   {
+     *     "username": "hawk",
+     *     "error": {
+     *       "code": 899001,
+     *       "message": "user exist"
+     *     }
+     *   },
+     *   {
+     *     "username": "ricoyucsd",
+     *     "error": {
+     *       "code": 899001,
+     *       "message": "user exist"
+     *     }
+     *   },
+     *   {
+     *     "username": "ricoyussss",
+     *     "nickname": "三少爷",
+     *     "birthday": "1982-11-09",
+     *     "gender": 1,
+     *     "avatar": "qiniu/image/j/8D57A18AD6926D6D879DFA36B4ED9CC4.jpg"
+     *   }
+     * ]
+     * }</pre>
+     * 分别读取包含/不包含 error属性的元素<p>
+     * <pre>{@code
+     * JsonPathUtils.readListNode(result, "[?(@.error)].username", String.class)
+     * JsonPathUtils.readListNode(result, "[?(!@.error)].username", String.class)
+     * }</pre>
+     * <p>
+     * 示例2：给定json对象
+     * <pre>{@code
+     * {
+     *   "count": 2,
+     *   "total": 714,
+     *   "start": 0,
+     *   "users": [
+     *     {
+     *       "mtime": "2018-03-16 18:12:41",
+     *       "gender": 0,
+     *       "username": "96289794xcuqzz",
+     *       "ctime": "2018-03-16 18:12:41"
+     *     },
+     *     {
+     *       "mtime": "2018-03-16 18:12:41",
+     *       "gender": 0,
+     *       "username": "96269528oydxvk",
+     *       "ctime": "2018-03-16 18:12:41"
+     *     }
+     *   ]
+     * }
+     * }</pre>
+     * 取所有的username：$.users[*].username
+     *
+     * @param json
+     * @param path
+     * @param clazz
+     * @return
+     */
+    public static <T> List<T> readListNode(String json, String path, Class<T> clazz) {
+        if (isBlank(json)) {
+            return null;
+        }
+        Type type = new ParameterizedTypeImpl(List.class, new Class[]{clazz});
+        try {
+            return getDocumentContext(json).read(path, type);
+        } catch (Exception e) {
+            log.error("path为: {}, json为:{}", path, json, e);
+        }
+        return new ArrayList<>();
+    }
+
+    @SuppressWarnings({"unchecked"})
+    public static List<String> readListNode(String json, String path) {
+        if (isBlank(json)) {
+            return null;
+        }
+        List results = new ArrayList();
+        try {
+            results = getDocumentContext(json).read(path);
+        } catch (Exception e) {
+            log.error("path为: {}, json为:{}", path, json, e);
+        }
+        return (List<String>) results.stream().map(result -> JacksonUtils.toJson(result)).collect(toList());
+    }
+
+    /**
+     * 通过Jsonpath读取某个节点，返回单个对象，如果是集合则取第一个
+     *
+     * @param json
+     * @param path
+     * @return
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public static <T> T readNodeSingleValue(String json, String path) {
+        if (isBlank(json)) {
+            return null;
+        }
+        Object result = null;
+        try {
+            getDocumentContext(json).read(path);
+        } catch (Exception e) {
+            log.error("path为: {}, json为:{}", path, json, e);
+            return null;
+        }
+        if (result instanceof JSONArray) {
+            JSONArray jsonArray = (JSONArray) result;
+            if (jsonArray.size() == 0) {
+                return null;
+            }
+            return (T) jsonArray.get(0);
+        }
+        if (result instanceof List) {
+            List list = (List) result;
+            if (list.size() == 0) {
+                return null;
+            }
+            return (T) list.get(0);
+        }
+        return (T) result;
+    }
+
+    private static DocumentContext getDocumentContext(String json) {
+        DocumentContext documentContext = expireingCache.computeIfAbsent(json, (x) -> {
+            Configuration configuration = Configuration.defaultConfiguration();
+            try {
+                if (log.isDebugEnabled()) {
+                    log.debug("传入的原始JSON: {}", json);
+                }
+                String processedJson = json;
+                if (isNotBlank(processedJson)) {
+                    /*
+                     * 特殊处理像
+                     */
+                    processedJson = JSON.cleanup(json);
+                    if (log.isDebugEnabled()) {
+                        log.debug("处理后的JSON: {}", processedJson);
+                    }
+                }
+                Object obj = configuration.jsonProvider().parse(processedJson);
+                return new JsonContext(obj, configuration);
+            } catch (Throwable e) {
+                log.error("", e);
+                log.error("JSON格式有问题, 输入的JSON串为: {}", json);
+                throw e;
+            }
+        }, 1, TimeUnit.MINUTES);
+        return documentContext;
+    }
+
 }

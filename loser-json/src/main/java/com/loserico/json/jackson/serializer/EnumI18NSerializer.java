@@ -16,6 +16,8 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
+ * 这个自定义序列化器主要是处理序列化Enum类型的时候, 支持国际化, 实际使用场景并不多, 还有下面所述的bug, 所以废弃了
+ * 实测这个实现在序列化Bean, 如果这个bean有一个List<Enum>属性, 会抛NullPointerException
  * <p>
  * Copyright: (C), 2021-08-13 10:17
  * <p>
@@ -25,6 +27,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
+@Deprecated
 public class EnumI18NSerializer extends JsonSerializer<Object> implements ContextualSerializer {
 	
 	private String property;
@@ -84,18 +87,18 @@ public class EnumI18NSerializer extends JsonSerializer<Object> implements Contex
 		//JsonSerializer<Object> enumSerializer = serializerProvider.findValueSerializer(beanProperty.getType(), beanProperty);
 		//JsonSerializer<Object> enumSerializer = ReflectionUtils.invokeMethod(serializerProvider, "_createUntypedSerializer", beanProperty.getType());
 		JsonSerializer<Object> enumSerializer = (JsonSerializer<Object>) LoserSerializerFactory.createEnumSerializer(serializerProvider, beanProperty);
-		EnumI18N enumI18N = beanProperty.getAnnotation(EnumI18N.class);
-		if (enumI18N == null) {
+			EnumI18N enumI18N = beanProperty.getAnnotation(EnumI18N.class);
+			if (enumI18N == null) {
 			return enumSerializer;
-		}
+			}
 		
-		String property = enumI18N.property();
-		String fallbackTo = enumI18N.fallbackTo();
-		
-		EnumI18NSerializer enumI18NSerializer = new EnumI18NSerializer(property, fallbackTo);
+			String property = enumI18N.property();
+			String fallbackTo = enumI18N.fallbackTo();
+			
+			EnumI18NSerializer enumI18NSerializer = new EnumI18NSerializer(property, fallbackTo);
 		enumI18NSerializer.setEnumSerializer(enumSerializer);
-		return enumI18NSerializer;
-	}
+			return enumI18NSerializer;
+		}
 	
 	public void setEnumSerializer(JsonSerializer<Object> enumSerializer) {
 		this.enumSerializer = enumSerializer;

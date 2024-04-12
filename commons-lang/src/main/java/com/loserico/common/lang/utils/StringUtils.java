@@ -251,7 +251,7 @@ public abstract class StringUtils {
 		}
 		return s1.trim().equals(s2.trim());
 	}
-	
+
 	/**
 	 * <p>Compares two String, returning {@code true} if they represent
 	 * equal sequences of characters.</p>
@@ -280,13 +280,27 @@ public abstract class StringUtils {
 		if (s1 == null) {
 			return false;
 		}
-		
+
 		if (s2 == null) {
 			return false;
 		}
 		return s1.trim().equals(s2.trim());
 	}
-	
+
+	public static boolean equalTo(String s1, Object s2) {
+		if (s1 == null && s2 == null) {
+			return true;
+		}
+		if (s1 == null) {
+			return false;
+		}
+
+		if (s2 == null) {
+			return false;
+		}
+		return s1.trim().equals(s2.toString());
+	}
+
 	/**
 	 * source equals targets钟任何一个即返回true
 	 *

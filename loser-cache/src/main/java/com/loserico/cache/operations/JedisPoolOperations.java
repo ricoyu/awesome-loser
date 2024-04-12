@@ -448,7 +448,9 @@ public class JedisPoolOperations implements JedisOperations {
 	 */
 	@Override
 	public void subscribe(JedisPubSub jedisPubSub, String... channels) {
+		//这边必须要走多线程, 否则会阻塞, 比如SpringBoot启动的时候, 如果有订阅消息的操作, 会阻塞SpringBoot启动
 		THREAD_POOL.execute(() -> pool.getResource().subscribe(jedisPubSub, channels));
+		//pool.getResource().subscribe(jedisPubSub, channels);
 	}
 	
 	/**

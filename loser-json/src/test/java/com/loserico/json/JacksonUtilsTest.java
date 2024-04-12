@@ -19,6 +19,7 @@ import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -137,10 +138,27 @@ public class JacksonUtilsTest {
 		System.out.println(JacksonUtils.toPrettyJson(eventJson));
 	}
 	
+	@Test
+	public void testSerializeLitOfEnum() {
+		SimpleEvent event = new SimpleEvent();
+		event.getTypes().add(SimpleEvent.Type.DGA);
+		event.getTypes().add(SimpleEvent.Type.DNS);
+		event.getTypes().add(SimpleEvent.Type.HTTP);
+		event.getTypes().add(SimpleEvent.Type.SMTP);
+		String json = toJson(event);
+		System.out.println(json);
+	}
+	
 	@Data
 	private static class SimpleEvent {
 		
 		private Long timestamp;
+		
+		private List<Type> types = new ArrayList<>();
+		
+		public static enum Type {
+			HTTP, DNS, SMTP, DGA
+		}
 	}
 	
 	@Data

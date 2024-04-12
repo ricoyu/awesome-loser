@@ -28,7 +28,7 @@ public class ExecutorsTest {
 	public void testCreateThreadPool() {
 		ThreadPoolExecutor executor = LoserExecutors.of("Loser-Pool")
 				.rejectPolicy(ABORT_WITH_REPORT)
-				.maximumPoolSize(500)
+				.maxPoolSize(500)
 				.keepAliveTime(1, TimeUnit.MINUTES)
 				.queueSize(200)
 				.build();
@@ -50,7 +50,7 @@ public class ExecutorsTest {
 				.corePoolSize(1)
 				.allowCoreThreadTimeout(false)
 				.queueSize(1)
-				.maximumPoolSize(2)
+				.maxPoolSize(2)
 				.keepAliveTime(4, SECONDS)
 				.rejectPolicy(ABORT_WITH_REPORT)
 				.build();
@@ -91,7 +91,7 @@ public class ExecutorsTest {
 				.corePoolSize(1)
 				.allowCoreThreadTimeout(false)
 				.queueSize(1)
-				.maximumPoolSize(2)
+				.maxPoolSize(2)
 				.keepAliveTime(4, SECONDS)
 				.rejectPolicy(ABORT_WITH_REPORT)
 				.prestartAllCoreThreads()

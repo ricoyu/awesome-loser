@@ -126,7 +126,7 @@ public final class LoserExecutors {
 	 * @param maximumPoolSize
 	 * @return Executors
 	 */
-	public LoserExecutors maximumPoolSize(Integer maximumPoolSize) {
+	public LoserExecutors maxPoolSize(Integer maximumPoolSize) {
 		this.maximumPoolSize = maximumPoolSize;
 		return this;
 	}
@@ -136,7 +136,7 @@ public final class LoserExecutors {
 	 * 使用CPU密集型任务, 有几个核心就开几个线程
 	 * @return LoserExecutors
 	 */
-	public LoserExecutors maximumPoolSizeToCorePoolSize() {
+	public LoserExecutors maxPoolSizeToCorePoolSize() {
 		this.maximumPoolSize = maximumPoolSize;
 		return this;
 	}

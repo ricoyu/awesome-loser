@@ -92,7 +92,7 @@ public class Consumer<K, V> extends KafkaConsumer {
 		} else if (maxPoolSize < corePoolSize) {
 			maxPoolSize = corePoolSize * 2;
 		}
-		loserExecutors.maximumPoolSize(maxPoolSize);
+		loserExecutors.maxPoolSize(maxPoolSize);
 		executor = loserExecutors.build();
 	}
 	

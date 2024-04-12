@@ -24,6 +24,10 @@ public interface Lock{
 	
 	/**
 	 * 加锁, 加锁成功与否通过locked()方法检查
+	 * <ul>
+	 *     <li/>如果是非阻塞锁, 加锁失败直接返回
+	 *     <li/>如果是阻塞锁, 加锁失败会阻塞等待
+	 * </ul>
 	 */
 	public void lock();
 	

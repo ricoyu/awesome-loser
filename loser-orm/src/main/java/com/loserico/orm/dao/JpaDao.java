@@ -14,6 +14,7 @@ import com.loserico.orm.exception.RawSQLQueryException;
 import com.loserico.orm.exception.SQLCountQueryException;
 import com.loserico.orm.exception.SQLQueryException;
 import com.loserico.orm.predicate.Predicate;
+import com.loserico.orm.predicate.Querys.QueryBuilder;
 import com.loserico.orm.transformer.ResultTransformerFactory;
 import com.loserico.orm.utils.Defaults;
 import com.loserico.orm.utils.HashUtils;
@@ -80,7 +81,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  * @since Mar 6, 2016
  */
 @Repository
-public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations, EntityOperations, InitializingBean {
+public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations, AdvCriteriaOperations, EntityOperations, InitializingBean {
 	
 	private static Logger log = LoggerFactory.getLogger(JpaDao.class);
 	
@@ -433,7 +434,217 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		}
 		return results.get(0);
 	}
-	
+
+	@Override
+	public <T> List<T> find(Class<T> entityClass, String propertyName, Object value) {
+		Objects.requireNonNull(propertyName, "propertyName cannot be null!");
+		JPACriteriaQuery<T> jpaCriteriaQuery =
+				JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache);
+		if (value == null) {
+			jpaCriteriaQuery.isNull(propertyName);
+		} else {
+			jpaCriteriaQuery.eq(propertyName, value);
+		}
+
+		return jpaCriteriaQuery.list();
+	}
+
+	@Override
+	public <T> List<T> find(Class<T> entityClass, String propertyName, Object value, boolean includeDeleted) {
+		Objects.requireNonNull(propertyName, "propertyName cannot be null!");
+		JPACriteriaQuery<T> jpaCriteriaQuery =
+				JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache);
+		if (value == null) {
+			jpaCriteriaQuery.isNull(propertyName);
+		} else {
+			jpaCriteriaQuery.eq(propertyName, value);
+		}
+
+		if (!includeDeleted) {
+			jpaCriteriaQuery.eq("deleted", false);
+		}
+		return jpaCriteriaQuery.list();
+	}
+
+
+	@Override
+	public <T> List<T> find(Class<T> entityClass, String propertyName, Object value, Page page) {
+		requireNonNull(propertyName, "propertyName cannot be null!");
+		JPACriteriaQuery<T> jpaCriteriaQuery =
+				JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache);
+		if (value == null) {
+			jpaCriteriaQuery.isNull(propertyName);
+		} else {
+			jpaCriteriaQuery.eq(propertyName, value);
+		}
+
+		jpaCriteriaQuery.setPage(page);
+		return jpaCriteriaQuery.list();
+	}
+
+	@Override
+	public <T> List<T> find(Class<T> entityClass, String propertyName, Object value, boolean includeDeleted, Page page) {
+		requireNonNull(propertyName, "propertyName cannot be null!");
+		JPACriteriaQuery<T> jpaCriteriaQuery =
+				JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache);
+		if (value == null) {
+			jpaCriteriaQuery.isNull(propertyName);
+		} else {
+			jpaCriteriaQuery.eq(propertyName, value);
+		}
+
+		jpaCriteriaQuery.setPage(page);
+		if (!includeDeleted) {
+			jpaCriteriaQuery.eq("deleted", false);
+		}
+		return jpaCriteriaQuery.list();
+	}
+
+	@Override
+	public <T> List<T> find(Class<T> entityClass, String propertyName, Object value, OrderBean... orders) {
+		Objects.requireNonNull(propertyName, "propertyName cannot be null!");
+		JPACriteriaQuery<T> jpaCriteriaQuery =
+				JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache);
+		if (value == null) {
+			jpaCriteriaQuery.isNull(propertyName);
+		} else {
+			jpaCriteriaQuery.eq(propertyName, value);
+		}
+		return jpaCriteriaQuery.addOrders(orders).list();
+	}
+
+	@Override
+	public <T> List<T> find(Class<T> entityClass, String propertyName, Object value, boolean includeDeleted, OrderBean... orders) {
+		Objects.requireNonNull(propertyName, "propertyName cannot be null!");
+		JPACriteriaQuery<T> jpaCriteriaQuery =
+				JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache);
+		if (value == null) {
+			jpaCriteriaQuery.isNull(propertyName);
+		} else {
+			jpaCriteriaQuery.eq(propertyName, value);
+		}
+		if (!includeDeleted) {
+			jpaCriteriaQuery.eq("deleted", false);
+		}
+		return jpaCriteriaQuery.addOrders(orders).list();
+	}
+
+	@Override
+	public <T> List<T> find(Class<T> entityClass, Predicate predicate) {
+		Objects.requireNonNull(predicate, "predicate cannot be null!");
+		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
+				.addPredicate(predicate);
+		return jpaCriteriaQuery.list();
+	}
+
+	@Override
+	public <T> List<T> find(Class<T> entityClass, Predicate predicate, OrderBean... orders) {
+		Objects.requireNonNull(predicate, "predicate cannot be null!");
+		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
+				.addPredicate(predicate)
+				.addOrders(orders);
+		return jpaCriteriaQuery.list();
+	}
+
+	@Override
+	public <T> List<T> find(Class<T> entityClass, Predicate predicate, boolean includeDeleted, OrderBean... orders) {
+		Objects.requireNonNull(predicate, "predicate cannot be null!");
+		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
+				.addPredicate(predicate)
+				.addOrders(orders);
+		if (!includeDeleted) {
+			jpaCriteriaQuery.eq("deleted", false);
+		}
+		return jpaCriteriaQuery.list();
+	}
+
+	@Override
+	public <T> List<T> find(Class<T> entityClass, Predicate predicate, boolean includeDeleted, Page page) {
+		Objects.requireNonNull(predicate, "predicate cannot be null!");
+		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
+				.addPredicate(predicate);
+		if (!includeDeleted) {
+			jpaCriteriaQuery.eq("deleted", false);
+		}
+		return jpaCriteriaQuery.setPage(page).list();
+	}
+
+	@Override
+	public <T> List<T> find(Class<T> entityClass, Predicate... predicates) {
+		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
+				.addPredicates(predicates);
+		return jpaCriteriaQuery.list();
+	}
+
+	@Override
+	public <T> List<T> find(Class<T> entityClass, QueryBuilder queryBuilder) {
+		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
+				.addPredicates(queryBuilder.predicates());
+		return jpaCriteriaQuery.list();
+	}
+
+	@Override
+	public <T> T findOne(Class<T> entityClass, String propertyName, Object value) {
+		List<T> resultList = null;
+		JPACriteriaQuery<T> jpaCriteriaQuery =
+				JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache);
+		if (value == null) {
+			jpaCriteriaQuery.isNull(propertyName);
+		} else {
+			jpaCriteriaQuery.eq(propertyName, value);
+		}
+		resultList = jpaCriteriaQuery.list();
+		return resultList.isEmpty() ? null : resultList.get(0);
+	}
+
+	@Override
+	public <T> T findOne(Class<T> entityClass, String propertyName, Object value, boolean includeDeleted) {
+		List<T> resultList = null;
+		JPACriteriaQuery<T> jpaCriteriaQuery =
+				JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache);
+		if (value == null) {
+			jpaCriteriaQuery.isNull(propertyName);
+		} else {
+			jpaCriteriaQuery.eq(propertyName, value);
+		}
+		if (!includeDeleted) {
+			jpaCriteriaQuery.eq("deleted", false);
+		}
+		resultList = jpaCriteriaQuery.list();
+		return resultList.isEmpty() ? null : resultList.get(0);
+	}
+
+	@Override
+	public <T> T findOne(Class<T> entityClass, String propertyName, Object value, OrderBean... orders) {
+		Objects.requireNonNull(propertyName, "propertyName cannot be null!");
+		JPACriteriaQuery<T> jpaCriteriaQuery =
+				JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache);
+		if (value == null) {
+			jpaCriteriaQuery.isNull(propertyName);
+		} else {
+			jpaCriteriaQuery.eq(propertyName, value);
+		}
+		List<T> resultList =  jpaCriteriaQuery.addOrders(orders).list();
+		return resultList.isEmpty() ? null : resultList.get(0);
+	}
+
+	@Override
+	public <T> T findOne(Class<T> entityClass, String propertyName, Object value, boolean includeDeleted, OrderBean... orders) {
+		Objects.requireNonNull(propertyName, "propertyName cannot be null!");
+		JPACriteriaQuery<T> jpaCriteriaQuery =
+				JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache);
+		if (value == null) {
+			jpaCriteriaQuery.isNull(propertyName);
+		} else {
+			jpaCriteriaQuery.eq(propertyName, value);
+		}
+		if (!includeDeleted) {
+			jpaCriteriaQuery.eq("deleted", false);
+		}
+		List<T> resultList =  jpaCriteriaQuery.addOrders(orders).list();
+		return resultList.isEmpty() ? null : resultList.get(0);
+	}
+
 	@Override
 	public <T, PK extends Serializable> Optional<T> findOne(Class<T> clazz, PK id) {
 		CriteriaBuilder criteriaBuilder = em().getCriteriaBuilder();
@@ -474,263 +685,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		}
 		return query.getResultList();
 	}
-	
-	@Override
-	public <T> List<T> findByProperty(Class<T> entityClass, Predicate predicate) {
-		return findByProperty(entityClass, predicate, true);
-	}
-	
-	@Override
-	public <T> List<T> findByProperty(Class<T> entityClass, Predicate predicate, boolean includeDeleted) {
-		Objects.requireNonNull(predicate, "predicate cannot be null!");
-		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
-				.addPredicate(predicate);
-		if (!includeDeleted) {
-			jpaCriteriaQuery.eq("deleted", false);
-		}
-		return jpaCriteriaQuery.list();
-	}
-	
-	@Override
-	public <T> List<T> findByProperty(Class<T> entityClass, Predicate predicate, OrderBean... orders) {
-		return findByProperty(entityClass, predicate, true, orders);
-	}
-	
-	@Override
-	public <T> List<T> findByProperty(Class<T> entityClass, Predicate predicate, boolean includeDeleted,
-	                                  OrderBean... orders) {
-		Objects.requireNonNull(predicate, "predicate cannot be null!");
-		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
-				.addPredicate(predicate)
-				.addOrders(orders);
-		if (!includeDeleted) {
-			jpaCriteriaQuery.eq("deleted", false);
-		}
-		return jpaCriteriaQuery.list();
-	}
-	
-	@Override
-	public <T> List<T> findByProperty(Class<T> entityClass, Predicate predicate, Page page) {
-		return findByProperty(entityClass, predicate, true, page);
-	}
-	
-	@Override
-	public <T> List<T> findByProperty(Class<T> entityClass, Predicate predicate, boolean includeDeleted,
-	                                  Page page) {
-		Objects.requireNonNull(predicate, "predicate cannot be null!");
-		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
-				.addPredicate(predicate);
-		if (!includeDeleted) {
-			jpaCriteriaQuery.eq("deleted", false);
-		}
-		return jpaCriteriaQuery.setPage(page).list();
-	}
-	
-	@Override
-	public <T> List<T> findByProperty(Class<T> entityClass, String propertyName, Object value) {
-		return findByProperty(entityClass, propertyName, value, true);
-	}
-	
-	@Override
-	public <T> List<T> findByProperty(Class<T> entityClass, String propertyName, Object value,
-	                                  boolean includeDeleted) {
-		Objects.requireNonNull(propertyName, "propertyName cannot be null!");
-		JPACriteriaQuery<T> jpaCriteriaQuery =
-				JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache);
-		if (value == null) {
-			jpaCriteriaQuery.isNull(propertyName);
-		} else {
-			jpaCriteriaQuery.eq(propertyName, value);
-		}
-		
-		if (!includeDeleted) {
-			jpaCriteriaQuery.eq("deleted", false);
-		}
-		return jpaCriteriaQuery.list();
-	}
-	
-	@Override
-	public <T> List<T> findByProperty(Class<T> entityClass, String propertyName, Object value, Page page) {
-		return findByProperty(entityClass, propertyName, value, true, page);
-	}
-	
-	@Override
-	public <T> List<T> findByProperty(Class<T> entityClass, String propertyName, Object value,
-	                                  boolean includeDeleted, Page page) {
-		requireNonNull(propertyName, "propertyName cannot be null!");
-		JPACriteriaQuery<T> jpaCriteriaQuery =
-				JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache);
-		if (value == null) {
-			jpaCriteriaQuery.isNull(propertyName);
-		} else {
-			jpaCriteriaQuery.eq(propertyName, value);
-		}
-		
-		jpaCriteriaQuery.setPage(page);
-		if (!includeDeleted) {
-			jpaCriteriaQuery.eq("deleted", false);
-		}
-		return jpaCriteriaQuery.list();
-	}
-	
-	@Override
-	public <T> List<T> findByProperty(Class<T> entityClass, String propertyName, Object value,
-	                                  OrderBean... orders) {
-		return findByProperty(entityClass, propertyName, value, true, orders);
-	}
-	
-	@Override
-	public <T> List<T> findByProperty(Class<T> entityClass, String propertyName, Object value,
-	                                  boolean includeDeleted, OrderBean... orders) {
-		Objects.requireNonNull(propertyName, "propertyName cannot be null!");
-		JPACriteriaQuery<T> jpaCriteriaQuery =
-				JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache);
-		if (value == null) {
-			jpaCriteriaQuery.isNull(propertyName);
-		} else {
-			jpaCriteriaQuery.eq(propertyName, value);
-		}
-		if (!includeDeleted) {
-			jpaCriteriaQuery.eq("deleted", false);
-		}
-		return jpaCriteriaQuery.addOrders(orders).list();
-	}
-	
-	@Override
-	public <T> T findUniqueByProperty(Class<T> entityClass, String propertyName, Object value) {
-		return findUniqueByProperty(entityClass, propertyName, value, true);
-	}
-	
-	@Override
-	public <T> T findUniqueByProperty(Class<T> entityClass, String propertyName, Object value,
-	                                  boolean includeDeleted) {
-		List<T> resultList = null;
-		JPACriteriaQuery<T> jpaCriteriaQuery =
-				JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache);
-		if (value == null) {
-			jpaCriteriaQuery.isNull(propertyName);
-		} else {
-			jpaCriteriaQuery.eq(propertyName, value);
-		}
-		if (!includeDeleted) {
-			jpaCriteriaQuery.eq("deleted", false);
-		}
-		resultList = jpaCriteriaQuery.list();
-		return resultList.isEmpty() ? null : resultList.get(0);
-	}
-	
-	@Override
-	public <T> T findUniqueByProperty(Class<T> entityClass, String propertyName, Object value,
-	                                  OrderBean... orders) {
-		return findUniqueByProperty(entityClass, propertyName, value, true, orders);
-	}
-	
-	@Override
-	public <T> T findUniqueByProperty(Class<T> entityClass, String propertyName, Object value,
-	                                  boolean includeDeleted, OrderBean... orders) {
-		List<T> resultList = findByProperty(entityClass, propertyName, value, includeDeleted, orders);
-		return resultList.isEmpty() ? null : resultList.get(0);
-	}
-	
-	@Override
-	public <T> T findUniqueByProperties(Class<T> entityClass, List<Predicate> predicates) {
-		return findUniqueByProperties(entityClass, predicates, true);
-	}
-	
-	@Override
-	public <T> T findUniqueByProperties(Class<T> entityClass, List<Predicate> predicates, boolean includeDeleted) {
-		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
-				.addPredicates(predicates);
-		if (!includeDeleted) {
-			jpaCriteriaQuery.eq("deleted", false);
-		}
-		List<T> results = jpaCriteriaQuery.list();
-		return results.isEmpty() ? null : results.get(0);
-	}
-	
-	@Override
-	public <T> T findUniqueByProperties(Class<T> entityClass, List<Predicate> predicates, OrderBean... orders) {
-		return findUniqueByProperties(entityClass, predicates, true, orders);
-	}
-	
-	@Override
-	public <T> T findUniqueByProperties(Class<T> entityClass, List<Predicate> predicates, boolean includeDeleted,
-	                                    OrderBean... orders) {
-		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
-				.addPredicates(predicates)
-				.addOrders(orders);
-		if (!includeDeleted) {
-			jpaCriteriaQuery.eq("deleted", false);
-		}
-		List<T> results = jpaCriteriaQuery.list();
-		return results.isEmpty() ? null : results.get(0);
-	}
-	
-	@Override
-	public <T> Optional<T> findOne(Class<T> entityClass, String propertyName, Object value) {
-		return findOne(entityClass, propertyName, value, true);
-	}
-	
-	@Override
-	public <T> Optional<T> findOne(Class<T> entityClass, String propertyName, Object value, boolean includeDeleted) {
-		List<T> resultList = findByProperty(entityClass, propertyName, value, includeDeleted);
-		return resultList.isEmpty() ? Optional.of(null) : Optional.of(resultList.get(0));
-	}
-	
-	@Override
-	public <T> List<T> findByProperties(Class<T> entityClass, List<Predicate> predicates, OrderBean... orders) {
-		return findByProperties(entityClass, predicates, true, orders);
-	}
-	
-	@Override
-	public <T> List<T> findByProperties(Class<T> entityClass, List<Predicate> predicates, boolean includeDeleted,
-	                                    OrderBean... orders) {
-		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
-				.addPredicates(predicates)
-				.addOrders(orders);
-		if (!includeDeleted) {
-			jpaCriteriaQuery.eq("deleted", false);
-		}
-		return jpaCriteriaQuery.list();
-	}
-	
-	@Override
-	public <T> List<T> findByProperties(Class<T> entityClass, List<Predicate> predicates, Page page) {
-		return findByProperties(entityClass, predicates, true, page);
-	}
-	
-	@Override
-	public <T> List<T> findByProperties(Class<T> entityClass, List<Predicate> predicates, boolean includeDeleted,
-	                                    Page page) {
-		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
-				.addPredicates(predicates)
-				.setPage(page);
-		if (!includeDeleted) {
-			jpaCriteriaQuery.eq("deleted", false);
-		}
-		return jpaCriteriaQuery.list();
-	}
-	
-	@Override
-	public <T> List<T> findByProperties(Class<T> entityClass, List<Predicate> predicates) {
-		return findByProperties(entityClass, predicates, true);
-	}
-	
-	@Override
-	public <T> List<T> findBy(Class<T> entityClass, Predicate... predicates) {
-		return findByProperties(entityClass, asList(predicates), true);
-	}
-	
-	@Override
-	public <T> List<T> findByProperties(Class<T> entityClass, List<Predicate> predicates, boolean includeDeleted) {
-		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
-				.addPredicates(predicates);
-		if (!includeDeleted) {
-			jpaCriteriaQuery.eq("deleted", false);
-		}
-		return jpaCriteriaQuery.list();
-	}
-	
+
 	/**
 	 * 给定一个值列表，查找某个属性值在这个列表里面的结果集，SQL的IN语法
 	 *
@@ -875,8 +830,9 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	public <T> List<T> findBetween(Class<T> entityClass, String propertyName, LocalDateTime begin,
 	                               LocalDateTime end, boolean includeDeleted) {
 		Objects.requireNonNull(propertyName);
-		Objects.requireNonNull(begin);
-		Objects.requireNonNull(end);
+		if (begin == null && end == null) {
+			throw new IllegalArgumentException("begin and end cannot be null at the same time!");
+		}
 		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
 				.between(propertyName, begin, end);
 		if (!includeDeleted) {
@@ -1645,24 +1601,15 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	}
 	
 	@Override
-	public <T> int deleteByProperty(Class<T> entityClass, String propertyName,
-	                                Object propertyValue) {
-		CriteriaBuilder criteriaBuilder = this.em().getCriteriaBuilder();
-		CriteriaDelete<T> delete = criteriaBuilder.createCriteriaDelete(entityClass);
-		Root<T> root = delete.from(entityClass);
-		delete.where(criteriaBuilder.equal(root.get(propertyName), propertyValue));
-		return em().createQuery(delete).executeUpdate();
-	}
-	
-	@Override
-	public <T> int deleteByProperties(Class<T> entityClass, List<Predicate> predicates) {
-		CriteriaBuilder criteriaBuilder = this.em().getCriteriaBuilder();
+	public <T> int deleteBy(Class<T> entityClass, Predicate... predicates) {
+		CriteriaBuilder criteriaBuilder = em().getCriteriaBuilder();
 		CriteriaDelete<T> delete = criteriaBuilder.createCriteriaDelete(entityClass);
 		Root<T> root = delete.from(entityClass);
 		List<javax.persistence.criteria.Predicate> conditions = new ArrayList<javax.persistence.criteria.Predicate>();
-		predicates.forEach((predicate) -> {
+		for (int i = 0; i < predicates.length; i++) {
+			Predicate predicate = predicates[i];
 			conditions.add(predicate.toPredicate(criteriaBuilder, root));
-		});
+		}
 		delete.where(conditions.toArray(new javax.persistence.criteria.Predicate[0]));
 		return this.em().createQuery(delete).executeUpdate();
 	}
@@ -1736,7 +1683,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	@Override
 	public <T> T ensureEntityExists(Class<T> entityClass, String propertyName, Object value,
 	                                boolean includeDeleted) throws EntityNotFoundException {
-		List<T> resultList = findByProperty(entityClass, propertyName, value, includeDeleted);
+		List<T> resultList = find(entityClass, propertyName, value, includeDeleted);
 		T entity = resultList.isEmpty() ? null : resultList.get(0);
 		if (entity == null) {
 			throw new EntityNotFoundException(format("Unable to find {0} by property {1} with value {2}",

@@ -32,6 +32,8 @@ public class StringUtilsTest {
 	public void testUniqueKey() {
 		for (int i = 0; i < 11; i++) {
 			System.out.println(StringUtils.uniqueKey(50));
+			String uniqueKey = StringUtils.uniqueKey(50);
+			System.out.println(uniqueKey);
 		}
 	}
 	

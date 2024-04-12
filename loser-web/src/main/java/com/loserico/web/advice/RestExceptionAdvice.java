@@ -16,6 +16,8 @@ import com.loserico.web.exception.LocalizedException;
 import com.loserico.web.utils.MessageHelper;
 import com.loserico.web.utils.RestUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -59,8 +61,9 @@ import static java.util.stream.Collectors.toList;
  * @version 1.0
  */
 @RestControllerAdvice
-@Slf4j
 public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
+
+	private static final Logger log = LoggerFactory.getLogger(RestExceptionAdvice.class);
 	
 	private static final Pattern MESSAGE_TEMPLATE_PATTERN = Pattern.compile("\\{(.+)\\}");
 	

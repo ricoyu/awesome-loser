@@ -5,7 +5,8 @@ import com.loserico.cache.exception.OperationNotSupportedException;
 import com.loserico.cache.utils.KeyUtils;
 import com.loserico.common.lang.concurrent.LoserThreadFactory;
 import com.loserico.common.lang.utils.ReflectionUtils;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import redis.clients.jedis.JedisPubSub;
 
 import java.util.UUID;
@@ -25,8 +26,9 @@ import java.util.concurrent.TimeUnit;
  * @author Rico Yu	ricoyu520@gmail.com
  * @version 1.0
  */
-@Slf4j
 public class NonBlockingLock implements Lock{
+	
+	private static final Logger log = LoggerFactory.getLogger(NonBlockingLock.class);
 	
 	private static final int NCPUS = Runtime.getRuntime().availableProcessors();
 	

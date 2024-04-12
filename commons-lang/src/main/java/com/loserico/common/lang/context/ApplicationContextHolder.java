@@ -1,6 +1,7 @@
 package com.loserico.common.lang.context;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -22,8 +23,9 @@ import static java.util.stream.Collectors.toList;
  * @author Rico Yu  ricoyu520@gmail.com
  * @version 1.0
  */
-@Slf4j
 public class ApplicationContextHolder implements ApplicationContextAware {
+	
+	private static final Logger log = LoggerFactory.getLogger(ApplicationContextHolder.class);
 	
 	private static ApplicationContext applicationContext;
 	

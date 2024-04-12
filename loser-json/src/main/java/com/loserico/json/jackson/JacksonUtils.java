@@ -238,4 +238,19 @@ public final class JacksonUtils {
 	public static void addMixIn(Class target, Class mixinSource) {
 		objectMapper.addMixIn(target, mixinSource);
 	}
+
+	/**
+	 * 将给定的 JSON 字符串处理为最外层加上双引号，并且字符串内部的每个双引号前都加上一个反斜杠转义符。
+	 *
+	 * @param jsonStr 原始 JSON 字符串
+	 * @return 转换后的字符串
+	 */
+	public static String formatJsonString(String jsonStr) {
+		// 去除换行符和回车符
+		String noNewLines = jsonStr.replace("\n", "").replace("\r", "");
+		// 转义内部的双引号
+		String escapedJson = noNewLines.replace("\"", "\\\"");
+		// 最外层加上双引号
+		return "\"" + escapedJson + "\"";
+	}
 }

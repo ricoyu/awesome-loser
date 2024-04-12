@@ -738,7 +738,7 @@
         <repository>
             <id>magic-store</id>
             <name>magic-store</name>
-            <url>http://139.196.141.138:9091/repository/magic-store/</url>
+            <url>http://47.100.125.240:9091/repository/magic-store/</url>
         </repository>
     </distributionManagement>
 
@@ -746,7 +746,7 @@
         <repository>
             <id>magic-store</id>
             <name>magic-store</name>
-            <url>http://139.196.141.138:9091/repository/maven-public/</url>
+            <url>http://47.100.125.240:9091/repository/maven-public/</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
@@ -760,7 +760,7 @@
         <pluginRepository>
             <id>magic-store</id>
             <name>magic-store</name>
-            <url>http://139.196.141.138:9091/repository/maven-public</url>
+            <url>http://47.100.125.240:9091/repository/maven-public</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
