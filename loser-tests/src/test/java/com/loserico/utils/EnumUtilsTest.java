@@ -9,7 +9,7 @@ public class EnumUtilsTest {
 	@Test
 	public void testGetField() {
 		ExportType preview = ExportType.PREVIEW;
-		Object value = ReflectionUtils.getField(preview, ExportType.class, "code");
+		Object value = ReflectionUtils.getFieldValue("code", preview);
 		System.out.println(value);
 
 		Enum preview1 = EnumUtils.lookupEnum(ExportType.class, "PREVIEW");

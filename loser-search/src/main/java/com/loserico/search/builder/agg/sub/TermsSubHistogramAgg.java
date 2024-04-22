@@ -49,7 +49,7 @@ public class TermsSubHistogramAgg extends SubHistogramAgg {
 	@Override
 	public ElasticTermsAggregationBuilder and() {
 		AggregationBuilder subHistogramBuilder = build();
-		ReflectionUtils.invokeMethod(aggregationBuilder, "subAggregation", subHistogramBuilder);
+		ReflectionUtils.invokeMethod("subAggregation", aggregationBuilder, subHistogramBuilder);
 		return aggregationBuilder;
 	}
 	

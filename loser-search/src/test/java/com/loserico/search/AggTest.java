@@ -167,7 +167,7 @@ public class AggTest {
 	@Test
 	public void testAggAfterQuery() {
 		ElasticTermQueryBuilder elasticTermQueryBuilder = ElasticUtils.Query.termQuery("employees").query("job", "java").size(0);
-		QueryBuilder queryBuilder = ReflectionUtils.invokeMethod(elasticTermQueryBuilder, "builder");
+		QueryBuilder queryBuilder = ReflectionUtils.invokeMethod("builder", elasticTermQueryBuilder);
 		SearchResponse searchResponse = ElasticUtils.CLIENT.prepareSearch("employees")
 				.setQuery(queryBuilder)
 				.addAggregation(AggregationBuilders.stats("stats_agg").field("salary"))

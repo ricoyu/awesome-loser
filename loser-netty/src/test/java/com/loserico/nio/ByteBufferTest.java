@@ -24,21 +24,21 @@ public class ByteBufferTest {
 		/*
 		 * 分配后打印的内存信息应该是非常接近的
 		 */
-		System.out.println("分配前内存信息: " + ReflectionUtils.invokeMethod(osmxb, "getFreePhysicalMemorySize"));
+		System.out.println("分配前内存信息: " + ReflectionUtils.invokeMethod("getFreePhysicalMemorySize", osmxb));
 		//在堆上分配内存
 		ByteBuffer buffer = ByteBuffer.allocate(200000);
 		System.out.println("buffer = " + buffer);
-		System.out.println("分配后内存信息: " + ReflectionUtils.invokeMethod(osmxb, "getFreePhysicalMemorySize"));
+		System.out.println("分配后内存信息: " + ReflectionUtils.invokeMethod("getFreePhysicalMemorySize", osmxb));
 		
 		
 		/*
 		 * 分配后打印的内存信息应该是非常接近的
 		 */
-		System.out.println("分配前内存信息: " + ReflectionUtils.invokeMethod(osmxb, "getFreePhysicalMemorySize"));
+		System.out.println("分配前内存信息: " + ReflectionUtils.invokeMethod("getFreePhysicalMemorySize", osmxb));
 		//在直接内存上分配内存
 		ByteBuffer directBuffer = ByteBuffer.allocateDirect(200000);
 		System.out.println("buffer = " + buffer);
-		System.out.println("分配后内存信息: " + ReflectionUtils.invokeMethod(osmxb, "getFreePhysicalMemorySize"));
+		System.out.println("分配后内存信息: " + ReflectionUtils.invokeMethod("getFreePhysicalMemorySize", osmxb));
 	}
 	
 	@Test
@@ -47,21 +47,21 @@ public class ByteBufferTest {
 		/*
 		 * 分配后打印的内存信息应该是非常接近的
 		 */
-		System.out.println("分配前内存信息: " + ReflectionUtils.invokeMethod(osmxb, "getFreePhysicalMemorySize"));
+		System.out.println("分配前内存信息: " + ReflectionUtils.invokeMethod("getFreePhysicalMemorySize", osmxb));
 		//在堆上分配内存
 		ByteBuffer buffer = ByteBuffer.allocate(200000);
 		System.out.println("buffer = " + buffer);
-		System.out.println("分配后内存信息: " + ReflectionUtils.invokeMethod(osmxb, "getFreePhysicalMemorySize"));
+		System.out.println("分配后内存信息: " + ReflectionUtils.invokeMethod("getFreePhysicalMemorySize", osmxb));
 		
 		
 		/*
 		 * 分配后打印的内存信息应该是非常接近的
 		 */
-		System.out.println("分配前内存信息: " + ReflectionUtils.invokeMethod(osmxb, "getFreePhysicalMemorySize"));
+		System.out.println("分配前内存信息: " + ReflectionUtils.invokeMethod( "getFreePhysicalMemorySize", osmxb));
 		//在直接内存上分配内存
 		ByteBuffer directBuffer = ByteBuffer.allocateDirect(200000);
 		System.out.println("buffer = " + buffer);
-		System.out.println("分配后内存信息: " + ReflectionUtils.invokeMethod(osmxb, "getFreePhysicalMemorySize"));
+		System.out.println("分配后内存信息: " + ReflectionUtils.invokeMethod("getFreePhysicalMemorySize", osmxb));
 		
 	}
 	

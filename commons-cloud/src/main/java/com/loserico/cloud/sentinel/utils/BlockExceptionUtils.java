@@ -17,7 +17,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public final class BlockExceptionUtils {
 	
 	public static String responseBody(Throwable e) {
-		Object responseBody = ReflectionUtils.getField(e, "responseBody");
+		Object responseBody = ReflectionUtils.getFieldValue("responseBody", e);
 		if (responseBody != null) {
 			byte[] data = (byte[])responseBody;
 			return new String(data, UTF_8);

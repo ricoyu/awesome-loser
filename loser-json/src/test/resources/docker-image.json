@@ -1,0 +1,332 @@
+{
+  "architecture": "amd64",
+  "config": {
+    "User": "jenkins",
+    "ExposedPorts": {
+      "50000/tcp": {},
+      "8080/tcp": {}
+    },
+    "Env": [
+      "PATH=/opt/java/openjdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+      "LANG=C.UTF-8",
+      "JENKINS_HOME=/var/jenkins_home",
+      "JENKINS_SLAVE_AGENT_PORT=50000",
+      "REF=/usr/share/jenkins/ref",
+      "JENKINS_VERSION=2.361.1",
+      "JENKINS_UC=https://updates.jenkins.io",
+      "JENKINS_UC_EXPERIMENTAL=https://updates.jenkins.io/experimental",
+      "JENKINS_INCREMENTALS_REPO_MIRROR=https://repo.jenkins-ci.org/incrementals",
+      "COPY_REFERENCE_FILE_LOG=/var/jenkins_home/copy_reference_file.log",
+      "JAVA_HOME=/opt/java/openjdk"
+    ],
+    "Entrypoint": [
+      "/usr/bin/tini",
+      "--",
+      "/usr/local/bin/jenkins.sh"
+    ],
+    "Volumes": {
+      "/var/jenkins_home": {}
+    },
+    "Labels": {
+      "org.opencontainers.image.description": "The Jenkins Continuous Integration and Delivery server",
+      "org.opencontainers.image.licenses": "MIT",
+      "org.opencontainers.image.revision": "00d1edcbf6e0bd78ff5b359731310b91bdac9b07",
+      "org.opencontainers.image.source": "https://github.com/jenkinsci/docker",
+      "org.opencontainers.image.title": "Official Jenkins Docker image",
+      "org.opencontainers.image.url": "https://www.jenkins.io/",
+      "org.opencontainers.image.vendor": "Jenkins project",
+      "org.opencontainers.image.version": "2.361.1"
+    },
+    "OnBuild": null
+  },
+  "created": "2022-09-07T12:02:24.712441461Z",
+  "history": [
+    {
+      "created": "2022-08-23T00:20:40.144281895Z",
+      "created_by": "/bin/sh -c #(nop) ADD file:6944d322f4c04bd2192061822af5cbec8ac0a6b424c461d66174d32aed604972 in / "
+    },
+    {
+      "created": "2022-08-23T00:20:40.700966019Z",
+      "created_by": "/bin/sh -c #(nop)  CMD [\"bash\"]",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-09-07T12:02:00.654987621Z",
+      "created_by": "RUN /bin/sh -c apt-get update   && apt-get install -y --no-install-recommends     ca-certificates     curl     git     gnupg     gpg     libfontconfig1     libfreetype6     ssh-client     tini     unzip   && rm -rf /var/lib/apt/lists/* # buildkit",
+      "comment": "buildkit.dockerfile.v0"
+    },
+    {
+      "created": "2022-09-07T12:02:18.24479413Z",
+      "created_by": "RUN /bin/sh -c curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh -o /tmp/script.deb.sh   && bash /tmp/script.deb.sh   && rm -f /tmp/script.deb.sh   && apt-get install -y --no-install-recommends     git-lfs   && rm -rf /var/lib/apt/lists/*   && git lfs install # buildkit",
+      "comment": "buildkit.dockerfile.v0"
+    },
+    {
+      "created": "2022-09-07T12:02:18.832499947Z",
+      "created_by": "ENV LANG=C.UTF-8",
+      "comment": "buildkit.dockerfile.v0",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-09-07T12:02:18.832499947Z",
+      "created_by": "ARG TARGETARCH",
+      "comment": "buildkit.dockerfile.v0",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-09-07T12:02:18.832499947Z",
+      "created_by": "ARG COMMIT_SHA",
+      "comment": "buildkit.dockerfile.v0",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-09-07T12:02:18.832499947Z",
+      "created_by": "ARG user=jenkins",
+      "comment": "buildkit.dockerfile.v0",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-09-07T12:02:18.832499947Z",
+      "created_by": "ARG group=jenkins",
+      "comment": "buildkit.dockerfile.v0",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-09-07T12:02:18.832499947Z",
+      "created_by": "ARG uid=1000",
+      "comment": "buildkit.dockerfile.v0",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-09-07T12:02:18.832499947Z",
+      "created_by": "ARG gid=1000",
+      "comment": "buildkit.dockerfile.v0",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-09-07T12:02:18.832499947Z",
+      "created_by": "ARG http_port=8080",
+      "comment": "buildkit.dockerfile.v0",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-09-07T12:02:18.832499947Z",
+      "created_by": "ARG agent_port=50000",
+      "comment": "buildkit.dockerfile.v0",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-09-07T12:02:18.832499947Z",
+      "created_by": "ARG JENKINS_HOME=/var/jenkins_home",
+      "comment": "buildkit.dockerfile.v0",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-09-07T12:02:18.832499947Z",
+      "created_by": "ARG REF=/usr/share/jenkins/ref",
+      "comment": "buildkit.dockerfile.v0",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-09-07T12:02:18.832499947Z",
+      "created_by": "ENV JENKINS_HOME=/var/jenkins_home",
+      "comment": "buildkit.dockerfile.v0",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-09-07T12:02:18.832499947Z",
+      "created_by": "ENV JENKINS_SLAVE_AGENT_PORT=50000",
+      "comment": "buildkit.dockerfile.v0",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-09-07T12:02:18.832499947Z",
+      "created_by": "ENV REF=/usr/share/jenkins/ref",
+      "comment": "buildkit.dockerfile.v0",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-09-07T12:02:18.832499947Z",
+      "created_by": "RUN |10 TARGETARCH=amd64 COMMIT_SHA=00d1edcbf6e0bd78ff5b359731310b91bdac9b07 user=jenkins group=jenkins uid=1000 gid=1000 http_port=8080 agent_port=50000 JENKINS_HOME=/var/jenkins_home REF=/usr/share/jenkins/ref /bin/sh -c mkdir -p $JENKINS_HOME   && chown ${uid}:${gid} $JENKINS_HOME   && groupadd -g ${gid} ${group}   && useradd -d \"$JENKINS_HOME\" -u ${uid} -g ${gid} -l -m -s /bin/bash ${user} # buildkit",
+      "comment": "buildkit.dockerfile.v0"
+    },
+    {
+      "created": "2022-09-07T12:02:18.832499947Z",
+      "created_by": "VOLUME [/var/jenkins_home]",
+      "comment": "buildkit.dockerfile.v0",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-09-07T12:02:19.152094694Z",
+      "created_by": "RUN |10 TARGETARCH=amd64 COMMIT_SHA=00d1edcbf6e0bd78ff5b359731310b91bdac9b07 user=jenkins group=jenkins uid=1000 gid=1000 http_port=8080 agent_port=50000 JENKINS_HOME=/var/jenkins_home REF=/usr/share/jenkins/ref /bin/sh -c mkdir -p ${REF}/init.groovy.d # buildkit",
+      "comment": "buildkit.dockerfile.v0"
+    },
+    {
+      "created": "2022-09-07T12:02:19.152094694Z",
+      "created_by": "ARG JENKINS_VERSION",
+      "comment": "buildkit.dockerfile.v0",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-09-07T12:02:19.152094694Z",
+      "created_by": "ENV JENKINS_VERSION=2.361.1",
+      "comment": "buildkit.dockerfile.v0",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-09-07T12:02:19.152094694Z",
+      "created_by": "ARG JENKINS_SHA=1163c4554dc93439c5eef02b06a8d74f98ca920bbc012c2b8a089d414cfa8075",
+      "comment": "buildkit.dockerfile.v0",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-09-07T12:02:19.152094694Z",
+      "created_by": "ARG JENKINS_URL=https://repo.jenkins-ci.org/public/org/jenkins-ci/main/jenkins-war/2.361.1/jenkins-war-2.361.1.war",
+      "comment": "buildkit.dockerfile.v0",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-09-07T12:02:23.508646144Z",
+      "created_by": "RUN |13 TARGETARCH=amd64 COMMIT_SHA=00d1edcbf6e0bd78ff5b359731310b91bdac9b07 user=jenkins group=jenkins uid=1000 gid=1000 http_port=8080 agent_port=50000 JENKINS_HOME=/var/jenkins_home REF=/usr/share/jenkins/ref JENKINS_VERSION=2.361.1 JENKINS_SHA=08a72b43d570f785796a7f8b398d2d4865d20cdd985e524bc33b7f9cd5907eb3 JENKINS_URL=https://repo.jenkins-ci.org/public/org/jenkins-ci/main/jenkins-war/2.361.1/jenkins-war-2.361.1.war /bin/sh -c curl -fsSL ${JENKINS_URL} -o /usr/share/jenkins/jenkins.war   && echo \"${JENKINS_SHA}  /usr/share/jenkins/jenkins.war\" >/tmp/jenkins_sha   && sha256sum -c --strict /tmp/jenkins_sha   && rm -f /tmp/jenkins_sha # buildkit",
+      "comment": "buildkit.dockerfile.v0"
+    },
+    {
+      "created": "2022-09-07T12:02:23.508646144Z",
+      "created_by": "ENV JENKINS_UC=https://updates.jenkins.io",
+      "comment": "buildkit.dockerfile.v0",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-09-07T12:02:23.508646144Z",
+      "created_by": "ENV JENKINS_UC_EXPERIMENTAL=https://updates.jenkins.io/experimental",
+      "comment": "buildkit.dockerfile.v0",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-09-07T12:02:23.508646144Z",
+      "created_by": "ENV JENKINS_INCREMENTALS_REPO_MIRROR=https://repo.jenkins-ci.org/incrementals",
+      "comment": "buildkit.dockerfile.v0",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-09-07T12:02:23.748855838Z",
+      "created_by": "RUN |13 TARGETARCH=amd64 COMMIT_SHA=00d1edcbf6e0bd78ff5b359731310b91bdac9b07 user=jenkins group=jenkins uid=1000 gid=1000 http_port=8080 agent_port=50000 JENKINS_HOME=/var/jenkins_home REF=/usr/share/jenkins/ref JENKINS_VERSION=2.361.1 JENKINS_SHA=08a72b43d570f785796a7f8b398d2d4865d20cdd985e524bc33b7f9cd5907eb3 JENKINS_URL=https://repo.jenkins-ci.org/public/org/jenkins-ci/main/jenkins-war/2.361.1/jenkins-war-2.361.1.war /bin/sh -c chown -R ${user} \"$JENKINS_HOME\" \"$REF\" # buildkit",
+      "comment": "buildkit.dockerfile.v0"
+    },
+    {
+      "created": "2022-09-07T12:02:23.748855838Z",
+      "created_by": "ARG PLUGIN_CLI_VERSION=2.12.8",
+      "comment": "buildkit.dockerfile.v0",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-09-07T12:02:23.748855838Z",
+      "created_by": "ARG PLUGIN_CLI_URL=https://github.com/jenkinsci/plugin-installation-manager-tool/releases/download/2.12.8/jenkins-plugin-manager-2.12.8.jar",
+      "comment": "buildkit.dockerfile.v0",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-09-07T12:02:24.402647181Z",
+      "created_by": "RUN |15 TARGETARCH=amd64 COMMIT_SHA=00d1edcbf6e0bd78ff5b359731310b91bdac9b07 user=jenkins group=jenkins uid=1000 gid=1000 http_port=8080 agent_port=50000 JENKINS_HOME=/var/jenkins_home REF=/usr/share/jenkins/ref JENKINS_VERSION=2.361.1 JENKINS_SHA=08a72b43d570f785796a7f8b398d2d4865d20cdd985e524bc33b7f9cd5907eb3 JENKINS_URL=https://repo.jenkins-ci.org/public/org/jenkins-ci/main/jenkins-war/2.361.1/jenkins-war-2.361.1.war PLUGIN_CLI_VERSION=2.12.8 PLUGIN_CLI_URL=https://github.com/jenkinsci/plugin-installation-manager-tool/releases/download/2.12.8/jenkins-plugin-manager-2.12.8.jar /bin/sh -c curl -fsSL ${PLUGIN_CLI_URL} -o /opt/jenkins-plugin-manager.jar # buildkit",
+      "comment": "buildkit.dockerfile.v0"
+    },
+    {
+      "created": "2022-09-07T12:02:24.402647181Z",
+      "created_by": "EXPOSE map[8080/tcp:{}]",
+      "comment": "buildkit.dockerfile.v0",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-09-07T12:02:24.402647181Z",
+      "created_by": "EXPOSE map[50000/tcp:{}]",
+      "comment": "buildkit.dockerfile.v0",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-09-07T12:02:24.402647181Z",
+      "created_by": "ENV COPY_REFERENCE_FILE_LOG=/var/jenkins_home/copy_reference_file.log",
+      "comment": "buildkit.dockerfile.v0",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-09-07T12:02:24.402647181Z",
+      "created_by": "ENV JAVA_HOME=/opt/java/openjdk",
+      "comment": "buildkit.dockerfile.v0",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-09-07T12:02:24.402647181Z",
+      "created_by": "ENV PATH=/opt/java/openjdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+      "comment": "buildkit.dockerfile.v0",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-09-07T12:02:24.598128112Z",
+      "created_by": "COPY /javaruntime /opt/java/openjdk # buildkit",
+      "comment": "buildkit.dockerfile.v0"
+    },
+    {
+      "created": "2022-09-07T12:02:24.598128112Z",
+      "created_by": "USER jenkins",
+      "comment": "buildkit.dockerfile.v0",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-09-07T12:02:24.626562097Z",
+      "created_by": "COPY jenkins-support /usr/local/bin/jenkins-support # buildkit",
+      "comment": "buildkit.dockerfile.v0"
+    },
+    {
+      "created": "2022-09-07T12:02:24.641751656Z",
+      "created_by": "COPY jenkins.sh /usr/local/bin/jenkins.sh # buildkit",
+      "comment": "buildkit.dockerfile.v0"
+    },
+    {
+      "created": "2022-09-07T12:02:24.672923387Z",
+      "created_by": "COPY tini-shim.sh /sbin/tini # buildkit",
+      "comment": "buildkit.dockerfile.v0"
+    },
+    {
+      "created": "2022-09-07T12:02:24.700175651Z",
+      "created_by": "COPY jenkins-plugin-cli.sh /bin/jenkins-plugin-cli # buildkit",
+      "comment": "buildkit.dockerfile.v0"
+    },
+    {
+      "created": "2022-09-07T12:02:24.700175651Z",
+      "created_by": "ENTRYPOINT [\"/usr/bin/tini\" \"--\" \"/usr/local/bin/jenkins.sh\"]",
+      "comment": "buildkit.dockerfile.v0",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-09-07T12:02:24.712441461Z",
+      "created_by": "COPY install-plugins.sh /usr/local/bin/install-plugins.sh # buildkit",
+      "comment": "buildkit.dockerfile.v0"
+    },
+    {
+      "created": "2022-09-07T12:02:24.712441461Z",
+      "created_by": "LABEL org.opencontainers.image.vendor=Jenkins project org.opencontainers.image.title=Official Jenkins Docker image org.opencontainers.image.description=The Jenkins Continuous Integration and Delivery server org.opencontainers.image.version=2.361.1 org.opencontainers.image.url=https://www.jenkins.io/ org.opencontainers.image.source=https://github.com/jenkinsci/docker org.opencontainers.image.revision=00d1edcbf6e0bd78ff5b359731310b91bdac9b07 org.opencontainers.image.licenses=MIT",
+      "comment": "buildkit.dockerfile.v0",
+      "empty_layer": true
+    }
+  ],
+  "moby.buildkit.buildinfo.v1": "eyJmcm9udGVuZCI6ImRvY2tlcmZpbGUudjAiLCJzb3VyY2VzIjpbeyJ0eXBlIjoiZG9ja2VyLWltYWdlIiwicmVmIjoiZG9ja2VyLmlvL2xpYnJhcnkvZGViaWFuOmJ1bGxzZXllLTIwMjIwODIyIiwicGluIjoic2hhMjU2OmQ1MjkyMWQ5NzMxMGQwYmQ0OGRhYjkyODU0OGVmNTM5ZDVjODhjNzQzMTY1NzU0YzU3Y2ZhZDAwMzAzMTM4NmMifSx7InR5cGUiOiJkb2NrZXItaW1hZ2UiLCJyZWYiOiJkb2NrZXIuaW8vbGlicmFyeS9lY2xpcHNlLXRlbXVyaW46MTEuMC4xNi4xXzEtamRrLWZvY2FsIiwicGluIjoic2hhMjU2OjllZWE2Njk4M2MzOGQwZGUxNjQxM2M5NmEyNmYwZGY3Zjk4ZThlYTFiMmE1YzY1OTg1NjUzYWIyNDU2NDY3M2EifV19",
+  "os": "linux",
+  "rootfs": {
+    "type": "layers",
+    "diff_ids": [
+      "sha256:655ed1b7a4286ce965b8942644f665a3aeafac315f023b3d75fabdbd4be12dd0",
+      "sha256:779f8dcd48f34bfb946def82db3a86d6fee2bb748581760c881c5c060d092d74",
+      "sha256:e0cd100d360aa393a2f39b62cca696a7e2473a4d7b7817512e96ce012825be53",
+      "sha256:7a13cfef6bfb48ba9a5c7c01128a8086fac8c37c5d2dbf88011111563f4a2886",
+      "sha256:78f002e1bbe170bca49b0ccef164cd1003147a4f9f6dc9938de5b9a6e8f19181",
+      "sha256:ad523594e9e53b54703f16719d1ab3440350de903c2c581425beea83b42e1771",
+      "sha256:f97af4a3e6aa490a998f85444c920a43269e47640d79ac59b50ee116794d995f",
+      "sha256:c8e36c3abfeb923187cfb6cfb9e83c1cee459cb5818d164b38a743153f7ffe23",
+      "sha256:cb9ff824ca721a77c158cce3d983020f1a0042bdc284b45c2a37697c2c65531a",
+      "sha256:b3cc6a740db6e2e397ee237d8261e0c36feef10c455c238f54135c6a622d2572",
+      "sha256:9b4d672df3fcd3e28763814721b8a6414f8abac12dd286330048eb2cc9b0aa67",
+      "sha256:ce15115060ae8e8115c9f064c05e43cfc03007d26ad5ae2e3e3331cf87564e36",
+      "sha256:edabf843284bdb6f2ee6d9c75c8a426dfdf0a42b435ea1db71096b03417b413f",
+      "sha256:be8aebf98af007c3edf440d82b08eedf280e5e87fea260e66095577faf8be7af"
+    ]
+  }
+}

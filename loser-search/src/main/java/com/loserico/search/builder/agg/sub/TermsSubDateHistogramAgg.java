@@ -57,7 +57,7 @@ public class TermsSubDateHistogramAgg extends SubDateHistogramAgg {
 	@Override
 	public ElasticTermsAggregationBuilder and() {
 		AggregationBuilder subDateHistogramBuilder = build();
-		ReflectionUtils.invokeMethod(aggregationBuilder, "subAggregation", subDateHistogramBuilder);
+		ReflectionUtils.invokeMethod("subAggregation", aggregationBuilder, subDateHistogramBuilder);
 		return aggregationBuilder;
 	}
 	

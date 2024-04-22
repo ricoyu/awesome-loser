@@ -112,7 +112,7 @@ public class ElasticAggsTest {
 						String writeableName = ((NamedWriteable) subAgg).getWriteableName(); //max min 等聚合的类型
 						Object value = ReflectionUtils.getFieldValue(writeableName, subAgg);
 						if (writeableName.equals("avg")) {
-							value = ReflectionUtils.invokeMethod(subAgg, "getValue");
+							value = ReflectionUtils.invokeMethod("getValue", subAgg);
 						}
 						System.out.println(writeableName + ":" + value);
 					}

@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
@@ -167,7 +166,7 @@ public final class QueryUtils {
 		Class clazz = queryValue.getDeclaringClass();
 		Object code = null;
 		try {
-			code = ReflectionUtils.getFieldValue(queryValue, clazz, "code");
+			code = ReflectionUtils.getFieldValue("code", clazz);
 		} catch (IllegalArgumentException e) {
 			logger.warn("{} 没有定义 code 属性, 忽略次查询条件", clazz.getSimpleName());
 		}
@@ -176,84 +175,7 @@ public final class QueryUtils {
 		}
 		params.put(paramName, code);
 	}
-	
-	/**
-	 * 如果enumObj有code属性并且值为-1, 表示查询所有, 则不会将这个查询条件加入params
-	 * 
-	 * @param params
-	 * @param queryValue
-	 */
-	@SuppressWarnings("rawtypes")
-	public static void enumDescCondition(Map<String, Object> params, String paramName, Enum queryValue) {
-		if (queryValue == null) {
-			return;
-		}
-		
-		Class clazz = queryValue.getDeclaringClass();
-		Object code = null;
-		try {
-			code = ReflectionUtils.getFieldValue(queryValue, clazz, "desc");
-		} catch (IllegalArgumentException e) {
-			logger.warn("{} 没有定义 code 属性, 忽略次查询条件", clazz.getSimpleName());
-		}
-		if (code == null) {
-			return;
-		}
-		params.put(paramName, code);
-	}
-	
-	/**
-	 * 如果enumObj有code属性并且值为-1, 表示查询所有, 则不会将这个查询条件加入params
-	 * 
-	 * @param params
-	 * @param queryValue
-	 */
-	@SuppressWarnings("rawtypes")
-	public static void enumOrdinalCondition(Map<String, Object> params, String paramName, Enum queryValue) {
-		if (queryValue == null) {
-			return;
-		}
-		params.put(paramName, queryValue.ordinal());
-	}
-	
-	/**
-	 * 如果enumObj有code属性并且值为-1, 表示查询所有, 则不会将这个查询条件加入params
-	 * 
-	 * @param params
-	 * @param queryValue
-	 */
-	@SuppressWarnings("rawtypes")
-	public static void enumNameCondition(Map<String, Object> params, String paramName, Enum queryValue) {
-		if (queryValue == null) {
-			return;
-		}
-		params.put(paramName, queryValue.name());
-	}
-	
-	/**
-	 * 用enum的属性prop作为查询条件paramName的值
-	 * @param params
-	 * @param paramName		SQL查询的变量名
-	 * @param queryValue	enum实例
-	 * @param prop			enum的某个属性名
-	 */
-	public static void enumPropCondition(Map<String, Object> params, String paramName, Enum queryValue, String prop) {
-		if (queryValue == null || isBlank(prop)) {
-			return;
-		}
-		Class clazz = queryValue.getDeclaringClass();
-		Object propValue = null;
-		try {
-			propValue = ReflectionUtils.getFieldValue(queryValue, clazz, prop);
-		} catch (IllegalArgumentException e) {
-			logger.warn("{} 没有定义 code 属性, 忽略次查询条件", clazz.getSimpleName());
-		}
-		if (propValue == null) {
-			return;
-		}
-		params.put(paramName, propValue);
-	}
-	
+
 	/**
 	 * 设置数组类型的参数, 如果paramValues是null或者长度为0, 则不设置该参数。并且如果数组中某元素是null, 会过滤掉该元素
 	 * @param params

@@ -242,7 +242,7 @@ public final class EnumUtils {
 			Enum enumObj = consts[i];
 			Integer propertyValue = null;
 			try {
-				Object objValue = ReflectionUtils.getField(enumObj, clazz, property);
+				Object objValue = ReflectionUtils.getFieldValue(property, enumObj);
 				if (objValue instanceof Integer) {
 					propertyValue = (Integer) objValue;
 				}
@@ -292,7 +292,7 @@ public final class EnumUtils {
 		Enum[] consts = (Enum[]) clazz.getEnumConstants();
 		for (int i = 0; i < consts.length; i++) {
 			Enum enumObj = consts[i];
-			Object objValue = ReflectionUtils.getField(enumObj, clazz, property);
+			Object objValue = ReflectionUtils.getFieldValue(property, enumObj);
 			if (objValue instanceof Long) {
 				Long propertyValue = (Long) objValue;
 				if (value != null && propertyValue != null && value.intValue() == propertyValue.intValue()) {
@@ -339,7 +339,7 @@ public final class EnumUtils {
 		Enum[] consts = (Enum[]) clazz.getEnumConstants();
 		for (int i = 0; i < consts.length; i++) {
 			Enum enumObj = consts[i];
-			Object objValue = ReflectionUtils.getField(enumObj, clazz, property);
+			Object objValue = ReflectionUtils.getFieldValue(property, enumObj);
 			if (objValue instanceof BigInteger) {
 				BigInteger propertyValue = (BigInteger) objValue;
 				if (value != null && propertyValue != null && value.intValue() == propertyValue.intValue()) {
@@ -393,7 +393,7 @@ public final class EnumUtils {
 			Enum enumObj = consts[i];
 			String propertyValue = null;
 			try {
-				Object objValue = ReflectionUtils.getField(enumObj, clazz, property);
+				Object objValue = ReflectionUtils.getFieldValue(property, enumObj);
 				if (objValue instanceof String) {
 					propertyValue = (String) objValue;
 				} else {

@@ -10,7 +10,7 @@
         <groupId>com.loserico</groupId>
         <artifactId>awesome-loser</artifactId>
         <relativePath>../pom.xml</relativePath>
-        <version>4.12.8</version>
+        <version>4.12.9</version>
     </parent>
 
     <dependencies>

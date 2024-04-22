@@ -119,13 +119,20 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 		/**
 		 * 持有的锁类型
 		 * 表示共享锁
-		 * 标记节点在共享模式中等待
+		 * 在AQS的内部实现中用于区分节点是在共享模式下等待还是在独占模式下等待
 		 * Marker to indicate a node is waiting in shared mode
+		 * 这个标记告诉AQS的释放方法, 当状态被释放时, 应该考虑唤醒其他在共享模式下等待的线程。
+		 *
+		 * 如果一个节点是以SHARED为标记的，AQS知道它后面的节点可能也处于共享模式，并且可能需要被同时释放或唤醒。
+		 * 这有助于实现诸如Semaphore或CountDownLatch这样的同步器，其中多个线程可能同时等待资源变得可用。
 		 */
 		static final Node SHARED = new Node();
 		/**
 		 * 表示排它锁
 		 * Marker to indicate a node is waiting in exclusive mode
+		 * 在Node类中，EXCLUSIVE被定义为null。这意味着当一个节点是以独占模式入队时,
+		 * 其Node类型的nextWaiter字段将被设置为null。
+		 * 这是用来区分独占模式和共享模式的一个标志。
 		 */
 		static final Node EXCLUSIVE = null;
 		
@@ -173,9 +180,37 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 		 *     <li/>CANCELLED 1  表示因为超时或者在这个线程上调用了interrupt()导致这个线程cancelled <br/>
 		 *                       This node is cancelled due to timeout or interrupt. Nodes never leave this state.
 		 *                       In particular, a thread with cancelled node never again blocks.
+		 *                       一旦节点的状态变为CANCELLED, 它将不会被转换到其他任何状态。
+		 *                       该节点不会被用于任何后续的同步或调度操作。在实际操作中, 这意味着当AQS的操作（如释放操作）遍历等待队列时, 会忽略任何处于CANCELLED状态的节点。
+		 *                       在同步队列的操作过程中, 会定期进行队列的清理工作, 移除那些处于CANCELLED状态的节点, 因为它们不再对同步状态有任何影响。
+		 *                       这个清理过程通常发生在其他操作如enq()或dequeue()等方法执行时。
+		 *
+		 *                       设置节点为CANCELLED状态是AQS中处理线程取消（如线程在获取锁时被中断）的一种方式。
+		 *                       这样的设计减少了复杂性，并且提高了系统的整体效率，因为取消的节点不再需要系统资源去监视或管理。
 		 *     <li/>0            None of the above 后面可能有节点但是没有挂起, 所以当我释放锁的时候就可以不去唤醒后面的线程
-		 *     <li/>SIGNAL -1    表示后面有节点并且已经挂起了, 我在释放锁以后要去唤醒后面的节点 <br/>
-		 *                       The successor of this node is blocked (via park), so the current node must unpark its successor when it releases or cancels.
+		 *
+		 *      				 初始状态：当一个新的节点被创建并加入到AQS的同步队列中时, 它的waitStatus通常被初始化为0。
+		 *      				 这意味着节点尚未被赋予具体的等待状态指示, 如SIGNAL, CONDITION, 或PROPAGATE。
+		 *
+		 *      				 无特定信号状态：waitStatus为0也表示节点目前不在任何特定的等待状态中。
+		 *      				 例如, 它不需要唤醒其后继者 (不是SIGNAL状态), 也没有被取消(不是CANCELLED状态), 并且它不是处于条件等待中 (不是CONDITION状态)。
+		 *
+		 *      				 转变可能：处于0状态的节点是可能在将来被更新为其他状态的。例如, 如果持有锁的线程决定释放锁, 且检测到后继节点的状态为0,
+		 *      				 它可能会更新这个后继节点的状态为SIGNAL, 以确保当锁被释放时, 后继节点可以被唤醒。
+		 *
+		 *      				 活动节点：在某些情况下, waitStatus为0的节点可能正处于活动状态, 正在参与对同步状态的竞争, 但尚未有必要将其标记为需要唤醒后继节点或其他特殊操作。
+		 *     <li/>SIGNAL -1    在AQS框架中, SIGNAL状态主要与节点的后继节点有关。
+		 *     					 当一个节点的waitStatus被设置为SIGNAL时, 这表明该节点 (我们可以称之为前驱节点)在释放资源或变得不再活跃时, 有责任去唤醒它的后继节点。
+		 *     					 这个状态实际上是针对前驱节点而设, 其目的是确保前驱节点在释放锁或资源之后, 会检查并可能唤醒它的后继节点。
+		 *     					 操作流程的具体说明
+		 *     					 1. 节点设置SIGNAL状态
+		 *     					 当一个线程 (A线程) 将自己封装成节点并加入同步队列时, 它会查看其前驱节点的状态。
+		 *     					 如果前驱节点的状态不是SIGNAL, A线程可能会尝试将前驱节点的状态设置为SIGNAL。
+		 *     					 这样做是为了确保当前驱节点 (即A线程的前驱)释放资源时, 可以唤醒A线程代表的节点。
+		 *     					 2. 节点在释放资源时的行为：
+		 *     					 当一个节点 (假设为B线程)准备释放它所持有的资源时, 它会检查其后继节点的状态。
+		 *     					 如果后继节点的状态是SIGNAL, 这表明后继节点需要被唤醒（因为后继节点已经将当前节点的状态预先设置为了SIGNAL)。
+		 *     					 因此, B线程在释放资源之前, 会通过LockSupport.unpark()方法唤醒后继节点的线程。
 		 *     <li/>CONDITION -2 表示这个节点在条件队列里面?
 		 *                       This node is currently on a condition queue.
 		 *                       It will not be used as a sync queue node until transferred, at which time the status will be set to 0.
@@ -183,6 +218,17 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 		 *                       A releaseShared should be propagated to other nodes. <br/>
 		 *                       This is set (for head node only) in doReleaseShared to ensure propagation continues,
 		 *                       even if other operations have since intervened.
+		 *                       PROPAGATE状态是专门设计用于共享模式的同步器, 例如Semaphore或ReadWriteLock中的读锁。
+		 *                       在共享模式中, 多个线程可能同时获得对资源的访问。PROPAGATE状态帮助确保当资源变得可用时, 信号可以传播给多个等待的线程, 而不仅仅是一个。
+		 *
+		 *                       当一个线程释放资源并且可能允许多个后继线程同时继续执行时, AQS将检查并可能更新后继节点的状态为PROPAGATE, 以确保释放信号可以适当地传递给更多的线程。这通常发生在如下情况:
+		 *                       1. 线程释放共享资源: 线程在释放共享资源时 (例如释放一个读锁), 会尝试设置后继节点的状态为PROPAGATE, 以确保后续等待的线程也可以被唤醒并运行。
+		 *                       2. 递归传播: 如果后继节点已处于或被设置为PROPAGATE状态, 当前节点在唤醒它的后继节点后, 这个状态可以帮助确保信号继续向下传递, 从而使得连续的多个节点(线程)能够被适当地唤醒。
+		 *
+		 *                       在ReadWriteLock.ReadLock的实现中, 当一个读锁被释放, 如果有其他线程仍然可以获得读锁, 那么AQS将使用PROPAGATE状态来确保所有合适的等待线程都可以被唤醒, 从而最大化并发读的效率。
+		 *
+		 *                       PROPAGATE状态在AQS的设计中主要针对共享模式的同步器, 它确保在资源可以被多个线程共享访问的情况下, 状态的变更和线程的唤醒可以适当地传播。
+		 *                       这种机制有助于提升并发性能, 并确保资源使用的公平性和效率。在处理共享资源的同步问题时, PROPAGATE状态发挥着关键的作用, 使得系统能够更加高效和响应地管理多线程访问共享资源的场景。
 		 * </ul>
 		 */
 		volatile int waitStatus;
@@ -204,6 +250,7 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 		volatile Thread thread;
 		
 		/**
+		 * 这里的nextWaiter实际上是用来存储节点模式的字段。它既表示节点在队列中的下一个节点, 也通过特定值（如SHARED或EXCLUSIVE）指明节点的等待类型。
 		 * 在Condition上等待时, node加入的是等待队列, 这是一个单向队列, 由nextWaiter指向下一个节点
 		 * Link to next node waiting on condition, or the special value SHARED. <br/>
 		 * 在new Node时创传进来
@@ -253,8 +300,8 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 		 *               Link to next node waiting on condition, or the special value SHARED.
 		 */
 		Node(Thread thread, Node mode) {     // Used by addWaiter
-			this.nextWaiter = mode;
-			this.thread = thread;
+			this.nextWaiter = mode; // 设置节点的模式（独占或共享）
+			this.thread = thread;   // 关联线程与此节点
 		}
 		
 		Node(Thread thread, int waitStatus) { // Used by Condition
@@ -278,7 +325,9 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 	private transient volatile Node tail;
 	
 	/**
-	 * The synchronization state. 同步状态
+	 * state字段用于表示同步器的状态, 这个状态的具体含义根据同步器的实现而异。
+	 * 例如, 在一个互斥锁的实现中, state可能表示锁的持有情况 (0表示未被持有, 1表示被某个线程持有);
+	 * 在一个信号量中, state可能表示当前可用的许可数量。
 	 * ReentrantLock和ReentrantReadWriteLock都实现了AQS，所以：
 	 * 记录锁被加了多少次(锁的上锁次数) <br/>
 	 * 0 未上锁 <br/>
@@ -340,6 +389,7 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 	 * to improve responsiveness with very short timeouts.
 	 * <p>
 	 * 自旋多少纳秒, 自旋这么一段时间认为比 park 一个线程来划算
+	 * 线程在等待获取资源时保持活跃状态, 不停地检查是否可以执行下一步操作。这种方式消耗CPU资源, 但响应时间快, 适用于预期等待时间非常短的场景。
 	 */
 	static final long spinForTimeoutThreshold = 1000L;
 	

@@ -67,7 +67,7 @@ public class PageResultAspect {
 			return;
 		}
 		
-		Object page = ReflectionUtils.getField(firstParam, "page");
+		Object page = ReflectionUtils.getFieldValue("page", firstParam);
 		if (page == null || !(page instanceof Page)) {
 			return;
 		}

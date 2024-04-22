@@ -142,9 +142,9 @@ public class NonBlockingLock implements Lock{
 		}
 		if (locked) {
 			//调用这个类的instance()方法, 如果这个类不在classpath下会直接抛异常提示找不到这个类, 所以这里不抛异常肯定能找到一个对象
-			transactionEventsInstance = ReflectionUtils.invokeStatic(TRANSACTION_EVENTS_CLASS_NAME, "instance");
+			transactionEventsInstance = ReflectionUtils.invokeStatic("instance", TRANSACTION_EVENTS_CLASS_NAME);
 			this.transactionEventsInitialized = true;
-			ReflectionUtils.invokeMethod(transactionEventsInstance, "afterCompletion", () -> JedisUtils.unlock(key, requestId));
+			ReflectionUtils.invokeMethod("afterCompletion",transactionEventsInstance,  () -> JedisUtils.unlock(key, requestId));
 		} else {
 			throw new OperationNotSupportedException("你还没获取到锁哦");
 		}

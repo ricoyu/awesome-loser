@@ -26,7 +26,7 @@ public class ClusterSettingBuilder {
 	public boolean update() {
 		ClusterUpdateSettingsRequestBuilder builder = ElasticUtils.CLIENT.admin().cluster().prepareUpdateSettings();
 		if (persistentSettingBuilder != null) {
-			Settings persistentSettings = ReflectionUtils.invokeMethod(persistentSettingBuilder, "build");
+			Settings persistentSettings = ReflectionUtils.invokeMethod("build", persistentSettingBuilder);
 			builder.setPersistentSettings(persistentSettings);
 		}
 		

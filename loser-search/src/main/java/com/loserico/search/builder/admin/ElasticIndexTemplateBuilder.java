@@ -165,7 +165,7 @@ public final class ElasticIndexTemplateBuilder {
 			builder.addMapping(ElasticUtils.ONLY_TYPE, mappingBuilder.build());
 		}
 		if (settings != null) {
-			builder.setSettings((org.elasticsearch.common.settings.Settings) ReflectionUtils.invokeMethod(settings, "build"));
+			builder.setSettings((org.elasticsearch.common.settings.Settings) ReflectionUtils.invokeMethod("build", settings));
 		}
 		AcknowledgedResponse response = builder.get();
 		return response.isAcknowledged();

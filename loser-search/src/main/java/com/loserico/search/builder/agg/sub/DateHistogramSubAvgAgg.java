@@ -29,7 +29,7 @@ public class DateHistogramSubAvgAgg extends SubAvgAgg {
 	@Override
 	public ElasticDateHistogramAggregationBuilder and() {
 		AggregationBuilder avgAggregationBuilder = build();
-		ReflectionUtils.invokeMethod(aggregationBuilder, "subAggregation", avgAggregationBuilder);
+		ReflectionUtils.invokeMethod("subAggregation", aggregationBuilder, avgAggregationBuilder);
 		return aggregationBuilder;
 	}
 	

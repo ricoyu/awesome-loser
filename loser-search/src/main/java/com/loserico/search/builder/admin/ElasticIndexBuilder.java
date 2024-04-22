@@ -96,7 +96,7 @@ public final class ElasticIndexBuilder {
 			createIndexRequestBuilder.addMapping(ElasticUtils.ONLY_TYPE, mappingBuilder.build());
 		}
 		if (settings != null) {
-			createIndexRequestBuilder.setSettings((org.elasticsearch.common.settings.Settings) ReflectionUtils.invokeMethod(settings, "build" ));
+			createIndexRequestBuilder.setSettings((org.elasticsearch.common.settings.Settings) ReflectionUtils.invokeMethod("build", settings ));
 		}
 
 		CreateIndexResponse response = createIndexRequestBuilder.get();

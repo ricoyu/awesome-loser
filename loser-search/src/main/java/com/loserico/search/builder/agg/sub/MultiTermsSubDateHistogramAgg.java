@@ -57,7 +57,7 @@ public class MultiTermsSubDateHistogramAgg extends SubDateHistogramAgg {
 	@Override
 	public ElasticMultiTermsAggregationBuilder and() {
 		AggregationBuilder subDateHistogramBuilder = build();
-		ReflectionUtils.invokeMethod(aggregationBuilder, "subAggregation", subDateHistogramBuilder);
+		ReflectionUtils.invokeMethod("subAggregation", aggregationBuilder, subDateHistogramBuilder);
 		return aggregationBuilder;
 	}
 	

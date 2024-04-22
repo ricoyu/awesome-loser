@@ -1247,7 +1247,7 @@ public class LoserThreadPoolExecutor extends AbstractExecutorService {
 				 * 否则通过take方法, 如果这时队列为空, 则take方法会阻塞直到队列不为空。
 				 *
 				 * 这里就是实现线程超时控制的代码
-				 * workQueue.poll(keepAliveTime, TimeUnit.NANOSECONDS) 会阻塞keepAliveTime, 如果超时了没用元素则返回null
+				 * workQueue.poll(keepAliveTime, TimeUnit.NANOSECONDS) 会阻塞keepAliveTime, 如果超时了没有元素则返回null
 				 * 如果拿到的Runnable是null, 那么timedOut就是true;
 				 * 然后在下一轮循环的时候就会执行compareAndDecrementWorkerCount(c), 并且返回null
 				 * 然后在runWorker()调用getTask()的地方, 会判断 getTask() != null, 否则就跳出while循环, 循环结束了线程池中这个线程也就停掉了

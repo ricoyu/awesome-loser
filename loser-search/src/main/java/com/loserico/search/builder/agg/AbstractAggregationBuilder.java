@@ -80,7 +80,7 @@ public abstract class AbstractAggregationBuilder{
 	protected SearchRequestBuilder searchRequestBuilder() {
 		SearchRequestBuilder searchRequestBuilder = ElasticUtils.CLIENT.prepareSearch(indices);
 		if (baseQueryBuilder != null) {
-			QueryBuilder queryBuilder = ReflectionUtils.invokeMethod(baseQueryBuilder, "builder");
+			QueryBuilder queryBuilder = ReflectionUtils.invokeMethod("builder", baseQueryBuilder);
 			searchRequestBuilder.setQuery(queryBuilder);
 		}
 		//要搜索的index不存在时不报错

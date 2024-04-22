@@ -1255,7 +1255,7 @@ public abstract class ClassUtils {
 				}
 				else {
 					Method specificMethod =
-							ReflectionUtils.findMethod(targetClass, method.getName(), method.getParameterTypes());
+							ReflectionUtils.findMethod(method.getName(), targetClass, method.getParameterTypes());
 					return (specificMethod != null ? specificMethod : method);
 				}
 			}

@@ -29,7 +29,7 @@ public class ObjectMapperFactory {
 				if (objectMapper == null) {
 					boolean exists = ReflectionUtils.existsClass("org.springframework.context.ApplicationContext");
 					if (exists) {
-						objectMapper = (ObjectMapper) ReflectionUtils.invokeStatic(ApplicationContextHolder.class, "getBean", ObjectMapper.class);
+						objectMapper = (ObjectMapper) ReflectionUtils.invokeStatic("getBean", ApplicationContextHolder.class, ObjectMapper.class);
 					}
 					if (objectMapper == null) {
 						objectMapper = new ObjectMapper();

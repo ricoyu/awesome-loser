@@ -52,7 +52,7 @@ public class ElasticUpdateSettingBuilder extends ElasticSettingsBuilder {
 	 * @return
 	 */
 	public boolean thenUpdate() {
-		Settings settings = ReflectionUtils.invokeMethod(this, "build");
+		Settings settings = ReflectionUtils.invokeMethod("build", this);
 		AcknowledgedResponse response = ElasticUtils.CLIENT
 				.admin()
 				.indices()

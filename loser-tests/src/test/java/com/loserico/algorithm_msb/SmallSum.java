@@ -21,7 +21,6 @@ import org.junit.Test;
  * <p>
  * 1. 采用归并排序的思想
  * 2. 在merge的过程中，如果左边数组的元素小于右边数组的元素，那么左边数组的元素就会产生小和
- * 3. 举例说明：左边数组[1,3,5]，右边数组[2,4,6]，左边数组的元素5大于右边数组的元素2，那么5就会产生小和
  * 4. 代码实现：在merge的过程中，如果左边数组的元素小于右边数组的元素，那么左边数组的元素就会产生小和，同时左边数组
  * 的元素和右边数组的元素都是有序的，所以左边数组的元素小于右边数组的元素，那么左边数组的元素就会产生小和，同时左边数组
  * 的元素也是有序的，所以左边数组的元素产生小和的个数就是右边数组剩余元素的个数
@@ -39,10 +38,12 @@ public class SmallSum {
 
     @Test
     public void testSmallSum() {
-        int[] arr = AlgorithmUtils.randomArr(10, 20);
-        AlgorithmUtils.printArray(arr);
-        int smallSum = process(arr, 0, arr.length - 1);
-        System.out.println(smallSum);
+        for (int i = 0; i < 5; i++) {
+            int[] arr = AlgorithmUtils.randomArr(5, 20);
+            AlgorithmUtils.printArray(arr);
+            int smallSum = process(arr, 0, arr.length - 1);
+            System.out.println(smallSum);
+        }
     }
 
     public static int process(int[] arr, int l, int r) {
@@ -61,7 +62,7 @@ public class SmallSum {
         int p2 = r;
         int ans = 0;
         while (p1 <= m && p2 <= r) {
-            ans += arr[p1] < arr[p2] * (r - p2 + 1) ? arr[p1] : 0;
+            ans += arr[p1] < arr[p2] ? arr[p1] * (r - p2 + 1) : 0;
             help[i++] = arr[p1] < arr[p2] ? arr[p1++] : arr[p2++];
         }
 
