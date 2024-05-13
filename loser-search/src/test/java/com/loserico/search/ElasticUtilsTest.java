@@ -120,12 +120,10 @@ public class ElasticUtilsTest {
 	public void testCreateWithId() {
 		boolean deleteResult = Admin.deleteIndex("mapping_test");
 		System.out.println(deleteResult);
-		String result =
-				ElasticUtils.index("mapping_test", "{\"firstName\": \"Chan\", \"lastName\": \"Jackie\", \"loginDate\": \"2018-07-24T10:29:48.103Z\"}", 1);
+		String result = ElasticUtils.index("mapping_test", "{\"firstName\": \"Chan\", \"lastName\": \"Jackie\", \"loginDate\": \"2018-07-24T10:29:48.103Z\"}", 1);
 		String json = ElasticUtils.get("mapping_test", 1);
 		System.out.println(json);
-		result =
-				ElasticUtils.index("mapping_test", "{\"firstName\": \"Chan\", \"lastName\": \"Jackie\", \"loginDate\": \"2018-07-24T10:29:48.103Z\"}", 1);
+		result = ElasticUtils.index("mapping_test", "{\"firstName\": \"Chan\", \"lastName\": \"Jackie\", \"loginDate\": \"2018-07-24T10:29:48.103Z\"}", 1);
 		System.out.println(result);
 		json = ElasticUtils.get("mapping_test", 1);
 		System.out.println(json);
@@ -178,8 +176,8 @@ public class ElasticUtilsTest {
 		persons.add(new Person(2, "Icon Man", "this is Stark"));
 		persons.add(new Person(3, "Sea King", "this is 海王"));
 		
-		//BulkResult bulkResult = ElasticUtils.bulkIndex("rico", persons);
-		//System.out.println(toJson(bulkResult));
+		BulkResult bulkResult = ElasticUtils.bulkIndex("rico", persons);
+		System.out.println(toJson(bulkResult));
 	}
 	
 	@Test
@@ -187,8 +185,8 @@ public class ElasticUtilsTest {
 		List<Product> products = asList(new Product("1", "XHDK-A-1293-#fJ3", "iPhone"),
 				new Product("2", "KDKE-B-9947-#kL5", "iPad"),
 				new Product("3", "JODL-X-1937-#pV7", "MBP"));
-		//BulkResult bulkResult = ElasticUtils.bulkIndex("products", products);
-		//System.out.println(toJson(bulkResult));
+		BulkResult bulkResult = ElasticUtils.bulkIndex("products", products);
+		System.out.println(toJson(bulkResult));
 	}
 	
 	@Test

@@ -3,11 +3,12 @@ package com.loserico.concurrent.completablefuture;
 import org.junit.Test;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-public class AllOfCase {
+public class JoinCase {
 
     @Test
     public void test() {
@@ -39,17 +40,12 @@ public class AllOfCase {
             return "hello3";
         });
 
-        CompletableFuture<Void> future = CompletableFuture.allOf(future1, future2, future3);
         long current = System.currentTimeMillis()/1000;
         System.out.println("等待全部执行完毕: "+ current);
-        try {
-            future.get();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e);
-        }
+            String comnined = Stream.of(future1, future2, future3)
+                    .map(CompletableFuture::join)
+                    .collect(Collectors.joining(" "));
         current = System.currentTimeMillis()/1000;
-        System.out.println("全部任务执行完毕: " + current);
+        System.out.println("全部任务执行完毕: " + current+", 执行结果: "+ comnined);
     }
 }

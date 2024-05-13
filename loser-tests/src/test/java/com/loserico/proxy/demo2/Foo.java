@@ -1,2 +1,6 @@
-package com.loserico.proxy.demo2;public interface Foo {
+package com.loserico.proxy.demo2;
+
+public interface Foo {
+
+    public void sayHello(String msg);
 }

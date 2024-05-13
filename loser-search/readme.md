@@ -18,9 +18,74 @@ keystore.path=D:\\elastic-certificates.p12
 
 # 二 API Demo
 
-## 2.1 查询API
+## 2.1 索引文档
 
-### 2.1.1 Request Body Search
+1. 创建一个文档, 指定ID
+
+   ```java
+   ElasticUtils.index("rico", "{\"key\": \"三少爷\"}", "1");
+   ```
+
+   或者
+
+   ```java
+   ElasticUtils.index("rico").doc("{\"key\": \"三少爷\"}").id(1).execute();
+   ```
+
+2. 将一个POJO索引文档
+
+   ```java
+   @Data
+   @NoArgsConstructor
+   @AllArgsConstructor
+   public static class Person {
+     
+     @DocId
+     private Integer id;
+     private String user;
+     private String comment;
+   }
+   ```
+
+   ```java
+   Person person = new Person();
+   person.setUser("三少爷");
+   person.setComment("牛仔");
+   String id = ElasticUtils.index("rico", person);
+   System.out.println(id);
+   ```
+
+3. 批量创建文档
+
+   ```java
+   String[] docs = new String[]{"{\"name\": \"三少爷\"}", "{\"name\": \"二少爷\"}", "{\"name\": \"大少爷\"}"};
+   BulkResult bulkResult = ElasticUtils.bulkIndex("rico", docs);
+   System.out.println(toJson(bulkResult));
+   ```
+
+   ```java
+   List<Person> persons = new ArrayList<>();
+   persons.add(new Person(1, "Json", "this is jason born"));
+   persons.add(new Person(2, "Icon Man", "this is Stark"));
+   persons.add(new Person(3, "Sea King", "this is 海王"));
+   
+   BulkResult bulkResult = ElasticUtils.bulkIndex("rico", persons);
+   System.out.println(toJson(bulkResult));
+   ```
+
+   ```java
+   List<Product> products = asList(new Product("1", "XHDK-A-1293-#fJ3", "iPhone"),
+       new Product("2", "KDKE-B-9947-#kL5", "iPad"),
+       new Product("3", "JODL-X-1937-#pV7", "MBP"));
+   BulkResult bulkResult = ElasticUtils.bulkIndex("products", products);
+   System.out.println(toJson(bulkResult));
+   ```
+
+   
+
+## 2.2 查询API
+
+### 2.2.1 Request Body Search
 
 1. Query DSL
 
@@ -69,7 +134,7 @@ keystore.path=D:\\elastic-certificates.p12
        .queryForList();
    ```
 
-### 2.1.2 match query
+### 2.2.2 match query
 
 默认是king OR george这样一个查询条件
 
@@ -111,11 +176,9 @@ List<Object> movies = ElasticUtils.Query.matchQuery("movies")
 
 
 
-### 2.1.3 match phrase
+### 2.2.3 match phrase
 
 在query里面的查询词必须是按照顺序出现的, slop 1表示one love之间可以插入一个其他的单词
-
-
 
 ```http
 POST movies/_search
@@ -143,7 +206,7 @@ List<Object> movies = ElasticUtils.Query
 
 
 
-### 2.1.4 Query String Query
+### 2.2.4 Query String Query
 
 * 类似URI Querys
 
@@ -182,7 +245,7 @@ List<Object> movies = ElasticUtils.Query
 
 
 
-### 2.1.5 通过constant score转为Filter
+### 2.2.5 通过constant score转为Filter
 
 可以避免算分带来的性能开销, 即可以提高查询性能
 
@@ -212,7 +275,7 @@ List<Object> iphones = ElasticUtils.Query.termQuery("products")
     .queryForList();
 ```
 
-### 2.1.6 结果自动封装进POJO
+### 2.2.6 结果自动封装进POJO
 
 ```java
 List<Movie> movies = ElasticUtils.Query.query("movies")
@@ -222,7 +285,7 @@ List<Movie> movies = ElasticUtils.Query.query("movies")
 				.queryForList();
 ```
 
-### 2.1.7 Range查询
+### 2.2.7 Range查询
 
 now-1y 表示一年以前
 
@@ -251,7 +314,7 @@ List<Object> products = ElasticUtils.Query
         .queryForList();
 ```
 
-### 2.1.8 exists查询
+### 2.2.8 exists查询
 
 查询包含date字段的products
 
@@ -274,7 +337,7 @@ List<Object> products = ElasticUtils.Query.exists("products")
         .queryForList();
 ```
 
-### 2.1.9 bool查询
+### 2.2.9 bool查询
 
 ```json
 POST newmovies/_search
@@ -312,7 +375,7 @@ List<Object> movies = ElasticUtils.Query
 
 
 
-### 2.1.10 Disjunction Max Query
+### 2.2.10 Disjunction Max Query
 
 分离最大化查询(Disjunction Max Query)指的是: 将任何与任一查询匹配的文档作为结果返回, 但只将最佳匹配的评分作为查询的评分结果返回
 
@@ -346,7 +409,7 @@ DisMaxQueryBuilder queryBuilder = disMaxQuery()
 
 
 
-### 2.1.11 Tie Breaker 最佳字段查询调优
+### 2.2.11 Tie Breaker 最佳字段查询调优
 
 Tie Breaker是一个介于0-1之间的浮点数, 0代表使用最佳匹配; 1代表所有语句同等重要
 
@@ -378,7 +441,7 @@ List<Object> blogs = ElasticUtils.Query
     .queryForList();
 ```
 
-### 2.1.12 Multi Match Query
+### 2.2.12 Multi Match Query
 
 1. 最佳字段(Best Fields)
 
@@ -522,9 +585,9 @@ List<Object> addresses = ElasticUtils.Query
 
 
 
-## 2.2 聚合
+## 2.3 聚合
 
-### 2.2.1 Bucket聚合
+### 2.3.1 Bucket聚合
 
 ```json
 POST kibana_sample_data_flights/_search
@@ -551,7 +614,7 @@ List<Map<String, Object>> aggResults1 = Aggs.terms("kibana_sample_data_flights")
 
 这里Map的value是一个Long类型
 
-### 2.2.2 Metric
+### 2.3.2 Metric
 
 ```json
 POST kibana_sample_data_flights/_search
@@ -624,7 +687,7 @@ for (Aggregation aggregation : aggregations) {
 }
 ```
 
-### 2.2.3 Bucket和Metric 混合
+### 2.3.3 Bucket和Metric 混合
 
 
 
@@ -664,7 +727,7 @@ List<Map<String, Object>> resultMap = Aggs.terms("kibana_sample_data_flights")
         .get();
 ```
 
-### 2.2.4 stats子聚合
+### 2.3.4 stats子聚合
 
 
 

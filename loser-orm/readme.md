@@ -926,4 +926,6 @@ entityOperations.commit();
    }
    ```
 
-   
+# 七 ORM 错误
+
+如果是多module项目, Entity实体类在一个module里面, 然后另一个module是一个SpringBoot应用, 在这里执行named-sql查询, xxx.hbm.xml也是放在这个module里面的, 那么正常的Ideadebug没问题, 但是用Jrebel debug会找不到named-sql, 必须把xxx.hbm.xml和实体类放到同一个module下

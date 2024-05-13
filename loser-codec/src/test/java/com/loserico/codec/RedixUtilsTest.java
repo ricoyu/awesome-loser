@@ -289,4 +289,12 @@ public class RedixUtilsTest {
 		String s = "M";
 		System.out.println(RedixUtils.ascii2Hex(s));
 	}
+
+	@Test
+	public void testHex2Bits() {
+		String hex = RedixUtils.ascii2Hex("1");
+		String binary = RedixUtils.hex2BinaryStr(hex);
+		System.out.println(hex);
+		System.out.println(binary);
+	}
 }

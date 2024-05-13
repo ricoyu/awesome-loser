@@ -17,5 +17,6 @@ public class MethodReferenceUtils {
         } catch (NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
+        return null;
     }
 }
