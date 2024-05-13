@@ -196,7 +196,7 @@ public final class ElasticUtils {
 	 * 对应REST API POST 方式
 	 *
 	 * @param index 索引名
-	 * @param doc   哟啊保存的文档, 会自动通过Jackson序列化成JSON串
+	 * @param doc   要保存的文档, 会自动通过Jackson序列化成JSON串
 	 * @return String 文档ID
 	 */
 	public static String index(String index, Object doc) {
@@ -1293,10 +1293,9 @@ public final class ElasticUtils {
 		/**
 		 * 获取集群的健康状态, Green Yellow Red
 		 *
-		 * @param index
 		 * @return String
 		 */
-		public static String health(String index) {
+		public static String health() {
 			ClusterHealthResponse response = CLIENT.admin().cluster().prepareHealth().get();
 			ClusterHealthStatus status = response.getStatus();
 			return status.toString();

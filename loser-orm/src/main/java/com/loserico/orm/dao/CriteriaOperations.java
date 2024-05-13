@@ -1,8 +1,6 @@
 package com.loserico.orm.dao;
 
-import com.loserico.common.lang.vo.OrderBean;
 import com.loserico.common.lang.vo.Page;
-import com.loserico.orm.criteria.JPACriteriaQuery;
 import com.loserico.orm.predicate.Predicate;
 import com.loserico.orm.predicate.Querys;
 
@@ -10,7 +8,6 @@ import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 public interface CriteriaOperations {
 
@@ -38,6 +35,8 @@ public interface CriteriaOperations {
 	 * @param <T>
 	 */
 	public <T> T findOne(Class<T> entityClass, String propertyName, Object value);
+
+	public <T> T findOne(Class<T> entityClass, Predicate... predicates);
 
 	/**
 	 * 数字字段范围查询

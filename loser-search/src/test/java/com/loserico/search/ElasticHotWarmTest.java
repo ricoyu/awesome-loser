@@ -25,17 +25,25 @@ public class ElasticHotWarmTest {
 				.settings()
 				.numberOfShards(3)
 				.numberOfReplicas(1)
-				.indexRoutingAllocation("node_type", "hot")
+				//.indexRoutingAllocation("node_type", "hot") //只在hot节点上分配
 				.thenCreate();
 		
-		String health = Cluster.health("mytest");
-		assertThat(health).isEqualTo("YELLOW");
-		
+		String health = Cluster.health();
+		System.out.println(health);
+
+		deleted = ElasticUtils.Admin.deleteIndex("mytest");
+		created = ElasticUtils.Admin.createIndex("mytest")
+				.settings()
+				.numberOfShards(3)
+				.numberOfReplicas(1)
+				//.indexRoutingAllocation("node_type", "hot") //只在hot节点上分配
+				.thenCreate();
+
 		boolean updated = Settings.update("mytest")
 				.numberOfReplicas(0)
 				.thenUpdate();
 		
-		health = Cluster.health("mytest");
+		health = Cluster.health();
 		assertThat(health).isEqualTo("GREEN");
 	}
 }

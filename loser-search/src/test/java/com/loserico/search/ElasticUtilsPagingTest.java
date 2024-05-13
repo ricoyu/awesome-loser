@@ -38,7 +38,7 @@ public class ElasticUtilsPagingTest {
 	
 	@Test
 	public void testSearchAfter() {
-		ElasticPage<String> page = ElasticUtils.Query
+			ElasticPage<String> page = ElasticUtils.Query
 				.matchAllQuery("users")
 				.size(1)
 				.sort("age:desc,_id:asc")

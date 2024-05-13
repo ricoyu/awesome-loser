@@ -16,9 +16,9 @@ elastic.password=123456
 keystore.path=D:\\elastic-certificates.p12
 ```
 
-# 二 API Demo
+# 二 索引相关
 
-## 2.1 索引文档
+# 三 文档相关
 
 1. 创建一个文档, 指定ID
 

@@ -598,6 +598,14 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	}
 
 	@Override
+	public <T> T findOne(Class<T> entityClass, Predicate... predicates) {
+		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
+				.addPredicates(predicates);
+		List<T> resultList = jpaCriteriaQuery.list();
+		return resultList.isEmpty() ? null : resultList.get(0);
+	}
+
+	@Override
 	public <T> T findOne(Class<T> entityClass, String propertyName, Object value, boolean includeDeleted) {
 		List<T> resultList = null;
 		JPACriteriaQuery<T> jpaCriteriaQuery =
