@@ -23,12 +23,12 @@ public class ElasticHotWarmTest {
 		boolean deleted = ElasticUtils.Admin.deleteIndex("mytest");
 		boolean created = ElasticUtils.Admin.createIndex("mytest")
 				.settings()
-				.numberOfShards(3)
+				.numberOfShards(4)
 				.numberOfReplicas(1)
-				//.indexRoutingAllocation("node_type", "hot") //只在hot节点上分配
+				.indexRoutingAllocation("node_type", "hot") //只在hot节点上分配
 				.thenCreate();
 		
-		String health = Cluster.health();
+		String health = ElasticUtils.Cluster.health();
 		System.out.println(health);
 
 		deleted = ElasticUtils.Admin.deleteIndex("mytest");

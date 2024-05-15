@@ -86,7 +86,11 @@ public class ElasticIndexDocBuilder {
 		this.refresh = refresh;
 		return this;
 	}
-	
+
+	/**
+	 * 执行创建
+	 * @return docId
+	 */
 	public String execute() {
 			IndexRequestBuilder indexRequestBuilder = CLIENT.prepareIndex(index, ONLY_TYPE, id)
 					.setSource(doc, XContentType.JSON);

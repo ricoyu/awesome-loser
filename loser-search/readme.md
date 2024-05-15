@@ -16,9 +16,35 @@ elastic.password=123456
 keystore.path=D:\\elastic-certificates.p12
 ```
 
-# 二 索引相关
+# 二 集群相关
 
-# 三 文档相关
+## 2.1 集群的健康值检查
+
+* Green
+
+  健康, 所有的主分片(Primary)和副本分片(Replica)都可用
+
+* Yellow
+
+  亚健康, 所有的主分片可用, 部分副本分片不可用
+
+* Red
+
+  不健康状态, 部分主分片不可用
+
+1. GET _cluster/health
+
+2. 对应ElasticUtils API
+
+   ```java
+   ElasticUtils.Cluster.health()
+   ```
+
+   
+
+# 三 索引相关
+
+# 四 文档相关
 
 1. 创建一个文档, 指定ID
 
