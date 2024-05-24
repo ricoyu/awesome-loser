@@ -20,10 +20,31 @@ public interface CriteriaOperations {
 	 */
 	public <T> List<T> find(Class<T> entityClass, String propertyName, Object value);
 
+	/**
+	 * Predicate可以通过Predicates帮助类构造
+	 * @param entityClass
+	 * @param predicate
+	 * @return
+	 * @param <T>
+	 */
 	public <T> List<T> find(Class<T> entityClass, Predicate predicate);
 
+	/**
+	 * Predicate可以通过Predicates帮助类构造
+	 * @param entityClass
+	 * @param predicates
+	 * @return
+	 * @param <T>
+	 */
 	public <T> List<T> find(Class<T> entityClass, Predicate... predicates);
 
+	/**
+	 * QueryBuilder可以通过Querys#eq等快捷方法获取
+	 * @param entityClass
+	 * @param queryBuilder
+	 * @return
+	 * @param <T>
+	 */
 	<T> List<T> find(Class<T> entityClass, Querys.QueryBuilder queryBuilder);
 
 	/**
@@ -36,6 +57,14 @@ public interface CriteriaOperations {
 	 */
 	public <T> T findOne(Class<T> entityClass, String propertyName, Object value);
 
+	/**
+	 * 根据属性查找，返回一个对象，如果找到多个，取第一个
+	 * Predicate可以通过Predicates帮助类构造
+	 * @param entityClass
+	 * @param predicates
+	 * @return
+	 * @param <T>
+	 */
 	public <T> T findOne(Class<T> entityClass, Predicate... predicates);
 
 	/**
@@ -93,6 +122,13 @@ public interface CriteriaOperations {
 	 */
 	public <T> T ensureEntityExists(Class<T> entityClass, String propertyName, Object value) throws EntityNotFoundException;
 
+	/**
+	 * Predicate可以通过Predicates帮助类构造
+	 * @param entityClass
+	 * @param predicates
+	 * @return
+	 * @param <T>
+	 */
 	public <T> int deleteBy(Class<T> entityClass, Predicate... predicates);
 	
 //	public <T> int deleteByProperties(Class<T> entityClass, List<Predicate> predicates);
@@ -108,10 +144,34 @@ public interface CriteriaOperations {
 	
 	public <T> int deleteIn(Class<T> entityClass, String propertyName, Object[] values);
 
+	/**
+	 * Predicate可以通过Predicates帮助类构造
+	 * @param entityClass
+	 * @param predicate
+	 * @param attributeNames
+	 * @return
+	 * @param <T>
+	 */
 	public <T> List<T> leftJoinFetch(Class<T> entityClass, Predicate predicate, String... attributeNames);
 
+	/**
+	 * Predicate可以通过Predicates帮助类构造
+	 * @param entityClass
+	 * @param predicate
+	 * @param attributeNames
+	 * @return
+	 * @param <T>
+	 */
 	public <T> T leftJoinFetchSingleResult(Class<T> entityClass, Predicate predicate, String... attributeNames);
-	
+
+	/**
+	 * Predicate可以通过Predicates帮助类构造
+	 * @param entityClass
+	 * @param predicates
+	 * @param attributeNames
+	 * @return
+	 * @param <T>
+	 */
 	public <T> List<T> leftJoinFetch(Class<T> entityClass, List<Predicate> predicates, String... attributeNames);
 
 }

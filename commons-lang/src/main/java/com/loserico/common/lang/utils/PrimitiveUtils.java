@@ -107,6 +107,9 @@ public final class PrimitiveUtils {
         if (value instanceof Byte) {
             return ((Byte) value).intValue();
         }
+        if (value instanceof String) {
+            return Integer.parseInt((String) value);
+        }
         return 0;
     }
 
@@ -150,6 +153,7 @@ public final class PrimitiveUtils {
         if (value instanceof byte[]) {
             return new String((byte[]) value, UTF_8);
         }
+
         return null;
     }
 
@@ -184,5 +188,35 @@ public final class PrimitiveUtils {
             System.out.print((num & (1 << i)) == 0 ? "0" : "1");
         }
         System.out.println();
+    }
+
+    /**
+     * 将一个数字字符串转成float类型, intPartLength指定整数部分占几个字符
+     * @param str
+     * @param intPartLength
+     * @return float
+     */
+    public static float toFloat(String str, int intPartLength) {
+        if (str == null || str.length() <= intPartLength || intPartLength < 0) {
+            throw new IllegalArgumentException("Input string must be longer than the integer part length and integer part length must be non-negative");
+        }
+
+        try {
+            // 提取整数部分的字符
+            String intPartStr = str.substring(0, intPartLength);
+            int intPart = Integer.parseInt(intPartStr);
+
+            // 提取小数部分的字符
+            String fracPartStr = str.substring(intPartLength);
+            int fracPart = Integer.parseInt(fracPartStr);
+
+            // 计算小数部分的浮点值
+            float fracValue = fracPart / (float) Math.pow(10, fracPartStr.length());
+
+            // 将整数部分和小数部分组合成一个浮点数
+            return intPart + fracValue;
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Input string must contain only numeric characters", e);
+        }
     }
 }

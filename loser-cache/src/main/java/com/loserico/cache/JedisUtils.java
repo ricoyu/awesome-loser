@@ -2763,9 +2763,10 @@ public final class JedisUtils {
 			
 			@Override
 			public void onMessage(String channel, String message) {
-				//EXECUTOR.execute(() -> {
+				//实测这边必须另起线程, 否则收不到消息
+				EXECUTOR.execute(() -> {
 					messageListener.onMessage(channel, message);
-				//});
+				});
 			}
 		};
 		//这边订阅呃实现已经是异步的了, 不需要再开线程了

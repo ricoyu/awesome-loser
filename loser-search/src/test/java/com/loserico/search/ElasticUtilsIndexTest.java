@@ -65,7 +65,7 @@ public class ElasticUtilsIndexTest {
 	
 	@Test
 	public void testListAllIndices() {
-		List<String> indices = Admin.listIndices();
+		List<String> indices = Admin.listIndexNames();
 		indices.forEach(System.out::println);
 	}
 	

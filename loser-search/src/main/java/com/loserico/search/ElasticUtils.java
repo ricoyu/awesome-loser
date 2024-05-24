@@ -3,62 +3,26 @@ package com.loserico.search;
 import com.loserico.common.lang.context.ThreadContext;
 import com.loserico.common.lang.resource.PropertyReader;
 import com.loserico.common.lang.transformer.Transformers;
+import com.loserico.common.lang.utils.EnumUtils;
 import com.loserico.common.lang.utils.IOUtils;
 import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.json.jsonpath.JsonPathUtils;
 import com.loserico.networking.enums.HttpMethod;
 import com.loserico.networking.utils.HttpUtils;
-import com.loserico.search.builder.ElasticContextSuggestBuilder;
-import com.loserico.search.builder.ElasticMultiGetBuilder;
-import com.loserico.search.builder.ElasticQueryBuilder;
-import com.loserico.search.builder.ElasticSuggestBuilder;
-import com.loserico.search.builder.ElasticUpdateBuilder;
-import com.loserico.search.builder.admin.ClusterSettingBuilder;
-import com.loserico.search.builder.admin.ElasticIndexBuilder;
-import com.loserico.search.builder.admin.ElasticIndexTemplateBuilder;
-import com.loserico.search.builder.admin.ElasticPutMappingBuilder;
-import com.loserico.search.builder.admin.ElasticReindexBuilder;
-import com.loserico.search.builder.admin.ElasticSettingsBuilder;
-import com.loserico.search.builder.admin.ElasticUpdateSettingBuilder;
-import com.loserico.search.builder.agg.ElasticAvgAggregationBuilder;
-import com.loserico.search.builder.agg.ElasticCardinalityAggregationBuilder;
-import com.loserico.search.builder.agg.ElasticCompositeAggregationBuilder;
-import com.loserico.search.builder.agg.ElasticDateHistogramAggregationBuilder;
-import com.loserico.search.builder.agg.ElasticHistogramAggregationBuilder;
-import com.loserico.search.builder.agg.ElasticMaxAggregationBuilder;
-import com.loserico.search.builder.agg.ElasticMinAggregationBuilder;
-import com.loserico.search.builder.agg.ElasticMultiTermsAggregationBuilder;
-import com.loserico.search.builder.agg.ElasticRangeAggregationBuilder;
-import com.loserico.search.builder.agg.ElasticStatsAggregationBuilder;
-import com.loserico.search.builder.agg.ElasticSumAggregationBuilder;
-import com.loserico.search.builder.agg.ElasticTermsAggregationBuilder;
+import com.loserico.search.builder.*;
+import com.loserico.search.builder.admin.*;
+import com.loserico.search.builder.agg.*;
 import com.loserico.search.builder.bulk.ESBulkProcessor;
-import com.loserico.search.builder.query.ElasticBoolQueryBuilder;
-import com.loserico.search.builder.query.ElasticExistsQueryBuilder;
-import com.loserico.search.builder.query.ElasticIdsQueryBuilder;
-import com.loserico.search.builder.query.ElasticMatchAllQueryBuilder;
-import com.loserico.search.builder.query.ElasticMatchPhraseQueryBuilder;
-import com.loserico.search.builder.query.ElasticMatchQueryBuilder;
-import com.loserico.search.builder.query.ElasticMultiMatchQueryBuilder;
-import com.loserico.search.builder.query.ElasticPipelineBuilder;
-import com.loserico.search.builder.query.ElasticQueryStringBuilder;
-import com.loserico.search.builder.query.ElasticScrollQueryBuilder;
-import com.loserico.search.builder.query.ElasticTemplateQueryBuilder;
-import com.loserico.search.builder.query.ElasticTermQueryBuilder;
-import com.loserico.search.builder.query.ElasticTermsQueryBuilder;
-import com.loserico.search.builder.query.ElasticUriQueryBuilder;
+import com.loserico.search.builder.query.*;
 import com.loserico.search.cache.ElasticCacheUtils;
 import com.loserico.search.constants.ElasticConstants;
 import com.loserico.search.enums.Analyzer;
 import com.loserico.search.enums.Dynamic;
+import com.loserico.search.enums.IndexState;
 import com.loserico.search.exception.IndexTemplateCreateException;
 import com.loserico.search.factory.TransportClientFactory;
-import com.loserico.search.support.BulkResult;
-import com.loserico.search.support.IndexSupport;
-import com.loserico.search.support.MappingSupport;
-import com.loserico.search.support.RestSupport;
-import com.loserico.search.support.SettingsSupport;
-import com.loserico.search.support.UpdateResult;
+import com.loserico.search.support.*;
+import com.loserico.search.vo.Index;
 import com.loserico.search.vo.VersionedResult;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.ActionFuture;
@@ -95,6 +59,7 @@ import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.IndicesAdminClient;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.cluster.health.ClusterHealthStatus;
+import org.elasticsearch.cluster.metadata.IndexMetadata;
 import org.elasticsearch.cluster.metadata.IndexTemplateMetadata;
 import org.elasticsearch.cluster.metadata.MappingMetadata;
 import org.elasticsearch.common.bytes.BytesArray;
@@ -103,11 +68,7 @@ import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilder;
-import org.elasticsearch.index.reindex.BulkByScrollResponse;
-import org.elasticsearch.index.reindex.DeleteByQueryAction;
-import org.elasticsearch.index.reindex.DeleteByQueryRequestBuilder;
-import org.elasticsearch.index.reindex.UpdateByQueryAction;
-import org.elasticsearch.index.reindex.UpdateByQueryRequestBuilder;
+import org.elasticsearch.index.reindex.*;
 import org.elasticsearch.indices.IndexTemplateMissingException;
 import org.elasticsearch.search.suggest.SuggestBuilders;
 import org.elasticsearch.search.suggest.completion.CompletionSuggestionBuilder;
@@ -116,16 +77,7 @@ import org.elasticsearch.search.suggest.term.TermSuggestionBuilder;
 import org.json.JSONObject;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static com.loserico.common.lang.utils.Assert.notNull;
@@ -505,6 +457,19 @@ public final class ElasticUtils {
     /**
      * 删除一篇文档
      *
+     * @param index 索引名
+     * @param id 文档ID
+     * @return Result
+     */
+    public static boolean delete(String index, Integer id) {
+        Objects.requireNonNull(id, "id cannot be null!");
+        DeleteResponse response = CLIENT.prepareDelete(index, ONLY_TYPE, id.toString()).get();
+        return response.getResult() == DocWriteResponse.Result.DELETED;
+    }
+
+    /**
+     * 删除一篇文档
+     *
      * @param index
      * @param id
      * @return Result
@@ -558,8 +523,8 @@ public final class ElasticUtils {
      * </ol>
      * https://www.elastic.co/guide/en/elasticsearch/client/java-rest/7.6/java-rest-high-document-update.html
      *
-     * @param index
-     * @param id
+     * @param index String 索引名
+     * @param id String  文档的id
      * @param doc   整篇文档或者文档的一部分
      * @return Result 更新结果(更新了? 没更新?)
      */
@@ -569,6 +534,28 @@ public final class ElasticUtils {
         updateRequestBuilder.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
         UpdateResponse response = updateRequestBuilder.get();
         return UpdateResult.from(response);
+    }
+
+    /**
+     * 更新文档的一部分
+     * <ol>
+     * <li/>如果ID对应的文档在ES中还不存在, 那么报错
+     * <li/>如果docPiece对应的字段在文档中还不存在, 那么在原文档中插入这个字段
+     * <li/>如果docPiece对应的字段在文档中存在, 并且值不一样, 那么执行更新
+     * <li/>docPiece对应的字段在文档中存在, 但是值是一样的, 那么不执行更新
+     * </ol>
+     * https://www.elastic.co/guide/en/elasticsearch/client/java-rest/7.6/java-rest-high-document-update.html
+     *
+     * @param index 索引名
+     * @param id Integer 文档的id
+     * @param doc   整篇文档或者文档的一部分
+     * @return Result 更新结果(更新了? 没更新?)
+     */
+    public static UpdateResult update(String index, Integer id, String doc) {
+        if (id == null) {
+            return null;
+        }
+        return update(index, id.toString(), doc);
     }
 
     /**
@@ -922,7 +909,7 @@ public final class ElasticUtils {
          *
          * @return List<String>
          */
-        public static List<String> listIndices() {
+        public static List<String> listIndexNames() {
             IndicesStatsResponse response = CLIENT.admin()
                     .indices()
                     .stats(new IndicesStatsRequest().all())
@@ -930,6 +917,28 @@ public final class ElasticUtils {
 
             Set<String> indices = response.getIndices().keySet();
             return new ArrayList<>(indices);
+        }
+
+        /**
+         * 列出所有索引, 包含索引名, 主分片数, 副本数, uuid
+         * @return List<Index>
+         */
+        public static List<Index> listIndices() {
+            // 获取所有索引的元数据
+            ImmutableOpenMap<String, IndexMetadata> indices = CLIENT.admin().cluster().prepareState().execute().actionGet().getState().getMetadata().getIndices();
+
+            List<Index> indexList = new ArrayList<>();
+            // 打印每个索引的基本信息
+            indices.forEach((i) -> {
+                Index index = new Index();
+                index.setName(i.key);
+                index.setUuid(i.value.getIndexUUID());
+                index.setNumberOfShards(i.value.getNumberOfShards());
+                index.setNumberOfReplicas(i.value.getNumberOfReplicas());
+                index.setState(EnumUtils.lookupEnum(IndexState.class, i.value.getState().toString()));
+                indexList.add(index);
+            });
+            return indexList;
         }
 
         /**

@@ -1224,5 +1224,43 @@ public abstract class StringUtils {
 				.omitEmptyStrings()
 				.splitToList(s);
 	}
-	
+
+	/**
+	 * 如果str的长度不足len, 那么在尾部追加"0"补足len长度
+	 * @param str
+	 * @param len
+	 * @return String
+	 */
+	public static String padStringWithZeros(String str, int len) {
+		if (str == null) {
+			throw new IllegalArgumentException("The input string cannot be null");
+		}
+		if (len < 0) {
+			throw new IllegalArgumentException("The length cannot be negative");
+		}
+
+		StringBuilder sb = new StringBuilder(str);
+		while (sb.length() < len) {
+			sb.append('0');
+		}
+
+		return sb.toString();
+	}
+
+	/**
+	 * 判断这串字符串是否是数字
+	 * @param str
+	 * @return boolean
+	 */
+	public static boolean isNumeric(String str) {
+		if (str == null || str.isEmpty()) {
+			return false;
+		}
+		for (char c : str.toCharArray()) {
+			if (!Character.isDigit(c)) {
+				return false;
+			}
+		}
+		return true;
+	}
 }

@@ -80,8 +80,23 @@ public class QueryStringQueryTest {
 	
 	@Test
 	public void testListIndices() {
-		List<String> indices = ElasticUtils.Admin.listIndices();
+		List<String> indices = ElasticUtils.Admin.listIndexNames();
 		indices.forEach(System.out::println);
 	}
-	
+
+	@Test
+	public void testQueryAll() {
+		List<Object> products = ElasticUtils.Query.queryString("product")
+				.queryForList();
+		products.forEach(System.out::println);
+	}
+
+	@Test
+	public void testQuery4Name() {
+		List<Object> products = ElasticUtils.Query.queryString("product")
+				.query("name:nfc phone")
+				.queryForList();
+		products.forEach(System.out::println);
+	}
+
 }

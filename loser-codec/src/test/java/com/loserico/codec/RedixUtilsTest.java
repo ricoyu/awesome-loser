@@ -297,4 +297,38 @@ public class RedixUtilsTest {
 		System.out.println(hex);
 		System.out.println(binary);
 	}
+
+	@Test
+	public void testHex2Float() {
+		float floatValue = RedixUtils.hex2Float("C14E6666");
+		assertEquals(floatValue, -12.9, 0.01);
+	}
+
+	@Test
+	public void testFloat2Hex() {
+		String hex = RedixUtils.float2Hex(-12.9f);
+		assertEquals(hex, "C14E6666".toLowerCase());
+	}
+
+	@Test
+	public void test() {
+		String s = "001";
+		String s1 = RedixUtils.ascii2Hex(s); //303031
+		System.out.println(s1); //303031
+		System.out.println(RedixUtils.hex2Ascii(s1)); //001
+	}
+
+	@Test
+	public void testDecimal2Hex() {
+		String hex = RedixUtils.int2Hex(6);
+		System.out.println(hex);
+
+		System.out.println(RedixUtils.hex2Int("06"));
+	}
+
+	@Test
+	public void testHex2Binary() {
+		String binaryStr = RedixUtils.hex2BinaryStr("100D");
+		binaryStr.substring(binaryStr.length()-1);
+	}
 }

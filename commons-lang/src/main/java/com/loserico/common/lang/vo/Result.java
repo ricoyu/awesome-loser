@@ -1,7 +1,7 @@
 package com.loserico.common.lang.vo;
 
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
@@ -16,9 +16,9 @@ import java.util.Map;
  * @author Rico Yu  ricoyu520@gmail.com
  * @version 1.0
  */
-@Data
-@Slf4j
 public class Result {
+
+	private static final Logger log = LoggerFactory.getLogger(Result.class);
 	
 	/**
 	 * 请求接口状态码, 0表示成功
@@ -62,4 +62,42 @@ public class Result {
 		return this;
 	}
 
+	public Object getData() {
+		return this.data;
+	}
+	public String getCode() {
+		return code;
+	}
+
+	public void setCode(String code) {
+		this.code = code;
+	}
+
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
+	}
+
+	public Object getMessage() {
+		return message;
+	}
+
+	public void setMessage(Object message) {
+		this.message = message;
+	}
+
+	public void setData(Object data) {
+		this.data = data;
+	}
+
+	public Page getPage() {
+		return page;
+	}
+
+	public void setPage(Page page) {
+		this.page = page;
+	}
 }

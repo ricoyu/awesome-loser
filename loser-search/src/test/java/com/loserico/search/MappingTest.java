@@ -1,6 +1,8 @@
 package com.loserico.search;
 
+import com.loserico.search.builder.admin.Fields;
 import com.loserico.search.enums.Dynamic;
+import com.loserico.search.enums.FieldType;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 
@@ -10,8 +12,8 @@ import java.util.Map;
 import static com.loserico.json.jackson.JacksonUtils.toPrettyJson;
 import static com.loserico.search.enums.FieldType.KEYWORD;
 import static com.loserico.search.enums.FieldType.TEXT;
-import static org.assertj.core.api.Assertions.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertTrue;
 
 /**
  * <p>
@@ -92,5 +94,30 @@ public class MappingTest {
 		
 		String user = ElasticUtils.Query.byId("users", 1);
 		System.out.println(user);
+	}
+
+	@Test
+	public void testCreateIndexWithExplictMapping() {
+		boolean create = ElasticUtils.Admin.createIndex("my-index-000001")
+				.mapping()
+				.field("age", FieldType.INTEGER)
+				.field("email", KEYWORD)
+				.field("name", TEXT)
+				.thenCreate();
+		assertTrue(create);
+		Map<String, Object> mapping = ElasticUtils.Mappings.getMapping("my-index-000001");
+		System.out.println(toPrettyJson(mapping));
+	}
+
+	@Test
+	public void testAddfield2ExistMapping() {
+		boolean created = ElasticUtils.Mappings.putMapping("my-index-000001", Dynamic.TRUE)
+				.field(Fields.field("employee-id", KEYWORD)
+						.index(false))
+				.thenCreate();
+
+		assertTrue(created);
+		Map<String, Object> mapping = ElasticUtils.Mappings.getMapping("my-index-000001");
+		System.out.println(toPrettyJson(mapping));
 	}
 }

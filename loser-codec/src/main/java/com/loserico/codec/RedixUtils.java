@@ -24,6 +24,14 @@ public class RedixUtils {
     private static final String HEX_PREFIX = "0x";
 
     /**
+     * byte转16进制字符串
+     * @param b
+     * @return String
+     */
+    public static String byte2Hex(byte b) {
+        return String.format("%02x", b).toUpperCase();
+    }
+    /**
      * byte[]转16进制字符串
      *
      * @param data
@@ -319,6 +327,32 @@ public class RedixUtils {
     }
 
     /**
+     * int型转16进制, 不带0x前缀
+     * @param i
+     * @param hexLength 最终16进制字符串的长度, 不足的左侧补0
+     * @return
+     */
+    public static String int2Hex(Integer i, int hexLength) {
+        if (i == null) {
+            return null;
+        }
+
+        String hex = Integer.toHexString(i);
+        return padStartWithZeros(hex, hexLength);
+    }
+
+    /**
+     * float型转16进制, 不带0x前缀
+     *
+     * @param floatValue
+     * @return String
+     */
+    public static String float2Hex(float floatValue) {
+        int intBits = Float.floatToIntBits(floatValue);
+        return Integer.toHexString(intBits);
+    }
+
+    /**
      * 16进制字符串转整型
      *
      * @param hex
@@ -331,6 +365,19 @@ public class RedixUtils {
             hex = hex.substring(2);
         }
         return Integer.parseInt(hex, 16);
+    }
+
+    /**
+     * 16进制字符串转浮点型
+     *
+     * @param hex
+     * @return float
+     */
+    public static float hex2Float(String hex) {
+        hex = preCheck(hex);
+
+        int intBits = (int) Long.parseLong(hex, 16);
+        return Float.intBitsToFloat(intBits);
     }
 
     /**
@@ -385,12 +432,12 @@ public class RedixUtils {
      */
     private static String preCheck(String hex) {
         if (isBlank(hex)) {
-            throw new IllegalArgumentException("Can not be blank!");
+            throw new IllegalArgumentException("hex Can not be blank!");
         }
 
         //hex = hex.trim().toUpperCase();
         hex = StringUtils.trimAll(hex).toUpperCase();
-        if (hex.indexOf("0X") != -1) {
+        if (hex.toUpperCase().indexOf("0X") != -1) {
             hex = hex.substring(2);
         }
         return hex;
@@ -502,6 +549,11 @@ public class RedixUtils {
         return Float.intBitsToFloat(intBits);
     }
 
+    /**
+     * ascii编码的字符串转16进制字符串
+     * @param asciiString
+     * @return
+     */
     public static String ascii2Hex(String asciiString) {
         // 使用StringBuilder来构建最终的16进制字符串
         StringBuilder hexString = new StringBuilder();
@@ -529,5 +581,29 @@ public class RedixUtils {
     public static byte[] ascii2Bytes(String ascii) {
         // 使用字符串的getBytes方法直接获取其字节表示
         return ascii.getBytes();
+    }
+
+    /**
+     * 在字符串str的前面追加"0"，直到其长度等于len
+     *
+     * @param str 需要处理的字符串
+     * @param len 目标长度
+     * @return 补齐后的字符串
+     */
+    private static String padStartWithZeros(String str, int len) {
+        if (str == null) {
+            throw new IllegalArgumentException("The input string cannot be null");
+        }
+        if (len < 0) {
+            throw new IllegalArgumentException("The length cannot be negative");
+        }
+
+        StringBuilder sb = new StringBuilder();
+        while (sb.length() + str.length() < len) {
+            sb.append('0');
+        }
+        sb.append(str);
+
+        return sb.toString();
     }
 }

@@ -1,5 +1,6 @@
 package com.loserico.search;
 
+import com.loserico.json.jackson.JacksonUtils;
 import com.loserico.search.ElasticUtils.Query;
 import com.loserico.search.exception.UriQueryException;
 import com.loserico.search.pojo.Movie;
@@ -176,5 +177,45 @@ public class UriQueryTest {
 				.queryForList();
 		log.info("查询到{}条记录", movies.size());
 		assertEquals(5, movies.size());
+	}
+
+	@Test
+	public void testGeneralUriQuery() {
+		List<Movie> movies = ElasticUtils.Query.uriQuery("movies")
+				.query("2012")
+				.sort("year:desc")
+				.from(0)
+				.size(10)
+				.resultType(Movie.class) //FIXME _id目前没有设置到@DocId标注的字段上, POJO里得到的id是null
+				.queryForList();
+		for (Movie movie : movies) {
+			System.out.println(JacksonUtils.toJson(movie));
+		}
+	}
+
+	@Test
+	public void testExactValue() {
+		List<Object> products = Query.uriQuery("product")
+				.query("date:2024-05-27")
+				.queryForList();
+		products.forEach(System.out::println);
+	}
+
+	@Test
+	public void testQueryAllFields() {
+		List<Object> products = Query.uriQuery("product")
+				.query("2024-06-01")
+				.queryForList();
+		products.forEach(System.out::println);
+	}
+
+	@Test
+	public void testQuery4Page() {
+		List<Object> products = Query.uriQuery("product")
+				.from(0)
+				.size(2)
+				.sort("price:asc")
+				.queryForList();
+		products.forEach(System.out::println);
 	}
 }

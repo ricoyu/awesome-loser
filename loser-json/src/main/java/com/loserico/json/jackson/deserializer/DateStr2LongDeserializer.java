@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.loserico.common.lang.utils.DateUtils;
+import com.loserico.common.lang.utils.StringUtils;
 
 import java.io.IOException;
 import java.util.Date;
@@ -34,6 +35,10 @@ public class DateStr2LongDeserializer extends JsonDeserializer<Long> {
 		// Usually should just get string value:
 		if (curr == JsonToken.VALUE_STRING || curr == JsonToken.FIELD_NAME) {
 			final String source = p.getText();
+			boolean isNumber = StringUtils.isNumeric(source);
+			if (isNumber) {
+				return Long.parseLong(source);
+			}
 			Date date = DateUtils.parse(source);
 			if (date == null) {
 				return null;

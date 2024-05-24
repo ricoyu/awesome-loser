@@ -25,9 +25,14 @@ public class JedisPubSubTest {
 		
 		long count = JedisUtils.publish("test-channel", "你好");
 		System.out.println("收到消息的订阅者数量: " + count);
-		
-		JedisUtils.unsubscribe(subscribe, "test-channel");
-		System.out.println("取消订阅成功");
+
+        try {
+            Thread.currentThread().join();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        //JedisUtils.unsubscribe(subscribe, "test-channel");
+		//System.out.println("取消订阅成功");
 	}
 	
 	@SneakyThrows

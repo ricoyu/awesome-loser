@@ -2,6 +2,7 @@ package com.loserico.search.builder.query;
 
 import com.loserico.common.lang.resource.PropertyReader;
 import com.loserico.common.lang.utils.StringUtils;
+import com.loserico.json.jackson.JacksonUtils;
 import com.loserico.json.jsonpath.JsonPathUtils;
 import com.loserico.networking.utils.HttpUtils;
 import com.loserico.search.enums.Direction;
@@ -9,6 +10,7 @@ import com.loserico.search.exception.UriQueryException;
 import com.loserico.search.support.RestSupport;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.loserico.common.lang.utils.Assert.notEmpty;
@@ -383,7 +385,14 @@ public class ElasticUriQueryBuilder {
 			throw new UriQueryException(rootCause);
 		}
 		if (resultType != null) {
-			return JsonPathUtils.readListNode(responseJson, "$.hits.hits[*]._source", resultType);
+			//return JsonPathUtils.readListNode(responseJson, "$.hits.hits[*]._source", resultType);
+			List<String> sources = JsonPathUtils.readListNode(responseJson, "$.hits.hits[*]._source");
+			List<T> results = new ArrayList<>();
+			for (String source : sources) {
+				Object object = JacksonUtils.toObject(source, resultType);
+				results.add((T)object);
+			}
+			return results;
 		}
 		return (List<T>) JsonPathUtils.readListNode(responseJson, "$.hits.hits[*]._source");
 	}

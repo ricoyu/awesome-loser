@@ -1,7 +1,12 @@
 package com.loserico.search;
 
+import com.loserico.search.support.UpdateResult;
+import com.loserico.search.vo.Index;
 import org.junit.Test;
 
+import java.util.List;
+
+import static com.loserico.json.jackson.JacksonUtils.toJson;
 import static org.junit.Assert.assertTrue;
 
 public class IndexTest {
@@ -57,5 +62,23 @@ public class IndexTest {
                 .numberOfReplicas(3) //每个主分片3个副本
                 .thenCreate();
         assertTrue(created);
+    }
+
+    /**
+     * GET _cat/indices?v
+     */
+    @Test
+    public void testListIndices() {
+        List<String> indices = ElasticUtils.Admin.listIndexNames();
+        indices.forEach(System.out::println);
+
+        List<Index> indices2 = ElasticUtils.Admin.listIndices();
+        indices2.forEach(System.out::println);
+    }
+
+    @Test
+    public void testUpdateIndex() {
+        UpdateResult updateResult = ElasticUtils.update("product", 2, "{\"name\": \"xiaomi nfc phone\", \"doc\": \"zhichi quangongneng nfc,shou ji zhong de jianjiji\", \"price\": 8999, \"tags\": [\"xingjiabi\", \"fashao\", \"gongjiaoka\"] }");
+        System.out.println(toJson(updateResult));
     }
 }

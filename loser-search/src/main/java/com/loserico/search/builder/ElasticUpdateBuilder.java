@@ -60,12 +60,24 @@ public class ElasticUpdateBuilder {
 	 * @param id
 	 * @return ElasticUpdateBuilder
 	 */
+	public ElasticUpdateBuilder id(Integer id) {
+		Objects.requireNonNull(id, "id cannot be null!");
+		this.id = id.toString();
+		return this;
+	}
+
+	/**
+	 * 要更新的文档的ID
+	 *
+	 * @param id
+	 * @return ElasticUpdateBuilder
+	 */
 	public ElasticUpdateBuilder id(String id) {
 		Objects.requireNonNull(id, "id cannot be null!");
 		this.id = id;
 		return this;
 	}
-	
+
 	/**
 	 * 更新文档的一部分, 文档不存在时创建文档
 	 *
