@@ -255,7 +255,32 @@ public class ElasticAggsTest {
 		
 		log.info(toPrettyJson(resultMap));
 	}
-	
+
+	/**
+	 * POST kibana_sample_data_flights/_search
+	 * {
+	 *   "size": 0,
+	 *   "aggs": {
+	 *     "flight_dest": {
+	 *       "terms": {
+	 *         "field": "DestCountry",
+	 *         "size": 2
+	 *       },
+	 *       "aggs": {
+	 *         "average_price": {
+	 *           "avg": {
+	 *             "field": "AvgTicketPrice"
+	 *           }
+	 *         },
+	 *         "weather": {
+	 *           "terms": {
+	 *             "field": "DestWeather"
+	 *           }
+	 *         }
+	 *       }
+	 *     }
+	 *   }
+	 */
 	@Test
 	public void testDestCountrythenAvgThenWeather() {
 		List<Map<String, Object>> resultMap = Aggs.terms("kibana_sample_data_flights")
@@ -274,5 +299,96 @@ public class ElasticAggsTest {
 				.subAggregation(SubAggregations.terms("weather", "DestWeather").size(5))
 				.get();
 		System.out.println(toPrettyJson(resultMap));
+	}
+
+	@Test
+	public void testSubAgg2() {
+		List<Map<String, Object>> aggResult = Aggs.terms("kibana_sample_data_flights")
+				.of("flight_dest", "DestCountry")
+				.size(2)
+				.subAggregation(avg("average_price", "AvgTicketPrice"))
+				.subAggregation(SubAggregations.terms("weather", "DestWeather").size(5))
+				.get();
+
+		System.out.println(toPrettyJson(aggResult));
+	}
+
+	/**
+	 * POST kibana_sample_data_flights/_search
+	 * {
+	 *   "size": 0,
+	 *   "aggs": {
+	 *     "flight_dest": {
+	 *       "terms": {
+	 *         "field": "DestCountry",
+	 *         "size": 3
+	 *       },
+	 *       "aggs": {
+	 *         "average_price": {
+	 *           "avg": {
+	 *             "field": "AvgTicketPrice"
+	 *           }
+	 *         },
+	 *         "max_price":{
+	 *           "max": {
+	 *             "field": "AvgTicketPrice"
+	 *           }
+	 *         },
+	 *         "min_price":{
+	 *           "min": {
+	 *             "field": "AvgTicketPrice"
+	 *           }
+	 *         }
+	 *       }
+	 *     }
+	 *   }
+	 * }
+	 */
+	@Test
+	public void testSubAgg3() {
+		List<Map<String, Object>> results = Aggs.terms("kibana_sample_data_flights").of("flight_dest", "DestCountry").size(3)
+				.subAggregation(avg("average_price", "AvgTicketPrice"))
+				.subAggregation(SubAggregations.max("max_price", "AvgTicketPrice"))
+				.subAggregation(SubAggregations.min("min_price", "AvgTicketPrice"))
+				.get();
+
+		System.out.println(toPrettyJson(results));
+	}
+
+	/**
+	 * POST kibana_sample_data_flights/_search
+	 * {
+	 *   "size": 0,
+	 *   "aggs": {
+	 *     "flight_dest": {
+	 *       "terms": {
+	 *         "field": "DestCountry",
+	 *         "size": 2
+	 *       },
+	 *       "aggs": {
+	 *         "average_price": {
+	 *           "avg": {
+	 *             "field": "AvgTicketPrice"
+	 *           }
+	 *         },
+	 *         "weather": {
+	 *           "terms": {
+	 *             "field": "DestWeather",
+	 *             "size": 5
+	 *           }
+	 *         }
+	 *       }
+	 *     }
+	 *   }
+	 * }
+	 */
+	@Test
+	public void testBucketMixMetric() {
+		List<Map<String, Object>> results = Aggs.terms("kibana_sample_data_flights")
+				.of("flight_dest", "DestCountry").size(2)
+				.subAggregation(avg("average_price", "AvgTicketPrice"))
+				.subAggregation(SubAggregations.terms("weather", "DestWeather").size(5))
+				.get();
+		System.out.println(toPrettyJson(results));
 	}
 }

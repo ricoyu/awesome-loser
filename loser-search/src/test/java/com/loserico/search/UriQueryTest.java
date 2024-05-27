@@ -1,6 +1,5 @@
 package com.loserico.search;
 
-import com.loserico.json.jackson.JacksonUtils;
 import com.loserico.search.ElasticUtils.Query;
 import com.loserico.search.exception.UriQueryException;
 import com.loserico.search.pojo.Movie;
@@ -9,8 +8,9 @@ import org.junit.Test;
 
 import java.util.List;
 
+import static com.loserico.json.jackson.JacksonUtils.toJson;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * <p>
@@ -189,7 +189,7 @@ public class UriQueryTest {
 				.resultType(Movie.class) //FIXME _id目前没有设置到@DocId标注的字段上, POJO里得到的id是null
 				.queryForList();
 		for (Movie movie : movies) {
-			System.out.println(JacksonUtils.toJson(movie));
+			System.out.println(toJson(movie));
 		}
 	}
 
@@ -217,5 +217,37 @@ public class UriQueryTest {
 				.sort("price:asc")
 				.queryForList();
 		products.forEach(System.out::println);
+	}
+
+	@Test
+	public void testUriYearGreateThan() {
+		List<Movie> movies = Query.uriQuery("movies")
+				.query("year:>=1980")
+				.sort("year:desc")
+				.resultType(Movie.class)
+				.queryForList();
+
+		System.out.println(toJson(movies));
+		System.out.println(movies.size());
+		//System.out.println(movies.size());
+		//for (Movie movie : movies) {
+		//	System.out.println(movie.getYear());
+		//}
+	}
+
+	@Test
+	public void testQueryStringYearGreateThan() {
+		List<String> movies = ElasticUtils.Query.queryString("movies")
+				.query("year:>1980")
+				.sort("year:asc")
+				.queryForList();
+		for (String movie : movies) {
+			System.out.println(movie);
+		}
+		System.out.println(movies.size());
+		//System.out.println(movies.size());
+		//for (Movie movie : movies) {
+		//	System.out.println(movie.getYear());
+		//}
 	}
 }

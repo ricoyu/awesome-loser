@@ -23,7 +23,15 @@ public final class SubAggregations {
 	public static ElasticAvgSubAggregation avg(String name, String field) {
 		return new ElasticAvgSubAggregation(name, field);
 	}
-	
+
+	public static ElasticMaxSubAggregation max(String name, String field) {
+		return new ElasticMaxSubAggregation(name, field);
+	}
+
+	public static ElasticMinSubAggregation min(String name, String field) {
+		return new ElasticMinSubAggregation(name, field);
+	}
+
 	public static ElasticStatsSubAggregation stats(String name, String field) {
 		return new ElasticStatsSubAggregation(name, field);
 	}

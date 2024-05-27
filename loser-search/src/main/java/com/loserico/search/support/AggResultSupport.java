@@ -282,6 +282,12 @@ public final class AggResultSupport {
 		if (aggregation instanceof InternalStats) {
 			return (T) termsResult((InternalStats) aggregation);
 		}
+		if (aggregation instanceof  InternalMax) {
+			return (T)maxResult(aggregation);
+		}
+		if (aggregation instanceof InternalMin) {
+			return (T)minResult(aggregation);
+		}
 		
 		return null;
 	}
@@ -384,6 +390,13 @@ public final class AggResultSupport {
 		return null;
 	}
 	
+	public static Double maxResult(Aggregation aggregation) {
+		if (aggregation == null) {
+			return null;
+		}
+		return  ((InternalMax) aggregation).getValue();
+	}
+
 	public static Double maxResult(Aggregations aggregations) {
 		if (aggregations == null) {
 			return null;
@@ -391,10 +404,10 @@ public final class AggResultSupport {
 		for (Aggregation aggregation : aggregations) {
 			return ((InternalMax) aggregation).getValue();
 		}
-		
+
 		return null;
 	}
-	
+
 	public static StatsAggResult statsResult(Aggregations aggregations) {
 		if (aggregations == null) {
 			return null;
@@ -418,6 +431,13 @@ public final class AggResultSupport {
 		return null;
 	}
 	
+	public static Double minResult(Aggregation aggregation) {
+		if (aggregation == null) {
+			return null;
+		}
+		return ((InternalMin) aggregation).getValue();
+	}
+
 	public static Double minResult(Aggregations aggregations) {
 		if (aggregations == null) {
 			return null;
@@ -425,10 +445,10 @@ public final class AggResultSupport {
 		for (Aggregation aggregation : aggregations) {
 			return ((InternalMin) aggregation).getValue();
 		}
-		
+
 		return null;
 	}
-	
+
 	public static Double sumResult(Aggregations aggregations) {
 		if (aggregations == null) {
 			return null;

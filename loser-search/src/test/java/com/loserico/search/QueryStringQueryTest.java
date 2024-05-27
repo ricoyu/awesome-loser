@@ -1,10 +1,11 @@
 package com.loserico.search;
 
+import com.loserico.search.pojo.Movie;
 import org.junit.Test;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * <p>
@@ -99,4 +100,29 @@ public class QueryStringQueryTest {
 		products.forEach(System.out::println);
 	}
 
+	@Test
+	public void testGroupQuery2() {
+		//List<Movie> movies = ElasticUtils.Query.queryString("movies")
+				//.query("title:(Beautiful Mind)")
+				//.query("title:(Beautiful AND Mind)")
+				//.query("title:(Beautiful NOT Mind)")
+				//.query("year:>=1980")
+				//.includeSources("year")
+				//.sort("year:asc")
+				//.resultType(Movie.class)
+				//.queryForList();
+		List<Movie> movies1 = ElasticUtils.Query.uriQuery("movies")
+				.query("year:>=1980")
+				.sort("year:asc")
+				.resultType(Movie.class)
+				.queryForList();
+		//assertThat(movies.size()).isEqualTo(movies1.size());
+		for (Movie movie : movies1) {
+			System.out.println(movie.getYear());
+		}
+		//System.out.println(movies.size());
+		//for (Movie movie : movies) {
+		//	System.out.println(movie.getYear());
+		//}
+	}
 }

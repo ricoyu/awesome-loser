@@ -14,7 +14,7 @@ import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramInterval;
-import org.elasticsearch.search.aggregations.bucket.histogram.LongBounds;
+import org.elasticsearch.search.aggregations.bucket.histogram.ExtendedBounds;
 
 import java.time.ZoneId;
 import java.util.Map;
@@ -303,7 +303,7 @@ public class ElasticDateHistogramAggregationBuilder extends AbstractAggregationB
 		}
 		
 		if (minBound != null && maxBound != null) {
-			aggregationBuilder.extendedBounds(new LongBounds(minBound, maxBound));
+			aggregationBuilder.extendedBounds(new ExtendedBounds(minBound, maxBound));
 		}
 		
 		if (isNotBlank(format)) {

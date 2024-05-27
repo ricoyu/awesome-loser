@@ -7,7 +7,7 @@ import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramInterval;
-import org.elasticsearch.search.aggregations.bucket.histogram.LongBounds;
+import org.elasticsearch.search.aggregations.bucket.histogram.ExtendedBounds;
 
 import java.time.ZoneId;
 import java.util.Objects;
@@ -290,7 +290,7 @@ public class ElasticDateHistogramSubAggregation extends SubAggregation implement
 		}
 		
 		if (minDocCount != null && maxBound != null) {
-			aggregationBuilder.extendedBounds(new LongBounds(minBound, maxBound));
+			aggregationBuilder.extendedBounds(new ExtendedBounds(minBound, maxBound));
 		}
 		if (isNotBlank(format)) {
 			aggregationBuilder.format(format);

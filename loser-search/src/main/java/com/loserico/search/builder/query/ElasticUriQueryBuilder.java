@@ -140,7 +140,7 @@ public class ElasticUriQueryBuilder {
 	 * <li/>Mind会在所有字段上查询  GET movies/_search?q=title:Beautiful OR Mind
 	 * <li/>Pahrase Query(引号引起来的) GET movies/_search?q=title:"Beautiful Mind"  表示Beautiful Mind要同时出现并且按照规定的顺序
 	 * <li/>                          GET movies/_search?q=title:Beautiful AND Mind
-	 * <li/>分组        GET movies/_search?q=title:(Beautiful Mind)
+	 * <li/>分组        GET movies/_search?q=title:(Beautiful Mind)      包含Beautiful 或者 Mind, 不要怀疑, 验证过了, 确实是OR的关系
 	 * <li/>           GET movies/_search?q=title:(Beautiful NOT Mind)  包含Beautiful 不包含 Mind
 	 * <li/>           GET movies/_search?q=title:(Beautiful %2BMind)   必须包含Mind, %2B是 + 号的转义字符
 	 * <li/>范围查询    GET movies/_search?q=year:>1980
@@ -157,6 +157,7 @@ public class ElasticUriQueryBuilder {
 			q = "q=" + q;
 		}
 		this.q = q;
+		//this.q = UrlUtils.encodeUrl(q);
 		return this;
 	}
 	
@@ -372,7 +373,7 @@ public class ElasticUriQueryBuilder {
 		}
 		String queryString = buildQueryString();
 		log.info("Query String Query: {}", queryString);
-		
+
 		String responseJson = null;
 		if (isNotBlank(username) && isNotBlank(password)) {
 			responseJson = HttpUtils.get(queryString).basicAuth(username, password).request();
