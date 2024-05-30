@@ -1028,7 +1028,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	 */
 	@SuppressWarnings("rawtypes")
 	@Override
-	public <T> T namedSqlQuerySingleResult(String queryName, String paramName, Object paramValue, Class<T> clazz) {
+	public <T> T query4One(String queryName, String paramName, Object paramValue, Class<T> clazz) {
 		//如果参数值是List类型，那么该SQL语句认为是IN查询，如果List的size则为0，就不需要查询了，直接返回空的ArrayList
 		if (paramValue instanceof List) {
 			if (((List) paramValue).size() == 0) {
@@ -1039,7 +1039,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		if (isNotBlank(paramName)) {
 			params.put(paramName, paramValue);
 		}
-		List<T> results = namedSqlQuery(queryName, params, clazz, null);
+		List<T> results = query4Page(queryName, params, clazz, null);
 		if (results.isEmpty()) {
 			return null;
 		}
@@ -1057,8 +1057,8 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	 * @return T
 	 */
 	@Override
-	public <T> T namedSqlQuerySingleResult(String queryName, Map<String, Object> params, Class<T> clazz) {
-		List<T> results = namedSqlQuery(queryName, params, clazz, null);
+	public <T> T query4One(String queryName, Map<String, Object> params, Class<T> clazz) {
+		List<T> results = query4Page(queryName, params, clazz, null);
 		if (results.isEmpty()) {
 			return null;
 		}
@@ -1067,8 +1067,8 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	}
 	
 	@Override
-	public <T> T namedSqlQuerySingleResult(String queryName, Class<T> clazz) {
-		List<T> results = namedSqlQuery(queryName, clazz);
+	public <T> T query4One(String queryName, Class<T> clazz) {
+		List<T> results = query4List(queryName, clazz);
 		if (results.isEmpty()) {
 			return null;
 		}
@@ -1078,7 +1078,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@SuppressWarnings({"unchecked", "deprecation"})
 	@Override
-	public <T> List<T> namedSqlQuery(String queryName, Map<String, Object> params, Class<T> clazz, Page page) {
+	public <T> List<T> query4Page(String queryName, Map<String, Object> params, Class<T> clazz, Page page) {
 		org.hibernate.query.Query<T> query = em().createNamedQuery(queryName)
 				.unwrap(org.hibernate.query.Query.class);
 		String rawQuery = query.getQueryString();
@@ -1207,8 +1207,8 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@SuppressWarnings("rawtypes")
 	@Override
-	public <T> List<T> namedSqlQuery(String queryName, String paramName, Object paramValue, Class<T> clazz,
-	                                 Page page) {
+	public <T> List<T> query4Page(String queryName, String paramName, Object paramValue, Class<T> clazz,
+								  Page page) {
 		//如果参数值是List类型，那么该SQL语句认为是IN查询，如果List的size则为0，就不需要查询了，直接返回空的ArrayList
 		if (paramValue instanceof List) {
 			if (((List) paramValue).size() == 0) {
@@ -1219,22 +1219,22 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		if (StringUtils.isNotBlank(paramName)) {
 			params.put(paramName, paramValue);
 		}
-		return namedSqlQuery(queryName, params, clazz, page);
+		return query4Page(queryName, params, clazz, page);
 	}
 	
 	@Override
-	public <T> List<T> namedSqlQuery(String queryName, Class<T> clazz, Page page) {
-		return namedSqlQuery(queryName, null, null, clazz, page);
+	public <T> List<T> query4Page(String queryName, Class<T> clazz, Page page) {
+		return query4Page(queryName, null, null, clazz, page);
 	}
 	
 	@Override
-	public <T> List<T> namedSqlQuery(String queryName, Map<String, Object> params, Class<T> clazz) {
-		return namedSqlQuery(queryName, params, clazz, null);
+	public <T> List<T> query4List(String queryName, Map<String, Object> params, Class<T> clazz) {
+		return query4Page(queryName, params, clazz, null);
 	}
 	
 	@SuppressWarnings("rawtypes")
 	@Override
-	public <T> List<T> namedSqlQuery(String queryName, String paramName, Object paramValue, Class<T> clazz) {
+	public <T> List<T> query4List(String queryName, String paramName, Object paramValue, Class<T> clazz) {
 		//如果参数值是List类型，那么该SQL语句认为是IN查询，如果List的斯则为0，就不需要查询了，直接返回空的ArrayList
 		if (paramValue instanceof List) {
 			if (((List) paramValue).size() == 0) {
@@ -1245,30 +1245,30 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		if (StringUtils.isNotBlank(paramName)) {
 			params.put(paramName, paramValue);
 		}
-		return namedSqlQuery(queryName, params, clazz);
+		return query4List(queryName, params, clazz);
 	}
 	
 	@Override
-	public <T> List<T> namedSqlQuery(String queryName, Class<T> clazz) {
-		return namedSqlQuery(queryName, null, clazz);
+	public <T> List<T> query4List(String queryName, Class<T> clazz) {
+		return query4List(queryName, null, clazz);
 	}
 	
 	@Override
-	public List<?> namedRawSqlQuery(String queryName) {
-		return namedRawSqlQuery(queryName, null, null);
+	public List<?> query4RawList(String queryName) {
+		return query4RawList(queryName, null, null);
 	}
 	
 	@Override
-	public List<?> namedRawSqlQuery(String queryName, String propertyName, Object value) {
+	public List<?> query4RawList(String queryName, String propertyName, Object value) {
 		Map<String, Object> params = new HashMap<String, Object>();
 		if (StringUtils.isNotBlank(propertyName)) {
 			params.put(propertyName, value);
 		}
-		return namedRawSqlQuery(queryName, params);
+		return query4RawList(queryName, params);
 	}
 	
 	@Override
-	public <T> List<T> namedRawSqlQuery(String queryName, Map<String, Object> params) {
+	public <T> List<T> query4RawList(String queryName, Map<String, Object> params) {
 		org.hibernate.query.Query<?> query = em()
 				.createNamedQuery(queryName)
 				.unwrap(org.hibernate.query.Query.class);
@@ -1329,7 +1329,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	}
 	
 	public int namedCountQuery(String queryName, Map<String, Object> params) {
-		List<?> result = namedRawSqlQuery(queryName, params);
+		List<?> result = query4RawList(queryName, params);
 		if (result.isEmpty()) {
 			return 0;
 		}
@@ -1398,37 +1398,37 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	}
 	
 	@Override
-	public <T> T namedScalarQuery(String queryName, Map<String, Object> params, Class<T> type) {
-		Object result = namedRawSqlQuerySingleResult(queryName, params);
+	public <T> T query4Primitive(String queryName, Map<String, Object> params, Class<T> type) {
+		Object result = query4One(queryName, params);
 		return ValueHandlerFactory.convert(result, type);
 	}
 	
 	@Override
-	public <T> T namedScalarQuery(String queryName, String paramName, Object paramValue, Class<T> type) {
+	public <T> T query4Primitive(String queryName, String paramName, Object paramValue, Class<T> type) {
 		Map<String, Object> params = new HashMap<>();
 		params.put(paramName, paramValue);
-		Object result = namedRawSqlQuerySingleResult(queryName, params);
+		Object result = query4One(queryName, params);
 		return ValueHandlerFactory.convert(result, type);
 	}
 	
 	@Override
-	public <T> List<T> namedScalarListQuery(String queryName, String paramName, Object paramValue, Class<T> type) {
+	public <T> List<T> query4PrimitiveList(String queryName, String paramName, Object paramValue, Class<T> type) {
 		Map<String, Object> params = new HashMap<>();
 		params.put(paramName, paramValue);
-		return namedScalarListQuery(queryName, params, type);
+		return query4PrimitiveList(queryName, params, type);
 	}
 	
 	@Override
-	public <T> List<T> namedScalarListQuery(String queryName, Map<String, Object> params, Class<T> type) {
-		return namedRawSqlQuery(queryName, params).stream()
+	public <T> List<T> query4PrimitiveList(String queryName, Map<String, Object> params, Class<T> type) {
+		return query4RawList(queryName, params).stream()
 				.map(result -> ValueHandlerFactory.convert(result, type))
 				.collect(toList());
 	}
 	
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	@Override
-	public List namedScalarListQuery(String queryName, Map<String, Object> params, Class... types) {
-		return (List) namedRawSqlQuery(queryName, params).stream()
+	public List query4PrimitiveList(String queryName, Map<String, Object> params, Class... types) {
+		return (List) query4RawList(queryName, params).stream()
 				.map((results) -> {
 					//results对应的是一行数据，它是Object[]类型的
 					Object[] objects = (Object[]) results;
@@ -1442,8 +1442,8 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	@Override
-	public List<?> namedScalarListQuery(String queryName, Class... types) {
-		return (List) namedRawSqlQuery(queryName, null).stream()
+	public List<?> query4PrimitiveList(String queryName, Class... types) {
+		return (List) query4RawList(queryName, null).stream()
 				.map((results) -> {
 					//results对应的是一行数据，它是Object[]类型的
 					Object[] objects = (Object[]) results;
@@ -1457,8 +1457,8 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	@Override
-	public <T> List<T> namedScalarListQuery(String queryName, Class<T> type) {
-		return (List) namedRawSqlQuery(queryName, null).stream()
+	public <T> List<T> query4PrimitiveList(String queryName, Class<T> type) {
+		return (List) query4RawList(queryName, null).stream()
 				.map((result) -> ValueHandlerFactory.convert(result, type))
 				.collect(toList());
 	}
@@ -1767,33 +1767,33 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	}
 	
 	@Override
-	public Object namedRawSqlQuerySingleResult(String queryName, Map<String, Object> params) {
-		List<?> results = namedRawSqlQuery(queryName, params);
+	public Object query4One(String queryName, Map<String, Object> params) {
+		List<?> results = query4RawList(queryName, params);
 		return results.isEmpty() ? null : results.get(0);
 	}
 	
 	@Override
-	public Object namedRawSqlQuerySingleResult(String queryName, String paramName, Object paramValue) {
+	public Object query4One(String queryName, String paramName, Object paramValue) {
 		Map<String, Object> params = new HashMap<>();
 		if (!isBlank(paramName)) {
 			params.put(paramName, paramValue);
 		}
-		return namedRawSqlQuerySingleResult(queryName, params);
+		return query4One(queryName, params);
 	}
 	
 	@Override
-	public Object namedRawSqlQuerySingleResult(String queryName) {
-		List<?> results = namedRawSqlQuery(queryName, null);
+	public Object query4One(String queryName) {
+		List<?> results = query4RawList(queryName, null);
 		return results.isEmpty() ? null : results.get(0);
 	}
 	
 	@Override
-	public <T> T namedRawSqlQuerySingleResult(String queryName, String paramName, Object paramValue, Class<T> type) {
+	public <T> T query4PrimitiveOne(String queryName, String paramName, Object paramValue, Class<T> type) {
 		Map<String, Object> params = new HashMap<>();
 		if (!isBlank(paramName)) {
 			params.put(paramName, paramValue);
 		}
-		List<?> results = namedRawSqlQuery(queryName, params);
+		List<?> results = query4RawList(queryName, params);
 		Object result = results.isEmpty() ? null : results.get(0);
 		if (result == null) {
 			if (type.isPrimitive()) {
