@@ -3,14 +3,7 @@ package com.loserico.json;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.BeanDescription;
-import com.fasterxml.jackson.databind.DeserializationConfig;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.MapperFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.deser.BeanDeserializerModifier;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -19,11 +12,7 @@ import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import com.loserico.common.lang.resource.PropertyReader;
 import com.loserico.common.lang.vo.Page;
 import com.loserico.common.lang.vo.Result;
-import com.loserico.json.jackson.deserializer.DateStr2LongDeserializer;
-import com.loserico.json.jackson.deserializer.EnumDeserializer;
-import com.loserico.json.jackson.deserializer.LocalDateDeserializer;
-import com.loserico.json.jackson.deserializer.LocalDateTimeDeserializer;
-import com.loserico.json.jackson.deserializer.PageDeserializer;
+import com.loserico.json.jackson.deserializer.*;
 import com.loserico.json.jackson.serializer.LocalDateTimeSerializer;
 import com.loserico.json.jackson.serializer.ResultSerializer;
 
@@ -36,6 +25,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.SignStyle;
 import java.time.temporal.ChronoField;
+import java.util.Date;
 import java.util.Set;
 
 import static java.time.format.DateTimeFormatter.ofPattern;
@@ -135,6 +125,7 @@ public class ObjectMapperDecorator {
 		javaTimeModule.addSerializer(LocalDate.class, new com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer(ofPattern("yyyy-MM-dd")));
 		//javaTimeModule.addDeserializer(LocalDate.class, new com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer(ofPattern("yyyy-MM-dd")));
 		javaTimeModule.addDeserializer(LocalDate.class, new LocalDateDeserializer());
+		javaTimeModule.addDeserializer(Date.class, new DateDeserializer());
 		
 		javaTimeModule.addSerializer(LocalTime.class, new com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer(ofPattern("HH:mm:ss")));
 		javaTimeModule.addDeserializer(LocalTime.class, new com.fasterxml.jackson.datatype.jsr310.deser.LocalTimeDeserializer(ofPattern("HH:mm:ss")));
@@ -173,7 +164,9 @@ public class ObjectMapperDecorator {
 		JavaTimeModule module = new JavaTimeModule();
 		module.addSerializer(LocalDate.class, new com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer(ofPattern("yyyy-MM-dd")));
 		module.addDeserializer(LocalDate.class, new LocalDateDeserializer());
-		
+
+		module.addDeserializer(Date.class, new DateDeserializer());
+
 		module.addSerializer(LocalDateTime.class, new LocalDateTimeSerializer());
 		module.addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer(epochMilisFormatter));
 		
