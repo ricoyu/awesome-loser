@@ -270,7 +270,14 @@ public class JacksonUtilsTest {
 		JsonNode jsonNode = JacksonUtils.readTree(json);
 	}
 	
-	
+	@Test
+	public void testToList() {
+		String equipments = IOUtils.readClassPathFileAsString("equipment.json");
+		List<Equipment> equipmentList = JacksonUtils.toList(equipments, Equipment.class);
+		for (Equipment equipment : equipmentList) {
+			System.out.println(equipment.getCreatedStamp());
+		}
+	}
 	@Data
 	private static class Event implements Serializable {
 		
