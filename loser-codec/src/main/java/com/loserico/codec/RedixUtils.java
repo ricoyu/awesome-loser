@@ -371,9 +371,10 @@ public class RedixUtils {
      * 16进制字符串转浮点型
      *
      * @param hex
+     * @param scale 保留小数点后几位
      * @return float
      */
-    public static float hex2Float(String hex) {
+    public static float hex2Float(String hex, int scale) {
         hex = preCheck(hex);
 
         int intBits = (int) Long.parseLong(hex, 16);

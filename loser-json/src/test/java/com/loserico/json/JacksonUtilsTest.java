@@ -269,6 +269,16 @@ public class JacksonUtilsTest {
 		String json = IOUtils.readFileAsString("C:\\Users\\ricoy\\Documents\\ids-event-mqtt.json");
 		JsonNode jsonNode = JacksonUtils.readTree(json);
 	}
+
+	@Test
+	public void testToList() {
+		String equipments = IOUtils.readClassPathFileAsString("equipment.json");
+		List<Equipment> equipmentList = JacksonUtils.toList(equipments, Equipment.class);
+		for (Equipment equipment : equipmentList) {
+			System.out.println(equipment.getCreatedStamp());
+		}
+
+	}
 	
 	
 	@Data

@@ -300,7 +300,7 @@ public class RedixUtilsTest {
 
 	@Test
 	public void testHex2Float() {
-		float floatValue = RedixUtils.hex2Float("C14E6666");
+		float floatValue = RedixUtils.hex2Float("00001111", 2);
 		assertEquals(floatValue, -12.9, 0.01);
 	}
 
