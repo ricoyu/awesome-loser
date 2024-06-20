@@ -2,16 +2,11 @@ package com.loserico.security.filter;
 
 import com.loserico.security.http.XSSRequestWrapper;
 import com.loserico.security.utils.XSSUtils;
+import jakarta.servlet.*;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;

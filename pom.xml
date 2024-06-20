@@ -40,7 +40,7 @@
 
         <springframework.version>6.1.8</springframework.version>
 
-        <hibernate.version>6.5.2.Final</hibernate.version>
+        <hibernate.version>5.4.8.Final</hibernate.version>
 
         <mysql-connector-java.version>5.1.48</mysql-connector-java.version>
 
@@ -232,7 +232,7 @@
             <dependency>
                 <groupId>org.springframework.security</groupId>
                 <artifactId>spring-security-web</artifactId>
-                <version>5.1.8.RELEASE</version>
+                <version>6.1.8</version>
             </dependency>
             <dependency>
                 <groupId>javax.annotation</groupId>

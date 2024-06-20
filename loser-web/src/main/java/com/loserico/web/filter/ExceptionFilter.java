@@ -3,14 +3,10 @@ package com.loserico.web.filter;
 import com.loserico.common.lang.context.ThreadContext;
 import com.loserico.common.lang.vo.Results;
 import com.loserico.web.utils.RestUtils;
+import jakarta.servlet.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import java.io.IOException;
 
 import static com.loserico.common.lang.errors.ErrorTypes.INTERNAL_SERVER_ERROR;

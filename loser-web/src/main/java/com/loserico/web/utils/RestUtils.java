@@ -3,6 +3,9 @@ package com.loserico.web.utils;
 import com.loserico.common.lang.utils.IOUtils;
 import com.loserico.json.jackson.JacksonUtils;
 import com.loserico.web.exception.DownloadException;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -11,9 +14,6 @@ import org.springframework.http.MediaType;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -56,7 +56,7 @@ public final class RestUtils {
 	 */
 	@SneakyThrows
 	public static void writeJson(ServletResponse response, HttpStatus httpStatus, Object result) {
-		HttpServletResponse httpServletResponse = (HttpServletResponse)response;
+		HttpServletResponse httpServletResponse = (HttpServletResponse) response;
 		CORS.builder().allowAll().build(httpServletResponse);
 		httpServletResponse.setStatus(httpStatus.value());
 		httpServletResponse.setContentType(MediaType.APPLICATION_JSON_VALUE);
