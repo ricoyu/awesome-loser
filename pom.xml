@@ -5,7 +5,7 @@
     <groupId>com.loserico</groupId>
     <artifactId>awesome-loser</artifactId>
     <packaging>pom</packaging>
-    <version>4.12.11</version>
+    <version>17.0.1</version>
     <name>Awesome Loser</name>
     <url>http://maven.apache.org</url>
 
@@ -24,7 +24,6 @@
         <module>loser-workbook</module>
         <module>loser-networking</module>
         <module>loser-security</module>
-        <module>loser-mongo</module>
         <module>loser-token-parser</module>
         <module>loser-netty</module>
         <module>loser-search</module>
@@ -37,11 +36,11 @@
 
     <properties>
         <encoding>UTF-8</encoding>
-        <jdk.version>1.8</jdk.version>
+        <jdk.version>17</jdk.version>
 
-        <springframework.version>5.1.18.RELEASE</springframework.version>
+        <springframework.version>6.1.8</springframework.version>
 
-        <hibernate.version>5.4.8.Final</hibernate.version>
+        <hibernate.version>6.5.2.Final</hibernate.version>
 
         <mysql-connector-java.version>5.1.48</mysql-connector-java.version>
 
@@ -93,11 +92,11 @@
         <el-api.version>3.0.0</el-api.version>
         <javax.el.version>2.2.6</javax.el.version>
 
-        <maven-resources-plugin.version>2.7</maven-resources-plugin.version>
+        <maven-resources-plugin.version>3.2.0</maven-resources-plugin.version>
         <maven-source-plugin.version>2.4</maven-source-plugin.version>
-        <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
+        <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
         <maven-war-plugin.version>2.6</maven-war-plugin.version>
-        <maven-checkstyle-plugin.version>2.17</maven-checkstyle-plugin.version>
+        <!--<maven-checkstyle-plugin.version>2.17</maven-checkstyle-plugin.version>-->
     </properties>
 
     <dependencyManagement>
@@ -243,7 +242,7 @@
             <dependency>
                 <groupId>org.hibernate</groupId>
                 <artifactId>hibernate-entitymanager</artifactId>
-                <version>${hibernate.version}</version>
+                <version>5.6.15.Final</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.jboss.logging</groupId>
@@ -551,6 +550,12 @@
                 <scope>provided</scope>
             </dependency>
             <dependency>
+                <groupId>jakarta.servlet</groupId>
+                <artifactId>jakarta.servlet-api</artifactId>
+                <version>5.0.0</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
                 <groupId>javax.inject</groupId>
                 <artifactId>javax.inject</artifactId>
                 <version>${javax.inject.version}</version>
@@ -675,7 +680,7 @@
             <dependency>
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
-                <version>1.18.10</version>
+                <version>1.18.22</version>
             </dependency>
 
             <dependency>
@@ -734,42 +739,6 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <distributionManagement>
-        <repository>
-            <id>magic-store</id>
-            <name>magic-store</name>
-            <url>http://47.100.125.240:9091/repository/magic-store/</url>
-        </repository>
-    </distributionManagement>
-
-    <repositories>
-        <repository>
-            <id>magic-store</id>
-            <name>magic-store</name>
-            <url>http://47.100.125.240:9091/repository/maven-public/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-
-    <pluginRepositories>
-        <pluginRepository>
-            <id>magic-store</id>
-            <name>magic-store</name>
-            <url>http://47.100.125.240:9091/repository/maven-public</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </pluginRepository>
-    </pluginRepositories>
 
     <build>
         <resources>
