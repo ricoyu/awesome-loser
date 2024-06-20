@@ -300,7 +300,7 @@ public class RedixUtilsTest {
 
 	@Test
 	public void testHex2Float() {
-		float floatValue = RedixUtils.hex2Float("00001111", 2);
+		float floatValue = RedixUtils.hex2Float("00001111");
 		assertEquals(floatValue, -12.9, 0.01);
 	}
 
@@ -330,5 +330,12 @@ public class RedixUtilsTest {
 	public void testHex2Binary() {
 		String binaryStr = RedixUtils.hex2BinaryStr("100D");
 		binaryStr.substring(binaryStr.length()-1);
+	}
+
+	@Test
+	public void testasciiNum2Hex() {
+		String ascii="101";
+		String hex = RedixUtils.ascii2Hex(ascii);
+		System.out.println(hex);
 	}
 }

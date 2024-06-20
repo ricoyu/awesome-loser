@@ -279,6 +279,13 @@ public class JacksonUtilsTest {
 		}
 
 	}
+
+	@Test
+	public void testIsValidJson() {
+		String str = IOUtils.readClassPathFileAsString("childTask.json");
+		boolean valid = JacksonUtils.isValidJson(str);
+		System.out.println(valid);
+	}
 	
 	
 	@Data

@@ -374,7 +374,7 @@ public class RedixUtils {
      * @param scale 保留小数点后几位
      * @return float
      */
-    public static float hex2Float(String hex, int scale) {
+    public static float hex2Float(String hex) {
         hex = preCheck(hex);
 
         int intBits = (int) Long.parseLong(hex, 16);

@@ -35,7 +35,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
  */
 public final class JacksonUtils {
 	
-	private static final Logger logger = LoggerFactory.getLogger(JacksonUtils.class);
+	private static final Logger log = LoggerFactory.getLogger(JacksonUtils.class);
 	
 	private static ObjectMapper objectMapper = null;
 	
@@ -60,8 +60,8 @@ public final class JacksonUtils {
 		try {
 			return objectMapper.readValue(json, clazz);
 		} catch (IOException e) {
-			logger.error("将JSON串\n{}\n转成{}失败", json, clazz.getName());
-			logger.error(e.getMessage(), e);
+			log.error("将JSON串\n{}\n转成{}失败", json, clazz.getName());
+			log.error(e.getMessage(), e);
 			throw new JacksonException(e);
 		}
 	}
@@ -70,7 +70,7 @@ public final class JacksonUtils {
 		try {
 			return objectMapper.readValue(src, clazz);
 		} catch (IOException e) {
-			logger.error(e.getMessage(), e);
+			log.error(e.getMessage(), e);
 			throw new JacksonException(e);
 		}
 	}
@@ -102,8 +102,8 @@ public final class JacksonUtils {
 			return objectMapper.readValue(json, new TypeReference<Map<String, T>>() {
 			});
 		} catch (IOException e) {
-			logger.error("将JSON串\n{}\n转成Map失败", json);
-			logger.error(e.getMessage(), e);
+			log.error("将JSON串\n{}\n转成Map失败", json);
+			log.error(e.getMessage(), e);
 			throw new JacksonException(e);
 		}
 	}
@@ -135,8 +135,8 @@ public final class JacksonUtils {
 			return objectMapper.readValue(json, new TypeReference<Map<K, V>>() {
 			});
 		} catch (IOException e) {
-			logger.error("将JSON串\n{}\n转成Map失败", json);
-			logger.error(e.getMessage(), e);
+			log.error("将JSON串\n{}\n转成Map失败", json);
+			log.error(e.getMessage(), e);
 			throw new JacksonException(e);
 		}
 	}
@@ -150,7 +150,7 @@ public final class JacksonUtils {
 		try {
 			return objectMapper.readValue(jsonArray, javaType);
 		} catch (IOException e) {
-			logger.error("Parse json array \n{} \n to List of type {} failed", jsonArray, clazz, e);
+			log.error("Parse json array \n{} \n to List of type {} failed", jsonArray, clazz, e);
 			throw new JacksonException(e);
 		}
 	}
@@ -172,7 +172,7 @@ public final class JacksonUtils {
 		try {
 			return objectMapper.writeValueAsString(object);
 		} catch (JsonProcessingException e) {
-			logger.error(e.getMessage(), e);
+			log.error(e.getMessage(), e);
 			throw new JacksonException(e);
 		}
 	}
@@ -187,7 +187,7 @@ public final class JacksonUtils {
 		try {
 			return objectMapper.writeValueAsBytes(object);
 		} catch (JsonProcessingException e) {
-			logger.error(e.getMessage(), e);
+			log.error(e.getMessage(), e);
 			throw new JacksonException(e);
 		}
 	}
@@ -203,7 +203,7 @@ public final class JacksonUtils {
 		try {
 			return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(object);
 		} catch (JsonProcessingException e) {
-			logger.error(e.getMessage(), e);
+			log.error(e.getMessage(), e);
 			throw new JacksonException(e);
 		}
 	}
@@ -212,7 +212,7 @@ public final class JacksonUtils {
 		try {
 			objectMapper.writeValue(writer, value);
 		} catch (IOException e) {
-			logger.error(e.getMessage(), e);
+			log.error(e.getMessage(), e);
 			throw new JacksonException(e);
 		}
 	}
@@ -226,10 +226,28 @@ public final class JacksonUtils {
 		try {
 			return objectMapper.readTree(json);
 		} catch (IOException e) {
-			logger.error(e.getMessage(), e);
+			log.error(e.getMessage(), e);
 			throw new JacksonException(e);
 		}
 	}
+
+	/**
+	 * 判断一个字符串是否是合法的JSON字符串
+	 * @param json
+	 * @return
+	 */
+	public static boolean isValidJson(String json) {
+		if (isBlank(json)) {
+			return false;
+		}
+        try {
+            objectMapper.readTree(json);
+			return true;
+        } catch (JsonProcessingException e) {
+			log.error("", e);
+			return false;
+		}
+    }
 	
 	public static ObjectMapper objectMapper() {
 		return objectMapper;
