@@ -125,7 +125,7 @@ public class LocalDateTimeDeserializer extends JSR310DateTimeDeserializerBase<Lo
 						partialSecond *= 1_000_000;
 					}
 					if (parser.nextToken() != JsonToken.END_ARRAY) {
-						throw context.wrongTokenException(parser, JsonToken.END_ARRAY, "Expected array to end.");
+						throw context.wrongTokenException(parser, LocalDateTime.class, JsonToken.END_ARRAY, "Expected array to end.");
 					}
 					return LocalDateTime.of(year, month, day, hour, minute, second, partialSecond);
 				}
@@ -137,7 +137,7 @@ public class LocalDateTimeDeserializer extends JSR310DateTimeDeserializerBase<Lo
 			return (LocalDateTime) parser.getEmbeddedObject();
 		}
 		
-		throw context.wrongTokenException(parser, JsonToken.VALUE_STRING, "Expected array or string.");
+		throw context.wrongTokenException(parser, LocalDateTime.class, JsonToken.VALUE_STRING, "Expected array or string.");
 	}
 	
 	private LocalDateTime parse(String string) {

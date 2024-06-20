@@ -80,12 +80,12 @@ public class ObjectMapperDecorator {
 			@SuppressWarnings({"unchecked", "rawtypes"})
 			@Override
 			public JsonDeserializer modifyEnumDeserializer(DeserializationConfig config,
-			                                               final JavaType type,
-			                                               BeanDescription beanDesc,
-			                                               final JsonDeserializer<?> deserializer) {
+														   final JavaType type,
+														   BeanDescription beanDesc,
+														   final JsonDeserializer<?> deserializer) {
 				return new EnumDeserializer((Class<Enum<?>>) type.getRawClass(), enumProperties, deserializer);
 			}
-			
+
 		});
 		//Page对象在序列化的时候不希望把order输出到json, 但是反序列化的时候要可以接收order
 		customModule.addDeserializer(Page.class, new PageDeserializer(Page.class));
@@ -99,7 +99,15 @@ public class ObjectMapperDecorator {
 		//对POJO字段排序
 		objectMapper.configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 		//对Map字段排序
-		objectMapper.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
+		/*
+		 * 如果开启了
+		 * Map<Object, Object> params = new HashMap<>();
+		 * params.put("one", "hello");
+		 * params.put(1, "asd");
+		 * String output = toJson(params);
+		 * 会报错
+		 */
+		//objectMapper.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
 		/*
 		 * 用来处理没有默认构造函数的bean
 		 * POJO的有参构造函数需要标注@JsonCreator
@@ -121,17 +129,17 @@ public class ObjectMapperDecorator {
 		JavaTimeModule javaTimeModule = new JavaTimeModule();
 		javaTimeModule.addSerializer(LocalDateTime.class, new com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer(ofPattern("yyyy-MM-dd HH:mm:ss")));
 		javaTimeModule.addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer(ofPattern("yyyy-MM-dd HH:mm:ss")));
-		
+
 		javaTimeModule.addSerializer(LocalDate.class, new com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer(ofPattern("yyyy-MM-dd")));
 		//javaTimeModule.addDeserializer(LocalDate.class, new com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer(ofPattern("yyyy-MM-dd")));
 		javaTimeModule.addDeserializer(LocalDate.class, new LocalDateDeserializer());
 		javaTimeModule.addDeserializer(Date.class, new DateDeserializer());
-		
+
 		javaTimeModule.addSerializer(LocalTime.class, new com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer(ofPattern("HH:mm:ss")));
 		javaTimeModule.addDeserializer(LocalTime.class, new com.fasterxml.jackson.datatype.jsr310.deser.LocalTimeDeserializer(ofPattern("HH:mm:ss")));
-		
+
 		DateTimeFormatter epochMilisFormatter = epocMillisFormatter();
-		
+
 		/*
 		 * 如果在Spring环境使用, 从Spring容器中拿到的objectMapper实例已经注册过javaTimeModule
 		 * 默认是不支持重复注册的, 即我们这里注册的会被忽略,
@@ -140,13 +148,13 @@ public class ObjectMapperDecorator {
 		objectMapper.disable(MapperFeature.IGNORE_DUPLICATE_MODULE_REGISTRATIONS);
 		objectMapper.registerModule(javaTimeModule);
 		javaTimeModule.addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer(epochMilisFormatter));
-		
+
 		/*
 		 * java.util.Date 序列化格式
 		 */
 		SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		objectMapper.setDateFormat(simpleDateFormat);
-		
+
 		objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 		objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
 		objectMapper.setVisibility(objectMapper.getSerializationConfig().getDefaultVisibilityChecker()

@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 
 /**
  * Deserializer for Java 8 temporal {@link LocalDate}s.
@@ -107,7 +108,7 @@ public class LocalDateDeserializer extends JSR310DateTimeDeserializerBase<LocalD
 			int day = parser.nextIntValue(-1);
 
 			if (parser.nextToken() != JsonToken.END_ARRAY) {
-				throw context.wrongTokenException(parser, JsonToken.END_ARRAY, "Expected array to end.");
+				throw context.wrongTokenException(parser, Date.class, JsonToken.END_ARRAY, "Expected array to end.");
 			}
 			return LocalDate.of(year, month, day);
 		}
@@ -115,6 +116,6 @@ public class LocalDateDeserializer extends JSR310DateTimeDeserializerBase<LocalD
 			return (LocalDate) parser.getEmbeddedObject();
 		}
 
-		throw context.wrongTokenException(parser, JsonToken.VALUE_STRING, "Expected array or string.");
+		throw context.wrongTokenException(parser, Date.class, JsonToken.VALUE_STRING, "Expected array or string.");
 	}
 }

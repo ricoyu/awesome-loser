@@ -88,9 +88,6 @@ public class JacksonUtilsTest {
 		Map<Object, Object> params = new HashMap<>();
 		params.put("one", "hello");
 		params.put(1, "asd");
-		//		params.put(null, "sss");
-		//		params.put(new int[] {1}, 1);
-		
 		String output = toJson(params);
 		System.out.println(output);
 	}
