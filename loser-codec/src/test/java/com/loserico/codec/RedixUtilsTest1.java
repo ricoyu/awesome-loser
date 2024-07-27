@@ -19,7 +19,7 @@ import static org.junit.Assert.assertTrue;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
-public class RedixUtilsTest {
+public class RedixUtilsTest1 {
 	
 	@Test
 	public void testInt2Hex() {

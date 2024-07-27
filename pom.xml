@@ -5,7 +5,7 @@
     <groupId>com.loserico</groupId>
     <artifactId>awesome-loser</artifactId>
     <packaging>pom</packaging>
-    <version>17.0.1</version>
+    <version>17.0.2</version>
     <name>Awesome Loser</name>
     <url>http://maven.apache.org</url>
 
@@ -40,7 +40,8 @@
 
         <springframework.version>6.1.8</springframework.version>
 
-        <hibernate.version>5.4.8.Final</hibernate.version>
+        <!--<hibernate.version>5.4.8.Final</hibernate.version>-->
+        <hibernate.version>6.5.2.Final</hibernate.version>
 
         <mysql-connector-java.version>5.1.48</mysql-connector-java.version>
 
@@ -48,7 +49,7 @@
         <log4j.version>1.2.17</log4j.version>
         <logback.version>1.2.3</logback.version>
 
-        <jackson.version>2.17.1</jackson.version>
+        <jackson.version>2.17.2</jackson.version>
         <jaxb-api.versioin>2.2.12</jaxb-api.versioin>
         <json.version>20170516</json.version>
         <jsonpath.version>2.6.0</jsonpath.version>
@@ -242,7 +243,7 @@
             <dependency>
                 <groupId>org.hibernate</groupId>
                 <artifactId>hibernate-entitymanager</artifactId>
-                <version>5.6.15.Final</version>
+                <version>5.6.36.Final</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.jboss.logging</groupId>
@@ -509,7 +510,7 @@
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.datatype</groupId>
-                <artifactId>jackson-datatype-hibernate5</artifactId>
+                <artifactId>jackson-datatype-hibernate6</artifactId>
                 <version>${jackson.version}</version>
                 <exclusions>
                     <exclusion>

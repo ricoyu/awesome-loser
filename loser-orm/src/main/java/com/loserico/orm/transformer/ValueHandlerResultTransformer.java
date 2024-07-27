@@ -6,9 +6,10 @@ import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.common.lang.utils.StringUtils;
 import com.loserico.orm.exception.AliasLengthNotMatchException;
 import com.loserico.orm.exception.ApplicationException;
+import jakarta.persistence.Tuple;
 import org.hibernate.HibernateException;
 import org.hibernate.PropertyNotFoundException;
-import org.hibernate.transform.AliasedTupleSubsetResultTransformer;
+import org.hibernate.transform.ResultTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +37,7 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
  * @version 3.0
  *
  */
-public class ValueHandlerResultTransformer extends AliasedTupleSubsetResultTransformer {
+public class ValueHandlerResultTransformer implements ResultTransformer {
 
 	private static final long serialVersionUID = -487079650392740751L;
 
@@ -461,12 +462,17 @@ public class ValueHandlerResultTransformer extends AliasedTupleSubsetResultTrans
 		}
 	}
 
+	@Override
+	public List transformList(List resultList) {
+		return ResultTransformer.super.transformList(resultList);
+	}
+
 	/*
 	 * 将resultset注入到bean中
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
-	public Object transformTuple(Object[] tuple, String[] aliases) {
+	public Tuple transformTuple(Object[] tuple, String[] aliases) {
 		initialize(aliases, tuple);
 		Object result = null;
 
@@ -605,7 +611,7 @@ public class ValueHandlerResultTransformer extends AliasedTupleSubsetResultTrans
 			throw new ApplicationException(e);
 		}
 
-		return result;
+		return null;
 	}
 
 	/**
@@ -650,18 +656,6 @@ public class ValueHandlerResultTransformer extends AliasedTupleSubsetResultTrans
 		}
 
 		return new String[] { propertyName, propertyName };
-	}
-
-	/**
-	 * 没什么用，但必须实现该方法
-	 * 
-	 * @param aliases
-	 * @param tupleLength
-	 * @return
-	 */
-	@Override
-	public boolean isTransformedValueATupleElement(String[] aliases, int tupleLength) {
-		return false;
 	}
 
 	public Set<String> getEnumLookupProperties() {

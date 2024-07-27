@@ -7,8 +7,8 @@ import com.loserico.security.constants.LoserSecurityConstants;
 import com.loserico.security.vo.LoginRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -29,10 +29,9 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  * @version 1.0
  * @on
  */
-@Slf4j
-@Data
 public class UsernamePasswordAuthenticationFilter extends org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter {
-	
+
+	private static final Logger log = LoggerFactory.getLogger(UsernamePasswordAuthenticationFilter.class);
 	private static final String ERROR_MESSAGE = "Something went wrong while parsing /login request body";
 	
 	private boolean rsaEncrypted;
@@ -77,5 +76,8 @@ public class UsernamePasswordAuthenticationFilter extends org.springframework.se
 		token = new UsernamePasswordAuthenticationToken("", "");
 		return this.getAuthenticationManager().authenticate(token);
 	}
-	
+
+	public void setRsaEncrypted(boolean rsaEncrypted) {
+		this.rsaEncrypted = rsaEncrypted;
+	}
 }

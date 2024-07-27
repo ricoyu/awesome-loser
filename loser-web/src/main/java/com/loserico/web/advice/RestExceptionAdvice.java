@@ -14,9 +14,6 @@ import com.loserico.validation.exception.ValidationException;
 import com.loserico.validation.utils.ValidationUtils;
 import com.loserico.web.exception.LocalizedException;
 import com.loserico.web.utils.MessageHelper;
-import com.loserico.web.utils.RestUtils;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.TypeMismatchException;
@@ -41,8 +38,13 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.loserico.common.lang.errors.ErrorTypes.*;
-import static java.util.stream.Collectors.toList;
+import static com.loserico.common.lang.errors.ErrorTypes.BAD_REQUEST;
+import static com.loserico.common.lang.errors.ErrorTypes.INTERNAL_SERVER_ERROR;
+import static com.loserico.common.lang.errors.ErrorTypes.MAX_UPLOAD_SIZE_EXCEEDED;
+import static com.loserico.common.lang.errors.ErrorTypes.METHOD_NOT_ALLOWED;
+import static com.loserico.common.lang.errors.ErrorTypes.NOT_FOUND;
+import static com.loserico.common.lang.errors.ErrorTypes.VALIDATION_FAIL;
+import static java.util.stream.Collectors.*;
 
 /**
  * 全局异常处理
@@ -226,19 +228,18 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 		logger.error("Rest API ERROR happen", e);
 		return Results.status(e.getCode(), e.getMessage()).build();
 	}
-	
+
 	/**
 	 * 上传文件是multipart/form-data类型, 所以这边@ResponseBody实际是不生效的, 需要通过Response手工返回REST结果
-	 *
-	 * @param e
-	 * @param request
-	 * @param response
+	 * @param e the exception to handle
+	 * @param headers the headers to use for the response
+	 * @param status the status code to use for the response
+	 * @param request the current request
 	 * @return
 	 */
-	@ExceptionHandler(MaxUploadSizeExceededException.class)
-	@ResponseStatus(value = HttpStatus.BAD_REQUEST)
-	@ResponseBody
-	public Result handleMaxUploadSizeExceededException(MaxUploadSizeExceededException e, HttpServletRequest request, HttpServletResponse response) {
+	protected ResponseEntity<Object> handleMaxUploadSizeExceededException(
+			MaxUploadSizeExceededException e, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+
 		Matcher matcher = ACTUAL_SIZE_PATTERN.matcher(e.getMessage());
 		String message;
 		if (matcher.matches()) {
@@ -249,11 +250,10 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 		} else {
 			message = I18N.i18nMessage(MAX_UPLOAD_SIZE_EXCEEDED.msgTemplate(), MAX_UPLOAD_SIZE_EXCEEDED.message());
 		}
-		
+
 		logger.error(message, e);
 		Result result = Results.status(MAX_UPLOAD_SIZE_EXCEEDED.code(), message).build();
-		RestUtils.writeJson(response, HttpStatus.BAD_REQUEST, result);
-		return null;
+		return new ResponseEntity(result, HttpStatus.OK);
 	}
 	
 	@ExceptionHandler(Throwable.class)

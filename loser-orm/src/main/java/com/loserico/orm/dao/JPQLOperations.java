@@ -1,8 +1,8 @@
 package com.loserico.orm.dao;
 
 import com.loserico.common.lang.vo.Page;
+import jakarta.persistence.Query;
 
-import javax.persistence.Query;
 import java.util.List;
 import java.util.Map;
 
@@ -81,7 +81,7 @@ public interface JPQLOperations {
 	 * @param jpql
 	 * @return
 	 */
-	public <T> Query createQuery(String jpql, Class<T> clazz);
+	public <T> jakarta.persistence.Query createQuery(String jpql, Class<T> clazz);
 
 	public <T> Query createQuery(String jpql, String paramName, Object paramValue, Class<T> clazz);
 	
