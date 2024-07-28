@@ -4,8 +4,8 @@ import com.loserico.common.lang.vo.OrderBean;
 import com.loserico.common.lang.vo.Page;
 import com.loserico.orm.criteria.JPACriteriaQuery;
 import com.loserico.orm.predicate.Predicate;
+import jakarta.persistence.EntityNotFoundException;
 
-import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;

@@ -37,6 +37,10 @@
                     <groupId>javax.persistence</groupId>
                     <artifactId>javax.persistence-api</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.hibernate</groupId>
+                    <artifactId>hibernate-core</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>

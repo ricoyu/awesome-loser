@@ -3,8 +3,8 @@ package com.loserico.orm.dao;
 import com.loserico.common.lang.vo.Page;
 import com.loserico.orm.predicate.Predicate;
 import com.loserico.orm.predicate.Querys;
+import jakarta.persistence.EntityNotFoundException;
 
-import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;

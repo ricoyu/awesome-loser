@@ -65,6 +65,8 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static java.text.MessageFormat.format;
 import static java.util.Arrays.asList;
@@ -88,6 +90,11 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	private static final String IS_COUNT_QUERY = "isCountQuery";
 	
 	private static final String HINT_QUERY_CACHE = "org.hibernate.cacheable";
+
+	/**
+	 * 用于判断是否是查询语句
+	 */
+	private static final Pattern SELECT_PATTERN = Pattern.compile("\\bSELECT\\b[\\s\\S]*?\\bFROM\\b\\s+", Pattern.CASE_INSENSITIVE);
 	
 	private static final ConcurrentMap<String, ArrayTypes> ARRAY_TYPE_MAP = new ConcurrentHashMap<>();
 	
@@ -1079,9 +1086,16 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	@SuppressWarnings({"unchecked", "deprecation"})
 	@Override
 	public <T> List<T> query4Page(String queryName, Map<String, Object> params, Class<T> clazz, Page page) {
-		org.hibernate.query.Query<T> query = em().createNamedQuery(queryName)
-				.unwrap(org.hibernate.query.Query.class);
-		String rawQuery = query.getQueryString();
+		String rawQuery = null;
+		org.hibernate.query.Query<T> query = null;
+				Matcher matcher = SELECT_PATTERN.matcher(queryName);
+		if (matcher.find()) {
+			rawQuery = queryName; // 这就是一个完整的查询语句,而不是定义在xml中的查询语句名
+		}else {//表示queryName是定义在xml中的查询语句名
+			 query = em().createNamedQuery(queryName)
+					.unwrap(org.hibernate.query.Query.class);
+			rawQuery = query.getQueryString();
+		}
 		StringBuilder queryString = new StringBuilder(rawQuery);
 		
 		// 排序
@@ -1269,12 +1283,20 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	
 	@Override
 	public <T> List<T> query4RawList(String queryName, Map<String, Object> params) {
-		org.hibernate.query.Query<?> query = em()
-				.createNamedQuery(queryName)
-				.unwrap(org.hibernate.query.Query.class);
-		
-		String queryString = query.getQueryString();
-		//建立context， 并放入数据  
+		String queryString = null;
+		org.hibernate.query.Query<?> query = null;
+		Matcher matcher = SELECT_PATTERN.matcher(queryName);
+		if (matcher.find()) {
+			queryString = queryName; // 这就是一个完整的查询语句,而不是定义在xml中的查询语句名
+		} else {
+			query = em()
+					.createNamedQuery(queryName)
+					.unwrap(org.hibernate.query.Query.class);
+
+			queryString = query.getQueryString();
+
+		}
+		//建立context， 并放入数据
 		VelocityContext context = new VelocityContext();
 		if (isNotEmpty(params)) {
 			for (String paramName : params.keySet()) {

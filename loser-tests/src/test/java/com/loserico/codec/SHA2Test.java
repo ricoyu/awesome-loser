@@ -4,7 +4,7 @@ import com.google.common.hash.Hashing;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.Test;
 
-import javax.xml.bind.DatatypeConverter;
+import jakarta.xml.bind.DatatypeConverter;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 

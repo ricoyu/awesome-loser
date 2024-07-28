@@ -18,7 +18,7 @@ public interface SQLOperations {
 	/**
 	 * 返回单个对象，不存在则返回null
 	 *
-	 * @param queryName
+	 * @param queryName 可以是定义在xx.hbm.xml中的sql-query的名字, 也可以是完整的一个SQL语句, 最新的loser-orm对这块更新支持了
 	 * @param paramName
 	 * @param paramValue
 	 * @param clazz
@@ -29,7 +29,7 @@ public interface SQLOperations {
 	/**
 	 * 返回单个对象，不存在则返回null
 	 *
-	 * @param queryName
+	 * @param queryName 可以是定义在xx.hbm.xml中的sql-query的名字, 也可以是完整的一个SQL语句, 最新的loser-orm对这块更新支持了
 	 * @param params
 	 * @param clazz
 	 * @param <T>
@@ -40,7 +40,7 @@ public interface SQLOperations {
 	/**
 	 * 返回单个对象，不存在则返回null
 	 *
-	 * @param queryName
+	 * @param queryName 可以是定义在xx.hbm.xml中的sql-query的名字, 也可以是完整的一个SQL语句, 最新的loser-orm对这块更新支持了
 	 * @param clazz
 	 * @param <T>
 	 * @return T
@@ -50,7 +50,7 @@ public interface SQLOperations {
 	/**
 	 * 没有分页和参数的命名SQL查询
 	 *
-	 * @param queryName
+	 * @param queryName 可以是定义在xx.hbm.xml中的sql-query的名字, 也可以是完整的一个SQL语句, 最新的loser-orm对这块更新支持了
 	 * @param clazz
 	 * @return List<T>
 	 */
@@ -59,7 +59,7 @@ public interface SQLOperations {
 	/**
 	 * 支持分页的命名SQL查询, 不带参数, 同时会自动调用queryName_count来获取总记录数
 	 *
-	 * @param queryName
+	 * @param queryName 可以是定义在xx.hbm.xml中的sql-query的名字, 也可以是完整的一个SQL语句, 最新的loser-orm对这块更新支持了
 	 * @param clazz
 	 * @param page
 	 * @return List<T>
@@ -69,7 +69,7 @@ public interface SQLOperations {
 	/**
 	 * 不带分页的命名SQL查询, 一个参数。
 	 *
-	 * @param queryName
+	 * @param queryName 可以是定义在xx.hbm.xml中的sql-query的名字, 也可以是完整的一个SQL语句, 最新的loser-orm对这块更新支持了
 	 * @param paramName
 	 * @param paramValue
 	 * @param clazz
@@ -80,7 +80,7 @@ public interface SQLOperations {
 	/**
 	 * 支持分页的命名SQL查询, 支持一个参数, 同时会自动调用queryName_count来获取总记录数
 	 *
-	 * @param queryName
+	 * @param queryName 可以是定义在xx.hbm.xml中的sql-query的名字, 也可以是完整的一个SQL语句, 最新的loser-orm对这块更新支持了
 	 * @param paramName
 	 * @param paramValue
 	 * @param clazz
@@ -92,7 +92,7 @@ public interface SQLOperations {
 	/**
 	 * 不带分页的命名SQL查询
 	 *
-	 * @param queryName
+	 * @param queryName 可以是定义在xx.hbm.xml中的sql-query的名字, 也可以是完整的一个SQL语句, 最新的loser-orm对这块更新支持了
 	 * @param params
 	 * @param clazz
 	 * @return List<T>
@@ -104,7 +104,7 @@ public interface SQLOperations {
 	 * 这个API，如果SQL有IN语句，但是传入的List类型参数size为0的话，会抛异常，需要自己在SQL里面用条件判断
 	 * 支持Velocity风格的SQL模版
 	 *
-	 * @param queryName
+	 * @param queryName 可以是定义在xx.hbm.xml中的sql-query的名字, 也可以是完整的一个SQL语句, 最新的loser-orm对这块更新支持了
 	 * @param params
 	 * @param clazz
 	 * @param page
@@ -115,7 +115,7 @@ public interface SQLOperations {
 	/**
 	 * 跟namedSqlQuery的差别就是结果集不封装到Bean里面
 	 *
-	 * @param queryName
+	 * @param queryName 可以是定义在xx.hbm.xml中的sql-query的名字, 也可以是完整的一个SQL语句, 最新的loser-orm对这块更新支持了
 	 * @return List<T>
 	 */
 	public <T> List<T> query4RawList(String queryName);
@@ -124,7 +124,7 @@ public interface SQLOperations {
 	 * 跟namedSqlQuery的差别就是结果集不封装到Bean里面
 	 * List里面存的是Object[], 数组长度取决于你SELECT了几个字段
 	 *
-	 * @param queryName
+	 * @param queryName 可以是定义在xx.hbm.xml中的sql-query的名字, 也可以是完整的一个SQL语句, 最新的loser-orm对这块更新支持了
 	 * @return List<T>
 	 */
 	public <T> List<T> query4RawList(String queryName, String propertyName, Object value);

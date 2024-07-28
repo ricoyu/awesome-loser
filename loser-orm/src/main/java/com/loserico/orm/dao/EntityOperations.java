@@ -1,6 +1,6 @@
 package com.loserico.orm.dao;
 
-import javax.persistence.EntityNotFoundException;
+import jakarta.persistence.EntityNotFoundException;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Optional;
@@ -147,7 +147,7 @@ public interface EntityOperations {
 	 * @param entityClass
 	 * @param id
 	 * @return T
-	 * @throws EntityNotFoundException
+	 * @throws jakarta.persistence.EntityNotFoundException
 	 */
 	public <T, PK extends Serializable> T ensureEntityExists(Class<T> entityClass, PK id);
 
@@ -158,7 +158,7 @@ public interface EntityOperations {
 	 * @param entityClass
 	 * @param ids
 	 * @return List<T>
-	 * @throws EntityNotFoundException
+	 * @throws jakarta.persistence.EntityNotFoundException
 	 * @on
 	 */	
 	@SuppressWarnings("unchecked")
