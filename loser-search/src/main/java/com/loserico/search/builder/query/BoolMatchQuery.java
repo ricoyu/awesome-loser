@@ -2,6 +2,8 @@ package com.loserico.search.builder.query;
 
 import org.elasticsearch.index.query.Operator;
 
+import java.util.List;
+
 /**
  * <p>
  * Copyright: (C), 2021-06-13 15:09
@@ -21,5 +23,7 @@ public interface BoolMatchQuery extends BoolQuery{
 	public MatchQuery minimumShouldMatch(int minimumShouldMatch);
 	
 	public MatchQuery minimumShouldMatch(String minimumShouldMatch);
+
+	public <T> List<T> queryForList();
 
 }

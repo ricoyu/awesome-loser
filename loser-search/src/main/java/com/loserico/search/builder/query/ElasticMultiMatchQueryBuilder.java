@@ -51,8 +51,8 @@ public class ElasticMultiMatchQueryBuilder extends BaseQueryBuilder implements H
 	/**
 	 * 设置查询字段, 值
 	 *
-	 * @param fields
-	 * @param value
+	 * @param value 要查询的值
+	 * @param fields 要在哪些字段上执行查询
 	 * @return ElasticMatchQueryBuilder
 	 */
 	public ElasticMultiMatchQueryBuilder query(Object value, String... fields) {

@@ -85,7 +85,7 @@ public class NioClient {
 					socketChannel.write(buffer);
 					
 					//在和服务端连接成功之后, 为了可以接收到服务端的信息, 需要给通道设置读的权限
-					socketChannel.register(this.selector, OP_READ); // 获得了可读的事件
+					socketChannel.register(this.selector, OP_READ); // 注册可读的事件
 				} else if (key.isReadable()) {
 					read(key);
 				}

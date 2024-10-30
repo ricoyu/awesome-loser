@@ -36,7 +36,7 @@ public final class Arrays {
      */
     public static void print(int[] array) {
         for (int i : array) {
-            System.out.print(i + "  ");
+            System.out.print(i + " ");
         }
         System.out.println("");
     }

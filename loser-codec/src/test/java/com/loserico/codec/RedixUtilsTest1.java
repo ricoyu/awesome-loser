@@ -20,7 +20,12 @@ import static org.junit.Assert.assertTrue;
  * @version 1.0
  */
 public class RedixUtilsTest1 {
-	
+
+	@Test
+	public void testAscii2BitStr() {
+		byte[] bytes = RedixUtils.ascii2Bytes("\\x00\\x80");
+		RedixUtils.print(bytes);
+	}
 	@Test
 	public void testInt2Hex() {
 		System.out.println(RedixUtils.int2Hex(14));

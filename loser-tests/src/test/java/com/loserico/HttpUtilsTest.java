@@ -6,6 +6,8 @@ import com.loserico.json.jsonpath.JsonPathUtils;
 import com.loserico.networking.utils.HttpUtils;
 import org.junit.Test;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * <p>
  * Copyright: (C), 2021-05-18 15:50
@@ -39,5 +41,15 @@ public class HttpUtilsTest {
 				.bearerAuth(token)
 				.request();
 		System.out.println(result);
+	}
+
+	@Test
+	public void testEsSettings() {
+		String url = "http://192.168.100.101:9200/_cluster/settings?include_defaults=true&flat_settings=true";
+		Object response = HttpUtils.get(url)
+				.basicAuth("elastic", "qianyu14")
+				.connectionTimeout(120, TimeUnit.SECONDS)
+				.request();
+		System.out.println(response);
 	}
 }

@@ -6,14 +6,49 @@ import com.loserico.common.lang.transformer.Transformers;
 import com.loserico.common.lang.utils.EnumUtils;
 import com.loserico.common.lang.utils.IOUtils;
 import com.loserico.common.lang.utils.ReflectionUtils;
+import com.loserico.json.jackson.JacksonUtils;
 import com.loserico.json.jsonpath.JsonPathUtils;
 import com.loserico.networking.enums.HttpMethod;
 import com.loserico.networking.utils.HttpUtils;
-import com.loserico.search.builder.*;
-import com.loserico.search.builder.admin.*;
-import com.loserico.search.builder.agg.*;
+import com.loserico.search.builder.ElasticContextSuggestBuilder;
+import com.loserico.search.builder.ElasticMultiGetBuilder;
+import com.loserico.search.builder.ElasticQueryBuilder;
+import com.loserico.search.builder.ElasticSuggestBuilder;
+import com.loserico.search.builder.ElasticUpdateBuilder;
+import com.loserico.search.builder.admin.ClusterSettingBuilder;
+import com.loserico.search.builder.admin.ElasticIndexBuilder;
+import com.loserico.search.builder.admin.ElasticIndexTemplateBuilder;
+import com.loserico.search.builder.admin.ElasticPutMappingBuilder;
+import com.loserico.search.builder.admin.ElasticReindexBuilder;
+import com.loserico.search.builder.admin.ElasticSettingsBuilder;
+import com.loserico.search.builder.admin.ElasticUpdateSettingBuilder;
+import com.loserico.search.builder.agg.ElasticAvgAggregationBuilder;
+import com.loserico.search.builder.agg.ElasticCardinalityAggregationBuilder;
+import com.loserico.search.builder.agg.ElasticCompositeAggregationBuilder;
+import com.loserico.search.builder.agg.ElasticDateHistogramAggregationBuilder;
+import com.loserico.search.builder.agg.ElasticHistogramAggregationBuilder;
+import com.loserico.search.builder.agg.ElasticMaxAggregationBuilder;
+import com.loserico.search.builder.agg.ElasticMinAggregationBuilder;
+import com.loserico.search.builder.agg.ElasticMultiTermsAggregationBuilder;
+import com.loserico.search.builder.agg.ElasticRangeAggregationBuilder;
+import com.loserico.search.builder.agg.ElasticStatsAggregationBuilder;
+import com.loserico.search.builder.agg.ElasticSumAggregationBuilder;
+import com.loserico.search.builder.agg.ElasticTermsAggregationBuilder;
 import com.loserico.search.builder.bulk.ESBulkProcessor;
-import com.loserico.search.builder.query.*;
+import com.loserico.search.builder.query.ElasticBoolQueryBuilder;
+import com.loserico.search.builder.query.ElasticExistsQueryBuilder;
+import com.loserico.search.builder.query.ElasticIdsQueryBuilder;
+import com.loserico.search.builder.query.ElasticMatchAllQueryBuilder;
+import com.loserico.search.builder.query.ElasticMatchPhraseQueryBuilder;
+import com.loserico.search.builder.query.ElasticMatchQueryBuilder;
+import com.loserico.search.builder.query.ElasticMultiMatchQueryBuilder;
+import com.loserico.search.builder.query.ElasticPipelineBuilder;
+import com.loserico.search.builder.query.ElasticQueryStringBuilder;
+import com.loserico.search.builder.query.ElasticScrollQueryBuilder;
+import com.loserico.search.builder.query.ElasticTemplateQueryBuilder;
+import com.loserico.search.builder.query.ElasticTermQueryBuilder;
+import com.loserico.search.builder.query.ElasticTermsQueryBuilder;
+import com.loserico.search.builder.query.ElasticUriQueryBuilder;
 import com.loserico.search.cache.ElasticCacheUtils;
 import com.loserico.search.constants.ElasticConstants;
 import com.loserico.search.enums.Analyzer;
@@ -21,9 +56,14 @@ import com.loserico.search.enums.Dynamic;
 import com.loserico.search.enums.IndexState;
 import com.loserico.search.exception.IndexTemplateCreateException;
 import com.loserico.search.factory.TransportClientFactory;
-import com.loserico.search.support.*;
+import com.loserico.search.support.BulkResult;
+import com.loserico.search.support.IndexSupport;
+import com.loserico.search.support.MappingSupport;
+import com.loserico.search.support.RestSupport;
+import com.loserico.search.support.SettingsSupport;
+import com.loserico.search.support.UpdateResult;
 import com.loserico.search.vo.Index;
-import com.loserico.search.vo.VersionedResult;
+import com.loserico.search.vo.VersionedDoc;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.DocWriteResponse;
@@ -68,7 +108,11 @@ import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilder;
-import org.elasticsearch.index.reindex.*;
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
+import org.elasticsearch.index.reindex.DeleteByQueryAction;
+import org.elasticsearch.index.reindex.DeleteByQueryRequestBuilder;
+import org.elasticsearch.index.reindex.UpdateByQueryAction;
+import org.elasticsearch.index.reindex.UpdateByQueryRequestBuilder;
 import org.elasticsearch.indices.IndexTemplateMissingException;
 import org.elasticsearch.search.suggest.SuggestBuilders;
 import org.elasticsearch.search.suggest.completion.CompletionSuggestionBuilder;
@@ -77,7 +121,16 @@ import org.elasticsearch.search.suggest.term.TermSuggestionBuilder;
 import org.json.JSONObject;
 
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static com.loserico.common.lang.utils.Assert.notNull;
@@ -85,8 +138,7 @@ import static com.loserico.json.jackson.JacksonUtils.toJson;
 import static com.loserico.json.jackson.JacksonUtils.toObject;
 import static java.util.Arrays.asList;
 import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.*;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
@@ -124,7 +176,6 @@ public final class ElasticUtils {
      * 对应REST API POST 方式
      *
      * @param index
-     * @param doc
      * @return String 文档ID
      */
     public static ElasticIndexDocBuilder index(String index) {
@@ -180,6 +231,27 @@ public final class ElasticUtils {
     }
 
     /**
+     * 创建一个新的文档, 返回新创建文档的ID
+     * 使用/_create`端点是用来明确创建一个新的文档, 而不是更新它。如果指定的文档ID已经存在, 则会返回一个错误。
+     * 对应REST API POST 方式
+     *
+     * @param index
+     * @param doc
+     * @return String 文档ID
+     */
+    public static String create(String index, String doc, String id) {
+        Objects.requireNonNull(index, "index cannot be null!");
+        if (doc == null) {
+            return null;
+        }
+        IndexResponse response = CLIENT.prepareIndex(index, ONLY_TYPE, id)
+                .setSource(doc, XContentType.JSON)
+                .setCreate(true)
+                .get();
+        return response.getId();
+    }
+
+    /**
      * 创建一个新的文档, 返回新创建文档的ID, 相同ID的文档如果已存在, Elasticsearch底层会先删掉该文档, 然后重新创建一个文档, 版本号+1
      * 对应REST API POST 方式
      *
@@ -192,6 +264,18 @@ public final class ElasticUtils {
     }
 
     /**
+     * 创建一个新的文档, 返回新创建文档的ID, 使用/_create`端点是用来明确创建一个新的文档, 而不是更新它。如果指定的文档ID已经存在, 则会返回一个错误。
+     * 对应REST API POST 方式
+     *
+     * @param index 索引名
+     * @param doc   要保存的文档
+     * @return String 文档ID
+     */
+    public static String create(String index, String doc, int id) {
+        return create(index, doc, String.valueOf(id));
+    }
+
+    /**
      * 创建一个新的文档, 返回新创建文档的ID
      * 对应REST API POST 方式
      *
@@ -201,6 +285,18 @@ public final class ElasticUtils {
      */
     public static String index(String index, Object doc, int id) {
         return index(index, doc, String.valueOf(id));
+    }
+
+    /**
+     * 创建一个新的文档, 返回新创建文档的ID, 使用/_create`端点是用来明确创建一个新的文档, 而不是更新它。如果指定的文档ID已经存在, 则会返回一个错误。
+     * 对应REST API POST 方式
+     *
+     * @param index 索引名
+     * @param doc   要保存的文档
+     * @return String 文档ID
+     */
+    public static String create(String index, Object doc, int id) {
+        return create(index, doc, String.valueOf(id));
     }
 
     /**
@@ -218,6 +314,27 @@ public final class ElasticUtils {
         }
         IndexResponse response = CLIENT.prepareIndex(index, ONLY_TYPE, id)
                 .setSource(toJson(doc), XContentType.JSON)
+                .get();
+        return response.getId();
+    }
+
+    /**
+     * 创建一个新的文档, 返回新创建文档的ID
+     * 使用/_create`端点是用来明确创建一个新的文档, 而不是更新它。如果指定的文档ID已经存在, 则会返回一个错误。
+     * 对应REST API POST 方式
+     *
+     * @param index 索引名
+     * @param doc   要保存的文档
+     * @return String 文档ID
+     */
+    public static String create(String index, Object doc, String id) {
+        Objects.requireNonNull(index, "index cannot be null!");
+        if (doc == null) {
+            return null;
+        }
+        IndexResponse response = CLIENT.prepareIndex(index, ONLY_TYPE, id)
+                .setSource(toJson(doc), XContentType.JSON)
+                .setCreate(true)
                 .get();
         return response.getId();
     }
@@ -348,14 +465,15 @@ public final class ElasticUtils {
         return get(index, String.valueOf(id));
     }
 
+
     /**
-     * 根据ID获取文档
+     * 根据ID获取文档, 等价于getWithVersion
      *
      * @param index 索引名
      * @param id    文档id
      * @return T
      */
-    public static VersionedResult<String> getWithVersion(String index, int id) {
+    public static VersionedDoc<String> getWithVersion(String index, int id) {
         return getWithVersion(index, String.valueOf(id));
     }
 
@@ -374,6 +492,7 @@ public final class ElasticUtils {
         return response.getSourceAsString();
     }
 
+
     /**
      * 根据ID获取文档
      *
@@ -381,7 +500,7 @@ public final class ElasticUtils {
      * @param id    文档id
      * @return T
      */
-    public static VersionedResult<String> getWithVersion(String index, String id) {
+    public static VersionedDoc<String> getWithVersion(String index, String id) {
         Objects.requireNonNull(index, "索引名不能为null");
         Objects.requireNonNull(id, "id 不能为null");
 
@@ -390,9 +509,10 @@ public final class ElasticUtils {
         long ifPrimaryTerm = response.getPrimaryTerm();
 
         String source = response.getSourceAsString();
-        return VersionedResult.<String>builder()
-                .doc(source)
+        return VersionedDoc.<String>builder()
+                .source(source)
                 .id(id)
+                .version(response.getVersion())
                 .ifSeqNo(ifSeqNo)
                 .ifPrimaryTerm(ifPrimaryTerm)
                 .build();
@@ -426,7 +546,7 @@ public final class ElasticUtils {
      * @param <T>
      * @return T
      */
-    public static <T> VersionedResult<T> getWithVersion(String index, String id, Class<T> clazz) {
+    public static <T> VersionedDoc<T> getWithVersion(String index, String id, Class<T> clazz) {
         Objects.requireNonNull(index, "索引名不能为null");
         Objects.requireNonNull(id, "id 不能为null");
         Objects.requireNonNull(clazz, "clazz不能为null");
@@ -438,10 +558,10 @@ public final class ElasticUtils {
         String source = response.getSourceAsString();
         T result = toObject(source, clazz);
 
-        return VersionedResult.<T>builder()
+        return VersionedDoc.<T>builder()
                 .ifSeqNo(seqNo)
                 .ifPrimaryTerm(primaryTerm)
-                .doc(result)
+                .source(result)
                 .build();
     }
 
@@ -1314,6 +1434,18 @@ public final class ElasticUtils {
             return new ClusterSettingBuilder();
         }
 
+        /**
+         * 返回所有cluster setting, 包括persistent, transient
+         * @return
+         */
+        public static Map<String, Object> allSettings() {
+            String url = RestSupport.HOSTS.get(0) +"/_cluster/settings?include_defaults=true&flat_settings=true";
+            String settings = HttpUtils.get(url).basicAuth("elastic", "qianyu14")
+                    .request();
+            Map<String, Object> settingsMap = JacksonUtils.toMap(settings);
+            return settingsMap;
+        }
+
 
         /**
          * 创建多字段聚合, 用法:
@@ -1598,7 +1730,7 @@ public final class ElasticUtils {
          *     <li/>type        best_fields 默认类型, 可以不指定. 表示会在fields指定的字段中取一个评分最高的作为一个返回结果
          * </ul>
          *
-         * @param indices
+         * @param indices 要查询的索引
          */
         public static ElasticMultiMatchQueryBuilder multiMatch(String... indices) {
             return new ElasticMultiMatchQueryBuilder(indices);

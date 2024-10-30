@@ -15,11 +15,11 @@ import static java.nio.channels.SelectionKey.OP_WRITE;
 /**
  * NIO模型的selector 就像一个大总管, 负责监听各种IO事件, 然后转交给后端线程去处理
  * <p>
- * NIO相对于BIO非阻塞的体现就在: 
+ * NIO相对于BIO非阻塞的体现就在:
  * BIO的后端线程需要阻塞等待客户端写数据(比如read方法), 如果客户端不写数据线程就要阻塞
- * NIO把等待客户端操作的事情交给了大总管 selector, selector 负责轮询所有已注册的客户端, 
- * 发现有事件发生了才转交给后端线程处理, 后端线程不需要做任何阻塞等待, 直接处理客户端事件的数据即可, 
- * 处理完马上结束, 或返回线程池供其他客户端事件继续使用. 
+ * NIO把等待客户端操作的事情交给了大总管 selector, selector 负责轮询所有已注册的客户端,
+ * 发现有事件发生了才转交给后端线程处理, 后端线程不需要做任何阻塞等待, 直接处理客户端事件的数据即可,
+ * 处理完马上结束, 或返回线程池供其他客户端事件继续使用.
  * 还有就是 channel 的读写是非阻塞的。
  * <p>
  * Copyright: (C), 2019/12/21 16:49
@@ -31,23 +31,20 @@ import static java.nio.channels.SelectionKey.OP_WRITE;
  * @version 1.0
  */
 public class NIOServer {
-	
+
 	public static void main(String[] args) throws IOException {
-		/*
-		 * 1: 创建一个 ServerSocketChannel 和 Selector ，并将 ServerSocketChannel 注册到 Selector 上
-		 */
-		
+		// 1: 创建一个 ServerSocketChannel 和 Selector ，并将 ServerSocketChannel 注册到 Selector 上
 		//创建一个在本地端口进行监听的服务Socket通道.并设置为非阻塞方式
 		ServerSocketChannel ssc = ServerSocketChannel.open();
 		// 必须配置为非阻塞才能往selector上注册，否则会报错，selector模式本身就是非阻塞模式
 		ssc.configureBlocking(false);
 		ssc.socket().bind(new InetSocketAddress(8080));
-		
+
 		//创建一个选择器并将serverSocketChannel注册到它上面
 		Selector selector = Selector.open();
 		// 把channel注册到selector上，并且selector对客户端accept连接操作感兴趣
 		ssc.register(selector, SelectionKey.OP_ACCEPT);
-		
+
 		while (true) {
 			System.out.println("等待事件发生...");
 			/*
@@ -70,7 +67,7 @@ public class NIOServer {
 			}
 		}
 	}
-	
+
 	private static void handle(SelectionKey key) throws IOException {
 		if (key.isAcceptable()) {
 			System.out.println("有客户端连接事件发生了...");
@@ -84,7 +81,7 @@ public class NIOServer {
 			 */
 			SocketChannel socketChannel = ssc.accept();
 			socketChannel.configureBlocking(false);
-			
+
 			/*
 			 * 5: 将 SocketChannel 注册到 Selector 上, 关心 read 事件
 			 * 6: 注册后返回一个 SelectionKey,, 会和该 SocketChannel 关联
@@ -105,13 +102,13 @@ public class NIOServer {
 			if (length != -1) {
 				System.out.println("读取到客户端发送的数据：" + new String(buffer.array(), 0, length));
 			}
-			
+
 			ByteBuffer bufferToWrite = ByteBuffer.wrap("HelloClient".getBytes());
 			/*
 			 * 10: 用 socketChannel 将服务端数据写回客户端
 			 */
 			socketChannel.write(bufferToWrite);
-			
+
 			key.interestOps(OP_READ | OP_WRITE);
 			socketChannel.close();
 		}

@@ -56,16 +56,26 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import static com.loserico.json.jackson.JacksonUtils.toJson;
+import static com.loserico.json.jackson.JacksonUtils.toPrettyJson;
 import static com.loserico.search.enums.FieldType.COMPLETION;
 import static com.loserico.search.enums.FieldType.KEYWORD;
 import static com.loserico.search.enums.FieldType.TEXT;
 import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.elasticsearch.index.query.MultiMatchQueryBuilder.Type.BEST_FIELDS;
-import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
+import static org.elasticsearch.index.query.QueryBuilders.boostingQuery;
+import static org.elasticsearch.index.query.QueryBuilders.disMaxQuery;
+import static org.elasticsearch.index.query.QueryBuilders.existsQuery;
+import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
+import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
+import static org.elasticsearch.index.query.QueryBuilders.multiMatchQuery;
+import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
+import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
+import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 import static org.elasticsearch.search.suggest.SortBy.FREQUENCY;
 import static org.elasticsearch.search.suggest.term.TermSuggestionBuilder.StringDistanceImpl.INTERNAL;
 import static org.junit.Assert.*;
@@ -87,6 +97,48 @@ public class ElasticUtilsTest {
 	public static void testInitialize() {
 		Class<ElasticUtils> elasticUtilsClass = ElasticUtils.class;
 		assertThat(ElasticUtils.CLIENT != null);
+	}
+
+	@Test
+	public void testCreateEndpoint() {
+		ElasticUtils.delete("product", 1);
+		String id = ElasticUtils.create("product", """
+                {
+					"name": "Coffee Maker",
+					"brand": "Good Coffee",
+					"price": 99.99,
+					"in_stock": 15
+				}
+				""", 1);
+		try {
+			SECONDS.sleep(1);
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		}
+
+		String doc = ElasticUtils.get("product", id);
+		System.out.println(doc);
+	}
+
+	@Test
+	public void testCreateThenUpdate() {
+		ElasticUtils.Admin.deleteIndex("users");
+		String id = ElasticUtils.create("users", """
+				{
+				  "name": "onebird",
+				  "interests": "reading"
+				}
+				""", 1);
+
+		UpdateResult updateResult = ElasticUtils.update("users", id, """
+				{
+				  "name": "twobirds",
+				  "interests": ["reading", "music"]
+				}
+				""");
+
+		String doc = ElasticUtils.get("users", id);
+		System.out.println(doc);
 	}
 	
 	@Test
@@ -606,7 +658,7 @@ public class ElasticUtilsTest {
 		ElasticUtils.index("comments", "{\"comment\": \"I love the star war movies\", \"comment_autocomplete\": {\"input\": [\"star wars\"], \"contexts\": {\"comment_category\": \"movies\"} } }");
 		ElasticUtils.index("comments", "{\"comment\": \"Where can Ifind a Starbucks\", \"comment_autocomplete\": {\"input\": [\"starbucks\"], \"contexts\": {\"comment_category\": \"coffee\"} } }");
 		
-		TimeUnit.SECONDS.sleep(1);
+		SECONDS.sleep(1);
 		
 		Map<String, List<? extends ToXContent>> contexts = Collections.singletonMap("comment_category",
 				asList(CategoryQueryContext.builder()
@@ -867,7 +919,7 @@ public class ElasticUtilsTest {
 				.size(1000)
 				.slices(8)
 				.get();
-		TimeUnit.SECONDS.sleep(1);
+		SECONDS.sleep(1);
 		List<Object> blogsFix = ElasticUtils.Query.query("blogs_fix").queryForList();
 		blogsFix.forEach(System.out::println);
 	}
@@ -968,5 +1020,11 @@ public class ElasticUtilsTest {
 	
 	 @Test
 	 public void testCreatePipeline() {
+	 }
+
+	 @Test
+	 public void testAllClusterSettings() {
+		 Map<String, Object> allSettings = Cluster.allSettings();
+		 System.out.println(toPrettyJson(allSettings));
 	 }
 }

@@ -15,13 +15,15 @@ import lombok.Data;
  */
 @Data
 @Builder
-public class VersionedResult<T> {
+public class VersionedDoc<T> {
 	
 	private String id;
 	
-	private T doc;
+	private T source;
 	
 	private Long ifSeqNo;
 	
 	private Long ifPrimaryTerm;
+
+	private Long version;
 }

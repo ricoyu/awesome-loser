@@ -1,7 +1,7 @@
 package com.loserico.search;
 
 import com.loserico.search.support.UpdateResult;
-import com.loserico.search.vo.VersionedResult;
+import com.loserico.search.vo.VersionedDoc;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -20,8 +20,8 @@ public class ElasticUtilsVersionControllTest {
 	
 	@Test
 	public void testGet() {
-		VersionedResult<String> versionedResult = ElasticUtils.getWithVersion("products", 1);
-		System.out.println(versionedResult.getDoc());
+		VersionedDoc<String> versionedResult = ElasticUtils.getWithVersion("products", 1);
+		System.out.println(versionedResult.getSource());
 		
 		UpdateResult updateResult = ElasticUtils.update("products")
 				.id(versionedResult.getId())

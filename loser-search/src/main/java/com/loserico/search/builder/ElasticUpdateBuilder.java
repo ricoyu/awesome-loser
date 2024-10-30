@@ -44,9 +44,16 @@ public class ElasticUpdateBuilder {
 	 * 更新后是否立即刷新? 立即刷新可以马上搜索到, 不立即刷新可能要1s过后
 	 */
 	private Boolean refresh;
-	
+
+	/**
+	 * 这个文档每次修改, ifSeqNo都会增加1
+	 */
 	private Long ifSeqNo;
-	
+
+	/**
+	 * 每个主分片的当前期号。如果主分片因故障而重新分配, 期号会增加。
+	 * 这可以用来识别文档所在的主分片是否在你上次读取后发生了变化。
+	 */
 	private Long ifPrimaryTerm;
 	
 	public ElasticUpdateBuilder(String index) {
@@ -111,13 +118,24 @@ public class ElasticUpdateBuilder {
 		this.refresh = refresh;
 		return this;
 	}
-	
-	
+
+	/**
+	 * Elasticsearch 为索引中的每次变更 (包括添加、更新、删除操作) 维护一个全局序列号。
+	 * 这个序列号是在索引级别上的, 不是针对单个文档的。每当索引中发生更改时, 序列号递增。
+	 * @param ifSeqNo
+	 * @return
+	 */
 	public ElasticUpdateBuilder ifSeqNo(Long ifSeqNo) {
 		this.ifSeqNo = ifSeqNo;
 		return this;
 	}
-	
+
+	/**
+	 * 每个主分片的当前期号。如果主分片因故障而重新分配, 期号会增加。
+	 * 这可以用来识别文档所在的主分片是否在你上次读取后发生了变化。
+	 * @param ifPrimaryTerm
+	 * @return
+	 */
 	public ElasticUpdateBuilder ifPrimaryTerm(Long ifPrimaryTerm) {
 		this.ifPrimaryTerm = ifPrimaryTerm;
 		return this;

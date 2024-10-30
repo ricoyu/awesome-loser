@@ -131,4 +131,18 @@ public final class RegexUtils {
 			this.msgTemplate = msgTemplate;
 		}
 	}
+
+	/**
+	 * 去除字符串首尾的双引号, 返回新的字符串
+	 * @param s
+	 * @return 去除了首尾双引号后的新字符串
+	 */
+	public static String trimQuotes(String s) {
+		/*
+		 * ^\" 匹配字符串开头的引号
+		 * | 表示“或者”
+		 * \"$ 匹配字符串结尾的引号
+		 */
+		return s != null ? s.replaceAll("^\"|\"$", "") : null;
+	}
 }

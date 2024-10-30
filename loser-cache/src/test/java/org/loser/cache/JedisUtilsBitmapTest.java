@@ -19,11 +19,12 @@ public class JedisUtilsBitmapTest {
 	
 	@Test
 	public void testSetbit() {
-		boolean result = JedisUtils.Bitmap.setbit("login_20220714", 101, 99);
+		long count = JedisUtils.Bitmap.bitCount("login_20220714");
+		System.out.println(count);
+		JedisUtils.del("login_20220714");
+		boolean result = JedisUtils.Bitmap.setbit("login_20220714", 101, 10);
 		System.out.println(result);
-		result = JedisUtils.Bitmap.setbit("login_20220714", 101, 99);
-		System.out.println(result);
-		result = JedisUtils.Bitmap.setbit("login_20220714", 100, 99);
+		result = JedisUtils.Bitmap.setbit("login_20220714", 101, 8);
 		System.out.println(result);
 	}
 	

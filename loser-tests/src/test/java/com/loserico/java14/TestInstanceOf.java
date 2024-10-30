@@ -17,10 +17,10 @@ public class TestInstanceOf {
 	@Test
 	public void test2() {
 		Object obj = "hello java";
-// 这里做的是取反运算
+		// 这里做的是取反运算
 		if (!(obj instanceof String str)) {
 			//System.out.println("not a String");
-//			System.out.println(str);// 这里不能使用str
+			//			System.out.println(str);// 这里不能使用str
 		} else {
 			System.out.println(str);// 这里可以使用str
 		}

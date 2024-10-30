@@ -3,6 +3,8 @@ package com.loserico.io;
 import java.io.IOException;
 import java.net.Socket;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 /**
  * <p>
  * Copyright: (C), 2019/12/21 13:43
@@ -26,7 +28,7 @@ public class SocketClient {
 		//接收服务端回传的数据
 		int read = socket.getInputStream().read(bytes);
 		if (read != -1) {
-			System.out.println("接收到服务端的数据：" + new String(bytes));
+			System.out.println("接收到服务端的数据：" + new String(bytes, UTF_8));
 			socket.close();
 		}
 	}
