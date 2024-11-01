@@ -264,6 +264,16 @@ public class RedixUtils {
     }
 
     /**
+     * 在Java中，获取一个字符 (char) 的 ASCII 码非常简单，因为 char 类型在 Java 中是一个无符号的 16 位整数，
+     * 底层的值就对应字符的 ASCII 或 Unicode 编码。你可以将 char 直接转换为 int 类型来获取它的 ASCII 码。
+     * @param c
+     * @return
+     */
+    public static int char2Ascii(char c) {
+        return (int) c;
+    }
+
+    /**
      * 用字符串的形式表示一个byte的二进制形式
      *
      * @param b

@@ -1,4 +1,4 @@
 # sexy-uncle
 Parent POM of my artifacts
 
-Loser不支持Java17, 别瞎折腾了
+已经成功迁移到Java17
