@@ -56,6 +56,7 @@ public class CoinChange {
 			coins[i] = Integer.parseInt(parts[i].trim());
 		}
 		System.out.println(coinChange2(coins, totalAmount));
+
 	}
 
 	public static int coinChange(int[] coins, int amount) {

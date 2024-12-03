@@ -37,7 +37,7 @@
         <dependency>
             <groupId>com.alibaba.csp</groupId>
             <artifactId>sentinel-core</artifactId>
-            <version>1.8.4</version>
+            <version>1.8.6</version>
         </dependency>
         <dependency>
             <groupId>com.loserico</groupId>
@@ -49,10 +49,15 @@
             <artifactId>loser-json</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
-        <dependency>
+        <!--<dependency>
             <groupId>com.alibaba.csp</groupId>
             <artifactId>sentinel-spring-webmvc-adapter</artifactId>
-            <version>1.8.4</version>
+            <version>1.8.8</version>
+        </dependency>-->
+        <dependency>
+            <groupId>com.alibaba.csp</groupId>
+            <artifactId>sentinel-spring-webmvc-6x-adapter</artifactId>
+            <version>1.8.6</version>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
@@ -63,7 +68,7 @@
         <dependency>
             <groupId>com.alibaba.csp</groupId>
             <artifactId>sentinel-spring-cloud-gateway-adapter</artifactId>
-            <version>1.8.4</version>
+            <version>1.8.6</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
