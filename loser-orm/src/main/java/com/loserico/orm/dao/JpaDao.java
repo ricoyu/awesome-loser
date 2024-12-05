@@ -83,59 +83,73 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  * @since Mar 6, 2016
  */
 @Repository
-public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations, AdvCriteriaOperations, EntityOperations, InitializingBean {
-	
+public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations, AdvCriteriaOperations,
+		EntityOperations, InitializingBean {
+
 	private static Logger log = LoggerFactory.getLogger(JpaDao.class);
-	
+
 	private static final String IS_COUNT_QUERY = "isCountQuery";
-	
+
 	private static final String HINT_QUERY_CACHE = "org.hibernate.cacheable";
 
 	/**
 	 * 用于判断是否是查询语句
 	 */
-	private static final Pattern SELECT_PATTERN = Pattern.compile("\\bSELECT\\b[\\s\\S]*?\\bFROM\\b\\s+", Pattern.CASE_INSENSITIVE);
-	
+	private static final Pattern SELECT_PATTERN =
+			Pattern.compile("\\bSELECT\\b[\\s\\S]*?\\bFROM\\b\\s+", Pattern.CASE_INSENSITIVE);
+
+	//用于判断是否insert语句
+	private static final Pattern DELETE_PATTERN =
+			Pattern.compile("\\bdelete\\b[\\s\\S]*?\\bFROM\\b\\s+", Pattern.CASE_INSENSITIVE);
+
+	//用于判断是否insert语句
+	private static final Pattern INSERT_PATTERN =
+			Pattern.compile("\\binsert\\b[\\s\\S]*?\\binto\\b\\s+", Pattern.CASE_INSENSITIVE);
+
+	//用于判断是否update语句
+	private static final Pattern UPDATE_PATTERN =
+			Pattern.compile("\\bupdate\\b[\\s\\S]*?\\bset\\b\\s+", Pattern.CASE_INSENSITIVE);
+
 	private static final ConcurrentMap<String, ArrayTypes> ARRAY_TYPE_MAP = new ConcurrentHashMap<>();
-	
+
 	@Autowired
 	private EntityManagerFactory entityManagerFactory;
-	
+
 	/**
 	 * Spring环境下拿到的是LocalContainerEntityManagerFactoryBean的代理类
 	 */
 	protected transient ThreadLocal<EntityManager> entityManagerThreadLocal = new ThreadLocal<>();
 	//protected transient EntityManager noTransactionalEntityManager;
-	
+
 	@PersistenceContext
 	protected EntityManager entityManager;
-	
+
 	@Value("${hibernate.query.mode:loose}")
 	private String hibernateQueryMode = "loose";
-	
+
 	@Value("${hibernate.query.cache:false}")
 	private boolean hibernateUseQueryCache = false;
-	
+
 	@Value("${hibernate.jdbc.batch_size:100}")
 	private int batchSize = 0;
-	
+
 	private boolean useDefaultOrder = false;
-	
+
 	/**
 	 * 如果类的某个属性是enum类型，并且需要根据这个enum类型的某个属性来和数据库列值匹配，那么要知名这个属性的名字
 	 */
 	private Set<String> enumLookupProperties = new HashSet<>();
-	
+
 	/**
 	 * 默认会根据CREATE_TIME倒序排
 	 */
 	private OrderBean order = new OrderBean("CREATE_TIME", OrderBean.ORDER_BY.DESC);
-	
+
 	/**
 	 * 配置JpaDao的时候指定context-className
 	 */
 	private Map<String, String> contextClasses = new HashMap<>();
-	
+
 	/**
 	 * 根据contextClasses找对应的Class对象在namedSqlQuery中会把classMap中的key/value对put到VelocityContext中
 	 * 这样在SQL里面就可以用了, 示例如下:
@@ -147,7 +161,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	 */
 	@SuppressWarnings("rawtypes")
 	private Map<String, Class> classMap = new HashMap<>();
-	
+
 	static {
 		ARRAY_TYPE_MAP.put(ArrayTypes.LONG.getClassName(), ArrayTypes.LONG);
 		ARRAY_TYPE_MAP.put(ArrayTypes.LONG_WRAPPER.getClassName(), ArrayTypes.LONG_WRAPPER);
@@ -158,7 +172,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		ARRAY_TYPE_MAP.put(ArrayTypes.DOUBLE_WRAPPER.getClassName(), ArrayTypes.DOUBLE_WRAPPER);
 		ARRAY_TYPE_MAP.put(ArrayTypes.FLOAT.getClassName(), ArrayTypes.FLOAT);
 		ARRAY_TYPE_MAP.put(ArrayTypes.FLOAT_WRAPPER.getClassName(), ArrayTypes.FLOAT_WRAPPER);
-		
+
 		Properties properties = new Properties();
 		properties.setProperty("userdirective",
 				"com.loserico.orm.directive.IfNotNull," +
@@ -167,12 +181,13 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 						"com.loserico.orm.directive.Between," +
 						"com.loserico.orm.directive.OmitForCount," +
 						"com.loserico.orm.directive.IfPresent");
-		properties.setProperty(RuntimeConstants.RUNTIME_LOG_LOGSYSTEM_CLASS, "org.apache.velocity.runtime.log.Log4JLogChute");
+		properties.setProperty(RuntimeConstants.RUNTIME_LOG_LOGSYSTEM_CLASS, "org.apache.velocity.runtime.log" +
+				".Log4JLogChute");
 		properties.setProperty("runtime.log.logsystem.log4j.logger", "velocity");
 		//初始化运行时引擎
 		Velocity.init(properties);
 	}
-	
+
 	/**
 	 * Make an instance managed and persistent.
 	 *
@@ -189,7 +204,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			throw new PersistenceException(e);
 		}
 	}
-	
+
 	@Override
 	public <T> void persist(List<T> entities) {
 		Objects.requireNonNull(entities, "entities cannot be null");
@@ -205,7 +220,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			throw new PersistenceException(e);
 		}
 	}
-	
+
 	/**
 	 * merge返回的是一个受当前Persistence Context管理的新对象
 	 *
@@ -223,7 +238,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			throw new PersistenceException(e);
 		}
 	}
-	
+
 	/**
 	 * merge返回的是一个受当前Persistence Context管理的新对象
 	 *
@@ -249,7 +264,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		flush();
 		return results;
 	}
-	
+
 	@Override
 	public <T> T save(T entity) {
 		Objects.requireNonNull(entity, "entity cannot be null");
@@ -267,7 +282,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			}
 		}
 	}
-	
+
 	@Override
 	public <T> List<T> save(List<T> entities) {
 		if (isEmpty(entities)) {
@@ -291,7 +306,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		flush();
 		return results;
 	}
-	
+
 	@Override
 	public <T> List<T> save(Set<T> entities) {
 		if (isEmpty(entities)) {
@@ -314,7 +329,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		flush();
 		return results;
 	}
-	
+
 	/**
 	 * 删除
 	 *
@@ -330,7 +345,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			throw e;
 		}
 	}
-	
+
 	/**
 	 * 删除
 	 *
@@ -350,7 +365,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			throw e;
 		}
 	}
-	
+
 	/**
 	 * 根据主键删除
 	 *
@@ -363,7 +378,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		T entity = em().getReference(entityClass, id);
 		delete(entity);
 	}
-	
+
 	@Override
 	public <T, PK extends Serializable> void deleteByPK(Class<T> entityClass, List<PK> ids) {
 		Objects.requireNonNull(ids, "ids cannot be null");
@@ -374,7 +389,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			deleteByPK(entityClass, pk);
 		}
 	}
-	
+
 	/**
 	 * 根据主键查找
 	 *
@@ -393,7 +408,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			throw new EntityOperationException(e);
 		}
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T, PK extends Serializable> List<T> getMulti(Class<T> clazz, PK... ids) {
@@ -407,7 +422,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			throw new EntityOperationException(e);
 		}
 	}
-	
+
 	@Override
 	public <T, PK extends Serializable> List<T> getMulti(Class<T> clazz, List<PK> ids) {
 		Objects.requireNonNull(ids, "ids cannot be null");
@@ -420,7 +435,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			throw new EntityOperationException(e);
 		}
 	}
-	
+
 	@Override
 	public <T, PK extends Serializable> T find(Class<T> clazz, PK id) {
 		CriteriaBuilder criteriaBuilder = em().getCriteriaBuilder();
@@ -490,7 +505,8 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	}
 
 	@Override
-	public <T> List<T> find(Class<T> entityClass, String propertyName, Object value, boolean includeDeleted, Page page) {
+	public <T> List<T> find(Class<T> entityClass, String propertyName, Object value, boolean includeDeleted,
+	                        Page page) {
 		requireNonNull(propertyName, "propertyName cannot be null!");
 		JPACriteriaQuery<T> jpaCriteriaQuery =
 				JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache);
@@ -521,7 +537,8 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	}
 
 	@Override
-	public <T> List<T> find(Class<T> entityClass, String propertyName, Object value, boolean includeDeleted, OrderBean... orders) {
+	public <T> List<T> find(Class<T> entityClass, String propertyName, Object value, boolean includeDeleted,
+	                        OrderBean... orders) {
 		Objects.requireNonNull(propertyName, "propertyName cannot be null!");
 		JPACriteriaQuery<T> jpaCriteriaQuery =
 				JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache);
@@ -639,12 +656,13 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		} else {
 			jpaCriteriaQuery.eq(propertyName, value);
 		}
-		List<T> resultList =  jpaCriteriaQuery.addOrders(orders).list();
+		List<T> resultList = jpaCriteriaQuery.addOrders(orders).list();
 		return resultList.isEmpty() ? null : resultList.get(0);
 	}
 
 	@Override
-	public <T> T findOne(Class<T> entityClass, String propertyName, Object value, boolean includeDeleted, OrderBean... orders) {
+	public <T> T findOne(Class<T> entityClass, String propertyName, Object value, boolean includeDeleted,
+	                     OrderBean... orders) {
 		Objects.requireNonNull(propertyName, "propertyName cannot be null!");
 		JPACriteriaQuery<T> jpaCriteriaQuery =
 				JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache);
@@ -656,7 +674,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		if (!includeDeleted) {
 			jpaCriteriaQuery.eq("deleted", false);
 		}
-		List<T> resultList =  jpaCriteriaQuery.addOrders(orders).list();
+		List<T> resultList = jpaCriteriaQuery.addOrders(orders).list();
 		return resultList.isEmpty() ? null : resultList.get(0);
 	}
 
@@ -679,7 +697,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		}
 		return Optional.ofNullable(results.get(0));
 	}
-	
+
 	@Override
 	public <T, PK extends Serializable> T load(Class<T> entityClass, PK id) {
 		try {
@@ -689,7 +707,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			throw new EntityOperationException(e);
 		}
 	}
-	
+
 	@Override
 	public <T> List<T> findAll(Class<T> entityClass) {
 		CriteriaQuery<T> criteriaQuery = em().getCriteriaBuilder().createQuery(entityClass);
@@ -716,7 +734,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	                          OrderBean... orders) {
 		return findIn(entityClass, propertyName, values, true, orders);
 	}
-	
+
 	@Override
 	public <T> List<T> findIn(Class<T> entityClass, final String propertyName, Collection<?> values,
 	                          boolean includeDeleted, OrderBean... orders) {
@@ -732,12 +750,12 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		}
 		return jpaCriteriaQuery.list();
 	}
-	
+
 	@Override
 	public <T> List<T> findIn(Class<T> entityClass, final String propertyName, Collection<?> values) {
 		return findIn(entityClass, propertyName, values, true);
 	}
-	
+
 	@Override
 	public <T> List<T> findIn(Class<T> entityClass, String propertyName, Collection<?> values,
 	                          boolean includeDeleted) {
@@ -745,7 +763,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		if (isEmpty(values)) {
 			return new ArrayList<>();
 		}
-		
+
 		JPACriteriaQuery<T> jpaCriteriaQuery = JPACriteriaQuery.from(entityClass, em(), hibernateUseQueryCache)
 				.in(propertyName, values);
 		if (!includeDeleted) {
@@ -753,11 +771,11 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		}
 		return jpaCriteriaQuery.list();
 	}
-	
+
 	public <T, E> List<T> findIn(Class<T> entityClass, String propertyName, E[] values) {
 		return findIn(entityClass, propertyName, values, true);
 	}
-	
+
 	@Override
 	public <T, E> List<T> findIn(Class<T> entityClass, String propertyName, E[] values, boolean includeDeleted) {
 		Objects.requireNonNull(propertyName);
@@ -771,12 +789,12 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		}
 		return jpaCriteriaQuery.list();
 	}
-	
+
 	@Override
 	public <T> List<T> findIn(Class<T> entityClass, String propertyName, Collection<?> values, Page page) {
 		return findIn(entityClass, propertyName, values, true, page);
 	}
-	
+
 	@Override
 	public <T> List<T> findIn(Class<T> entityClass, String propertyName, Collection<?> values,
 	                          boolean includeDeleted, Page page) {
@@ -792,13 +810,13 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		}
 		return jpaCriteriaQuery.list();
 	}
-	
+
 	@Override
 	public <T> List<T> findBetween(Class<T> entityClass, String propertyName, LocalDateTime begin,
 	                               LocalDateTime end, OrderBean... orders) {
 		return findBetween(entityClass, propertyName, begin, end, true, orders);
 	}
-	
+
 	@Override
 	public <T> List<T> findBetween(Class<T> entityClass, String propertyName, LocalDateTime begin,
 	                               LocalDateTime end, boolean includeDeleted, OrderBean... orders) {
@@ -813,13 +831,13 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		}
 		return jpaCriteriaQuery.list();
 	}
-	
+
 	@Override
 	public <T> List<T> findBetween(Class<T> entityClass, String propertyName, LocalDateTime begin,
 	                               LocalDateTime end) {
 		return findBetween(entityClass, propertyName, begin, end, true);
 	}
-	
+
 	@Override
 	public <T> List<T> findBetween(Class<T> entityClass, String propertyName, Long begin, Long end) {
 		Objects.requireNonNull(propertyName);
@@ -829,8 +847,8 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 				.between(propertyName, begin, end);
 		return jpaCriteriaQuery.list();
 	}
-	
-	
+
+
 	@Override
 	public <T> List<T> findBetween(Class<T> entityClass, String propertyName, Long begin, Long end, Page page) {
 		Objects.requireNonNull(propertyName);
@@ -840,7 +858,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 				.between(propertyName, begin, end).setPage(page);
 		return jpaCriteriaQuery.list();
 	}
-	
+
 	@Override
 	public <T> List<T> findBetween(Class<T> entityClass, String propertyName, LocalDateTime begin,
 	                               LocalDateTime end, boolean includeDeleted) {
@@ -855,13 +873,13 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		}
 		return jpaCriteriaQuery.list();
 	}
-	
+
 	@Override
 	public <T> List<T> findBetween(Class<T> entityClass, String propertyName, LocalDateTime begin,
 	                               LocalDateTime end, Page page) {
 		return findBetween(entityClass, propertyName, begin, end, true, page);
 	}
-	
+
 	@Override
 	public <T> List<T> findBetween(Class<T> entityClass, String propertyName, LocalDateTime begin,
 	                               LocalDateTime end, boolean includeDeleted, Page page) {
@@ -876,7 +894,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		}
 		return jpaCriteriaQuery.list();
 	}
-	
+
 	@Override
 	public <T> List<T> findIsNull(Class<T> entityClass, String propertyName) {
 		Objects.requireNonNull(propertyName, "propertyName cannot be null!");
@@ -885,7 +903,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		jpaCriteriaQuery.isNull(propertyName);
 		return jpaCriteriaQuery.list();
 	}
-	
+
 	@Override
 	public <T> List<T> findIsNull(Class<T> entityClass, String propertyName, boolean includeDeleted) {
 		Objects.requireNonNull(propertyName, "propertyName cannot be null!");
@@ -897,7 +915,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		}
 		return jpaCriteriaQuery.list();
 	}
-	
+
 	@Override
 	public <T> List<T> leftJoinFetch(Class<T> entityClass, Predicate predicate, String... attributeNames) {
 		Objects.requireNonNull(predicate, "predicate cannot be null!");
@@ -906,7 +924,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 				.leftJoinFetch(attributeNames)
 				.list();
 	}
-	
+
 	@Override
 	public <T> List<T> leftJoinFetch(Class<T> entityClass, List<Predicate> predicates, String... attributeNames) {
 		Objects.requireNonNull(predicates, "predicates cannot be null!");
@@ -915,7 +933,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 				.leftJoinFetch(attributeNames)
 				.list();
 	}
-	
+
 	@Override
 	public <T> T leftJoinFetchSingleResult(Class<T> entityClass, Predicate predicate, String... attributeNames) {
 		Objects.requireNonNull(predicate, "predicate cannot be null!");
@@ -925,7 +943,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 				.list();
 		return results.isEmpty() ? null : results.get(0);
 	}
-	
+
 	@Override
 	public <T> T leftJoinFetchSingleResult(Class<T> entityClass, Predicate predicate, List<OrderBean> orders,
 	                                       String... attributeNames) {
@@ -936,7 +954,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 				.list();
 		return results.isEmpty() ? null : results.get(0);
 	}
-	
+
 	@Override
 	public <T> List<T> find(String jpql, Class<T> clazz) {
 		try {
@@ -946,25 +964,25 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			throw new JPQLException(e);
 		}
 	}
-	
+
 	@Override
 	public <T> T findUnique(String jpql, Class<T> clazz) {
 		List<T> results = find(jpql, clazz);
 		return results.isEmpty() ? null : results.get(0);
 	}
-	
+
 	@Override
 	public <T> T findUnique(String jpql, Map<String, Object> params, Class<T> resultClass) {
 		List<T> results = find(jpql, params, resultClass);
 		return results.isEmpty() ? null : results.get(0);
 	}
-	
+
 	@Override
 	public <T> T findUnique(String jpql, String paramName, Object paramValue, Class<T> clazz) {
 		List<T> results = find(jpql, paramName, paramValue, clazz);
 		return results.isEmpty() ? null : results.get(0);
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T> List<T> find(String jpql, Map<String, Object> params, Class<T> resultClass) {
@@ -975,7 +993,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			throw new JPQLException(e);
 		}
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T> List<T> find(String jpql, String paramName, Object paramValue, Class<T> clazz) {
@@ -986,7 +1004,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			throw new JPQLException(e);
 		}
 	}
-	
+
 	@Override
 	public <T> List<T> namedQuery(String queryName, Map<String, Object> params, Class<T> clazz, Page page) {
 		TypedQuery<T> query = em().createNamedQuery(queryName, clazz);
@@ -997,12 +1015,12 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		}
 		return query.getResultList();
 	}
-	
+
 	@Override
 	public <T> List<T> namedQuery(String queryName, Map<String, Object> params, Class<T> clazz) {
 		return namedQuery(queryName, params, clazz, null);
 	}
-	
+
 	@SuppressWarnings("rawtypes")
 	@Override
 	public <T> List<T> namedQuery(String queryName, String paramName, Object paramValue, Class<T> clazz) {
@@ -1018,12 +1036,12 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		}
 		return namedQuery(queryName, params, clazz, null);
 	}
-	
+
 	@Override
 	public <T> List<T> namedQuery(String queryName, Class<T> clazz) {
 		return namedQuery(queryName, null, null, clazz);
 	}
-	
+
 	/**
 	 * 返回单个对象，不存在则返回null
 	 *
@@ -1050,10 +1068,10 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		if (results.isEmpty()) {
 			return null;
 		}
-		
+
 		return results.get(0);
 	}
-	
+
 	/**
 	 * 返回单个对象，不存在则返回null
 	 *
@@ -1069,35 +1087,35 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		if (results.isEmpty()) {
 			return null;
 		}
-		
+
 		return results.get(0);
 	}
-	
+
 	@Override
 	public <T> T query4One(String queryName, Class<T> clazz) {
 		List<T> results = query4List(queryName, clazz);
 		if (results.isEmpty()) {
 			return null;
 		}
-		
+
 		return results.get(0);
 	}
-	
+
 	@SuppressWarnings({"unchecked", "deprecation"})
 	@Override
 	public <T> List<T> query4Page(String queryName, Map<String, Object> params, Class<T> clazz, Page page) {
 		String rawQuery = null;
 		org.hibernate.query.Query<T> query = null;
-				Matcher matcher = SELECT_PATTERN.matcher(queryName);
+		Matcher matcher = SELECT_PATTERN.matcher(queryName);
 		if (matcher.find()) {
 			rawQuery = queryName; // 这就是一个完整的查询语句,而不是定义在xml中的查询语句名
-		}else {//表示queryName是定义在xml中的查询语句名
-			 query = em().createNamedQuery(queryName)
+		} else {//表示queryName是定义在xml中的查询语句名
+			query = em().createNamedQuery(queryName)
 					.unwrap(org.hibernate.query.Query.class);
 			rawQuery = query.getQueryString();
 		}
 		StringBuilder queryString = new StringBuilder(rawQuery);
-		
+
 		// 排序
 		if (page != null) {
 			boolean primaryOrdered = false;
@@ -1122,7 +1140,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			if (queryString.lastIndexOf(", ") == queryString.length() - 2) {
 				queryString.delete(queryString.length() - 2, queryString.length());
 			}
-			
+
 			//如果没有提供排序，但是设置了默认排序，则采用create_time desc
 			if (useDefaultOrder && queryString.indexOf("ORDER BY") == -1) {
 				page.setOrder(order);
@@ -1131,9 +1149,9 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 						.append(" ")
 						.append(page.getOrder().getDirection());
 			}
-			
+
 		}
-		
+
 		//建立context， 并放入数据  
 		VelocityContext context = new VelocityContext();
 		context.put("StringUtils", StringUtils.class);
@@ -1149,14 +1167,15 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		StringWriter sql = new StringWriter();
 		//进行解析  
 		Velocity.evaluate(context, sql, queryName, queryString.toString());
-		
+
 		String parsedSQL = sql.toString();
 		query = em()
 				.createNativeQuery(parsedSQL)
 				.unwrap(org.hibernate.query.Query.class);
-		query.setResultTransformer(ResultTransformerFactory.getResultTransformer(HashUtils.sha256(parsedSQL), clazz, hibernateQueryMode,
+		query.setResultTransformer(ResultTransformerFactory.getResultTransformer(HashUtils.sha256(parsedSQL), clazz,
+				hibernateQueryMode,
 				enumLookupProperties));
-		
+
 		if (isNotEmpty(params)) {
 			/*
 			 * 如果params里面某个key对应的value是null, 下面query.setProperties(params)会抛NullpointException, 所以这里要移除值为null的key
@@ -1174,12 +1193,12 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			}
 			query.setProperties(params);
 		}
-		
+
 		if (page != null && !page.isPagingIgnore()) {
 			query.setMaxResults(page.getMaxResults());
 			query.setFirstResult(page.getFirstResult());
 		}
-		
+
 		List<T> resultList;
 		try {
 			resultList = query.getResultList();
@@ -1190,7 +1209,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			log.error(msg, e);
 			throw new SQLQueryException(msg, e);
 		}
-		
+
 		//接下来是分页查询中的查询总记录数
 		if (page != null && page.isAutoCount()) {
 			context.put(IS_COUNT_QUERY, true);
@@ -1218,11 +1237,11 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		}
 		return resultList;
 	}
-	
+
 	@SuppressWarnings("rawtypes")
 	@Override
 	public <T> List<T> query4Page(String queryName, String paramName, Object paramValue, Class<T> clazz,
-								  Page page) {
+	                              Page page) {
 		//如果参数值是List类型，那么该SQL语句认为是IN查询，如果List的size则为0，就不需要查询了，直接返回空的ArrayList
 		if (paramValue instanceof List) {
 			if (((List) paramValue).size() == 0) {
@@ -1235,17 +1254,17 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		}
 		return query4Page(queryName, params, clazz, page);
 	}
-	
+
 	@Override
 	public <T> List<T> query4Page(String queryName, Class<T> clazz, Page page) {
 		return query4Page(queryName, null, null, clazz, page);
 	}
-	
+
 	@Override
 	public <T> List<T> query4List(String queryName, Map<String, Object> params, Class<T> clazz) {
 		return query4Page(queryName, params, clazz, null);
 	}
-	
+
 	@SuppressWarnings("rawtypes")
 	@Override
 	public <T> List<T> query4List(String queryName, String paramName, Object paramValue, Class<T> clazz) {
@@ -1261,17 +1280,17 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		}
 		return query4List(queryName, params, clazz);
 	}
-	
+
 	@Override
 	public <T> List<T> query4List(String queryName, Class<T> clazz) {
 		return query4List(queryName, null, clazz);
 	}
-	
+
 	@Override
 	public List<?> query4RawList(String queryName) {
 		return query4RawList(queryName, null, null);
 	}
-	
+
 	@Override
 	public List<?> query4RawList(String queryName, String propertyName, Object value) {
 		Map<String, Object> params = new HashMap<String, Object>();
@@ -1280,7 +1299,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		}
 		return query4RawList(queryName, params);
 	}
-	
+
 	@Override
 	public <T> List<T> query4RawList(String queryName, Map<String, Object> params) {
 		String queryString = null;
@@ -1311,15 +1330,15 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		//进行解析  
 		Velocity.evaluate(context, sql, queryName, queryString);
 		queryString = sql.toString();
-		
+
 		query = em()
 				.createNativeQuery(queryString)
 				.unwrap(org.hibernate.query.Query.class);
-		
+
 		if (hibernateUseQueryCache) {
 			query.setHint(HINT_QUERY_CACHE, true);
 		}
-		
+
 		if (isNotEmpty(params)) {
 			query.setProperties(params);
 		}
@@ -1331,7 +1350,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			throw new RawSQLQueryException(msg, e);
 		}
 	}
-	
+
 	/**
 	 * 用于查询记录条数
 	 *
@@ -1341,7 +1360,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	public int namedCountQuery(String queryName) {
 		return namedCountQuery(queryName, null, null);
 	}
-	
+
 	public int namedCountQuery(String queryName, String paramName, Object paramValue) {
 		Map<String, Object> params = new HashMap<String, Object>();
 		if (StringUtils.isNotBlank(paramName)) {
@@ -1349,33 +1368,33 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		}
 		return namedCountQuery(queryName, params);
 	}
-	
+
 	public int namedCountQuery(String queryName, Map<String, Object> params) {
 		List<?> result = query4RawList(queryName, params);
 		if (result.isEmpty()) {
 			return 0;
 		}
-		
+
 		return PrimitiveUtils.toInt(result.get(0));
 	}
-	
+
 	@Override
 	public boolean ifExists(String queryName, Map<String, Object> params) {
 		return namedCountQuery(queryName, params) > 0;
 	}
-	
+
 	@Override
 	public <T> boolean ifExists(Class<T> entityClass, String propertyName, Object value, boolean includeDeleted) {
 		CriteriaBuilder criteriaBuilder = em().getCriteriaBuilder();
-		
+
 		CriteriaQuery<Boolean> query = criteriaBuilder.createQuery(Boolean.class);
 		query.from(entityClass);
 		query.select(criteriaBuilder.literal(true));
-		
+
 		Subquery<T> subquery = query.subquery(entityClass);
 		Root<T> subRootEntity = subquery.from(entityClass);
 		subquery.select(subRootEntity);
-		
+
 		Path<?> attributePath = subRootEntity.get(propertyName);
 		jakarta.persistence.criteria.Predicate predicate =
 				criteriaBuilder.equal(attributePath, criteriaBuilder.literal(value));
@@ -1384,7 +1403,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 				criteriaBuilder.literal(includeDeleted));
 		subquery.where(predicate, deletedPredicate);
 		query.where(criteriaBuilder.exists(subquery));
-		
+
 		TypedQuery<Boolean> typedQuery = em().createQuery(query);
 		List<Boolean> results = typedQuery.getResultList();
 		if (results.isEmpty()) {
@@ -1392,25 +1411,25 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		}
 		return results.get(0);
 	}
-	
+
 	@Override
 	public <T> boolean ifExists(Class<T> entityClass, String propertyName, Object value) {
 		CriteriaBuilder criteriaBuilder = em().getCriteriaBuilder();
-		
+
 		CriteriaQuery<Boolean> query = criteriaBuilder.createQuery(Boolean.class);
 		query.from(entityClass);
 		query.select(criteriaBuilder.literal(true));
-		
+
 		Subquery<T> subquery = query.subquery(entityClass);
 		Root<T> subRootEntity = subquery.from(entityClass);
 		subquery.select(subRootEntity);
-		
+
 		Path<?> attributePath = subRootEntity.get(propertyName);
 		jakarta.persistence.criteria.Predicate predicate = criteriaBuilder.equal(attributePath,
 				criteriaBuilder.literal(value));
 		subquery.where(predicate);
 		query.where(criteriaBuilder.exists(subquery));
-		
+
 		TypedQuery<Boolean> typedQuery = em().createQuery(query);
 		List<Boolean> results = typedQuery.getResultList();
 		if (results.isEmpty()) {
@@ -1418,13 +1437,13 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		}
 		return results.get(0);
 	}
-	
+
 	@Override
 	public <T> T query4Primitive(String queryName, Map<String, Object> params, Class<T> type) {
 		Object result = query4One(queryName, params);
 		return ValueHandlerFactory.convert(result, type);
 	}
-	
+
 	@Override
 	public <T> T query4Primitive(String queryName, String paramName, Object paramValue, Class<T> type) {
 		Map<String, Object> params = new HashMap<>();
@@ -1432,21 +1451,21 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		Object result = query4One(queryName, params);
 		return ValueHandlerFactory.convert(result, type);
 	}
-	
+
 	@Override
 	public <T> List<T> query4PrimitiveList(String queryName, String paramName, Object paramValue, Class<T> type) {
 		Map<String, Object> params = new HashMap<>();
 		params.put(paramName, paramValue);
 		return query4PrimitiveList(queryName, params, type);
 	}
-	
+
 	@Override
 	public <T> List<T> query4PrimitiveList(String queryName, Map<String, Object> params, Class<T> type) {
 		return query4RawList(queryName, params).stream()
 				.map(result -> ValueHandlerFactory.convert(result, type))
 				.collect(toList());
 	}
-	
+
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	@Override
 	public List query4PrimitiveList(String queryName, Map<String, Object> params, Class... types) {
@@ -1461,7 +1480,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 					return objects;
 				}).collect(toList());
 	}
-	
+
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	@Override
 	public List<?> query4PrimitiveList(String queryName, Class... types) {
@@ -1476,7 +1495,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 					return objects;
 				}).collect(toList());
 	}
-	
+
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	@Override
 	public <T> List<T> query4PrimitiveList(String queryName, Class<T> type) {
@@ -1484,7 +1503,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 				.map((result) -> ValueHandlerFactory.convert(result, type))
 				.collect(toList());
 	}
-	
+
 	@Override
 	@SuppressWarnings({"unchecked", "deprecation"})
 	public <T> List<T> sqlQuery(String sql, Map<String, Object> params, Class<T> clazz) {
@@ -1492,7 +1511,8 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 				.unwrap(org.hibernate.query.Query.class);
 		if (clazz != null) {
 			query.setResultTransformer(
-					ResultTransformerFactory.getResultTransformer(sql, clazz, hibernateQueryMode, enumLookupProperties));
+					ResultTransformerFactory.getResultTransformer(sql, clazz, hibernateQueryMode,
+							enumLookupProperties));
 		}
 		if (isNotEmpty(params)) {
 			query.setProperties(params);
@@ -1507,7 +1527,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			throw new SQLQueryException(msg, e);
 		}
 	}
-	
+
 	@Override
 	@SuppressWarnings({"unchecked", "deprecation"})
 	public <T> List<T> sqlQuery(String sql, String countSql, Map<String, Object> params, Class<T> clazz,
@@ -1521,17 +1541,17 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		} else {
 			query = em().createNativeQuery(sql).unwrap(org.hibernate.query.Query.class);
 		}
-		
+
 		query.setResultTransformer(
 				ResultTransformerFactory.getResultTransformer(sql, clazz, hibernateQueryMode, enumLookupProperties));
-		
+
 		if (params != null && !params.isEmpty()) {
 			query.setProperties(params);
 		}
 		if (hibernateUseQueryCache) {
 			query.setHint(HINT_QUERY_CACHE, true);
 		}
-		
+
 		//获取总记录条数
 		if (page != null) {
 			if (StringUtils.isNotBlank(countSql)) {
@@ -1544,7 +1564,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 				Integer totalRecords = ((BigInteger) countQuery.getSingleResult()).intValue();
 				page.setTotalCount(totalRecords);
 			}
-			
+
 			// Get data of required page
 			query.setMaxResults(page.getMaxResults());
 			query.setFirstResult(page.getFirstResult());
@@ -1552,22 +1572,23 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		try {
 			return query.getResultList();
 		} catch (Throwable e) {
-			String msg = format("Execute query[{0}] with parameter[{1}], pagination[{2}] and result class[{3}] failed!",
+			String msg = format("Execute query[{0}] with parameter[{1}], pagination[{2}] and result class[{3}] " +
+							"failed!",
 					sql, JacksonUtils.toJson(params), JacksonUtils.toJson(page), clazz.getName());
 			throw new SQLQueryException(msg, e);
 		}
 	}
-	
+
 	@Override
 	public <T> List<T> sqlQuery(String sql) {
 		return sqlQuery(sql, null, null);
 	}
-	
+
 	@Override
 	public <T> List<T> sqlQuery(String sql, Class<T> clazz) {
 		return sqlQuery(sql, null, clazz);
 	}
-	
+
 	@Override
 	public <T> List<T> sqlQuery(String sql, String paramName, Object paramValue, Class<T> clazz) {
 		Map<String, Object> params = new HashMap<String, Object>();
@@ -1576,7 +1597,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		}
 		return sqlQuery(sql, params, clazz);
 	}
-	
+
 	@Override
 	public <T> List<T> sqlQuery(String sql, String countSql, String paramName, Object paramValue, Class<T> clazz,
 	                            Page page) {
@@ -1586,19 +1607,19 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		}
 		return sqlQuery(sql, countSql, params, clazz);
 	}
-	
+
 	@Override
 	public <T> T sqlScalarQuery(String sql, Class<T> type) {
 		Object result = sqlQuerySingleResult(sql, Collections.emptyMap());
 		return ValueHandlerFactory.convert(result, type);
 	}
-	
+
 	@Override
 	public <T> T sqlScalarQuery(String sql, Map<String, Object> params, Class<T> type) {
 		Object result = sqlQuerySingleResult(sql, params);
 		return ValueHandlerFactory.convert(result, type);
 	}
-	
+
 	@Override
 	public <T> T sqlScalarQuery(String sql, String paramName, Object paramValue, Class<T> type) {
 		Map<String, Object> params = new HashMap<>();
@@ -1606,7 +1627,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		Object result = sqlQuerySingleResult(sql, params);
 		return ValueHandlerFactory.convert(result, type);
 	}
-	
+
 	public int sqlCountQuery(String sql, Map<String, Object> params) {
 		Query query = em().createNativeQuery(sql);
 		for (String paramName : params.keySet()) {
@@ -1621,7 +1642,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		}
 		return ((Integer) count).intValue();
 	}
-	
+
 	@Override
 	public <T> JPACriteriaQuery<T> createJPACriteriaQuery(Class<T> entityClass,
 	                                                      List<Predicate> predicates, OrderBean... orders) {
@@ -1629,13 +1650,14 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 				.addPredicates(predicates)
 				.addOrders(orders);
 	}
-	
+
 	@Override
 	public <T> int deleteBy(Class<T> entityClass, Predicate... predicates) {
 		CriteriaBuilder criteriaBuilder = em().getCriteriaBuilder();
 		CriteriaDelete<T> delete = criteriaBuilder.createCriteriaDelete(entityClass);
 		Root<T> root = delete.from(entityClass);
-		List<jakarta.persistence.criteria.Predicate> conditions = new ArrayList<jakarta.persistence.criteria.Predicate>();
+		List<jakarta.persistence.criteria.Predicate> conditions =
+				new ArrayList<jakarta.persistence.criteria.Predicate>();
 		for (int i = 0; i < predicates.length; i++) {
 			Predicate predicate = predicates[i];
 			conditions.add(predicate.toPredicate(criteriaBuilder, root));
@@ -1643,33 +1665,34 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		delete.where(conditions.toArray(new jakarta.persistence.criteria.Predicate[0]));
 		return this.em().createQuery(delete).executeUpdate();
 	}
-	
+
 	@Override
 	public <T> int deleteIn(Class<T> entityClass, String propertyName, Collection<?> values) {
 		CriteriaBuilder criteriaBuilder = em().getCriteriaBuilder();
 		CriteriaDelete<T> criteriaDelete = criteriaBuilder.createCriteriaDelete(entityClass);
 		Root<T> root = criteriaDelete.from(entityClass);
 		criteriaDelete.where(root.get(propertyName).in(values));
-		
+
 		return em().createQuery(criteriaDelete).executeUpdate();
 	}
-	
+
 	@Override
 	public <T> int deleteIn(Class<T> entityClass, String propertyName, Object[] values) {
 		requireNonNull(values, "values cannot be null");
 		return deleteIn(entityClass, propertyName, asList(values));
 	}
-	
+
 	@Override
 	public <T, PK extends Serializable> T ensureEntityExists(Class<T> entityClass,
 	                                                         PK id) throws EntityNotFoundException {
 		T entity = get(entityClass, id);
 		if (entity == null) {
-			throw new EntityNotFoundException(format("Unable to find {0} with id {1}", entityClass.getSimpleName(), id));
+			throw new EntityNotFoundException(format("Unable to find {0} with id {1}", entityClass.getSimpleName(),
+					id));
 		}
 		return entity;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T, PK extends Serializable> List<T> ensureMultiEntityExists(Class<T> entityClass, PK... ids) {
@@ -1677,16 +1700,18 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		MultiIdentifierLoadAccess<T> multiIdentifierLoadAccess = session.byMultipleIds(entityClass);
 		List<T> entities = multiIdentifierLoadAccess.multiLoad(ids);
 		if (entities.size() != ids.length) {
-			throw new EntityNotFoundException(format("Unable to find {0} with id {1}", entityClass.getSimpleName(), ids));
+			throw new EntityNotFoundException(format("Unable to find {0} with id {1}", entityClass.getSimpleName(),
+					ids));
 		}
 		for (T entity : entities) {
 			if (entity == null) {
-				throw new EntityNotFoundException(format("Unable to find {0} with id {1}", entityClass.getSimpleName(), ids));
+				throw new EntityNotFoundException(format("Unable to find {0} with id {1}", entityClass.getSimpleName()
+						, ids));
 			}
 		}
 		return entities;
 	}
-	
+
 	@Override
 	public <T, PK extends Serializable> List<T> ensureMultiEntityExists(Class<T> entityClass, List<PK> ids) {
 		requireNonNull(ids, "ids cannot be null!");
@@ -1694,22 +1719,24 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		MultiIdentifierLoadAccess<T> multiIdentifierLoadAccess = session.byMultipleIds(entityClass);
 		List<T> entities = multiIdentifierLoadAccess.multiLoad(ids);
 		if (entities.size() != ids.size()) {
-			throw new EntityNotFoundException(format("Unable to find {0} with id {1}", entityClass.getSimpleName(), ids));
+			throw new EntityNotFoundException(format("Unable to find {0} with id {1}", entityClass.getSimpleName(),
+					ids));
 		}
 		for (T entity : entities) {
 			if (entity == null) {
-				throw new EntityNotFoundException(format("Unable to find {0} with id {1}", entityClass.getSimpleName(), ids));
+				throw new EntityNotFoundException(format("Unable to find {0} with id {1}", entityClass.getSimpleName()
+						, ids));
 			}
 		}
 		return entities;
 	}
-	
+
 	@Override
 	public <T> T ensureEntityExists(Class<T> entityClass, String propertyName,
 	                                Object value) throws EntityNotFoundException {
 		return ensureEntityExists(entityClass, propertyName, value, true);
 	}
-	
+
 	@Override
 	public <T> T ensureEntityExists(Class<T> entityClass, String propertyName, Object value,
 	                                boolean includeDeleted) throws EntityNotFoundException {
@@ -1721,7 +1748,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		}
 		return entity;
 	}
-	
+
 	@Override
 	public <T> Query createQuery(String jpql, Class<T> resultClass) {
 		Objects.requireNonNull(jpql, "jpql cannot be null");
@@ -1731,7 +1758,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		}
 		return query;
 	}
-	
+
 	@Override
 	public <T> Query createQuery(final String jpql, String paramName, Object paramValue, Class<T> resultClass) {
 		Objects.requireNonNull(jpql, "jpql cannot be null");
@@ -1744,13 +1771,13 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		}
 		return query;
 	}
-	
+
 	@Override
 	public <T> void detach(T entity) {
 		requireNonNull(entity, "entity cannot be null!");
 		em().detach(entity);
 	}
-	
+
 	@Override
 	public <T> void detach(List<T> entities) {
 		requireNonNull(entities, "entities cannot be null!");
@@ -1759,23 +1786,23 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			em().detach(entity);
 		});
 	}
-	
+
 	@Override
 	public Object sqlQuerySingleResult(String sql, Map<String, Object> params) {
 		List<?> results = sqlQuery(sql, params);
 		return results.isEmpty() ? null : results.get(0);
 	}
-	
+
 	@Override
 	public <T> List<T> sqlQuery(String sql, Map<String, Object> params) {
 		org.hibernate.query.Query<?> query = em()
 				.createNativeQuery(sql)
 				.unwrap(org.hibernate.query.Query.class);
-		
+
 		if (hibernateUseQueryCache) {
 			query.setHint(HINT_QUERY_CACHE, true);
 		}
-		
+
 		if (isNotEmpty(params)) {
 			query.setProperties(params);
 		}
@@ -1787,28 +1814,28 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			throw new RawSQLQueryException(msg, e);
 		}
 	}
-	
+
 	@Override
 	public Object query4One(String queryName, Map<String, Object> params) {
 		List<?> results = query4RawList(queryName, params);
 		return results.isEmpty() ? null : results.get(0);
 	}
-	
+
 	@Override
-	public Object query4One(String queryName, String paramName, Object paramValue) {
+	public <T> T query4One(String queryName, String paramName, Object paramValue) {
 		Map<String, Object> params = new HashMap<>();
 		if (!isBlank(paramName)) {
 			params.put(paramName, paramValue);
 		}
-		return query4One(queryName, params);
+		return (T) query4One(queryName, params);
 	}
-	
+
 	@Override
 	public Object query4One(String queryName) {
 		List<?> results = query4RawList(queryName, null);
 		return results.isEmpty() ? null : results.get(0);
 	}
-	
+
 	@Override
 	public <T> T query4PrimitiveOne(String queryName, String paramName, Object paramValue, Class<T> type) {
 		Map<String, Object> params = new HashMap<>();
@@ -1823,10 +1850,10 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			}
 			return null;
 		}
-		
+
 		return ValueHandlerFactory.determineAppropriateHandler(type).convert(result);
 	}
-	
+
 	@Override
 	public int executeUpdate(String queryName, String paramName, Object paramValue) {
 		Map<String, Object> params = new HashMap<>();
@@ -1835,14 +1862,20 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		}
 		return executeUpdate(queryName, params);
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public int executeUpdate(String queryName, Map<String, Object> params) {
-		org.hibernate.query.Query<Integer> query =
-				em().createNamedQuery(queryName).unwrap(org.hibernate.query.Query.class);
-		String rawQuery = query.getQueryString();
-		
+		String rawQuery = null;
+		org.hibernate.query.Query<Integer> query = null;
+		if (isSqlStatement(queryName)) {
+			rawQuery = queryName;
+		} else {
+			query =
+					em().createNamedQuery(queryName).unwrap(org.hibernate.query.Query.class);
+			rawQuery = query.getQueryString();
+		}
+
 		//建立context， 并放入数据  
 		VelocityContext context = new VelocityContext();
 		context.put("StringUtils", StringUtils.class);
@@ -1858,11 +1891,11 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		StringWriter sql = new StringWriter();
 		//进行解析  
 		Velocity.evaluate(context, sql, queryName, rawQuery);
-		
+
 		String parsedSQL = sql.toString();
 		query = em().createNativeQuery(parsedSQL)
 				.unwrap(org.hibernate.query.Query.class);
-		
+
 		if (isNotEmpty(params)) {
 			for (String key : params.keySet()) {
 				Object value = params.get(key);
@@ -1870,7 +1903,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			}
 			query.setProperties(params);
 		}
-		
+
 		try {
 			return query.executeUpdate();
 		} catch (Throwable e) {
@@ -1880,14 +1913,14 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			log.error(msg, e);
 			throw new SQLQueryException(msg, e);
 		}
-		
+
 	}
-	
+
 	@Override
 	public void execute(String sql) {
 		org.hibernate.query.Query query = em().createNativeQuery(sql)
 				.unwrap(org.hibernate.query.Query.class);
-		
+
 		if (hibernateUseQueryCache) {
 			query.setHint(HINT_QUERY_CACHE, true);
 		}
@@ -1898,7 +1931,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			throw new SQLQueryException(msg, e);
 		}
 	}
-	
+
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		for (String contextName : getContextClasses().keySet()) {
@@ -1914,12 +1947,12 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			}
 		}
 	}
-	
+
 	@Override
 	public void flush() {
 		em().flush();
 	}
-	
+
 	/**
 	 * Bind named parameters.
 	 *
@@ -1933,7 +1966,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		}
 		return setParameters(query, params);
 	}
-	
+
 	/**
 	 * 如果value是List或者数组，当他们是空、长度为0，则需要特殊处理一下，将value改写为'',这样SQL IN 语句才不会出错
 	 *
@@ -1945,7 +1978,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		if (value == null) {
 			return;
 		}
-		
+
 		if (value instanceof List) {
 			List<?> values = (List<?>) value;
 			if (values.size() == 0) {
@@ -1953,12 +1986,12 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			}
 			return;
 		}
-		
+
 		ArrayTypes arrayTypes = ARRAY_TYPE_MAP.get(value.getClass().getName());
 		if (arrayTypes == null) {
 			return;
 		}
-		
+
 		switch (arrayTypes) {
 			case LONG_WRAPPER:
 				Long[] arr1 = (Long[]) value;
@@ -2014,71 +2047,71 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 					params.put(key, "''");
 				}
 				break;
-			
+
 			default:
 				break;
 		}
 	}
-	
+
 	private boolean isEmpty(Collection entities) {
 		return entities == null || entities.isEmpty();
 	}
-	
+
 	private boolean isNotEmpty(Collection entities) {
 		return entities != null && !entities.isEmpty();
 	}
-	
+
 	private boolean isEmpty(Map map) {
 		return map == null || map.isEmpty();
 	}
-	
+
 	private boolean isNotEmpty(Map map) {
 		return map != null && !map.isEmpty();
 	}
-	
+
 	private Query setParameters(Query query, Map<String, ?> params) {
 		if (isEmpty(params)) {
 			return query;
 		}
-		
+
 		for (String paramName : params.keySet()) {
 			query.setParameter(paramName, params.get(paramName));
 		}
 		return query;
 	}
-	
+
 	public Map<String, String> getContextClasses() {
 		return contextClasses;
 	}
-	
+
 	public void setContextClasses(Map<String, String> contextClasses) {
 		this.contextClasses = contextClasses;
 	}
-	
+
 	public OrderBean getOrder() {
 		return order;
 	}
-	
+
 	public void setOrder(OrderBean order) {
 		this.order = order;
 	}
-	
+
 	public boolean isUseDefaultOrder() {
 		return useDefaultOrder;
 	}
-	
+
 	public void setUseDefaultOrder(boolean useDefaultOrder) {
 		this.useDefaultOrder = useDefaultOrder;
 	}
-	
+
 	public Set<String> getEnumLookupProperties() {
 		return enumLookupProperties;
 	}
-	
+
 	public void setEnumLookupProperties(Set<String> enumLookupProperties) {
 		this.enumLookupProperties = enumLookupProperties;
 	}
-	
+
 	/**
 	 * 判断是否在spring事务中
 	 *
@@ -2087,7 +2120,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 	public boolean isInSpringTransaction() {
 		return TransactionSynchronizationManager.isActualTransactionActive();
 	}
-	
+
 	/**
 	 * 基于是否受Spring事务管理，获取Spring管理的EntityManager或者自行通过EntityManagerFactory创建的EntityManager
 	 *
@@ -2106,19 +2139,19 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			}
 		}
 	}
-	
+
 	/**
 	 * 如果未开启spring事务，则需要手动开启事务
 	 */
 	public void begin() {
-		if(isInSpringTransaction()) {
+		if (isInSpringTransaction()) {
 			log.warn("Spring transaction is active, no need to begin transaction");
 			return;
-		}else {
+		} else {
 			em().getTransaction().begin();
 		}
 	}
-	
+
 	/**
 	 * 如果未开启spring事务，则需要手动提交事务
 	 */
@@ -2130,7 +2163,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 			em().getTransaction().commit();
 		}
 	}
-	
+
 	/**
 	 * 如果未开启spring事务，则需要手动回滚事务
 	 */
@@ -2141,5 +2174,29 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		} else {
 			em().getTransaction().rollback();
 		}
+	}
+
+	private boolean isSqlStatement(String queryName) {
+		Matcher matcher = SELECT_PATTERN.matcher(queryName);
+		if (matcher.find()) {
+			return true;
+		}
+
+		matcher = UPDATE_PATTERN.matcher(queryName);
+		if (matcher.find()) {
+			return true;
+		}
+
+		matcher = DELETE_PATTERN.matcher(queryName);
+		if (matcher.find()) {
+			return true;
+		}
+
+		matcher = INSERT_PATTERN.matcher(queryName);
+		if (matcher.find()) {
+			return true;
+		}
+
+		return false;
 	}
 }

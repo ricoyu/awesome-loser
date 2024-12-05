@@ -156,7 +156,7 @@ public interface SQLOperations {
 	 * @param queryName
 	 * @return Object
 	 */
-	public Object query4One(String queryName, String paramName, Object paramValue);
+	public <T> T query4One(String queryName, String paramName, Object paramValue);
 	
 	/**
 	 * 根据SQL查询返回单个结果，并自动转换成期望对象类型<p/>
@@ -295,20 +295,20 @@ public interface SQLOperations {
 	public boolean ifExists(String queryName, Map<String, Object> params);
 	
 	/**
-	 * 执行更新
+	 * 执行更新, 插入或删除语句
 	 *
-	 * @param queryName
-	 * @param params
+	 * @param queryName xml中的sql名字或者直接是一条原生SQL update, insert, delete语句
+	 * @param params  SQL语句中的参数
 	 * @return int 更新影响的记录数
 	 */
 	public int executeUpdate(String queryName, Map<String, Object> params);
 	
 	/**
-	 * 执行更新操作
+	 * 执行更新, 插入或删除语句
 	 *
-	 * @param queryName
-	 * @param paramName
-	 * @param paramValue
+	 * @param queryName xml中的sql名字或者直接是一条原生SQL update, insert, delete语句
+	 * @param paramName SQL语句中的参数名, 形式为 :name
+	 * @param paramValue  SQL语句中的参数值
 	 * @return int 更新影响的记录数
 	 */
 	public int executeUpdate(String queryName, String paramName, Object paramValue);

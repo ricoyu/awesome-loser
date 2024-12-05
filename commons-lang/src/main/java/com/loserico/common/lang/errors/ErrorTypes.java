@@ -51,20 +51,20 @@ public enum ErrorTypes implements ErrorType {
 	MISSING_AUTHORIZATION("18", "template.missing.authorization.header", "请提供Authorization请求头"),
     
     
-    ACCESS_DENIED("19", "template.access.denied", "你无权访问该资源"),
-    FLOW_EXCEPTION("20", "template.flow.control", "已被流控"),
-    DEGRADE_EXCEPTION("21", "template.flow.degrade", "已被熔断"),
-    HOT_PARAM_EXCEPTION("22", "template.hot.param", "已被热点参数限流"),
-    SYSTEM_BLOCK_EXCEPTION("23", "template.system.control", "已被系统规则限流"),
+    ACCESS_DENIED("40", "template.access.denied", "你无权访问该资源"),
+    FLOW_EXCEPTION("41", "template.flow.control", "已被流控"),
+    DEGRADE_EXCEPTION("42", "template.flow.degrade", "已被熔断"),
+    HOT_PARAM_EXCEPTION("43", "template.hot.param", "已被热点参数限流"),
+    SYSTEM_BLOCK_EXCEPTION("44", "template.system.control", "已被系统规则限流"),
     
-    NOT_FOUND("24", "template.not.found", "Not Found"),
+    NOT_FOUND("45", "template.not.found", "Not Found"),
     
     //网管层找不对目标service
-    GATEWAY_NOT_FOUND_SERVICE("25", "template.service.not.found", "Service Not Found"),
+    GATEWAY_NOT_FOUND_SERVICE("46", "template.service.not.found", "Service Not Found"),
     
-    METHOD_NOT_ALLOWED("26", "template.method.notallowed", "Method not Allowed"),
+    METHOD_NOT_ALLOWED("47", "template.method.notallowed", "Method not Allowed"),
     
-    TOO_MANY_REQUESTS("27", "template.too.many.requests", "Too Many Requests");
+    TOO_MANY_REQUESTS("48", "template.too.many.requests", "Too Many Requests");
 
     
     /**
