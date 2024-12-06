@@ -1312,8 +1312,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 					.createNamedQuery(queryName)
 					.unwrap(org.hibernate.query.Query.class);
 
-			queryString = query.getQueryString();
-
+			queryString = ReflectionUtils.getFieldValue("originalSqlString", query);
 		}
 		//建立context， 并放入数据
 		VelocityContext context = new VelocityContext();
