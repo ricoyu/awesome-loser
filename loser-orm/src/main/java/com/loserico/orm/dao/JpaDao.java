@@ -1112,7 +1112,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		} else {//表示queryName是定义在xml中的查询语句名
 			query = em().createNamedQuery(queryName)
 					.unwrap(org.hibernate.query.Query.class);
-			rawQuery = query.getQueryString();
+			rawQuery = ReflectionUtils.getFieldValue("originalSqlString", query);
 		}
 		StringBuilder queryString = new StringBuilder(rawQuery);
 
@@ -1872,7 +1872,7 @@ public class JpaDao implements JPQLOperations, SQLOperations, CriteriaOperations
 		} else {
 			query =
 					em().createNamedQuery(queryName).unwrap(org.hibernate.query.Query.class);
-			rawQuery = query.getQueryString();
+			rawQuery = ReflectionUtils.getFieldValue("originalSqlString", query);
 		}
 
 		//建立context， 并放入数据  
