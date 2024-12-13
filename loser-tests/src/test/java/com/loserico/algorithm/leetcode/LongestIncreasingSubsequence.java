@@ -1,11 +1,13 @@
 package com.loserico.algorithm.leetcode;
 
+import com.loserico.common.lang.utils.Arrays;
+
 import java.util.Scanner;
 
 /**
  * 最长递增子序列
  * <p>
- * 给你一个整数数组 nums ，找到其中最长严格递增子序列的长度。<br/>
+ * 给你一个整数数组 nums, 找到其中最长严格递增子序列的长度。<br/>
  * 子序列 是由数组派生而来的序列，删除（或不删除）数组中的元素而不改变其余元素的顺序。例如，[3,6,2,7] 是数组 [0,3,1,6,2,2,7] 的子序列。
  * <p>
  * 示例 1：
@@ -26,8 +28,8 @@ import java.util.Scanner;
  * <p>
  * 为了解决这个问题，我们可以使用一个动态规划的方法。思路是使用一个数组 dp 来存储每个位置结尾的最长递增子序列的长度。具体算法如下：
  * <ol>
- *     <li/>初始化一个和输入数组 nums 等长的数组 dp，并将所有元素初始化为1，因为每个元素至少可以单独成为一个递增子序列。
- *     <li/>对于数组 nums 的每个元素，遍历其之前的所有元素，检查是否可以将当前元素添加到之前的递增子序列中。
+ *     <li/>初始化一个和输入数组 nums 等长的数组 dp, 并将所有元素初始化为1, 因为每个元素至少可以单独成为一个递增子序列。
+ *     <li/>对于数组 nums 的每个元素, 遍历其之前的所有元素, 检查是否可以将当前元素添加到之前的递增子序列中。
  *     <li/>如果当前元素 nums[j] 大于之前某元素 nums[i]（其中 i < j），那么就可以将当前元素加入由 nums[i] 结尾的递增子序列中，更新 dp[j] 为 dp[i] + 1 和现有的 dp[j]
  *     中的较大值。
  *     <li/>最后，dp 数组中的最大值即为整个数组的最长递增子序列的长度。
@@ -47,11 +49,7 @@ public class LongestIncreasingSubsequence {
 		Scanner scanner = new Scanner(System.in);
 		System.out.print("请输入数组元素: ");
 		String input = scanner.nextLine().trim();
-		String[] parts = input.split(",");
-		int[] nums = new int[parts.length];
-		for (int i = 0; i < parts.length; i++) {
-			nums[i] = Integer.parseInt(parts[i].trim());
-		}
+		int[] nums = Arrays.parseOneDimensionArray(input);
 		scanner.close();
 
 		System.out.println(lengthOfLIS(nums));
@@ -62,9 +60,9 @@ public class LongestIncreasingSubsequence {
 			return 0;
 		}
 
-		//dp数组，dp[i]表示以nums[i]结尾的最长递增子序列的长度
+		//dp数组, dp[i]表示以nums[i]结尾的最长递增子序列的长度
 		int[] dp = new int[nums.length];
-		// 初始情况，每个元素自身至少可以构成长度为1的递增子序列
+		// 初始情况, 每个元素自身至少可以构成长度为1的递增子序列
 		for (int i = 0; i < nums.length; i++) {
 			dp[i] = 1;
 		}
@@ -72,9 +70,9 @@ public class LongestIncreasingSubsequence {
 		// 填充dp数组
 		for (int j = 1; j < nums.length; j++) {
 			for (int i = 0; i < j; i++) {
-				// 如果nums[i]可以接在nums[j]后面形成递增序列
+				// 如果nums[j]可以接在nums[i]后面形成递增序列
 				if (nums[j] > nums[i]) {
-					// 更新dp[i]，取dp[j] + 1和现有的dp[i]的最大值
+					// 更新dp[i], 取dp[j] + 1和现有的dp[i]的最大值
 					dp[j] = Math.max(dp[j], dp[i] + 1);
 				}
 			}

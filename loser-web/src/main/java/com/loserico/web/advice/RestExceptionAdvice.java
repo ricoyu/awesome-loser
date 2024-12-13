@@ -7,6 +7,7 @@ import com.loserico.common.lang.exception.EntityNotFoundException;
 import com.loserico.common.lang.i18n.I18N;
 import com.loserico.common.lang.vo.Result;
 import com.loserico.common.lang.vo.Results;
+import com.loserico.json.jackson.JacksonUtils;
 import com.loserico.validation.bean.ErrorMessage;
 import com.loserico.validation.exception.GeneralValidationException;
 import com.loserico.validation.exception.UniqueConstraintViolationException;
@@ -113,7 +114,7 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 			ErrorMessage errorMessage = ValidationUtils.getErrorMessage(bindingResult);
 			List<String[]> msgs = errorMessage.getErrors();
 			
-			Result result = Results.status(VALIDATION_FAIL.code(), msgs).build();
+			Result result = Results.status(VALIDATION_FAIL.code(), JacksonUtils.toJson(msgs)).build();
 			return new ResponseEntity(result, HttpStatus.OK);
 		}
 		Result result = Results.status(VALIDATION_FAIL.code(), e.getMessage()).build();
@@ -144,7 +145,7 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 					return errArray;
 				})
 				.collect(toList());
-		Result result = Results.status(VALIDATION_FAIL.code(), msgs).build();
+		Result result = Results.status(VALIDATION_FAIL.code(), JacksonUtils.toJson(msgs)).build();
 		return new ResponseEntity(result, headers, HttpStatus.OK);
 	}
 	
@@ -170,7 +171,7 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 					return errArray;
 				})
 				.collect(toList());
-		Result result = Results.status(VALIDATION_FAIL.code(), msgs).build();
+		Result result = Results.status(VALIDATION_FAIL.code(), JacksonUtils.toJson(msgs)).build();
 		return new ResponseEntity(result, HttpStatus.OK);
 	}
 	

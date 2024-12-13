@@ -33,7 +33,10 @@ public class Result {
 	/**
 	 * message表示在API调用失败的情况下详细的错误信息, 这个信息可以由客户端直接呈现给用户
 	 * 调用成功则固定为OK；
-	 * 数据校验失败时的验证错误页放到这个字段里面
+	 * 数据校验失败时的验证错误也放到这个字段里面
+	 * 因为message还会承载详细的验证错误信息, 所以用Object类型, 因为验证错误信息可能是一个List<String[]>类型的
+	 * 如果message用String类型的, 那么在服务端就要先对错误信息进行序列化成String, 最后再输出到前端页面前会再序列化一次, 所以字符串的双引号就会多一个转义符, 像这样
+	 * "message": "[[\"name\",\"俞雪华 dev\"],[\"age\",\"18\"]]",
 	 */
 	private Object message = "OK";
 	
@@ -85,6 +88,13 @@ public class Result {
 		return message;
 	}
 
+	public String getMessageStr() {
+		if (message == null) {
+			return null;
+		}
+		return message.toString();
+	}
+
 	public void setMessage(Object message) {
 		this.message = message;
 	}
@@ -99,5 +109,13 @@ public class Result {
 
 	public void setPage(Page page) {
 		this.page = page;
+	}
+
+	/**
+	 * 判断调用是否成功
+	 * @return boolean
+	 */
+	public boolean isSuccess() {
+		return "0".equals(code);
 	}
 }
