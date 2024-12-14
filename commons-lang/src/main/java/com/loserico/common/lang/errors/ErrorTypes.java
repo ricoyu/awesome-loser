@@ -59,8 +59,8 @@ public enum ErrorTypes implements ErrorType {
     TIMESTAMP_INVALID("40116", "template.timestamp.invalid.error", "timestamp参数必须是UNIX miliseconds"),
     INVALID_URI_ACCESS("40117", "template.invalid.uri.access", "访问的URI不合法"),
     TIMESTAMP_MISMATCH("40118", "template.timestamp.mismatch.error", "timestamp参数不匹配"),
-    
-    
+
+    //-------------------- 流控相关错误, 403 开头 --------------------------------------
     ACCESS_DENIED("4031", "template.access.denied", "你无权访问该资源"),
     FLOW_EXCEPTION("4032", "template.flow.control", "已被流控"),
     DEGRADE_EXCEPTION("4033", "template.flow.degrade", "已被熔断"),

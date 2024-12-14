@@ -52,14 +52,14 @@ public class JedisSentinelPoolFactory implements PoolFactory {
 		if (StringUtils.isNotBlank(password)) {
 			sentinelPool = new JedisSentinelPool(masterName,
 					asList(sentinels.split(",")).stream().collect(toSet()),
-					config(propertyReader),
+					genericPoolConfig(propertyReader),
 					timeout,
 					password,
 					db);
 		} else {
 			sentinelPool = new JedisSentinelPool(masterName,
 					asList(sentinels.split(",")).stream().collect(toSet()),
-					config(propertyReader),
+					genericPoolConfig(propertyReader),
 					timeout,
 					null,
 					db);

@@ -18,6 +18,11 @@ import java.util.Map;
  */
 public class Result {
 
+	/**
+	 * 调用成功的状态码
+	 */
+	private static final String SUCCESS_CODE = "0";
+
 	private static final Logger log = LoggerFactory.getLogger(Result.class);
 	
 	/**
@@ -115,7 +120,7 @@ public class Result {
 	 * 判断调用是否成功
 	 * @return boolean
 	 */
-	public boolean isSuccess() {
-		return "0".equals(code);
+	public boolean success() {
+		return SUCCESS_CODE.equals(code);
 	}
 }

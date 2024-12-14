@@ -6,13 +6,13 @@ import com.loserico.cache.utils.ByteUtils;
 import com.loserico.json.jackson.JacksonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.jedis.BitOP;
 import redis.clients.jedis.GeoCoordinate;
-import redis.clients.jedis.GeoRadiusResponse;
-import redis.clients.jedis.GeoUnit;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
 import redis.clients.jedis.Pipeline;
+import redis.clients.jedis.args.BitOP;
+import redis.clients.jedis.args.GeoUnit;
+import redis.clients.jedis.resps.GeoRadiusResponse;
 import redis.clients.jedis.util.Pool;
 
 import java.util.List;
@@ -119,7 +119,7 @@ public class JedisPoolOperations implements JedisOperations {
 	}
 	
 	@Override
-	public Set<String> zrevrange(String key, int start, int end) {
+	public List<String> zrevrange(String key, int start, int end) {
 		return operate((jedis) -> jedis.zrevrange(key, (long)start, (long)end));
 	}
 	
@@ -134,12 +134,12 @@ public class JedisPoolOperations implements JedisOperations {
 	}
 	
 	@Override
-	public Set<String> zrange(String key, long start, long end) {
+	public List<String> zrange(String key, long start, long end) {
 		return operate((jedis) -> jedis.zrange(key, start, end));
 	}
 	
 	@Override
-	public Set<String> zrangeByScore(String key, String min, String max) {
+	public List<String> zrangeByScore(String key, String min, String max) {
 		return operate(jedis -> jedis.zrangeByScore(key, min, max));
 	}
 	
@@ -505,7 +505,7 @@ public class JedisPoolOperations implements JedisOperations {
 	@Override
 	public Boolean setbit(String key, long offset, int value) {
 		return operate((jedis) -> {
-			return jedis.setbit(key, offset, value+"");
+			return jedis.setbit(key, offset, value == 1);
 		});
 	}
 	

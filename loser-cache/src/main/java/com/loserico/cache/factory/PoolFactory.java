@@ -2,9 +2,10 @@ package com.loserico.cache.factory;
 
 import com.loserico.cache.config.RedisProperties;
 import com.loserico.common.lang.resource.PropertyReader;
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
+import redis.clients.jedis.ConnectionPoolConfig;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisCluster;
-import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.util.Pool;
 
 /**
@@ -47,8 +48,8 @@ public interface PoolFactory {
 	 * @param propertyReader
 	 * @return
 	 */
-	public default JedisPoolConfig config(PropertyReader propertyReader) {
-		JedisPoolConfig config = new JedisPoolConfig();
+	public default ConnectionPoolConfig config(PropertyReader propertyReader) {
+		ConnectionPoolConfig config = new ConnectionPoolConfig();
 		
 		/*
 		 * 最大最小资源数
@@ -88,13 +89,54 @@ public interface PoolFactory {
 		return config;
 	}
 
+	public default GenericObjectPoolConfig<Jedis> genericPoolConfig(PropertyReader propertyReader) {
+		GenericObjectPoolConfig<Jedis> config = new GenericObjectPoolConfig<>();
+
+		/*
+		 * 最大最小资源数
+		 * 应用的实例数 * maxTotal不能超过redis最大连接数maxclients(默认10000)
+		 * 如果一次命令时间(borrow/return resource + Jedis执行命令(包括网络))的平均耗时为1ms, 那么一个连接的QPS大约是1000
+		 * 那么maxTotal设为50理论上QPS可以达到50000
+		 */
+		config.setMaxTotal(propertyReader.getInt("redis.maxTotal", 50));
+		/*
+		 * 连接池里的连接都是空闲时, 最多保留多少个连接
+		 * 连接池的最佳性能是maxIdle == maxTotal, 这样可以避免连接池伸缩带来呃性能干扰
+		 */
+		config.setMaxIdle(propertyReader.getInt("redis.maxIdle", 50));
+		//连接池里最少放几个连接
+		config.setMinIdle(propertyReader.getInt("redis.minIdle", 8));
+
+		/*
+		 * 测试连接可用性
+		 */
+		config.setTestOnBorrow(propertyReader.getBoolean("redis.testOnBorrow", true));
+		config.setTestOnReturn(propertyReader.getBoolean("redis.testOnReturn", false));
+
+		/*
+		 * 资源用尽时处理
+		 */
+		config.setBlockWhenExhausted(propertyReader.getBoolean("redis.blockWhenExhausted", true));
+		config.setMaxWaitMillis(propertyReader.getInt("redis.maxWaitMillis", 60000));
+
+		/*
+		 * 空闲资源监测
+		 */
+		config.setTestWhileIdle(propertyReader.getBoolean("redis.testWhileIdle", true));
+		config.setTimeBetweenEvictionRunsMillis(propertyReader.getInt("redis.timeBetweenEvictionRunsMillis", 30000));
+		config.setMinEvictableIdleTimeMillis(propertyReader.getInt("redis.minEvictableIdleTimeMillis", 60000));
+		config.setNumTestsPerEvictionRun(propertyReader.getInt("redis.numTestsPerEvictionRun", -1));
+
+		return config;
+	}
+
 	/**
 	 * 根据RedisProperties创建JedisPoolConfig
 	 * @param redisProperties
 	 * @return JedisPoolConfig
 	 */
-	public default JedisPoolConfig config(RedisProperties redisProperties) {
-		JedisPoolConfig config = new JedisPoolConfig();
+	public default ConnectionPoolConfig config(RedisProperties redisProperties) {
+		ConnectionPoolConfig config = new ConnectionPoolConfig();
 		
 		/*
 		 * 最大最小资源数
@@ -123,6 +165,39 @@ public interface PoolFactory {
 		config.setMinEvictableIdleTimeMillis(redisProperties.getMinEvictableIdleTimeMillis());
 		config.setNumTestsPerEvictionRun(redisProperties.getNumTestsPerEvictionRun());
 		
+		return config;
+	}
+
+	public default GenericObjectPoolConfig<Jedis> genericPoolConfig(RedisProperties redisProperties) {
+		GenericObjectPoolConfig<Jedis> config = new GenericObjectPoolConfig<>();
+
+		/*
+		 * 最大最小资源数
+		 */
+		config.setMaxTotal(redisProperties.getMaxTotal());
+		config.setMaxIdle(redisProperties.getMaxIdle());
+		config.setMinIdle(redisProperties.getMinIdle());
+
+		/*
+		 * 测试连接可用性
+		 */
+		config.setTestOnBorrow(redisProperties.isTestOnBorrow());
+		config.setTestOnReturn(redisProperties.isTestOnReturn());
+
+		/*
+		 * 资源用尽时处理
+		 */
+		config.setBlockWhenExhausted(redisProperties.isBlockWhenExhausted());
+		config.setMaxWaitMillis(redisProperties.getMaxWaitMillis());
+
+		/*
+		 * 空闲资源监测
+		 */
+		config.setTestWhileIdle(redisProperties.isTestWhileIdle());
+		config.setTimeBetweenEvictionRunsMillis(redisProperties.getTimeBetweenEvictionRunsMillis());
+		config.setMinEvictableIdleTimeMillis(redisProperties.getMinEvictableIdleTimeMillis());
+		config.setNumTestsPerEvictionRun(redisProperties.getNumTestsPerEvictionRun());
+
 		return config;
 	}
 

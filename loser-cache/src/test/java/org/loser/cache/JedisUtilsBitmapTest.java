@@ -30,6 +30,7 @@ public class JedisUtilsBitmapTest {
 	
 	@Test
 	public void testBitPosition() {
+		JedisUtils.Bitmap.setbit("k1", 8, true);
 		Boolean k1 = JedisUtils.Bitmap.getbit("k1", 8);
 		assertTrue(k1);
 		long bitCount = JedisUtils.Bitmap.bitCount("k1", 1, 1);

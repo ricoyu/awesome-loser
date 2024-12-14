@@ -2,20 +2,20 @@ package com.loserico.cache.operations;
 
 import com.loserico.json.jackson.JacksonUtils;
 import lombok.extern.slf4j.Slf4j;
-import redis.clients.jedis.BitOP;
 import redis.clients.jedis.GeoCoordinate;
-import redis.clients.jedis.GeoRadiusResponse;
-import redis.clients.jedis.GeoUnit;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPubSub;
+import redis.clients.jedis.args.BitOP;
+import redis.clients.jedis.args.GeoUnit;
+import redis.clients.jedis.resps.GeoRadiusResponse;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import static com.loserico.cache.utils.ByteUtils.toBytes;
-import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.*;
 
 /**
  * <p>
@@ -112,7 +112,7 @@ public class JedisClusterOperations implements JedisOperations {
 	}
 	
 	@Override
-	public Set<String> zrevrange(String key, int start, int end) {
+	public List<String> zrevrange(String key, int start, int end) {
 		return jedisCluster.zrevrange(key, (long)start, (long)end);
 	}
 	
@@ -322,12 +322,12 @@ public class JedisClusterOperations implements JedisOperations {
 	}
 	
 	@Override
-	public Set<String> zrange(String key, long start, long end) {
+	public List<String> zrange(String key, long start, long end) {
 		return jedisCluster.zrange(key, start, end);
 	}
 	
 	@Override
-	public Set<String> zrangeByScore(String key, String min, String max) {
+	public List<String> zrangeByScore(String key, String min, String max) {
 		return jedisCluster.zrangeByScore(key, min, max);
 	}
 	
@@ -438,7 +438,7 @@ public class JedisClusterOperations implements JedisOperations {
 	
 	@Override
 	public Boolean setbit(String key, long offset, int value) {
-		return jedisCluster.setbit(key, offset, value+"");
+		return jedisCluster.setbit(key, offset, value == 1);
 	}
 	
 	@Override

@@ -2,11 +2,11 @@ package com.loserico.cache.operations;
 
 import com.loserico.cache.exception.OperationNotSupportedException;
 import redis.clients.jedis.GeoCoordinate;
-import redis.clients.jedis.GeoRadiusResponse;
-import redis.clients.jedis.GeoUnit;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
 import redis.clients.jedis.Pipeline;
+import redis.clients.jedis.args.GeoUnit;
+import redis.clients.jedis.resps.GeoRadiusResponse;
 
 import java.util.List;
 import java.util.Map;
@@ -74,9 +74,9 @@ public interface JedisOperations {
 	
 	public Long zremRangeByScore(String key, String min, String max);
 	
-	public Set<String> zrange(String key, long start, long end);
+	public List<String> zrange(String key, long start, long end);
 	
-	public Set<String> zrangeByScore(String key, String min, String max);
+	public List<String> zrangeByScore(String key, String min, String max);
 	
 	/**
 	 * Removes and returns the first element of the list stored at key.
@@ -559,7 +559,7 @@ public interface JedisOperations {
 	 * @param end
 	 * @return
 	 */
-	Set<String> zrevrange(String key, int start, int end);
+	List<String> zrevrange(String key, int start, int end);
 	
 	Boolean setbit(String key, long offset, int value);
 	
