@@ -5,7 +5,7 @@
     <groupId>com.loserico</groupId>
     <artifactId>awesome-loser</artifactId>
     <packaging>pom</packaging>
-    <version>4.12.11</version>
+    <version>1.8.0</version>
     <name>Awesome Loser</name>
     <url>http://maven.apache.org</url>
 
@@ -734,42 +734,6 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <distributionManagement>
-        <repository>
-            <id>magic-store</id>
-            <name>magic-store</name>
-            <url>http://47.100.125.240:9091/repository/magic-store/</url>
-        </repository>
-    </distributionManagement>
-
-    <repositories>
-        <repository>
-            <id>magic-store</id>
-            <name>magic-store</name>
-            <url>http://47.100.125.240:9091/repository/maven-public/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-
-    <pluginRepositories>
-        <pluginRepository>
-            <id>magic-store</id>
-            <name>magic-store</name>
-            <url>http://47.100.125.240:9091/repository/maven-public</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </pluginRepository>
-    </pluginRepositories>
 
     <build>
         <resources>
