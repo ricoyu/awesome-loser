@@ -88,6 +88,6 @@ public class DateDeserializer extends JSR310DateTimeDeserializerBase<Date> {
 			return (Date) parser.getEmbeddedObject();
 		}
 
-		throw context.wrongTokenException(parser, JsonToken.VALUE_STRING, "Expected array or string.");
+		throw context.wrongTokenException(parser, Date.class, JsonToken.VALUE_STRING, "Expected array or string.");
 	}
 }

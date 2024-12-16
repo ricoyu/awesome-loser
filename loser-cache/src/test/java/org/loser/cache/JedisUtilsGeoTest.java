@@ -2,11 +2,10 @@ package org.loser.cache;
 
 import com.loserico.cache.JedisUtils;
 import org.junit.Test;
-import redis.clients.jedis.GeoRadiusResponse;
-import redis.clients.jedis.GeoUnit;
+import redis.clients.jedis.args.GeoUnit;
+import redis.clients.jedis.resps.GeoRadiusResponse;
 
 import java.util.List;
-import java.util.Set;
 
 /**
  * <p>
@@ -44,7 +43,7 @@ public class JedisUtilsGeoTest {
 	
 	@Test
 	public void test3() {
-		Set<String> sets = JedisUtils.ZSET.zrange("a-geo", 0, -1);
+		List<String> sets = JedisUtils.ZSET.zrange("a-geo", 0, -1);
 		for (String set : sets) {
 			System.out.println(set);
 		}

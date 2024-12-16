@@ -79,6 +79,8 @@ public class JacksonUtilsTest {
 		Map<String, Object> params = JacksonUtils.toMap(jsonString);
 		Map<Object, Object> genericMap = JacksonUtils.toGenericMap(jsonString);
 		assertThat(params.get("name")).isEqualTo("Mahesh");
+		params = JacksonUtils.toMap(jsonString);
+		assertThat(params.get("name")).isEqualTo("Mahesh");
 	}
 	
 	@Test

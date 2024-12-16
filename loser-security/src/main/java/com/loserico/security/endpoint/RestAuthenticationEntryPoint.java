@@ -3,16 +3,16 @@ package com.loserico.security.endpoint;
 import com.loserico.common.lang.vo.Result;
 import com.loserico.common.lang.vo.Results;
 import com.loserico.web.utils.RestUtils;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-import static com.loserico.common.lang.errors.ErrorTypes.*;
+import static com.loserico.common.lang.errors.ErrorTypes.TOKEN_EXPIRED;
 
 /**
  * 处理未认证访问的端点 
@@ -38,4 +38,5 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
 		Result result = Results.status(TOKEN_EXPIRED).build();
 		RestUtils.writeJson(response, result);
 	}
+
 }

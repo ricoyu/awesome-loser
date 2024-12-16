@@ -21,11 +21,11 @@ import com.loserico.json.jackson.JacksonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.GeoCoordinate;
-import redis.clients.jedis.GeoRadiusResponse;
-import redis.clients.jedis.GeoUnit;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
 import redis.clients.jedis.Pipeline;
+import redis.clients.jedis.args.GeoUnit;
+import redis.clients.jedis.resps.GeoRadiusResponse;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -58,7 +58,7 @@ import static com.loserico.cache.utils.UnMarshaller.toSeconds;
 import static com.loserico.json.jackson.JacksonUtils.toJson;
 import static java.lang.String.join;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.concurrent.TimeUnit.*;
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
@@ -1311,7 +1311,7 @@ public final class JedisUtils {
 		 *
 		 * @param key
 		 * @param elements
-		 * @return long
+		 * @return long 删除的元素个数, 0表示元素不在Set里面, 没有删除
 		 */
 		public static long srem(String key, Object... elements) {
 			return jedisOperations.srem(toBytes(key), toBytes(elements));
@@ -1441,7 +1441,7 @@ public final class JedisUtils {
 		 * @param end
 		 * @return
 		 */
-		public static Set<String> zrange(String key, long start, long end) {
+		public static List<String> zrange(String key, long start, long end) {
 			return jedisOperations.zrange(key, start, end);
 		}
 		
@@ -1460,7 +1460,7 @@ public final class JedisUtils {
 		 * @param end
 		 * @return
 		 */
-		public static Set<String> zrevrange(String key, int start, int end) {
+		public static List<String> zrevrange(String key, int start, int end) {
 			return jedisOperations.zrevrange(key, start, end);
 		}
 		
@@ -1487,7 +1487,7 @@ public final class JedisUtils {
 		 * @param max score最大值, 包含, +inf 表示正无穷大
 		 * @return Set<String>
 		 */
-		public static Set<String> zrangeByScore(String key, String min, String max) {
+		public static List<String> zrangeByScore(String key, String min, String max) {
 			return jedisOperations.zrangeByScore(key, min, max);
 		}
 		
@@ -1502,7 +1502,7 @@ public final class JedisUtils {
 		 * @param max score最大值, 包含, +inf 表示正无穷大
 		 * @return Set<String>
 		 */
-		public static Set<String> zrangeByScore(String key, long min, long max) {
+		public static List<String> zrangeByScore(String key, long min, long max) {
 			return jedisOperations.zrangeByScore(key, min + "", max + "");
 		}
 		

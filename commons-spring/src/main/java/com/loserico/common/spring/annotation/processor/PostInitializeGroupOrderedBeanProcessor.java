@@ -1,11 +1,12 @@
 package com.loserico.common.spring.annotation.processor;
 
 import com.loserico.common.spring.annotation.PostInitialize;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.BeanInitializationException;
+import org.springframework.beans.factory.SmartInitializingSingleton;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.ReflectionUtils;
 
@@ -23,8 +24,9 @@ import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.TimeUnit.MINUTES;
 
-@Slf4j
-public class PostInitializeGroupOrderedBeanProcessor implements ApplicationListener<ContextRefreshedEvent> {
+public class PostInitializeGroupOrderedBeanProcessor implements SmartInitializingSingleton {
+
+	private static final Logger log = LoggerFactory.getLogger(PostInitializeGroupOrderedBeanProcessor.class);
 
 	/**
 	 * Indicate how many applicationContext there are, default 1
@@ -37,6 +39,9 @@ public class PostInitializeGroupOrderedBeanProcessor implements ApplicationListe
 	 * The number of parallels threads
 	 */
 	private int maxThread = 32;
+
+	@Autowired
+	private ApplicationContext context;
 
 	/**
 	 * Filter used to get only methods annotated with {@link PostInitialize}
@@ -51,7 +56,8 @@ public class PostInitializeGroupOrderedBeanProcessor implements ApplicationListe
 	/**
 	 * A map used to cache all methods before execution
 	 */
-	private SortedMap<String, List<PostInitializingMethod>> postInitializingMethodGroups = new TreeMap<String, List<PostInitializingMethod>>();
+	private SortedMap<String, List<PostInitializingMethod>> postInitializingMethodGroups =
+			new TreeMap<String, List<PostInitializingMethod>>();
 
 	/**
 	 * Sets the maximum number of threads in parallel
@@ -63,21 +69,16 @@ public class PostInitializeGroupOrderedBeanProcessor implements ApplicationListe
 		this.maxThread = maxThread;
 	}
 
-	/**
-	 * Event processor when context is refreshed
-	 * If there are several contexts, only run on the last context refresh
-	 *
-	 * @param event The context event
-	 * @since 1.0.0
-	 */
+
 	@Override
-	public void onApplicationEvent(ContextRefreshedEvent event) {
+	public void afterSingletonsInstantiated() {
 		if (currentRunTimes < contextCount) {
 			currentRunTimes++;
 			return;
 		}
-		this.initializeAnnotations(event.getApplicationContext());
+		this.initializeAnnotations(context);
 		this.processInitialization();
+
 	}
 
 	/**
@@ -96,15 +97,15 @@ public class PostInitializeGroupOrderedBeanProcessor implements ApplicationListe
 					String group = postInitialize.group();
 					int delay = postInitialize.delay();
 					TimeUnit delayUnit = postInitialize.delayUnit();
-					
+
 					if (!postInitializingMethodGroups.containsKey(group)) {
 						postInitializingMethodGroups.put(group, new ArrayList<PostInitializingMethod>());
 					}
 
 					List<PostInitializingMethod> queue = postInitializingMethodGroups.get(group);
-					PostInitializingMethod postInitializingMethod = new PostInitializingMethod(method, 
-							bean.getValue(), 
-							bean.getKey(), 
+					PostInitializingMethod postInitializingMethod = new PostInitializingMethod(method,
+							bean.getValue(),
+							bean.getKey(),
 							order,
 							delay,
 							delayUnit);
@@ -134,10 +135,11 @@ public class PostInitializeGroupOrderedBeanProcessor implements ApplicationListe
 				postInitializingMethods.sort((prev, next) -> prev.order - next.order);
 				for (PostInitializingMethod postInitializingMethod : postInitializingMethods) {
 					try {
-						if(postInitializingMethod.getDelay() != 0) {
+						if (postInitializingMethod.getDelay() != 0) {
 							log.info("Will executor {} at {} {} later.", postInitializingMethod);
 							Executors.newScheduledThreadPool(maxThread)
-								.schedule(postInitializingMethod, postInitializingMethod.getDelay(), postInitializingMethod.getDelayUnit());
+									.schedule(postInitializingMethod, postInitializingMethod.getDelay(),
+											postInitializingMethod.getDelayUnit());
 						} else {
 							postInitializingMethod.call();
 						}
@@ -175,11 +177,11 @@ public class PostInitializeGroupOrderedBeanProcessor implements ApplicationListe
 		 * The name of the bean
 		 */
 		private String beanName;
-		
+
 		private Integer order;
-		
+
 		private int delay;
-		
+
 		private TimeUnit delayUnit = MINUTES;
 
 		/**
@@ -196,8 +198,9 @@ public class PostInitializeGroupOrderedBeanProcessor implements ApplicationListe
 			this.beanName = beanName;
 			this.order = order;
 		}
-		
-		private PostInitializingMethod(Method method, Object beanInstance, String beanName, Integer order, int delay, TimeUnit delayUnit) {
+
+		private PostInitializingMethod(Method method, Object beanInstance, String beanName, Integer order, int delay,
+		                               TimeUnit delayUnit) {
 			this.method = method;
 			this.beanInstance = beanInstance;
 			this.beanName = beanName;
@@ -245,7 +248,8 @@ public class PostInitializeGroupOrderedBeanProcessor implements ApplicationListe
 		 */
 		@Override
 		public Void call() throws Exception {
-			log.debug(MessageFormat.format("Initializing bean named {0} with method {1}", this.beanName, this.method.getName()));
+			log.debug(MessageFormat.format("Initializing bean named {0} with method {1}", this.beanName,
+					this.method.getName()));
 
 			try {
 				ReflectionUtils.invokeMethod(this.method, this.beanInstance);
@@ -256,7 +260,7 @@ public class PostInitializeGroupOrderedBeanProcessor implements ApplicationListe
 
 			return null;
 		}
-		
+
 		@Override
 		public String toString() {
 			return method.toString();

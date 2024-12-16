@@ -7,6 +7,7 @@ import com.loserico.common.lang.exception.EntityNotFoundException;
 import com.loserico.common.lang.i18n.I18N;
 import com.loserico.common.lang.vo.Result;
 import com.loserico.common.lang.vo.Results;
+import com.loserico.json.jackson.JacksonUtils;
 import com.loserico.validation.bean.ErrorMessage;
 import com.loserico.validation.exception.GeneralValidationException;
 import com.loserico.validation.exception.UniqueConstraintViolationException;
@@ -14,13 +15,12 @@ import com.loserico.validation.exception.ValidationException;
 import com.loserico.validation.utils.ValidationUtils;
 import com.loserico.web.exception.LocalizedException;
 import com.loserico.web.utils.MessageHelper;
-import com.loserico.web.utils.RestUtils;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
@@ -35,8 +35,6 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -47,7 +45,7 @@ import static com.loserico.common.lang.errors.ErrorTypes.MAX_UPLOAD_SIZE_EXCEEDE
 import static com.loserico.common.lang.errors.ErrorTypes.METHOD_NOT_ALLOWED;
 import static com.loserico.common.lang.errors.ErrorTypes.NOT_FOUND;
 import static com.loserico.common.lang.errors.ErrorTypes.VALIDATION_FAIL;
-import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.*;
 
 /**
  * 全局异常处理
@@ -76,8 +74,8 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	
 	@Override
 	@ResponseBody
-	protected ResponseEntity<Object> handleTypeMismatch(TypeMismatchException ex, HttpHeaders headers,
-	                                                    HttpStatus status, WebRequest request) {
+	protected ResponseEntity<Object> handleTypeMismatch(
+			TypeMismatchException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
 		logger.info("Rest API ERROR happen", ex);
 		return super.handleTypeMismatch(ex, headers, status, request);
 	}
@@ -86,16 +84,16 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	 * 表单提交数据校验错误, 或者提交的数据转换成目标数据类型时候出错
 	 */
 	@SuppressWarnings("rawtypes")
-	@Override
-	protected ResponseEntity<Object> handleBindException(BindException ex, HttpHeaders headers, HttpStatus status,
-	                                                     WebRequest request) {
+/*	@Override
+	public ResponseEntity<Object> handleBindException(
+			BindException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
 		logger.info("Rest API ERROR happen", ex);
 		headers.add("Content-Type", "application/json");
 		ErrorMessage errorMessage = ValidationUtils.getErrorMessage(ex.getBindingResult());
 		
 		Result result = Results.status(BAD_REQUEST.code(), errorMessage.getErrors()).build();
 		return new ResponseEntity(result, headers, HttpStatus.OK);
-	}
+	}*/
 	
 	/**
 	 * 处理验证相关的异常
@@ -116,7 +114,7 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 			ErrorMessage errorMessage = ValidationUtils.getErrorMessage(bindingResult);
 			List<String[]> msgs = errorMessage.getErrors();
 			
-			Result result = Results.status(VALIDATION_FAIL.code(), msgs).build();
+			Result result = Results.status(VALIDATION_FAIL.code(), JacksonUtils.toJson(msgs)).build();
 			return new ResponseEntity(result, HttpStatus.OK);
 		}
 		Result result = Results.status(VALIDATION_FAIL.code(), e.getMessage()).build();
@@ -124,8 +122,8 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	}
 	
 	@Override
-	protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex,
-	                                                              HttpHeaders headers, HttpStatus status, WebRequest request) {
+	protected ResponseEntity<Object> handleHttpMessageNotReadable(
+			HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
 		logger.info("Rest API ERROR happen", ex);
 		headers.add("Content-Type", "application/json");
 		Result result = Results.status(BAD_REQUEST).build();
@@ -133,8 +131,8 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	}
 	
 	@Override
-	protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
-	                                                              HttpHeaders headers, HttpStatus status, WebRequest request) {
+	protected ResponseEntity<Object> handleMethodArgumentNotValid(
+			MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
 		logger.info("Rest API ERROR happen", ex);
 		ErrorMessage errorMessage = ValidationUtils.getErrorMessage(ex.getBindingResult());
 		List<String[]> msgs = errorMessage.getErrors()
@@ -147,7 +145,7 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 					return errArray;
 				})
 				.collect(toList());
-		Result result = Results.status(VALIDATION_FAIL.code(), msgs).build();
+		Result result = Results.status(VALIDATION_FAIL.code(), JacksonUtils.toJson(msgs)).build();
 		return new ResponseEntity(result, headers, HttpStatus.OK);
 	}
 	
@@ -173,7 +171,7 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 					return errArray;
 				})
 				.collect(toList());
-		Result result = Results.status(VALIDATION_FAIL.code(), msgs).build();
+		Result result = Results.status(VALIDATION_FAIL.code(), JacksonUtils.toJson(msgs)).build();
 		return new ResponseEntity(result, HttpStatus.OK);
 	}
 	
@@ -194,8 +192,8 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	}
 	
 	@Override
-	protected ResponseEntity<Object> handleHttpRequestMethodNotSupported(HttpRequestMethodNotSupportedException ex, HttpHeaders headers, HttpStatus status,
-	                                                                     WebRequest request) {
+	protected ResponseEntity<Object> handleHttpRequestMethodNotSupported(
+			HttpRequestMethodNotSupportedException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
 		log.info("", ex);
 		headers.add("Content-Type", "application/json");
 		Result result = Results.status(METHOD_NOT_ALLOWED).build();
@@ -231,19 +229,18 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 		logger.error("Rest API ERROR happen", e);
 		return Results.status(e.getCode(), e.getMessage()).build();
 	}
-	
+
 	/**
 	 * 上传文件是multipart/form-data类型, 所以这边@ResponseBody实际是不生效的, 需要通过Response手工返回REST结果
-	 *
-	 * @param e
-	 * @param request
-	 * @param response
+	 * @param e the exception to handle
+	 * @param headers the headers to use for the response
+	 * @param status the status code to use for the response
+	 * @param request the current request
 	 * @return
 	 */
-	@ExceptionHandler(MaxUploadSizeExceededException.class)
-	@ResponseStatus(value = HttpStatus.BAD_REQUEST)
-	@ResponseBody
-	public Result handleMaxUploadSizeExceededException(MaxUploadSizeExceededException e, HttpServletRequest request, HttpServletResponse response) {
+	protected ResponseEntity<Object> handleMaxUploadSizeExceededException(
+			MaxUploadSizeExceededException e, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+
 		Matcher matcher = ACTUAL_SIZE_PATTERN.matcher(e.getMessage());
 		String message;
 		if (matcher.matches()) {
@@ -254,11 +251,10 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 		} else {
 			message = I18N.i18nMessage(MAX_UPLOAD_SIZE_EXCEEDED.msgTemplate(), MAX_UPLOAD_SIZE_EXCEEDED.message());
 		}
-		
+
 		logger.error(message, e);
 		Result result = Results.status(MAX_UPLOAD_SIZE_EXCEEDED.code(), message).build();
-		RestUtils.writeJson(response, HttpStatus.BAD_REQUEST, result);
-		return null;
+		return new ResponseEntity(result, HttpStatus.OK);
 	}
 	
 	@ExceptionHandler(Throwable.class)

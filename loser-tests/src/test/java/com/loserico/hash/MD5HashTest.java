@@ -4,7 +4,7 @@ import com.loserico.common.lang.utils.IOUtils;
 import lombok.SneakyThrows;
 import org.junit.Test;
 
-import javax.xml.bind.DatatypeConverter;
+import jakarta.xml.bind.DatatypeConverter;
 import java.security.MessageDigest;
 
 import static org.assertj.core.api.Assertions.assertThat;

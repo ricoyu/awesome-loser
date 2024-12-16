@@ -9,9 +9,9 @@ import static java.util.concurrent.TimeUnit.*;
 
 @Slf4j
 public class SynchronousQueueExample2 {
-	
+
 	private static final AtomicInteger SEQ = new AtomicInteger(1);
-	
+
 	public static void main(String[] args) {
 		SynchronousQueue<String> queue = new SynchronousQueue<>();
 		new Thread("Consumer") {
@@ -30,9 +30,9 @@ public class SynchronousQueueExample2 {
 				}
 			}
 		}.start();
-		
+
 		try {
-			
+
 			log.info("[{}] Try putting message: Hello World!", SEQ.getAndIncrement());
 			queue.put("Hello World!");
 			log.info("[{}] Hello World! Message put!", SEQ.getAndIncrement());
@@ -42,6 +42,6 @@ public class SynchronousQueueExample2 {
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}
-		
+
 	}
 }

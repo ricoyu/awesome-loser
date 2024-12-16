@@ -6,14 +6,14 @@ import com.loserico.common.lang.utils.ReflectionUtils;
 import com.loserico.common.lang.utils.StringUtils;
 import com.loserico.orm.exception.AliasLengthNotMatchException;
 import com.loserico.orm.exception.ApplicationException;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Convert;
 import org.hibernate.HibernateException;
 import org.hibernate.PropertyNotFoundException;
-import org.hibernate.transform.AliasedTupleSubsetResultTransformer;
+import org.hibernate.transform.ResultTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.persistence.AttributeConverter;
-import javax.persistence.Convert;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
@@ -36,7 +36,7 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
  * @version 3.0
  *
  */
-public class ValueHandlerResultTransformer extends AliasedTupleSubsetResultTransformer {
+public class ValueHandlerResultTransformer implements ResultTransformer {
 
 	private static final long serialVersionUID = -487079650392740751L;
 
@@ -172,7 +172,7 @@ public class ValueHandlerResultTransformer extends AliasedTupleSubsetResultTrans
 	 * 包括:
 	 * setter Method对象本身		tempMethods
 	 * 去掉set前缀后的名字			tempMethodNames
-	 * setter参数类型				tempParameterTypes
+	 * setter参数类型			tempParameterTypes
 	 * 对应MethodHandle			tempMethodHandles
 	 * 对应AttributeConverter	tempAttributeConverters
 	 * 
@@ -237,7 +237,7 @@ public class ValueHandlerResultTransformer extends AliasedTupleSubsetResultTrans
 					}
 				}
 
-				//如果在field上找到了Convert注解，则不再getter上找了
+				//如果在field上找到了Convert注解，则不在getter上找了
 				if (tempAttributeConverters[i] != null) {
 					continue;
 				}
@@ -288,8 +288,8 @@ public class ValueHandlerResultTransformer extends AliasedTupleSubsetResultTrans
 	 */
 	private synchronized void initialize(String[] aliases, Object[] tuple) {
 		/*
-		 * 系统以及在运行，但是期间对数据库表新增/删除字段，会导致methods和aliases的长度不一致
-		 * 如果发生，重新初始化
+		 * 系统已经在运行，但是期间对数据库表新增/删除字段，会导致methods和aliases的长度不一致
+		 * 如果发生, 重新初始化
 		 * @on
 		 */
 		if (alias2MethodInitialized) {
@@ -461,6 +461,11 @@ public class ValueHandlerResultTransformer extends AliasedTupleSubsetResultTrans
 		}
 	}
 
+	@Override
+	public List transformList(List resultList) {
+		return ResultTransformer.super.transformList(resultList);
+	}
+
 	/*
 	 * 将resultset注入到bean中
 	 */
@@ -482,7 +487,7 @@ public class ValueHandlerResultTransformer extends AliasedTupleSubsetResultTrans
 			tupleAliasLengthCheck = true;
 		}
 		
-		int index = 0; //一旦抛异常时，用于记录是哪个字段出错 TODO
+		int index = 0; //一旦抛异常时，用于记录是哪个字段出错
 		try {
 			result = resultClass.newInstance();
 
@@ -496,8 +501,8 @@ public class ValueHandlerResultTransformer extends AliasedTupleSubsetResultTrans
 				Class<?> parameterType = parameterTypes[i];
 
 				/*
-				 * 产线环境下容忍select子句包含列 col， 但是bean不包含col这种情况
-				 * 此时对应parameterType就为null，所以产线环境要跳过
+				 * 产线环境下容忍select子句包含列 col, 但是bean不包含col这种情况
+				 * 此时对应parameterType就为null, 所以产线环境要跳过
 				 */
 				if (parameterType == null && queryMode.equals(LOOSE)) {
 					continue;
@@ -650,18 +655,6 @@ public class ValueHandlerResultTransformer extends AliasedTupleSubsetResultTrans
 		}
 
 		return new String[] { propertyName, propertyName };
-	}
-
-	/**
-	 * 没什么用，但必须实现该方法
-	 * 
-	 * @param aliases
-	 * @param tupleLength
-	 * @return
-	 */
-	@Override
-	public boolean isTransformedValueATupleElement(String[] aliases, int tupleLength) {
-		return false;
 	}
 
 	public Set<String> getEnumLookupProperties() {

@@ -1,15 +1,11 @@
 package com.loserico.web.filter;
 
+import jakarta.servlet.*;
+import jakarta.servlet.annotation.WebFilter;
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.annotation.WebFilter;
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.Random;
 
@@ -32,7 +28,7 @@ public class TraceFilter implements Filter {
 	
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response,
-	                     FilterChain chain) throws IOException, ServletException {
+						 FilterChain chain) throws IOException, ServletException {
 		HttpServletRequest httpServletRequest = (HttpServletRequest) request;
 		// 从请求头中获取traceId
 		String traceId = ((HttpServletRequest) request).getHeader("TRACE_ID");

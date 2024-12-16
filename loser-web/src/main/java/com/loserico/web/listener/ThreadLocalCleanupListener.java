@@ -1,11 +1,10 @@
 package com.loserico.web.listener;
 
 import com.loserico.common.lang.context.ThreadContext;
+import jakarta.servlet.ServletRequestEvent;
+import jakarta.servlet.ServletRequestListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.servlet.ServletRequestEvent;
-import javax.servlet.ServletRequestListener;
 
 /**
  * 在Request开始和结束的时候清理一遍ThreadLocal

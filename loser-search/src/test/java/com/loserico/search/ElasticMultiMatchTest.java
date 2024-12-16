@@ -7,6 +7,7 @@ import org.junit.Test;
 
 import java.util.List;
 
+import static org.elasticsearch.index.query.MultiMatchQueryBuilder.Type.BEST_FIELDS;
 import static org.elasticsearch.index.query.MultiMatchQueryBuilder.Type.CROSS_FIELDS;
 import static org.elasticsearch.index.query.MultiMatchQueryBuilder.Type.MOST_FIELDS;
 import static org.elasticsearch.index.query.QueryBuilders.*;
@@ -67,5 +68,34 @@ public class ElasticMultiMatchTest {
 				.queryForList();
 		
 		movies.forEach(System.out::println);
+	}
+
+	@Test
+	public void testProducts() {
+		List<Object> products = ElasticUtils.Query.multiMatch("products")
+				.type(BEST_FIELDS)
+				.tieBreaker(0.3f)
+				.query("apple watch", "title", "description")
+				.queryForList();
+		products.forEach(System.out::println);
+	}
+
+	@Test
+	public void testMostFields2() {
+		List<Object> news = ElasticUtils.Query.multiMatch("news")
+				.type(MOST_FIELDS)
+				.query("climate change impact", "title", "intro", "body")
+				.queryForList();
+		news.forEach(System.out::println);
+	}
+
+	@Test
+	public void testCrossFields2() {
+		List<Object> address = ElasticUtils.Query.multiMatch("address")
+				.type(CROSS_FIELDS)
+				.query("Poland Street W1V", "street", "city", "country", "postcode")
+				.operator(Operator.AND)
+				.queryForList();
+		address.forEach(System.out::println);
 	}
 }

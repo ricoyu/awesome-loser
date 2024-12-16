@@ -2,17 +2,13 @@ package com.loserico.common.spring.http;
 
 import com.loserico.common.lang.context.ApplicationContextHolder;
 import com.loserico.common.spring.utils.ServletUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import javax.servlet.http.HttpServletRequest;
 import java.net.URI;
 import java.util.Enumeration;
 import java.util.Map;
@@ -99,7 +95,7 @@ public final class Requests {
 	 * @return T
 	 */
 	public static <T> T transmit(HttpServletRequest request, String destAddress, Class responseType,
-	                             Map<String, String> additionalHeaders, Map<String, String> additionalParameters) {
+								 Map<String, String> additionalHeaders, Map<String, String> additionalParameters) {
 		// 从request拿出所有的请求头, 构造HttpHeaders, 一起转发过去
 		HttpHeaders headers = new HttpHeaders();
 		Enumeration<String> headerNames = request.getHeaderNames();
@@ -162,7 +158,7 @@ public final class Requests {
 				.append(queryStr)
 				.toString();
 		
-		HttpMethod httpMethod = HttpMethod.resolve(method);
+		HttpMethod httpMethod = HttpMethod.valueOf(method);
 		
 		try {
 			URI url = new URI(destUrl);

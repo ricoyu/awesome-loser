@@ -1,7 +1,5 @@
 package com.loserico.concurrent.aqs;
 
-import com.loserico.unsafe.LoserUnsafe;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -378,7 +376,8 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 	 */
 	protected final boolean compareAndSetState(int expect, int update) {
 		// See below for intrinsics setup to support this
-		return unsafe.compareAndSwapInt(this, stateOffset, expect, update);
+		//return unsafe.compareAndSwapInt(this, stateOffset, expect, update);
+		return false;
 	}
 	
 	// Queuing utilities
@@ -2318,47 +2317,47 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 	 * <p>
 	 * unsafe魔法类，直接绕过虚拟机内存管理机制，修改内存
 	 */
-	private static final LoserUnsafe unsafe = LoserUnsafe.getUnsafe();
+	//private static final LoserUnsafe unsafe = LoserUnsafe.getUnsafe();
 	
 	/**
 	 * 返回 state 内存地址相对于此对象(AbstractQueuedSynchronizer)的内存地址的偏移量
 	 */
-	private static final long stateOffset;
+	private static final long stateOffset = 0;
 	/**
 	 * 返回 head 内存地址相对于此对象(AbstractQueuedSynchronizer)的内存地址的偏移量
 	 */
-	private static final long headOffset;
+	private static final long headOffset = 0;
 	/**
 	 * 返回 tail 内存地址相对于此对象(AbstractQueuedSynchronizer)的内存地址的偏移量
 	 * <p>
 	 * 指向同步等待队列的尾节点
 	 */
-	private static final long tailOffset;
+	private static final long tailOffset = 0;
 	/**
 	 * 返回 waitStatus 内存地址相对于此对象(Node)的内存地址的偏移量
 	 * <p>
 	 * waitStatus: 标记当前节点的信号量状态
 	 */
-	private static final long waitStatusOffset;
+	private static final long waitStatusOffset = 0;
 	/**
 	 * 返回 next 内存地址相对于此对象(Node)的内存地址的偏移量
 	 * <p>
 	 * next: 当前节点的后继节点
 	 */
-	private static final long nextOffset;
+	private static final long nextOffset = 0;
 	
 	static {
 		try {
-			stateOffset = unsafe.objectFieldOffset
-					(LoserAbstractQueuedSynchronizer.class.getDeclaredField("state"));
-			headOffset = unsafe.objectFieldOffset
-					(LoserAbstractQueuedSynchronizer.class.getDeclaredField("head"));
-			tailOffset = unsafe.objectFieldOffset
-					(LoserAbstractQueuedSynchronizer.class.getDeclaredField("tail"));
-			waitStatusOffset = unsafe.objectFieldOffset
-					(Node.class.getDeclaredField("waitStatus"));
-			nextOffset = unsafe.objectFieldOffset
-					(Node.class.getDeclaredField("next"));
+			//stateOffset = unsafe.objectFieldOffset
+			//		(LoserAbstractQueuedSynchronizer.class.getDeclaredField("state"));
+			//headOffset = unsafe.objectFieldOffset
+			//		(LoserAbstractQueuedSynchronizer.class.getDeclaredField("head"));
+			//tailOffset = unsafe.objectFieldOffset
+			//		(LoserAbstractQueuedSynchronizer.class.getDeclaredField("tail"));
+			//waitStatusOffset = unsafe.objectFieldOffset
+			//		(Node.class.getDeclaredField("waitStatus"));
+			//nextOffset = unsafe.objectFieldOffset
+			//		(Node.class.getDeclaredField("next"));
 			
 		} catch (Exception ex) {
 			throw new Error(ex);
@@ -2369,14 +2368,16 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 	 * CAS 设置头节点
 	 */
 	private final boolean compareAndSetHead(Node update) {
-		return unsafe.compareAndSwapObject(this, headOffset, null, update);
+		//return unsafe.compareAndSwapObject(this, headOffset, null, update);
+		return false;
 	}
 	
 	/**
 	 * CAS 修改尾节点, 修改成功后tail指向update
 	 */
 	private final boolean compareAndSetTail(Node expect, Node update) {
-		return unsafe.compareAndSwapObject(this, tailOffset, expect, update);
+		//return unsafe.compareAndSwapObject(this, tailOffset, expect, update);
+		return false;
 	}
 	
 	/**
@@ -2385,8 +2386,9 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 	private static final boolean compareAndSetWaitStatus(Node node,
 	                                                     int expect,
 	                                                     int update) {
-		return unsafe.compareAndSwapInt(node, waitStatusOffset,
-				expect, update);
+		return false;
+		//return unsafe.compareAndSwapInt(node, waitStatusOffset,
+		//		expect, update);
 	}
 	
 	/**
@@ -2395,6 +2397,7 @@ public abstract class LoserAbstractQueuedSynchronizer extends LoserAbstractOwnab
 	private static final boolean compareAndSetNext(Node node,
 	                                               Node expect,
 	                                               Node update) {
-		return unsafe.compareAndSwapObject(node, nextOffset, expect, update);
+		//return unsafe.compareAndSwapObject(node, nextOffset, expect, update);
+		return false;
 	}
 }

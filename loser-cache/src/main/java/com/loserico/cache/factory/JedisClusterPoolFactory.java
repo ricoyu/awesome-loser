@@ -3,16 +3,16 @@ package com.loserico.cache.factory;
 import com.loserico.cache.config.RedisProperties;
 import com.loserico.common.lang.resource.PropertyReader;
 import lombok.extern.slf4j.Slf4j;
+import redis.clients.jedis.ConnectionPoolConfig;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisCluster;
-import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.util.Pool;
 
 import java.util.Set;
 
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Collectors.*;
 
 /**
  * <p>
@@ -36,8 +36,8 @@ public class JedisClusterPoolFactory implements PoolFactory {
 					String[] hostAndPort = hostPort.split(":");
 					return new HostAndPort(hostAndPort[0].trim(), Integer.parseInt(hostAndPort[1].trim()));
 				}).collect(toSet());
-		
-		JedisPoolConfig poolConfig = config(propertyReader);
+
+		ConnectionPoolConfig poolConfig = config(propertyReader);
 		String password = propertyReader.getString("redis.password");
 		
 		// 默认50秒连接超时
@@ -54,7 +54,7 @@ public class JedisClusterPoolFactory implements PoolFactory {
 			log.info("socketTimeout: {}", socketTimeout);
 			log.info("maxAttempts: {}", maxAttempts);
 		}
-		
+		//public JedisCluster(Set<HostAndPort> clusterNodes, int connectionTimeout, int soTimeout, int maxAttempts, String password, GenericObjectPoolConfig< Connection > poolConfig) {
 		return new JedisCluster(nodes, connectionTimeout, socketTimeout, maxAttempts, password, poolConfig);
 	}
 	

@@ -103,12 +103,32 @@ public final class HashUtils {
 		}
 		return hash;
 	}
-	
+
+	/**
+	 * SHA256是一种哈希算法, 产生一个256位（32字节）的哈希值，用于数据完整性验证和消息摘要生成。
+	 * <ul>哈希算法的特点是：
+	 *     <li/>单向性：一旦数据被哈希，无法从哈希值反推回原始数据。
+	 *     <li/>固定输出长度：无论输入数据的大小如何，输出的哈希值长度都是固定的。
+	 *     <li/>碰撞抵抗性：不同的输入数据产生相同哈希值的可能性非常低。
+	 * </ul>
+	 * @param source
+	 * @return String
+	 */
 	public static String sha256(String source) {
 		byte[] bytes = source.getBytes(StandardCharsets.UTF_8);
 		return sha256(bytes);
 	}
-	
+
+	/**
+	 * SHA256是一种哈希算法, 产生一个256位（32字节）的哈希值，用于数据完整性验证和消息摘要生成。
+	 * <ul>哈希算法的特点是：
+	 *     <li/>单向性：一旦数据被哈希，无法从哈希值反推回原始数据。
+	 *     <li/>固定输出长度：无论输入数据的大小如何，输出的哈希值长度都是固定的。
+	 *     <li/>碰撞抵抗性：不同的输入数据产生相同哈希值的可能性非常低。
+	 * </ul>
+	 * @param bytes
+	 * @return String
+	 */
 	public static String sha256(byte[] bytes) {
 		MessageDigest digest = null;
 		try {

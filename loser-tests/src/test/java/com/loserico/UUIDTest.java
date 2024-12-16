@@ -19,6 +19,6 @@ public class UUIDTest {
 	@Test
 	public void test() {
 		String uuid = UUID.randomUUID().toString();
-		System.out.println(uuid);
+		System.out.println(uuid.replaceAll("-", ""));
 	}
 }

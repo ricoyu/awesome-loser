@@ -25,7 +25,7 @@ public final class RestSupport {
 	private static final String COMMA = ",";
 	
 	/**
-	 * 组合成 http://192.168.100.101:9200 这种形式
+	 * HOSTS里面最终存的是 http://192.168.100.101:9200 这种形式得URL
 	 */
 	public static final List<String> HOSTS = new ArrayList<>();
 	

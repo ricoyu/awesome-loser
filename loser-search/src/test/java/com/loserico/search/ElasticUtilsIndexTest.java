@@ -50,6 +50,19 @@ public class ElasticUtilsIndexTest {
 		
 		System.out.println(created);
 	}
+
+	/**
+	 * 每个主分片有两个副本, 一共有5个主分片, 所以加起来一共有15个分片
+	 */
+	@Test
+	public void testCreateIndexWith2Replicas() {
+		boolean created = Admin.createIndex("test-index")
+				.settings()
+				.numberOfShards(5)
+				.numberOfReplicas(2)
+				.thenCreate();
+		assertTrue(created);
+	}
 	
 	@Test
 	public void testCreateIndexByAnnotation() {

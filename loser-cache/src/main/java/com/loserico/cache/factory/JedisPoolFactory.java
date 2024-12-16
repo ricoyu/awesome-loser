@@ -78,7 +78,7 @@ public class JedisPoolFactory implements PoolFactory {
 		
 		if (StringUtils.isNotBlank(password)) {
 			return new JedisPool(
-					config(propertyReader),
+					genericPoolConfig(propertyReader),
 					host,
 					port,
 					connectionTimeout,
@@ -92,7 +92,7 @@ public class JedisPoolFactory implements PoolFactory {
 					null);
 		} else {
 			return new JedisPool(
-					config(propertyReader),
+					genericPoolConfig(propertyReader),
 					host,
 					port,
 					connectionTimeout,
@@ -110,7 +110,7 @@ public class JedisPoolFactory implements PoolFactory {
 	@Override
 	public JedisPool createPool(RedisProperties redisProperties) {
 		return new JedisPool(
-				config(redisProperties),
+				genericPoolConfig(redisProperties),
 				redisProperties.getHost(),
 				redisProperties.getPort(),
 				redisProperties.getConnectionTimeout(),

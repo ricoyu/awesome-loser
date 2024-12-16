@@ -1,5 +1,9 @@
 package com.loserico.common.spring.utils;
 
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.AntPathMatcher;
@@ -8,30 +12,14 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import javax.servlet.ServletRequest;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.*;
 
 import static com.loserico.common.lang.utils.Assert.notNull;
-import static com.loserico.networking.constants.NetworkConstant.HTTP_HEADER_HTTP_CLIENT_IP;
-import static com.loserico.networking.constants.NetworkConstant.HTTP_HEADER_HTTP_X_FORWARDED_FOR;
-import static com.loserico.networking.constants.NetworkConstant.HTTP_HEADER_PROXY_CLIENT_IP;
-import static com.loserico.networking.constants.NetworkConstant.HTTP_HEADER_WL_PROXY_CLIENT_IP;
-import static com.loserico.networking.constants.NetworkConstant.HTTP_HEADER_X_FORWARDED_FOR;
-import static com.loserico.networking.constants.NetworkConstant.HTTP_HEADER_X_REAL_IP;
-import static com.loserico.networking.constants.NetworkConstant.UNKNOWN;
+import static com.loserico.networking.constants.NetworkConstant.*;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 /**
