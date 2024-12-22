@@ -262,6 +262,36 @@ public class RestExceptionAdvice extends ResponseEntityExceptionHandler {
 	@ResponseBody
 	public ResponseEntity<?> handleThrowable(Throwable e) throws Exception {
 		logger.error("Rest API ERROR happen", e);
+		return findRealCause(e);
+	}
+
+	/**
+	 * 有时候, 业务代码抛出了某个比较有意义的异常, 但是由于系统组件比较多, 可能这个异常会被吃掉并包裹成另外一个异常, 比如RumtimeException
+	 * 导致返回的错误信息没有正确反应错误类型, 这里试图找到真正的的异常类型
+	 * @param e
+	 * @return
+	 */
+	private ResponseEntity<?> findRealCause(Throwable e) {
+		if (e.getCause() != null && e.getCause() instanceof BusinessException) {
+			return handleBusinessException((BusinessException)e.getCause());
+		}
+		if (e.getCause() != null && e.getCause() instanceof ValidationException){
+			return handleValidationException((ValidationException)e.getCause());
+		}
+		if (e.getCause() != null && e.getCause() instanceof UniqueConstraintViolationException){
+			return handleUniqueConstraintViolationException((UniqueConstraintViolationException)e.getCause());
+		}
+		if (e.getCause() != null && e.getCause() instanceof EntityNotFoundException){
+			return handleEntityNotFoundException((EntityNotFoundException)e.getCause());
+		}
+		if (e.getCause() != null && e.getCause() instanceof LocalizedException){
+			return handleLocalizedException((LocalizedException)e.getCause());
+		}
+		if (e.getCause() != null && e.getCause() instanceof ApplicationException){
+			Result result = handleApplicationException((ApplicationException)e.getCause());
+			return new ResponseEntity(result, HttpStatus.OK);
+		}
+
 		Result result = Results.status(ErrorTypes.INTERNAL_SERVER_ERROR).build();
 		return new ResponseEntity(result, HttpStatus.INTERNAL_SERVER_ERROR);
 	}

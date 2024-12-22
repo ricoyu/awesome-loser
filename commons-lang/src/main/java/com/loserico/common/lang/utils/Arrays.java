@@ -113,10 +113,10 @@ public final class Arrays {
 	 * @return
 	 */
 	public static int[] parseOneDimensionArray(String str) {
-		str = str.trim();
 		if (str == null || str.length() == 0) {
 			return null;
 		}
+		str = str.trim();
 		if ('[' == str.charAt(0) && ']' == str.charAt(str.length() - 1)) {
 			str = str.substring(1, str.length() - 1); // 去掉两边的方括号
 		}
