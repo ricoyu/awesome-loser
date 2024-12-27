@@ -149,4 +149,31 @@ public final class Arrays {
 
 		return list.toArray(new int[0][]);
 	}
+
+	/**
+	 * 将输入的字符串转化为字符串数组，处理两种情况：
+	 * 1. 如果存在中括号，去掉中括号；
+	 * 2. 去掉字符串中的双引号，并按逗号分隔。
+	 * @param input 输入的字符串，格式类似于["flower","flow","flight"] 或 "flower","flow","flight"
+	 * @return 字符串数组
+	 */
+	public static String[] toStringArray(String input) {
+		if (input == null ||input.isEmpty()) {
+			return null;
+		}
+		// 判断输入是否以中括号开头和结尾
+		if (input.startsWith("[") && input.endsWith("]")) {
+			// 去掉两边的中括号
+			input = input.substring(1, input.length() - 1);
+		}
+
+		// 去掉双引号
+		input = input.replaceAll("\"", "");
+
+		// 使用逗号分隔字符串并转换为数组
+		String[] arr = input.split(",");
+		return java.util.Arrays.stream(arr)
+				.map(String::trim)
+				.toArray(String[]::new);
+	}
 }

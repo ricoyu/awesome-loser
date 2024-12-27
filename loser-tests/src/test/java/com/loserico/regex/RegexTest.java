@@ -99,4 +99,15 @@ public class RegexTest {
 			System.out.println(group3);
 		}
 	}
+
+	@Test
+	public void testReplaceMultipleSpaceWithOneSpace() {
+		String[] arr = new String[]{"abc de  fgh   jk ", " 1 2 3  4 5 678   9 "};
+		String regex = "\\s+";
+		for (String s : arr) {
+			s = s.trim();
+			s = s.replaceAll(regex, " ");
+			System.out.println(s);
+		}
+	}
 }
