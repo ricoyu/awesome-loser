@@ -52,6 +52,7 @@ public class JacksonUtilsTest {
 		String toJson = toJson(str);
 		System.out.println(toJson + " , length=" + str.length());
 		System.out.println(json + " , length=" + str.length());
+		assertEquals(json, toJson);
 		
 		/*String simpleJson = IOUtils.readClassPathFileAsString("simple-json.txt");
 		System.out.println(JacksonUtils.toObject(simpleJson, String.class));*/
