@@ -4,7 +4,8 @@ import com.loserico.cache.JedisUtils;
 import com.loserico.common.lang.resource.PropertyReader;
 import com.loserico.common.lang.utils.StringUtils;
 import com.loserico.json.jackson.JacksonUtils;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Objects;
@@ -28,8 +29,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * @author Rico Yu	ricoyu520@gmail.com
  * @version 1.0
  */
-@Slf4j
 public final class AuthUtils {
+
+	private static final Logger log = LoggerFactory.getLogger(AuthUtils.class);
 	
 	/**
 	 * 默认读取classpath下redis.properties文件

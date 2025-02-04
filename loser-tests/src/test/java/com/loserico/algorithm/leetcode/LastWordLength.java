@@ -57,7 +57,6 @@ public class LastWordLength {
 	public static int lengthOfLastWord(String s) {
 		// 1. 去除尾部空格
 		s = s.trim();
-
 		// 2. 从尾部开始找到第一个空格的位置
 		int length = 0;
 		for (int i = s.length()-1; i >= 0; i--) {

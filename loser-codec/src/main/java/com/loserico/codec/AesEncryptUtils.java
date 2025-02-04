@@ -22,7 +22,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * AES 加密解密
- * AES 是一种对称加密算法
+ * AES 是一种对称加密算法 <p/>
+ * 非对称加密 (如RSA) 计算量大, 适合加密少量数据 (如会话密钥) <p/>
+ * 对称加密 (如AES) 计算量小, 适合加密大量数据 (如HTTP请求和响应) <p/>
  * <p>
  * Copyright: Copyright (c) 2018-08-20 17:12
  * <p>

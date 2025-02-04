@@ -1,5 +1,6 @@
 package com.loserico.common.lang;
 
+import com.loserico.common.lang.constants.DateConstants;
 import com.loserico.common.lang.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -352,5 +353,12 @@ public class DateUtilsTest {
 	public void testFormat() {
 		String format = DateUtils.format(new Date(), "yyyyMMddHHmmssS");
 		System.out.println(format);
+	}
+
+	@Test
+	public void testRfc1123() {
+		Date now = new Date();
+		String dateStr = DateUtils.format(now, DateConstants.FMT_RFC1123_FORMAT);
+		System.out.println(dateStr);
 	}
 }

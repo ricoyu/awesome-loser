@@ -1,10 +1,11 @@
 package com.loserico.security.aspect;
 
-import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 /**
@@ -18,10 +19,10 @@ import org.springframework.stereotype.Component;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
-@Slf4j
 @Aspect
 @Component
 public class TokenEndpointAspect {
+	private static final Logger log = LoggerFactory.getLogger(TokenEndpointAspect.class);
 	
 	@Pointcut("execution(public * org.springframework.security.oauth2.provider.endpoint.TokenEndpoint.handleException(*))")
 	public void handleException(){}

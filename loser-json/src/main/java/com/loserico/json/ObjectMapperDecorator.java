@@ -65,7 +65,10 @@ public class ObjectMapperDecorator {
 		} else {
 			stringBasedObjectMapper(objectMapper);
 		}
-		
+
+		//允许将空字符串强制转换为 null
+		objectMapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
+
 		/**
 		 * EnumDeserializer支持反序列化字符串到Enum类型, 并且是大小写不敏感的
 		 * 正常的话字符串"ASC" 可以反序列化成 Direction.ASC, 而字符串"asc"是不可以反序列化为Direction.ASC的

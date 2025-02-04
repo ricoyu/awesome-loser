@@ -2,7 +2,8 @@ package com.loserico.cache.factory;
 
 import com.loserico.cache.config.RedisProperties;
 import com.loserico.common.lang.resource.PropertyReader;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import redis.clients.jedis.ConnectionPoolConfig;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
@@ -24,9 +25,10 @@ import static java.util.stream.Collectors.*;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
-@Slf4j
 public class JedisClusterPoolFactory implements PoolFactory {
-	
+
+	private static final Logger log = LoggerFactory.getLogger(JedisClusterPoolFactory.class);
+
 	@Override
 	public JedisCluster createCluster(PropertyReader propertyReader) {
 		String clusters = propertyReader.getString(JedisPoolFactories.CLUSTERS);

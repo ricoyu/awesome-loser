@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
 /**
+ * 正常情况下, HttpServletRequest的body只能读取一次, 所以需要一个过滤器, 用RepeatedReadHttpServletRequestWarpper将HttpServletRequest
  * <p>
  * Copyright: (C), 2020-09-08 14:39
  * <p>

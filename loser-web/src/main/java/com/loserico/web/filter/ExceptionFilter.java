@@ -3,8 +3,13 @@ package com.loserico.web.filter;
 import com.loserico.common.lang.context.ThreadContext;
 import com.loserico.common.lang.vo.Results;
 import com.loserico.web.utils.RestUtils;
-import jakarta.servlet.*;
-import lombok.extern.slf4j.Slf4j;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 
 import java.io.IOException;
@@ -22,8 +27,9 @@ import static com.loserico.common.lang.errors.ErrorTypes.INTERNAL_SERVER_ERROR;
  * @author Rico Yu ricoyu520@gmail.com
  * @version 1.0
  */
-@Slf4j
 public class ExceptionFilter implements Filter {
+
+	private static final Logger log = LoggerFactory.getLogger(ExceptionFilter.class);
 	
 	public static final String ROUTE_CAUSE = "routeCause";
 	
